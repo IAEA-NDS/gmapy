@@ -1,0 +1,59 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module linpack_slim ! in 
+    interface  ! in :linpack_slim
+        subroutine dpodi(a,n,det,job) ! in :linpack_slim:linpack_slim.f
+            double precision dimension(n,n),intent(inout) :: a
+            integer, optional,check(shape(a,0)==n),depend(a) :: n=shape(a,0)
+            double precision dimension(2) :: det
+            integer :: job
+        end subroutine dpodi
+        subroutine dpofa(a,n,info) ! in :linpack_slim:linpack_slim.f
+            double precision dimension(n,n),intent(inout) :: a
+            integer, optional,check(shape(a,0)==n),depend(a) :: n=shape(a,0)
+            integer :: info
+        end subroutine dpofa
+        subroutine dppdi(ap,n,det,job) ! in :linpack_slim:linpack_slim.f
+            double precision dimension(n*(n+1)/2),intent(inout),depend(n) :: ap
+            integer :: n
+            double precision dimension(2) :: det
+            integer :: job
+        end subroutine dppdi
+        subroutine dppfa(ap,n,info) ! in :linpack_slim:linpack_slim.f
+            double precision dimension(n*(n+1)/2),intent(inout),depend(n) :: ap
+            integer :: n
+            integer :: info
+        end subroutine dppfa
+        subroutine dppsl(ap,n,b) ! in :linpack_slim:linpack_slim.f
+            double precision dimension(1) :: ap
+            integer :: n
+            double precision dimension(1) :: b
+        end subroutine dppsl
+        subroutine daxpy(n,da,dx,incx,dy,incy) ! in :linpack_slim:linpack_slim.f
+            integer :: n
+            double precision :: da
+            double precision dimension(1) :: dx
+            integer :: incx
+            double precision dimension(1) :: dy
+            integer :: incy
+        end subroutine daxpy
+        function ddot(n,dx,incx,dy,incy) ! in :linpack_slim:linpack_slim.f
+            integer :: n
+            double precision dimension(1) :: dx
+            integer :: incx
+            double precision dimension(1) :: dy
+            integer :: incy
+            double precision :: ddot
+        end function ddot
+        subroutine dscal(n,da,dx,incx) ! in :linpack_slim:linpack_slim.f
+            integer :: n
+            double precision :: da
+            double precision dimension(1) :: dx
+            integer :: incx
+        end subroutine dscal
+    end interface 
+end python module linpack_slim
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
