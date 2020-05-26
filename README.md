@@ -21,21 +21,20 @@ developments and extensions.
 The following steps are necessary to run the Python version:
 
 1. Compile the `LINPACK` module to be accessible by Python
-   ```
-   cd source
-   f2py -c linpack_slim.pyf linpack_slim.f
-   ```
+```
+ cd source
+ f2py -c linpack_slim.pyf linpack_slim.f
+```
 2. Point the `PYTHONPATH` to the directory of `GMAP.py`
-   ```
-   PYTHONPATH="<path-to-GMAP.py>/source"
-   ```
+```
+ PYTHONPATH="<path-to-GMAP.py>/source"
+```
 3. Create a directory, create an input file inside named `data.gma`
 (e.g., take it from `tests/test_001/input`), change into that directory
 and launch GMAP:
-  ```
-  python "<path-to-GMAP.py>/GMAP.py"
-  ```
-
+```
+python "<path-to-GMAP.py>/GMAP.py"
+```
 
 ### Comments on conversion
 
