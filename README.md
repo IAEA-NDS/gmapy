@@ -32,7 +32,8 @@ The following steps are necessary to run the Python version:
 3. Create a directory, create an input file inside named `data.gma`
 (e.g., take it from `tests/test_001/input`), change into that directory
 and launch GMAP:
-  ```python "<path-to-GMAP.py>/GMAP.py"
+  ```
+  python "<path-to-GMAP.py>/GMAP.py"
   ```
 
 
