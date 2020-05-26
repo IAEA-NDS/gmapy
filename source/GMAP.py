@@ -12,12 +12,19 @@ import os
 import numpy as np
 
 
+# Flag for activating extra output
+# for debugging and testing purposes
+VERIFY = False
+
+
 #################################################
 #   START OF GMAP PROGRAM
 ##################################################
 
 @with_goto
 def main():
+
+    global VERIFY
 
     # IMPLICIT definitions in original version
     # IMPLICIT REAL*8 (A-H,O-Z)
@@ -62,6 +69,9 @@ def main():
     file_IO3 = open('data.gma', 'r')
     file_IO4 = open('gma.res', 'w')
     file_IO5 = open('plot.dta', 'w')
+    if VERIFY:
+        file_IO21= open('debug.out', 'w')
+    #endif
 
 
     #   Parameters/apriori
@@ -225,6 +235,9 @@ def main():
     label .lbl50
     ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
     #
+    if VERIFY:
+        fort_write(file_IO21,"('READING CONTROL PARAMETER ',A4)", [ACON])
+    #endif
     for K in fort_range(1, 11):  # .lbl10
         if ACON == LABL.AKON[K]:
             if K == 1:
@@ -304,6 +317,9 @@ def main():
         for L in fort_range(1,NE1):  # .lbl34
             format103 = "(2E10.4)"
             EX1, CSX1 = fort_read(file_IO3, format103)
+            if VERIFY:
+                fort_write(file_IO21, "('CSX1 ',E10.4)", [CSX1])
+            #endif
             if EX1 == 0:
                 goto .lbl35
             NR += 1
@@ -311,6 +327,9 @@ def main():
             APR.CS[NR] = CSX1
             # label .lbl34
         L = L + 1  # to match L value of fortran after loop
+        if VERIFY:
+            fort_write(file_IO21, '(A,I5)', ['deb L1 ',L])
+        #endif
         label .lbl35
         APR.MCS[K,1] = L-1
     # label .lbl33
@@ -348,6 +367,9 @@ def main():
             fort_write(file_IO4, format138, [LQ, L, APR.EN[L], APR.CS[L]])
             # label .lbl 23
         L = L + 1  # to match L value of fortran after loop
+        if VERIFY:
+            fort_write(file_IO21, '(A,I5)', ['deb L2 ',L])
+        #endif
     # .lbl24
     K = K + 1
     label .lbl665
@@ -378,6 +400,9 @@ def main():
     #
 
     label .lbl4
+    if VERIFY:
+        fort_write(file_IO21, '(A,I5)', ['ENTERING LABEL ', 4])
+    #endif
     N = 0
     ID = 0
     for K in fort_range(1,LDA):  # .lbl32
@@ -397,6 +422,9 @@ def main():
             data.ECOR[K,L] = 0.
         L = L + 1  # to match L value of fortran after loop
         # .lbl32
+    if VERIFY:
+        fort_write(file_IO21, '(A,I5)', ['deb L3 ',L])
+    #endif
     NADD = 1
     if MODREP != 0:
         goto .lbl50
@@ -419,6 +447,9 @@ def main():
     #
     label .lbl2
     NS = MC1
+    if VERIFY:
+        fort_write(file_IO21,"('READING DATASET ',I5)", [NS])
+    #endif
     MT = MC2
     NCOX = MC3
     NCT = MC4
@@ -446,6 +477,10 @@ def main():
     goto .lbl511
 
     label .lbl510
+    if VERIFY:
+        format1060 = "('AFTER LABEL ',I4)"
+        fort_write(file_IO21, format1060, [510])
+    #endif
 
     MTTP = 2
     IDEN[ID, 8] = 2
@@ -464,6 +499,9 @@ def main():
     tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(1,NU)]
     L = 3  # to reflect value of L after loop in Fortran
            # because L in list comprehension goes immediately out of scope
+    if VERIFY:
+        fort_write(file_IO21, '(A,I5)', ['deb L4 ',L])
+    #endif
     fort_write(file_IO4, format139, [MC1, LABL.TYPE[MT],tmp])
     if NCT2 <= 0:
         goto .lbl140
@@ -472,6 +510,9 @@ def main():
     tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
     L = 3  # to reflect value of L after loop in Fortran
            # because L in list comprehension goes immediately out of scope
+    if VERIFY:
+        fort_write(file_IO21, '(A,I5)', ['deb L5 ',L])
+    #endif
     fort_write(file_IO4, format149, tmp)
 
     label .lbl140
@@ -504,6 +545,9 @@ def main():
     for L in fort_range(1,10):  # .lbl208
         XNORU = XNORU + (data.ENFF[ID,L])**2
     L = L + 1  # to match L value of fortran after loop
+    if VERIFY:
+        fort_write(file_IO21, '(A,I5)', ['deb L6 ',L])
+    #endif
 
     label .lbl200
     #
@@ -577,6 +621,9 @@ def main():
                 data.CSS[NADD] = APR.CS[K]
             # .lbl48
         L = L + 1  # to match L value of fortran after loop
+        if VERIFY:
+            fort_write(file_IO21, '(A,I5)', ['deb L7 ',L])
+        #endif
 
         #
         #      this is the Axton special (uncertainties have been multiplied by 10
@@ -656,6 +703,9 @@ def main():
         for L in fort_range(3,11):  # .lbl207
             RELU += data.CO[L, NADD]**2
         L = L + 1  # to match L value of fortran after loop
+        if VERIFY:
+            fort_write(file_IO21, '(A,I5)', ['deb L8 ',L])
+        #endif
 
         data.DCS[NADD] = np.sqrt(XNORU + RELU) 
         NADD += 1
@@ -740,6 +790,13 @@ def main():
     KS = KS + 1  # to match the value of KS after Fortran loop
     L = KS  # to match the value of L after READ (label 61 in Fortran code)
 
+    if VERIFY:
+        fort_write(file_IO21, "('ECOR READ 1 - DATASET ',I5)", [NS])
+        for IR in fort_range(1,NCOX):
+            fort_write(file_IO21, "('ROW ',I4,' OF ',I4)", [IR,NCOX])
+            fort_write(file_IO21, "(10E18.10)", [data.ECOR[IR,1:(IR+1)]])
+        fort_write(file_IO21,"('END ECOR READ 1 ',I4)", [NS])
+    #endif
 
     MODC = MODAL
     goto .lbl79
@@ -776,7 +833,13 @@ def main():
                 label .lbl214
                 label .lbl215
             L = L + 1  # to match L value of fortran after loop
+            if VERIFY:
+                fort_write(file_IO21, '(A,I5)', ['deb L9 ',L])
+            #endif
             CERR = (Q1 + XNORU) / (C1*C2)
+            if VERIFY:
+                fort_write(file_IO21,"('unlimited CERR ',E16.10)", [CERR])
+            #endif
 
             if CERR > .99:
                 CERR = .99
@@ -785,6 +848,10 @@ def main():
 
             label .lbl162
             data.ECOR[KS,KT] = CERR
+            if VERIFY:
+                fort_write(file_IO21, "('ECOR(',I3,',',I3,')= ',E16.10)", [KS,KT,data.ECOR[KS,KT]])
+                fort_write(file_IO21, "('Q1/XNORU/C1/C2 ',4E16.10)", [Q1, XNORU, C1, C2]) 
+            #endif
 
         data.ECOR[KS, KS] = 1.
     label .lbl62
@@ -927,6 +994,9 @@ def main():
     NSHP = NSHP + 1
     NSETN[NSHP] = NS
     L = NR + NSHP
+    if VERIFY:
+        fort_write(file_IO21, "(A,3I5)", ['L/NR/NSHP ', L, NR, NSHP])
+    #endif
     if L > LDB:
         goto .lbl76
 
@@ -1002,6 +1072,9 @@ def main():
 
     AP = 1.0 / AP
     APR.CS[L] = AP
+    if VERIFY:
+        fort_write(file_IO21,"('AP ',E20.12)", [AP])
+    #endif
     goto .lbl28
 
     label .lbl63
@@ -1013,6 +1086,9 @@ def main():
     #
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
+        if VERIFY:
+            fort_write(file_IO21, "('DQQQ ',3E20.12)", [DQQQ,data.DCS[KS],data.CSS[KS]])
+        #endif
         J = KAS[KS,1]
         I = KAS[KS,2]
         I8 = KAS[KS,3]
@@ -1083,7 +1159,13 @@ def main():
         #
         label .lbl41
         CX = APR.CS[J]
+        if VERIFY:
+            fort_write(file_IO21, "('41 ',E16.10)", [CX])
+        #endif
         gauss.AA[J,KR] = CX / DQQQ
+        if VERIFY:
+            fort_write(file_IO21, "('41x ',E16.10)", [gauss.AA[J,KR]])
+        #endif
         goto .lbl36
 
         #
@@ -1091,30 +1173,45 @@ def main():
         #
         label .lbl42
         CX = APR.CS[J]*AP
+        if VERIFY:
+            fort_write(file_IO21, "('42 ',E16.10)", [CX])
+        #endif
         CXX = CX/DQQQ
         gauss.AA[J,KR] = CXX
         KA[L,1] = KA[L,1]+1
         KR = KA[L,1]
         KA[L,KR+1] = N
         gauss.AA[L,KR] =  CXX
+        if VERIFY:
+            fort_write(file_IO21, "('42x ',E16.10)", [gauss.AA[L,KR]])
+        #endif
         goto .lbl36
         #
         #      RATIO
         #
         label .lbl43
         CX = APR.CS[J]/APR.CS[I]
+        if VERIFY:
+            fort_write(file_IO21, "('43 ',E16.10)", [CX])
+        #endif
         CCX = CX/DQQQ
         gauss.AA[J,KR] = CCX
         KA[I,1] = KA[I,1]+1
         KR = KA[I,1]
         KA[I,KR+1] = N
         gauss.AA[I,KR] = -CCX
+        if VERIFY:
+            fort_write(file_IO21, "('43x ',E16.10)", [gauss.AA[I,KR]])
+        #endif
         goto .lbl36
         #
         #      RATIO SHAPE
         #
         label .lbl44
         CX = APR.CS[J]*AP/APR.CS[I]
+        if VERIFY:
+            fort_write(file_IO21, "('44 ',E16.10)", [CX])
+        #endif
         CXX = CX/DQQQ
         gauss.AA[J,KR] = CXX
         KA[I,1] = KA[I,1]+1
@@ -1125,6 +1222,9 @@ def main():
         KR = KA[L,1]
         KA[L,KR+1] = N
         gauss.AA[L,KR] =  CXX
+        if VERIFY:
+            fort_write(file_IO21, "('44x ',E16.10)", [gauss.AA[L,KR]])
+        #endif
         goto .lbl36
         #
         #      TOTAL CROSS SECTION
@@ -1135,6 +1235,9 @@ def main():
             II = KAS[KS,I]
             CX = CX+APR.CS[II]
 
+        if VERIFY:
+            fort_write(file_IO21, "('45 ',E16.10)", [CX])
+        #endif
 
         for I in fort_range(1,NCT):  # .lbl60
             J  = KAS[KS,I]
@@ -1142,6 +1245,9 @@ def main():
             KR = KA[J,1]
             KA[J,KR+1] = N
             gauss.AA[J,KR] = APR.CS[J]/DQQQ
+            if VERIFY:
+                fort_write(file_IO21, "('45x ',E16.10)", [gauss.AA[J,KR]])
+            #endif
 
         goto .lbl36
 
@@ -1201,6 +1307,10 @@ def main():
             label .lbl196
 
             gauss.AA[J,KR]=CSSJ*data.FIS[K]/DQQQ
+            if VERIFY:
+                fort_write(file_IO21, "('46x AA/CSSJ/FIS/DQQQ ',4E20.10)",
+                        [gauss.AA[J,KR], CSSJ, data.FIS[K], DQQQ])
+            #endif
 
         goto .lbl36
 
@@ -1213,26 +1323,41 @@ def main():
             goto .lbl251
         CBX=CX/DQQQ
         gauss.AA[J,KR]=CBX
+        if VERIFY:
+            fort_write(file_IO21, "('247x1 ',E16.10)", [gauss.AA[J,KR]])
+        #endif
         KA[I,1]=KA[I,1]+1
         KR=KA[I,1]
         KA[I,KR+1]=N
         CBX2=CBX*CBX*DQQQ/APR.CS[J]
         CCX=CBX2*APR.CS[I]
         gauss.AA[I,KR]=-CCX
+        if VERIFY:
+            fort_write(file_IO21, "('247x2 ',E16.10)", [gauss.AA[I,KR]])
+        #endif
         KA[I8,1]=KA[I8,1]+1
         KR=KA[I8,1]
         KA[I8,KR+1]=N
         CCX=CBX2*APR.CS[I8]
         gauss.AA[I8,KR]=-CCX
+        if VERIFY:
+            fort_write(file_IO21, "('247x3 ',E16.10)", [gauss.AA[I8,KR]])
+        #endif
         goto .lbl36
 
         label .lbl251
         CBX=CX*CX*APR.CS[I8]/(APR.CS[J]*DQQQ)
         gauss.AA[J,KR]=CBX
+        if VERIFY:
+            fort_write(file_IO21, "('251x1 ',E16.10)", [gauss.AA[J,KR]])
+        #endif
         KA[I8,1]=KA[I8,1]+1
         KR=KA[I8,1]
         KA[I8,KR+1]=N
         gauss.AA[I8,KR]=-CBX
+        if VERIFY:
+            fort_write(file_IO21, "('251x2 ',E16.10)", [gauss.AA[I8,KR]])
+        #endif
         goto .lbl36
         #
         #   SHAPE OF SUM
@@ -1250,11 +1375,17 @@ def main():
             KR=KA[J,1]
             KA[J,KR+1]=N
             gauss.AA[J,KR]=APR.CS[J]*APDQ
+            if VERIFY:
+                fort_write(file_IO21, "('248x1 ',E16.10)", [gauss.AA[J,KR]])
+            #endif
 
         KA[L,1]=KA[L,1]+1
         KR=KA[L,1]
         KA[L,KR+1]=N
         gauss.AA[L,KR]=CX/DQQQ
+        if VERIFY:
+            fort_write(file_IO21, "('248x2 ',E16.10)", [gauss.AA[L,KR]])
+        #endif
         goto .lbl36
 
         #
@@ -1268,33 +1399,54 @@ def main():
             goto .lbl390
 
         gauss.AA[J,KR]=CBX
+        if VERIFY:
+            fort_write(file_IO21, "('249x1 ',E16.10)", [gauss.AA[J,KR]])
+        #endif
         KA[I,1]=KA[I,1]+1
         KR=KA[I,1]
         KA[I,KR+1]=N
         CDX=CBX*APR.CS[I]/CII8
         gauss.AA[I,KR]=-CDX
+        if VERIFY:
+            fort_write(file_IO21, "('249x2 ',E16.10)", [gauss.AA[I,KR]])
+        #endif
         KA[I8,1]=KA[I8,1]+1
         KR=KA[I8,1]
         KA[I8,KR+1]=N
         CDX=CBX*APR.CS[I8]/CII8
         gauss.AA[I8,KR]=-CDX
+        if VERIFY:
+            fort_write(file_IO21, "('249x3 ',E16.10)", [gauss.AA[I8,KR]])
+        #endif
         KA[L,1]=KA[L,1]+1
         KR=KA[L,1]
         KA[L,KR+1]=N
         gauss.AA[L,KR]=CBX
+        if VERIFY:
+            fort_write(file_IO21, "('249x4 ',E16.10)", [gauss.AA[L,KR]])
+        #endif
         goto .lbl36
 
         label .lbl390
         CCX=CBX*APR.CS[I8]/CII8
         gauss.AA[J,KR]=CCX
+        if VERIFY:
+            fort_write(file_IO21, "('249x5 ',E16.10)", [gauss.AA[J,KR]])
+        #endif
         KA[I8,1]=KA[I8,1]+1
         KR=KA[I8,1]
         KA[I8,KR+1]=N
         gauss.AA[I8,KR]=-CCX
+        if VERIFY:
+            fort_write(file_IO21, "('249x6 ',E16.10)", [gauss.AA[I8,KR]])
+        #endif
         KA[L,1]=KA[L,1]+1
         KR=KA[L,1]
         KA[L,KR+1]=N
         gauss.AA[L,KR]=CBX
+        if VERIFY:
+            fort_write(file_IO21, "('249x7 ',E16.10)", [gauss.AA[L,KR]])
+        #endif
         goto .lbl36
 
         label .lbl36
@@ -1352,6 +1504,14 @@ def main():
     #
     #      INVERT ECOR
     #
+    if VERIFY:
+        format1052 = "('DATASET',I5,' ECOR before inversion (upper triangular part)')"
+        fort_write(file_IO21, format1052, [NS])
+        for IR in fort_range(1,N):
+            fort_write(file_IO21, "('ROW ',I4,' OF ',I4)", [IR,N])
+            fort_write(file_IO21, "(10E18.10)", [data.ECOR[IR,IR:(N+1)]])
+        fort_write(file_IO21,"('END OF DATASET ',I4)", [NS])
+    #endif
 
     if MODC == 2:
         goto .lbl19
@@ -1373,8 +1533,19 @@ def main():
     #     INFO = 1
 
     if INFO != 0:
+        if VERIFY:
+            fort_write(file_IO21,"('CHOL FAILED - ',I4)", [NS])
+        #endif
         goto .lbl31
 
+    if VERIFY:
+        format1054 = "('DATASET',I5,' ECOR after cholesky (upper triangular part)')"
+        fort_write(file_IO21, format1054, [NS])
+        for IR in fort_range(1,N):
+            fort_write(file_IO21, "('ROW ',I4,' OF ',I4)", [IR,N])
+            fort_write(file_IO21,"(10E18.10)", [data.ECOR[IR,IR:(N+1)]])
+        fort_write(file_IO21,"('END OF DATASET ',I4)", [NS])
+    #endif
 
     JOB=1
     # CALL DPODI(ECOR,LDA,N,DET,JOB)
@@ -1387,6 +1558,16 @@ def main():
     # tmp = inv(data.ECOR[1:(N+1),1:(N+1)])
     # data.ECOR[1:(N+1),1:(N+1)] = np.matmul(tmp.T, tmp)
 
+    if VERIFY:
+        format1050 = "('ROW ',I4,' OF ',I4)"
+        format1051 = "(10E18.10)"
+        format1053 = "('DATASET',I5,' ECOR after inversion (upper triangular part)')"
+        fort_write(file_IO21, format1053, [NS])
+        for IR in fort_range(1,N):
+            fort_write(file_IO21, format1050, [IR,N])
+            fort_write(file_IO21, format1051, [data.ECOR[IR,IR:(N+1)]])
+        fort_write(file_IO21,"('END OF DATASET ',I4)", [NS])
+    #endif
 
     for K in fort_range(2,N):  # .lbl17
         L1=K-1
@@ -1406,6 +1587,9 @@ def main():
     #
     #      GET MATRIX PRODUCTS
     #
+    if VERIFY:
+        fort_write(file_IO21,"('GET MATRIX PRODUCTS ',I4)", [NS])
+    #endif
     NRS=NR+NSHP
     for I in fort_range(1,NRS):  # .lbl90
         NI=KA[I,1]
@@ -1423,8 +1607,19 @@ def main():
                 for MJ in fort_range(1,NJ):  # .lbl85
                     MJX=KA[J,MJ+1]
                     gauss.B[IJ]=gauss.B[IJ]+gauss.AA[I,MI]*gauss.AA[J,MJ]*data.ECOR[MIX,MJX]
+                    if VERIFY:
+                        if I==382 and J==516:
+                            fort_write(file_IO21, "(A,6I5,3E20.10)",
+                                    ['I/MI/J/MJ/MIX/MJX/AA/ECOR ',
+                                        I,MI,J,MJ,MIX,MJX,
+                                        gauss.AA[I,MI], gauss.AA[J,MJ],
+                                        data.ECOR[MIX,MJX]])
+                    #endif
                     
                 label .lbl85
+            if VERIFY:
+                fort_write(file_IO21, "(A,I5,I5,E20.10)", ['I/J/B: ',I,J,gauss.B[IJ]])
+            #endif
 
             label .lbl84
         label .lbl83
@@ -1443,6 +1638,9 @@ def main():
 
         label .lbl93
     label .lbl91
+    if VERIFY:
+        fort_write(file_IO21,"('AFTER LABEL 91')", [])
+    #endif
 
     for I in fort_range(1,N):  # .lbl26
         SUX=0.
@@ -1470,6 +1668,9 @@ def main():
     #      GETTING THE RESULT
     #
     label .lbl3
+    if VERIFY:
+        fort_write(file_IO21,"('REWIND FILE')",[])
+    #endif
 
     file_IO3.seek(0,0)
     format6919 = "(' start getting the result ')"
@@ -1493,6 +1694,12 @@ def main():
     format6918 = "(' start on matrix inversion ')"
     fort_write(None, format6918, [])
 
+    if VERIFY:
+        NUMEL = NRS*(NRS+1)//2
+        fort_write(file_IO21, "('GLOBECOR before inversion')", [])
+        fort_write(file_IO21, "(10E20.10)", [gauss.B[1:10000+1]])
+        fort_write(file_IO21,"('END OF GLOBECOR')", [])
+    #endif
 
     # CALL DPPFA(B,NRS,INFO)
     NUMEL = NRS*(NRS+1)//2
@@ -1512,6 +1719,9 @@ def main():
     #     INFO = 1
 
     if INFO != 0:
+        if VERIFY:
+            fort_write(file_IO21,"('CHOL2 FAILED')",[])
+        #endif
         goto .lbl40
 
     format9171 = "(' INVERT SOLUTION MATRIX')"
@@ -1535,6 +1745,11 @@ def main():
     # # pack the result again
     # gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
 
+    if VERIFY:
+        fort_write(file_IO21, "('GLOBECOR after inversion')", [])
+        fort_write(file_IO21, "(10E16.10)", [gauss.B[1:10000+1]])
+        fort_write(file_IO21,"('END OF GLOBECOR')", [])
+    #endif
 
     format6917 = "(' completed inversion of matrix')"
     fort_write(None, format6917, [])
@@ -1551,6 +1766,9 @@ def main():
     #
     #      output of the result
     #
+    if VERIFY:
+        fort_write(file_IO21,"('OUTPUT OF RESULT')",[])
+    #endif
     for L in fort_range(1,NC):  # .lbl14
         format117 = "(1H1,'   RESULT',5X,2A8//)" 
         fort_write(file_IO4, format117, [LABL.CLAB[L,1:3]])
@@ -1600,6 +1818,9 @@ def main():
             if MODAP == 2 and K <= APR.MCS[5,3]:
                 goto .lbl58
             APR.CS[K]=CXX
+            if VERIFY:
+                fort_write(file_IO21, "('77 APR.CS ',E20.10)", [APR.CS[K]])
+            #endif
             label .lbl58
         label .lbl77
         format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
@@ -1627,6 +1848,9 @@ def main():
         format115 = "(2I6,4F10.4)"
         fort_write(file_IO4, format115, [K,NSETN[LLX],CXX,DDX,DDXD,ZCS])
         APR.CS[K]=CXX
+        if VERIFY:
+            fort_write(file_IO21, "('82 APR.CS ',E20.10)", [APR.CS[K]])
+        #endif
     label .lbl82  # end for loop
 
     format5115 = "(2I6,2D20.12,F10.4)"
@@ -1647,6 +1871,9 @@ def main():
     for L in fort_range(1,LDBB2):  # .lbl73
         gauss.B[L]=0.
     
+    if VERIFY:
+        fort_write(file_IO21,"('BEFORE REWIND LOOP')", [])
+    #endif
     format130 = "(A4)"
     for L in fort_range(1,2000):  # .lbl69
         DUM = fort_read(file_IO3, format130)[0]
@@ -1856,6 +2083,9 @@ def main():
     file_IO3.close()
     file_IO4.close()
     file_IO5.close()
+    if VERIFY:
+        file_IO21.close()
+    #endif
     return None
 
 
