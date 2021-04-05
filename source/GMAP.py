@@ -12,7 +12,7 @@ import os
 import numpy as np
 
 # refactoring
-from gmap_functions import read_prior
+from gmap_functions import read_prior, read_block_input
 
 
 #################################################
@@ -67,16 +67,16 @@ def main():
     file_IO5 = open('plot.dta', 'w')
 
     state_vars = Bunch({
-        'NE': 0,
         'NC': 0,
         'NR': 0,
-        'L': 0,
-        'EX1': 0,
-        'CSX1': 0,
-        'K': 0,
-        'JC1': 0,
-        'JC2': 0,
-        'LQ': 0
+        'LDA': 0,
+        'LDB': 0,
+        'KA': 0,
+        'KAS': 0,
+        'MODREP': 0,
+        'ID': 0,
+        'N': 0,
+        'NADD': 0
     })
 
     #   Parameters/apriori
@@ -300,39 +300,16 @@ def main():
     IPP[8] = MC8
     goto .lbl50
 
-    #
-    #      BLOCK INPUT
-    #
-    #      N     TOTAL NO OF DATA POINTS IN BLOCK
-    #      ID    TOTAL NO OF DATA SETS IN BLOCK
-    #
-
     label .lbl4
-    N = 0
-    ID = 0
-    for K in fort_range(1,LDA):  # .lbl32
-        gauss.AM[K] = 0.
-        for I in fort_range(1,LDB):  # .lbl81
-            # VP line with BM(I)=0.D0  was commented because BM(I) cleaning should 
-            # VP done outside of the cycle on measured data 
-            # VPBEG*****************************************************************
-            # VP      BM(I)=0.D0
-            # VPEND*****************************************************************
-            KA[I,K] = 0
-            gauss.AA[I,K] = 0.
-            # .lbl81
-        for J in fort_range(1,5):
-            KAS[K, J] = 0
-        for L in fort_range(1,LDA):
-            data.ECOR[K,L] = 0.
-        L = L + 1  # to match L value of fortran after loop
-        # .lbl32
-    NADD = 1
-    if MODREP != 0:
-        goto .lbl50
-    format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
-                "******************************************DATABLOCK '/)"
-    fort_write(file_IO4, format108, [])
+    statevars_inp = Bunch({
+        'LDA': LDA, 'LDB': LDB, 
+        'KA': KA, 'KAS': KAS,
+        'MODREP': MODREP, 'file_IO4': file_IO4})
+    statevars_out = Bunch({'ID': 0, 'N': 0, 'NADD': 0})
+    read_block_input(data, gauss, statevars_inp, statevars_out)
+    ID = statevars_out.ID
+    N = statevars_out.N
+    NADD = statevars_out.NADD
     goto .lbl50
 
     #
