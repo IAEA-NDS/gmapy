@@ -2,7 +2,7 @@ from goto import with_goto
 from fortran_utils import fort_range, fort_read, fort_write
 
 @with_goto
-def read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4):
+def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     #
     #      INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
     #
@@ -14,7 +14,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4):
     NE = MC1
     NC = MC2
     NE1 = NE+1
-    NR = state_vars.NR
+    NR = 0
     for K in fort_range(1,NC):  # .lbl33
         format120 = r"(2A8)"
         LABL.CLAB[K, 1:3] = fort_read(file_IO3, format120)
@@ -71,14 +71,11 @@ def read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4):
     format113 = "(/,' TOTAL NO OF PARAMETERS ',I4/)"
     fort_write(file_IO4, format113, [NR])
 
-    # update global vars before continuing
-    state_vars.NC = NC
-    state_vars.NR = NR
 #
 #      for checking
 #
     if IPP[7] == 0:
-        return
+        return (NC, NR)
 
     format4390 = "(' No of Parameters per Cross Section '/)"
     fort_write(file_IO4, format4390, [])
@@ -90,23 +87,17 @@ def read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4):
     format4392 = "(/' End Address '/)"
     fort_write(file_IO4, format4392, [])
     fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
-    return
+    return (NC, NR)
 
 
 @with_goto
-def read_block_input(data, gauss, statevars_inp, statevars_out):
+def read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4):
     #
     #      BLOCK INPUT
     #
     #      N     TOTAL NO OF DATA POINTS IN BLOCK
     #      ID    TOTAL NO OF DATA SETS IN BLOCK
     #
-    LDA = statevars_inp.LDA
-    LDB = statevars_inp.LDB
-    KA = statevars_inp.KA
-    KAS = statevars_inp.KAS
-    MODREP = statevars_inp.MODREP
-    file_IO4 = statevars_inp.file_IO4
 
     N = 0
     ID = 0
@@ -129,16 +120,10 @@ def read_block_input(data, gauss, statevars_inp, statevars_out):
         # .lbl32
     NADD = 1
     if MODREP != 0:
-        statevars_out.ID = ID
-        statevars_out.N = N
-        statevars_out.NADD = NADD
-        return    
+        return (ID, N, NADD)   
     format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
                 "******************************************DATABLOCK '/)"
     fort_write(file_IO4, format108, [])
-    statevars_out.ID = ID
-    statevars_out.N = N
-    statevars_out.NADD = NADD
-    return
+    return (ID, N, NADD)
 
 

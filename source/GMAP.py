@@ -66,19 +66,6 @@ def main():
     file_IO4 = open('gma.res', 'w')
     file_IO5 = open('plot.dta', 'w')
 
-    state_vars = Bunch({
-        'NC': 0,
-        'NR': 0,
-        'LDA': 0,
-        'LDB': 0,
-        'KA': 0,
-        'KAS': 0,
-        'MODREP': 0,
-        'ID': 0,
-        'N': 0,
-        'NADD': 0
-    })
-
     #   Parameters/apriori
     #
     #      EN    ENERGY GRID
@@ -244,10 +231,7 @@ def main():
         if ACON == LABL.AKON[K]:
             if K == 1:
                 # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
-                state_vars.NR = 0
-                read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4)
-                NC = state_vars.NC
-                NR = state_vars.NR
+                NC, NR = read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
                 goto .lbl50
             if K == 2:
                 goto .lbl2
@@ -301,15 +285,7 @@ def main():
     goto .lbl50
 
     label .lbl4
-    statevars_inp = Bunch({
-        'LDA': LDA, 'LDB': LDB, 
-        'KA': KA, 'KAS': KAS,
-        'MODREP': MODREP, 'file_IO4': file_IO4})
-    statevars_out = Bunch({'ID': 0, 'N': 0, 'NADD': 0})
-    read_block_input(data, gauss, statevars_inp, statevars_out)
-    ID = statevars_out.ID
-    N = statevars_out.N
-    NADD = statevars_out.NADD
+    ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
     goto .lbl50
 
     #
