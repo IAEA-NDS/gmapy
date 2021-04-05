@@ -18,18 +18,28 @@ developments and extensions.
 
 ### Launching the Python version
 
-The following steps are necessary to run the Python version:
+The following steps are necessary to run the Python version.
+We recommend to use a package manager, such as `Anaconda`.
 
-1. Compile the `LINPACK` module to be accessible by Python
+1. Make sure that Python 3 is installed and don't use a version
+later than 3.8.
+
+2. Install the `goto-statement` and `fortranformat` package.
+```
+  pip install goto-statement
+  pip install fortranformat
+```
+
+3. Compile the `LINPACK` module to be accessible by Python
 ```
  cd source
  f2py -c linpack_slim.pyf linpack_slim.f
 ```
-2. Point the `PYTHONPATH` to the directory of `GMAP.py`
+4. Point the `PYTHONPATH` to the directory of `GMAP.py`
 ```
- PYTHONPATH="<path-to-GMAP.py>/source"
+ PYTHONPATH="<path-to-GMAP.py>"
 ```
-3. Create a directory, create an input file inside named `data.gma`
+5. Create a directory, create an input file inside named `data.gma`
 (e.g., take it from `tests/test_001/input`), change into that directory
 and launch GMAP:
 ```
