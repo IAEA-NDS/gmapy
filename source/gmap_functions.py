@@ -91,3 +91,54 @@ def read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4):
     fort_write(file_IO4, format4392, [])
     fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
     return
+
+
+@with_goto
+def read_block_input(data, gauss, statevars_inp, statevars_out):
+    #
+    #      BLOCK INPUT
+    #
+    #      N     TOTAL NO OF DATA POINTS IN BLOCK
+    #      ID    TOTAL NO OF DATA SETS IN BLOCK
+    #
+    LDA = statevars_inp.LDA
+    LDB = statevars_inp.LDB
+    KA = statevars_inp.KA
+    KAS = statevars_inp.KAS
+    MODREP = statevars_inp.MODREP
+    file_IO4 = statevars_inp.file_IO4
+
+    N = 0
+    ID = 0
+    for K in fort_range(1,LDA):  # .lbl32
+        gauss.AM[K] = 0.
+        for I in fort_range(1,LDB):  # .lbl81
+            # VP line with BM(I)=0.D0  was commented because BM(I) cleaning should 
+            # VP done outside of the cycle on measured data 
+            # VPBEG*****************************************************************
+            # VP      BM(I)=0.D0
+            # VPEND*****************************************************************
+            KA[I,K] = 0
+            gauss.AA[I,K] = 0.
+            # .lbl81
+        for J in fort_range(1,5):
+            KAS[K, J] = 0
+        for L in fort_range(1,LDA):
+            data.ECOR[K,L] = 0.
+        L = L + 1  # to match L value of fortran after loop
+        # .lbl32
+    NADD = 1
+    if MODREP != 0:
+        statevars_out.ID = ID
+        statevars_out.N = N
+        statevars_out.NADD = NADD
+        return    
+    format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
+                "******************************************DATABLOCK '/)"
+    fort_write(file_IO4, format108, [])
+    statevars_out.ID = ID
+    statevars_out.N = N
+    statevars_out.NADD = NADD
+    return
+
+
