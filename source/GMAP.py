@@ -258,7 +258,9 @@ def main():
             if K == 5:
                 goto .lbl5
             if K == 6:
-                goto .lbl6
+                format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
+                fort_write(file_IO4, format104, [ACON])
+                exit()
             if K == 7:
                 goto .lbl7
             if K == 8:
@@ -268,13 +270,14 @@ def main():
             if K == 10:
                 goto .lbl51
             if K == 11:
-                goto .lbl170
+                # input:  data set numbers which are to be excluded from the evaluation
+                IELIM = MC1
+                format171 = r"(16I5)"
+                NELIM = fort_read(file_IO3, format171)
+                goto .lbl50
+
     # end loop: .lbl10
 
-    label .lbl6
-    format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
-    fort_write(file_IO4, format104, [ACON])
-    exit()
     #
     #      test option:  forced stop for testing purpose
     #
@@ -282,15 +285,6 @@ def main():
     format107 = "( '  REQUESTED STOP ' )"
     fort_write(file_IO4, format107)
     exit()
-    #
-    #      input:  data set numbers which are to be excluded from the evaluation
-    #
-    label .lbl170
-    IELIM = MC1
-    format171 = r"(16I5)"
-    NELIM = fort_read(file_IO3, format171)
-    goto .lbl50
-
     #
     #      I/O CONTROL
     #
