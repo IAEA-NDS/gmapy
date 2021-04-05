@@ -248,7 +248,12 @@ def main():
     for K in fort_range(1, 11):  # .lbl10
         if ACON == LABL.AKON[K]:
             if K == 1:
-                goto .lbl1
+                # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
+                state_vars.NR = 0
+                read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4)
+                NC = state_vars.NC
+                NR = state_vars.NR
+                goto .lbl50
             if K == 2:
                 goto .lbl2
             if K == 3:
@@ -298,14 +303,6 @@ def main():
     IPP[6] = MC6
     IPP[7] = MC7
     IPP[8] = MC8
-    goto .lbl50
-
-    # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
-    label .lbl1
-    state_vars.NR = 0
-    read_prior(MC1, MC2, APR, LABL, IPP, state_vars, file_IO3, file_IO4)
-    NC = state_vars.NC
-    NR = state_vars.NR
     goto .lbl50
 
     #
