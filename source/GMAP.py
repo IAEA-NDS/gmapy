@@ -243,7 +243,8 @@ def main():
             if K == 3:
                 goto .lbl3
             if K == 4:
-                goto .lbl4
+                ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+                goto .lbl50
             if K == 5:
                 goto .lbl5
             if K == 6:
@@ -289,17 +290,12 @@ def main():
     IPP[8] = MC8
     goto .lbl50
 
-    label .lbl4
-    ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
-    goto .lbl50
-
 
     label .lbl2
     MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
             read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
                     ID, N, file_IO3, file_IO4)
-    label .lbl203
 
     #
     #      ACCOUNTING
@@ -1445,7 +1441,8 @@ def main():
     for L in fort_range(1,2000):  # .lbl69
         DUM = fort_read(file_IO3, format130)[0]
         if DUM == LABL.AKON[4]:
-            goto .lbl4
+            ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+            goto .lbl50
         label .lbl69
     label .lbl64
 
