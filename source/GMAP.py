@@ -12,7 +12,8 @@ import os
 import numpy as np
 
 # refactoring
-from gmap_functions import read_prior, read_block_input, read_dataset_input
+from gmap_functions import (read_prior, read_block_input,
+        read_dataset_input, accounting)
 
 
 #################################################
@@ -296,140 +297,8 @@ def main():
                     data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
                     ID, N, file_IO3, file_IO4)
 
-    #
-    #      ACCOUNTING
-    #
-    #      N,NADD      NO OF TOTAL DATA POINTS SO FAR IN BLOCK
-    #      ID          NO OF EXPERIMENTAL DATA SETS
-    #      NP          NO OF DATA POINTS IN THIS SET
-    #
-    NALT = NADD
-
-    for KS in fort_range(1,LDA):  # .lbl21
-
-        format109 = "(2E10.4,12F5.1)"
-        data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = unflatten(fort_read(file_IO3, format109), [2,[12]])
-        L = 13  # to reflect fortran value after READ loop
-        if data.E[NADD] == 0:
-            goto .lbl95
-
-        #
-        #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
-        #
-        #      KAS(I,L)   GIVES INDEX OF EVALUATION ENERGY FOR I.TH EXP POINT
-        #                 AND L.TH CROSS SECTION
-        #
-        if MT == 6:
-            goto .lbl70
-
-        #
-        #      NCT is the number of cross sections involved
-        #
-        for L in fort_range(1,NCT):  # .lbl48
-            JE = APR.MCS[NT[L], 2]
-            JI = APR.MCS[NT[L], 3]
-
-            for K in fort_range(JE, JI):  # .lbl12
-                E1 = .999*APR.EN[K]
-                E2 = 1.001*APR.EN[K]
-                if data.E[NADD] > E1 and data.E[NADD] < E2:
-                    goto .lbl75
-            # .lbl12
-            goto .lbl15
-            label .lbl75
-            KAS[NADD, L] = K
-            #
-            #      Exception for dummy data sets
-            #
-            if NS >= 900 and NS <= 909:
-                data.CSS[NADD] = APR.CS[K]
-            # .lbl48
-        L = L + 1  # to match L value of fortran after loop
-
-        #
-        #      this is the Axton special (uncertainties have been multiplied by 10
-        #         in order to preserve precision beyond 0.1%)
-        #
-        label .lbl70
-        if NNCOX == 0:
-            goto .lbl59
-        for LZ in fort_range(1,11):  # .lbl57
-            data.CO[LZ, NADD] = data.CO[LZ, NADD] / 10.
-
-        label .lbl59
-
-        #
-        #      test option:  as set with mode control
-        #
-        #      changing weights of data based on year or data set tag
-        #
-        if MOD2 == 0:
-            goto .lbl320
-        if MOD2 > 1000:
-            goto .lbl321
-        if MOD2 == 10:
-            goto .lbl322
-        if MOD2 > 10:
-            goto .lbl320
-
-        # replaces computed goto
-        if MOD2 == 1:
-            goto .lbl331
-        if MOD2 > 1 and MOD2 < 10:
-            goto .lbl336
-
-        label .lbl331
-
-        #
-        #      downweighting data sets with tags .NE. 1
-        #
-        if IDEN[ID,4] == 1:
-            goto .lbl320
-
-        label .lbl342
-        for I in fort_range(3,11):
-            data.CO[I, NADD] = AMO3*data.CO[I, NADD]
-
-        goto .lbl320
-
-        #
-        #      downweighting based on year of measurement
-        #
-        label .lbl321
-        if IDEN[ID, 3] < MOD2:
-            goto .lbl342
-
-        goto .lbl320
-
-        label .lbl322
-        #
-        #      downweighting of specified data sets
-        #
-        for IST in fort_range(1,NELI): # .lbl391
-            if IDEN[ID, 6] == NRED[IST]:
-                goto .lbl342
-
-        label .lbl391
-        goto .lbl320
-
-        label .lbl336
-        format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)" 
-        fort_write(file_IO4, format339, NS)
-
-        label .lbl320
-        #
-        #      CALCULATE TOTAL UNCERTAINTY  DCS
-        #
-        RELU = 0.
-        for L in fort_range(3,11):  # .lbl207
-            RELU += data.CO[L, NADD]**2
-        L = L + 1  # to match L value of fortran after loop
-
-        data.DCS[NADD] = np.sqrt(XNORU + RELU) 
-        NADD += 1
-
-        label .lbl15
-    label .lbl21
+    NALT, L, NADD = accounting(data, APR, MT, NT, NCT,
+            KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3)
 
     #
     #      all data of set have been red
