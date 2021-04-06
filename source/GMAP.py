@@ -12,7 +12,7 @@ import os
 import numpy as np
 
 # refactoring
-from gmap_functions import read_prior, read_block_input
+from gmap_functions import read_prior, read_block_input, read_dataset_input
 
 
 #################################################
@@ -288,127 +288,12 @@ def main():
     ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
     goto .lbl50
 
-    #
-    #      DATA SET INPUT
-    #
-    #      MC1 NS      DATA SET NO
-    #      MC2 MT      TYPE OF MEASUREMENT
-    #      MC3 NCOX    CORRELATION MATRIX GIVEN IF .NE. 0
-    #      MC4 NCT     NO OF CROSS SECTIONS INVOLVED
-    #      MC5 NT(1)   CROSS SECTION IDENTIFICATION
-    #      MC6 NT(2)   SAME
-    #      MC7 NT(3)   SAME
-    #      MC8 NNCOX   DIVIDE UNCERTAINTIES BY 10.
-    #
+
     label .lbl2
-    NS = MC1
-    MT = MC2
-    NCOX = MC3
-    NCT = MC4
-    NT[1] = MC5
-    NT[2] = MC6
-    NT[3] = MC7
-    NNCOX = MC8
-    format123 = "(16I5)"
-    if NCT > 3:
-        NT[4:(NCT+1)] = fort_read(file_IO3, format123)
-        L = NCT + 1  # to match L value of fortran after READ loop
-    ID = ID+1
-    IDEN[ID,2] = N+1
-    IDEN[ID,6] = NS
-    IDEN[ID,7] = MT
-    #
-    #       identify absolute or shape data
-    #
-    MTTP = 1
-    IDEN[ID, 8] = 1
-    if MT == 2 or MT == 4:
-        goto .lbl510
-    if MT == 8 or MT == 9:
-        goto .lbl510
-    goto .lbl511
-
-    label .lbl510
-
-    MTTP = 2
-    IDEN[ID, 8] = 2
-
-    label .lbl511
-
-    # VP      if(modrep .ne. 0) go to 140
-    format142 = "(//, ' ***********DATASET**************************** '/)"
-    fort_write(file_IO4, format142, [])
-    NU = NCT
-    if NCT > 4:
-        NU = 4
-    NCT2 = NCT - NU
-    NU1 = NU + 1
-    format139 = "(2X,8HDATA SET,I5,2X,A16,4(2X,2A8))"
-    tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(1,NU)]
-    L = 3  # to reflect value of L after loop in Fortran
-           # because L in list comprehension goes immediately out of scope
-    fort_write(file_IO4, format139, [MC1, LABL.TYPE[MT],tmp])
-    if NCT2 <= 0:
-        goto .lbl140
-
-    format149 = "(2X,6(2X,2A8))"
-    tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
-    L = 3  # to reflect value of L after loop in Fortran
-           # because L in list comprehension goes immediately out of scope
-    fort_write(file_IO4, format149, tmp)
-
-    label .lbl140
-
-    #
-    #       NAME ID AND REFERENCE I/O
-    #
-    format131 = "(3I5,4A8,4A8)"
-    format132 = "(/' YEAR',I5,' TAG',I3,' AUTHOR:  ',4A8,4A8/)"
-    IDEN[ID,3:6], LABL.CLABL[1:5], LABL.BREF[1:5] = unflatten(fort_read(file_IO3, format131), [[3],[4],[4]])
-    fort_write(None, format132, [IDEN[ID, 3:5], LABL.CLABL[1:5], LABL.BREF[1:5]])
-    # VP      if(modrep .ne. 0) go to 183
-    fort_write(file_IO4, format132, [IDEN[ID, 3:5], LABL.CLABL[1:5], LABL.BREF[1:5]])
-
-    label .lbl183
-    NCCS = IDEN[ID, 5]
-    #
-    #       READ(3,    ) NORMALIZATION UNCERTAINTIES
-    #
-    XNORU = 0.
-    if MTTP == 2:
-        goto .lbl200
-
-    format201 = "(10F5.1,10I3)"
-    data.ENFF[ID, 1:11], NENF[ID, 1:11] = unflatten(fort_read(file_IO3, format201), [[10],[10]])
-
-    #
-    #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
-    #
-    for L in fort_range(1,10):  # .lbl208
-        XNORU = XNORU + (data.ENFF[ID,L])**2
-    L = L + 1  # to match L value of fortran after loop
-
-    label .lbl200
-    #
-    #       READ(3,    ) ENERGY DEPENDENT UNCERTAINTY PARAMETERS
-    #
-    format202 = "(3F5.2,I3)"
-    for K in fort_range(1,11):
-        data.EPAF[1:4, K, ID], NETG[K, ID] = unflatten(fort_read(file_IO3, format202), [[3], 1])
-    #
-    #       READ(3,    ) CORRELATIONS INFORMATION
-    #
-    if NCCS == 0:
-        goto .lbl203
-
-    format841 = "(10F5.1)"
-    format205 = "(I5,20I3)"
-    for K in fort_range(1,NCCS):  # .lbl204
-        NCSST[K], tmp = unflatten(fort_read(file_IO3, format205), [1,[20]])
-        NEC[1:3, 1:11, K] = np.reshape(tmp, (2,10), order='F')
-        #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
-        data.FCFC[1:11, K] = fort_read(file_IO3, format841)
-
+    MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
+            read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+                    data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
+                    ID, N, file_IO3, file_IO4)
     label .lbl203
 
     #
