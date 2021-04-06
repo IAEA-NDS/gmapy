@@ -211,10 +211,9 @@ def main():
     # VP nullning of the vector BM and vector (matrix) B which keep
     # VP accumilate sum in cycle on experimental data
     # VPBEG********************************************************
-    for i in fort_range(1, 1200):
-        gauss.BM[i] = 0.
-    for i in fort_range(1, 720600):
-        gauss.B[i] = 0.
+    gauss.BM.fill(0.0)
+    gauss.B.fill(0.0)
+
     #
     #      CONTROL
     #
