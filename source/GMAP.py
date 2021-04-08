@@ -13,7 +13,8 @@ import numpy as np
 
 # refactoring
 from gmap_functions import (read_prior, read_block_input,
-        read_dataset_input, accounting, should_exclude_dataset)
+        read_dataset_input, accounting, should_exclude_dataset,
+        construct_Ecor)
 
 
 #################################################
@@ -319,211 +320,15 @@ def main():
     #
     IDEN[ID, 1] = NP
     NADD1 = NADD - 1
-    label .lbl460
-    #
-    #      CONSTRUCT ECOR
-    #
-    #         MODE  1   INPUT OF ECOR
-    #               2   UNCORRELATED
-    #               3   ALL CORRELATED ERRORS GIVEN
-    #
-    if NCOX == 0:
-        goto .lbl5001
-    MODAL = MODC
-    MODC = 1
-
-    label .lbl5001
-    if MODC == 1:
-        goto .lbl54
-    elif MODC == 2:
-        goto .lbl1779
-    elif MODC >= 3 and MODC <= 6:
-        goto .lbl56
-    #
-    #      INPUT OF ECOR
-    #
-    label .lbl54
-    format161 = "(10F8.5)"
-    for KS in fort_range(1,NCOX):  # .lbl61
-        num_el_read = 0
-        num_el_desired = KS
-        res = []
-        while num_el_read < num_el_desired:
-            tmp = fort_read(file_IO3, format161)
-            tmp = [x for x in tmp if x is not None]
-            res += tmp
-            num_el_read += len(tmp)
-
-        data.ECOR[KS,1:(KS+1)] = res
-    KS = KS + 1  # to match the value of KS after Fortran loop
-    L = KS  # to match the value of L after READ (label 61 in Fortran code)
 
 
-    MODC = MODAL
-    goto .lbl79
+    MODC, L = \
+    construct_Ecor(
+            data, NETG, IDEN, NCSST, NEC,
+            L, MODC, NCOX, NALT, NP, NADD1, ID,
+            XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
+    )
 
-
-    #
-    #       CONSTRUCT ECOR FROM UNCERTAINTY COMPONENTS
-    #
-    label .lbl56
-    data.ECOR[NALT, NALT] = 1.
-    if NP == 1:
-        goto .lbl1789
-    NALT1 = NALT + 1
-    for KS in fort_range(NALT1, NADD1):  # .lbl62
-        C1 = data.DCS[KS]
-        KS1 = KS - 1
-
-        for KT in fort_range(NALT, KS1):  # .lbl162
-            Q1 = 0.
-            C2 = data.DCS[KT]
-            for L in fort_range(3,11):  # .lbl215
-                if NETG[L, ID] == 9:
-                    goto .lbl214
-                if NETG[L, ID] == 0:
-                    goto .lbl214
-
-                FKS = data.EPAF[1,L,ID] + data.EPAF[2,L,ID]
-                XYY = data.EPAF[2,L,ID] - (data.E[KS]-data.E[KT])/(data.EPAF[3,L,ID]*data.E[KS])
-                if XYY < 0.:
-                    XYY = 0.
-                FKT = data.EPAF[1, L, ID] + XYY
-                Q1=Q1+data.CO[L,KS]*data.CO[L,KT]*FKS*FKT
-
-                label .lbl214
-                label .lbl215
-            L = L + 1  # to match L value of fortran after loop
-            CERR = (Q1 + XNORU) / (C1*C2)
-
-            if CERR > .99:
-                CERR = .99
-            # limit accuracy of comparison to reflect
-            # Fortran behavior
-
-            label .lbl162
-            data.ECOR[KS,KT] = CERR
-
-        data.ECOR[KS, KS] = 1.
-    label .lbl62
-    #
-    #   ADD CROSS CORRELATIONS OF EXPERIMENTAL DATA BLOCK
-    #
-    label .lbl1789
-    if ID == 1:
-        goto .lbl79
-    if NCCS == 0:
-        goto .lbl79
-    ID1 = ID - 1
-    
-    for I in fort_range(1,NCCS):  # .lbl271
-
-        NSET = NCSST[I]
-        for II in fort_range(1,ID1):  # .lbl272
-            if IDEN[II,6] == NSET:
-                goto .lbl273
-        #
-        #   CORRELATED DATA SET NOT FOUND AHEAD OF PRESENT DATA
-        #   SET WITHIN DATA BLOCK
-        #
-        format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)" 
-        fort_write(file_IO4, format274, [NSET, NS])
-        goto .lbl275
-
-        label .lbl273
-        NCPP = IDEN[II, 1]
-        #
-        #      cross correlation
-        #
-        MTT = IDEN[II, 8]
-        if MTT == 2 and NP == 1:
-            goto .lbl275
-        if MTTP == 2 and NCPP == 1:
-            goto .lbl275
-
-        label .lbl469
-        NCST = IDEN[II, 2]
-        NCED = NCPP + NCST - 1
-        for K in fort_range(NALT, NADD1):  # .lbl278
-            C1 = data.DCS[K]
-            for KK in fort_range(NCST, NCED):  # .lbl279
-                C2 = data.DCS[KK]
-                Q1 = 0.
-                for KKK in fort_range(1,10):  # .lbl281
-                    NC1 = NEC[1, KKK, I]
-                    NC2 = NEC[2, KKK, I]
-                    if NC1 > 21 or NC2 > 21:
-                        goto .lbl2811
-                    if NC1 == 0:
-                        goto .lbl2753
-                    if NC2 == 0:
-                        goto .lbl2753
-                    AMUFA = data.FCFC[KKK, I]
-                    if NC1 > 10:
-                        goto .lbl310
-                    C11 = data.ENFF[ID, NC1]
-                    goto .lbl311
-
-                    label .lbl310
-                    NC1 = NC1 - 10
-                    if NETG[NC1, ID] == 9:
-                        goto .lbl2800
-                    FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
-                    goto .lbl2801
-
-                    label .lbl2800
-                    FKT = 1.
-                    label .lbl2801
-
-                    C11 = FKT*data.CO[NC1, K]
-
-                    label .lbl311
-                    if NC2 > 10:
-                        goto .lbl312
-                    C22 = data.ENFF[II, NC2]
-                    goto .lbl313
-
-                    label .lbl312
-                    NC2 = NC2 - 10
-
-                    if NETG[NC2, II] == 9:
-                        goto .lbl2802
-
-                    XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
-                    if XYY < 0.:
-                        XYY = 0.
-                    FKS = data.EPAF[1, NC2, II] + XYY
-                    goto .lbl2803
-
-                    label .lbl2802
-                    FKS = 1.
-
-                    label .lbl2803
-                    C22 = FKS * data.CO[NC2, KK]
-
-                    label .lbl313
-                    Q1 = Q1 + AMUFA*C11*C22
-
-                    label .lbl2811
-                label .lbl281
-                label .lbl2753
-                data.ECOR[K,KK] = Q1/(C1*C2)
-
-            label .lbl279
-        label .lbl278
-        label .lbl275
-    label .lbl271
-
-    goto .lbl79
-
-    #
-    #       UNCORRELATED OR SINGLE VALUE
-    #
-    label .lbl1779
-    for KLK in fort_range(NALT, NADD1):  # .lbl74
-        data.ECOR[KLK,KLK] = 1.
-
-    label .lbl79
     if MT == 6:
         goto .lbl28
     #
