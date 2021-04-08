@@ -288,12 +288,17 @@ def main():
 
     label .lbl2
     MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
-            read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
-                    ID, N, file_IO3, file_IO4)
+    read_dataset_input(
+            MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+            data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
+            ID, N, file_IO3, file_IO4
+    )
 
-    NALT, L, NADD = accounting(data, APR, MT, NT, NCT,
-            KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3)
+    NALT, L, NADD = \
+    accounting(
+            data, APR, MT, NT, NCT,
+            KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
+    )
 
     #
     #      all data of set have been red
