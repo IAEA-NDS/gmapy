@@ -13,7 +13,7 @@ import numpy as np
 
 # refactoring
 from gmap_functions import (read_prior, read_block_input,
-        read_dataset_input, accounting)
+        read_dataset_input, accounting, should_exclude_dataset)
 
 
 #################################################
@@ -300,42 +300,18 @@ def main():
             KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
     )
 
-    #
-    #      all data of set have been red
-    #
-    label .lbl95
 
-    NP = NADD - NALT
-    if IELIM == 0:
-        goto .lbl173
-    #
-    #      data set excluded ?
-    #
-    for K in fort_range(1,IELIM):
-        if NS == NELIM[K]:
-            goto .lbl517
+    exclflag, NP, ID, NADD = \
+    should_exclude_dataset(
+            NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4
+    )
 
-    label .lbl172
-    #
-    #      NO VALID DATA POINTS OR SET REQUESTED TO BE EXCLUDED
-    #
-    label .lbl173
-    if NP == 1 and MTTP == 2:
-        goto .lbl517
+    if exclflag:
+        goto .lbl50
 
-    if NP != 0:
-        goto .lbl167
-
-    label .lbl517
-    format168 = "(' SET ',I5,' W/O VALID POINTS OR ELIMINATED'/)"
-    fort_write(file_IO4, format168, [NS])
-    ID = ID - 1
-    NADD = NALT
-    goto .lbl50
     #
     #      continue for valid data
     #
-    label .lbl167
     IDEN[ID, 1] = NP
     NADD1 = NADD - 1
     label .lbl460

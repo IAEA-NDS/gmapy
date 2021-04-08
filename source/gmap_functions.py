@@ -398,3 +398,36 @@ def accounting(data, APR, MT, NT, NCT,
     label .lbl21
     return (NALT, L, NADD)
 
+
+
+@with_goto
+def should_exclude_dataset(NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4): 
+
+    NP = NADD - NALT
+    if IELIM == 0:
+        goto .lbl173
+    #
+    #      data set excluded ?
+    #
+    for K in fort_range(1,IELIM):
+        if NS == NELIM[K]:
+            goto .lbl517
+
+    label .lbl172
+    #
+    #      NO VALID DATA POINTS OR SET REQUESTED TO BE EXCLUDED
+    #
+    label .lbl173
+    if NP == 1 and MTTP == 2:
+        goto .lbl517
+
+    if NP != 0:
+        return (False, NP, ID, NADD)
+
+    label .lbl517
+    format168 = "(' SET ',I5,' W/O VALID POINTS OR ELIMINATED'/)"
+    fort_write(file_IO4, format168, [NS])
+    ID = ID - 1
+    NADD = NALT
+    return (True, NP, ID, NADD)
+
