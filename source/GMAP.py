@@ -15,7 +15,7 @@ import numpy as np
 from gmap_functions import (read_prior, read_block_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
-        fill_AA_AM_COV)
+        fill_AA_AM_COV, complete_symmetric_Ecor)
 
 
 #################################################
@@ -356,24 +356,13 @@ def main():
     #
     #    Data BLOCK complete
     #
-    #      FILL IN SYMMETRIC TERM
-    #
     label .lbl7
     N1=N-1
     if ID == 0:
         goto .lbl50
 
-    format2830 = "(80X,4HN = ,I5)"
-    fort_write(file_IO4, format2830, [N])
     IREP = 0
-    for K in fort_range(1,N1):  # .lbl25
-        K1 = K + 1
-        for L in fort_range(K1, N):  # .lbl25
-            if MODC == 2:
-                data.ECOR[L, K] = 0.
-            data.ECOR[K, L] = data.ECOR[L, K]
-            # label .lbl25
-        L = L + 1  # to match L value of fortran after loop
+    complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
 
     #
     #      output of correlation matrix of data block
