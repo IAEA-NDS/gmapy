@@ -1049,3 +1049,20 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
     label .lbl18  # end of for loop
     return N
 
+
+
+def complete_symmetric_Ecor(data, MODC, N, N1, file_IO4):
+    #
+    #      FILL IN SYMMETRIC TERM
+    #
+    format2830 = "(80X,4HN = ,I5)"
+    fort_write(file_IO4, format2830, [N])
+    for K in fort_range(1,N1):  # .lbl25
+        K1 = K + 1
+        for L in fort_range(K1, N):  # .lbl25
+            if MODC == 2:
+                data.ECOR[L, K] = 0.
+            data.ECOR[K, L] = data.ECOR[L, K]
+            # label .lbl25
+        L = L + 1  # to match L value of fortran after loop
+
