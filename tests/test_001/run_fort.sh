@@ -17,7 +17,7 @@ if [ ! -d "GMAP-Fortran" ]; then
         print "Downloading Fortran version of GMAP from $GMAP_fortran_url failed"
         exit $retcode
     fi
-    if [ ! -d "GMAP-Fortran"]; then
+    if [ ! -d "GMAP-Fortran "]; then
         print "The directory expected to contain the Fortran source code does not exist"
         exit $?
     fi
