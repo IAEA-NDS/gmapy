@@ -977,7 +977,7 @@ def main():
         DIFF = (CSSK-AX)*100./AX
         #VP   AZ print out was added
         format133 = "(2X,E10.4,2X,E10.4,2X,E10.4,3X,F6.4,3X,F6.2," + \
-                    " 3X,F10.1,3X,F10.4)"
+                    " 3X,F10.2,3X,F10.4)"
         fort_write(file_IO4, format133, [data.E[K], CSSK, FDQ, AZ, DCSK, DIFF, SECS])
         #VP   Print out for Ratio of pior/exp value is added
         label .lbl99
@@ -1344,7 +1344,7 @@ def main():
 
     format101 = "(1H*//,'   CORRELATION MATRIX OF DATA BLOCK'/)"
     fort_write(file_IO4, format101, [])
-    format151 = "(1X,24F5.2)"
+    format151 = "(1X,24F7.4)"
     for K in fort_range(1,N):
         fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
