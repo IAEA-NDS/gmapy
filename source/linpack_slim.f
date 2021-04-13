@@ -59,7 +59,8 @@ C
 
 
       SUBROUTINE DPOFA(A,N,INFO)                                    
-      INTEGER N,INFO                                                
+      INTEGER N
+      INTEGER, INTENT(INOUT) :: INFO
       DOUBLE PRECISION, INTENT(INOUT) :: A(N,N)
       DOUBLE PRECISION DDOT,T                                           
       DOUBLE PRECISION S                                                

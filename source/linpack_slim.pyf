@@ -12,7 +12,7 @@ python module linpack_slim ! in
         subroutine dpofa(a,n,info) ! in :linpack_slim:linpack_slim.f
             double precision dimension(n,n),intent(inout) :: a
             integer, optional,check(shape(a,0)==n),depend(a) :: n=shape(a,0)
-            integer :: info
+            integer intent(inout) :: info
         end subroutine dpofa
         subroutine dppdi(ap,n,det,job) ! in :linpack_slim:linpack_slim.f
             double precision dimension(n*(n+1)/2),intent(inout),depend(n) :: ap

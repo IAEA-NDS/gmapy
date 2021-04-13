@@ -1360,7 +1360,7 @@ def main():
 
     # cholesky decomposition
     #CALL DPOFA(ECOR,LDA,N,INFO)
-    INFO = 0.
+    INFO = np.array(0)
     tmp = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
     linpack_slim.dpofa(a=tmp, info=INFO) 
     data.ECOR[1:(N+1),1:(N+1)] = tmp
@@ -1374,7 +1374,6 @@ def main():
 
     if INFO != 0:
         goto .lbl31
-
 
     JOB=1
     # CALL DPODI(ECOR,LDA,N,DET,JOB)
