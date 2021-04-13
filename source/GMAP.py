@@ -1346,7 +1346,7 @@ def main():
     fort_write(file_IO4, format101, [])
     format151 = "(1X,24F5.2)"
     for K in fort_range(1,N):
-        fort_write(file_IO4, format161, [data.ECOR[K,1:(K+1)]])
+        fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
     label .lbl67
     #
