@@ -1,0 +1,4 @@
+### Content of `data.gma`
+
+`data.gma` is the same file as `data26Jul2017.gma`
+sent by Vladimir Pronyaev on 5 April 2021
