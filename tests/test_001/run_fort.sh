@@ -38,8 +38,12 @@ if [ ! -d result/fortran ]; then
     ../../GMAP-Fortran/GMAP
     # Fortran print -0.0 whereas Python 0.0
     # thus remove the odd minus sign from Fortran output
-    sed -i -e 's/-\(00*\.0* \)/ \1/g' gma.res
-    sed -i -e 's/-\(00*\.0* \)/ \1/g' plot.dta
+    # two times each sed comment to deal with the case
+    # -0.00-0.00 and to make sure both minuses are removed
+    sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' gma.res
+    sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' gma.res
+    sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
+    sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
     cd "$basedir"
 fi
 
