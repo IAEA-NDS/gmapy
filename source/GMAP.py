@@ -15,7 +15,8 @@ import numpy as np
 from gmap_functions import (read_prior, read_block_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
-        fill_AA_AM_COV, complete_symmetric_Ecor)
+        fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
+        invert_Ecor)
 
 
 #################################################
@@ -364,75 +365,13 @@ def main():
     IREP = 0
     complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
 
-    #
-    #      output of correlation matrix of data block
-    #
-    if IPP[3] == 0:
-        goto .lbl67
-    if N == 1:
-        goto .lbl67
-    if MODC == 2:
-        goto .lbl67
+    if not (IPP[3] == 0 or N == 1 or MODC == 2):
+        output_Ecor_matrix(data, N, file_IO4)
 
-    format101 = "(1H*//,'   CORRELATION MATRIX OF DATA BLOCK'/)"
-    fort_write(file_IO4, format101, [])
-    format151 = "(1X,24F7.4)"
-    for K in fort_range(1,N):
-        fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
-
-    label .lbl67
-    #
-    #      INVERT ECOR
-    #
-
-    if MODC == 2:
-        goto .lbl19
-    if N == 1:
-        goto .lbl19
-
-    # cholesky decomposition
-    #CALL DPOFA(ECOR,LDA,N,INFO)
-    INFO = np.array(0)
-    tmp = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
-    linpack_slim.dpofa(a=tmp, info=INFO) 
-    data.ECOR[1:(N+1),1:(N+1)] = tmp
-
-    # ALTERNATIVE USING NUMPY FUNCTION cholesky
-    # INFO = 0
-    # try:
-    #     data.ECOR[1:(N+1),1:(N+1)] = cholesky(data.ECOR[1:(N+1), 1:(N+1)]).T 
-    # except np.linalg.LinAlgError:
-    #     INFO = 1
-
-    if INFO != 0:
-        goto .lbl31
-
-    JOB=1
-    # CALL DPODI(ECOR,LDA,N,DET,JOB)
-    tmp = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
-    tmp_det = np.array([0., 0.], dtype='float64', order='F') 
-    linpack_slim.dpodi(tmp, det=tmp_det, job=JOB)
-    data.ECOR[1:(N+1),1:(N+1)] = tmp
-
-    # ALTERNATIVE USING NUMPY inv function
-    # tmp = inv(data.ECOR[1:(N+1),1:(N+1)])
-    # data.ECOR[1:(N+1),1:(N+1)] = np.matmul(tmp.T, tmp)
-
-
-    for K in fort_range(2,N):  # .lbl17
-        L1=K-1
-        for L in fort_range(1,L1):
-            data.ECOR[K,L] = data.ECOR[L,K]
-        L = L + 1  # to match L value of fortran after loop
-    #
-    #      output of inverted correlation matrix of data block
-    #
-    if IPP[5] == 0:
-        goto .lbl19
-    for K in fort_range(1,N):
-        fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
-
-    label .lbl19
+    if not (MODC == 2 or N == 1):
+        invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
+        if not invertible:
+            goto .lbl50
 
     #
     #      GET MATRIX PRODUCTS
@@ -715,6 +654,7 @@ def main():
     if IPP[6] == 0:
         goto .lbl184
 
+    format151 = "(1X,24F7.4)"
     for K in fort_range(1,NC):  # .lbl78
         J1=APR.MCS[K,2]
         J2=APR.MCS[K,3]
@@ -918,35 +858,6 @@ def main():
     label .lbl680
     label .lbl681
     NELI=K-1
-    goto .lbl50
-    #
-    #      ATTEMPT TO MAKE CORR. MATRIX POSITIVE DEFINITE
-    #
-    label .lbl31
-    format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
-    fort_write(file_IO4, format105, [])
-    IREP=IREP+1
-    N1=N-1
-    for K in fort_range(1,N1):  # .lbl2211
-        K1=K+1
-        for L in fort_range(K1, N):  # .lbl2211
-            if MODC == 2:
-                data.ECOR[L,K] = 0.
-            data.ECOR[K,L] = data.ECOR[L,K]
-    label .lbl2211
-    for K in fort_range(1,N):  # .lbl2212
-        data.ECOR[K,K] = 1.
-
-    CXZ=0.10
-    for K in fort_range(1,N):  # .lbl37
-        for L in fort_range(1,N):
-            data.ECOR[K,L]=data.ECOR[K,L]/(1.+CXZ)
-            if K == L:
-                data.ECOR[K,L] = 1.
-    label .lbl37
-    if IREP < 15:
-        goto .lbl67
-
     goto .lbl50
 
     #
