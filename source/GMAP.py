@@ -1609,15 +1609,15 @@ def main():
 
         # VP: 13 lines below are added by VP, 26 July, 2004
         format588 = "(6(1X,E10.5))"
-        # fort_write(file_IO4, format588, [
-        #     (APR.EN[JA]*500000.),
-        #     (APR.EN[JA:JI]+APR.EN[(JA+1):(JI+1)])*500000.,
-        #     (-APR.EN[JI-1]+3*APR.EN[JI])*500000.
-        # ])
+        fort_write(file_IO4, format588, [
+            (APR.EN[JA]*500000.),
+            (APR.EN[JA:JI]+APR.EN[(JA+1):(JI+1)])*500000.,
+            (-APR.EN[JI-1]+3*APR.EN[JI])*500000.
+        ])
 
         tmp = np.vstack([APR.EN[JA:(JI+1)]*1000000., APR.CS[JA:(JI+1)]])
         tmp = tmp.T.flatten()
-        # fort_write(file_IO4, format588, tmp)
+        fort_write(file_IO4, format588, tmp)
         for K in fort_range(JA+1, JI-1):
             DSMOOA = APR.CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
                     +APR.CS[K-1] * (APR.EN[K+1] - APR.EN[K-1]) \
