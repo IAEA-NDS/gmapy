@@ -100,7 +100,8 @@ def main():
         'CO': np.zeros((12+1, 250+1), dtype=float),
         'ENFF': np.zeros((30+1, 10+1), dtype=float),
         'EPAF': np.zeros((3+1, 11+1, 30+1), dtype=float),
-        'FCFC': np.zeros((10+1, 10+1), dtype=float)
+        'FCFC': np.zeros((10+1, 10+1), dtype=float),
+        'AAA': np.zeros((250+1, 250+1), dtype=float)
         })
 
     #
@@ -120,7 +121,11 @@ def main():
             'AM': np.zeros(250+1, dtype=float),
             'DE': np.zeros(1200+1, dtype=float),
             'BM': np.zeros(1200+1, dtype=float),
-            'B': np.zeros(720600+1, dtype=float)
+            'B': np.zeros(720600+1, dtype=float),
+            'EGR': np.zeros(199+1, dtype=float),
+            'EEGR': np.zeros(400+1, dtype=float),
+            'RELTRG': np.zeros((200+1, 200+1), dtype=float),
+            'RELCOV': np.zeros((200+1, 200+1), dtype=float)
     })
 
     #
@@ -1601,6 +1606,28 @@ def main():
             APR.CS[K]=CXX
             label .lbl58
         label .lbl77
+
+        # VP: 13 lines below are added by VP, 26 July, 2004
+        format588 = "(6(1X,E10.5))"
+        # fort_write(file_IO4, format588, [
+        #     (APR.EN[JA]*500000.),
+        #     (APR.EN[JA:JI]+APR.EN[(JA+1):(JI+1)])*500000.,
+        #     (-APR.EN[JI-1]+3*APR.EN[JI])*500000.
+        # ])
+
+        tmp = np.vstack([APR.EN[JA:(JI+1)]*1000000., APR.CS[JA:(JI+1)]])
+        tmp = tmp.T.flatten()
+        # fort_write(file_IO4, format588, tmp)
+        for K in fort_range(JA+1, JI-1):
+            DSMOOA = APR.CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
+                    +APR.CS[K-1] * (APR.EN[K+1] - APR.EN[K-1]) \
+                    -APR.CS[K] * (APR.EN[K+1] - APR.EN[K-1]) \
+                    /2./(APR.EN[K+1] - APR.EN[K-1])
+            DSMOOR = DSMOOA / APR.CS[K]*100.
+            SSMOO = APR.CS[K] + DSMOOA
+            # fort_write(file_IO4, format153, [APR.EN[K], APR.CS[K], SSMOD, DSMOOR
+        # VP above is writing CS in B-6 format and smoothing with CS conserving
+
         format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
         fort_write(file_IO4, format158, [FLX])
         # label .lbl14  # end of for loop
