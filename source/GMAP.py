@@ -1625,7 +1625,7 @@ def main():
                     /2./(APR.EN[K+1] - APR.EN[K-1])
             DSMOOR = DSMOOA / APR.CS[K]*100.
             SSMOO = APR.CS[K] + DSMOOA
-            # fort_write(file_IO4, format153, [APR.EN[K], APR.CS[K], SSMOD, DSMOOR
+            fort_write(file_IO4, format153, [APR.EN[K], APR.CS[K], SSMOO, DSMOOR])
         # VP above is writing CS in B-6 format and smoothing with CS conserving
 
         format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
