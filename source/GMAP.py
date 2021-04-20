@@ -1619,9 +1619,9 @@ def main():
         tmp = tmp.T.flatten()
         fort_write(file_IO4, format588, tmp)
         for K in fort_range(JA+1, JI-1):
-            DSMOOA = APR.CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
-                    +APR.CS[K-1] * (APR.EN[K+1] - APR.EN[K-1]) \
-                    -APR.CS[K] * (APR.EN[K+1] - APR.EN[K-1]) \
+            DSMOOA = (APR.CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
+                    +APR.CS[K-1] * (APR.EN[K+1] - APR.EN[K]) \
+                    -APR.CS[K] * (APR.EN[K+1] - APR.EN[K-1])) \
                     /2./(APR.EN[K+1] - APR.EN[K-1])
             DSMOOR = DSMOOA / APR.CS[K]*100.
             SSMOO = APR.CS[K] + DSMOOA
