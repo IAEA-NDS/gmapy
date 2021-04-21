@@ -1765,18 +1765,17 @@ def main():
 
             format389 = '(2x,f7.3,1x,200(E10.4,1x))'
             IMAX = J2-J1+1
-            # for I in fort_range(1,IMAX):
-            #     fort_write(file_IO4, format389,
-            #             [APR.EN[JA+I-1], data.AAA[I,1:(J2-J1+2)]])
-            # TODO
-            # 	do 387 i=1,IMAX
-            # CG  write(4,389) EN(ja+i-1),(AAA(i,j),j=1,j2-j1+1)
-            #   387 continue
+            for I in fort_range(1,IMAX):
+                fort_write(file_IO4, format389,
+                        [APR.EN[JA+I-1], data.AAA[I,1:(J2-J1+2)]])
 
             # CVP   Lines below are added by VP, 26 July, 2004
-            # CG    WRITE(4,388) (EGR(KI),KI=1,NROW),
-            # CG   1 ((RELTRG(III,JJJ),III=JJJ,NROW-1),JJJ=1,NROW-1)
-            #   388 FORMAT(6E11.4)
+            format388 = '(6E11.4)'
+            tmp = [[gauss.RELTRG[III,JJJ]
+                    for III in fort_range(JJJ,NROW-1)]
+                    for JJJ in fort_range(1, NROW-1)]
+            fort_write(file_IO4, format388,
+                    [gauss.EGR[1:(NROW+1)], tmp])
             # CVP
 
             label .lbl300
