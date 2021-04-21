@@ -1691,11 +1691,24 @@ def main():
         J1=APR.MCS[K,2]
         J2=APR.MCS[K,3]
 
+        # CVP 3 lines below are added by VP, 26 July, 2004
+        NROW=J2-J1+2
+        for III in fort_range(1, NROW):
+            gauss.EGR[III] = 1.0*III
+        # CVP
+
         for L in fort_range(1,K):  # .lbl80
             format122 = "(1H1, '  CORRELATION MATRIX OF THE RESULT   ',2A8,2A8///)"
             fort_write(file_IO4, format122, [LABL.CLAB[K,1:3], LABL.CLAB[L,1:3]])
             J3=APR.MCS[L,2]
             J4=APR.MCS[L,3]
+
+            # CVP 3 lines below are added by VP, 26 July 2004
+            NCOL = J4-J3+2
+            for III in fort_range(1, NROW+NCOL):
+                gauss.EEGR[III] = 1.0*III
+            # CVP
+
             if K == L:
                 goto .lbl87
 
@@ -1705,9 +1718,32 @@ def main():
                     IJ=I*(I-1)//2+J
                     JJ=J*(J-1)//2+J
                     gauss.BM[J]=gauss.B[IJ]/np.sqrt(gauss.B[II]*gauss.B[JJ])
+                    # CVP three lines below are inserted by VP
+                    gauss.RELCOV[I-J1+1, J-J3+1] = gauss.B[IJ]
+                    data.AAA[I-J1+1, J-J3+1] = gauss.BM[J]
+                    data.AAA[J-J3+1, I-J1+1] = gauss.BM[J]
+                    # CVP
                 label .lbl16  # end loop
                 fort_write(file_IO4, format151, [gauss.BM[J3:(J4+1)]]) 
             label .lbl88  # end loop
+
+            # TODO
+            # CVP   Lines below are added by VP, 26 July, 2004
+            format388 = '(6E11.4)'
+            fort_write(file_IO4, format388,
+                    [gauss.EEGR[1:(NROW+NCOL+1)],
+                        gauss.RELCOV[1:NROW, 1:NCOL].flatten()])
+            fort_write(file_IO4, format388,
+                    [gauss.EEGR[1:(NROW+NCOL+1)],
+                     gauss.RELCOV[1:NROW, 1:NCOL].flatten(order='F')])
+            # CVP   print below is inserted by VP Aug2013
+            IMAX = J2-J1+1
+            format389 = '(2x,f7.3,1x,200(E10.4,1x))'
+            for I in fort_range(1, IMAX):
+                fort_write(file_IO4, format389,
+                        [APR.EN[JA+I-1],
+                         data.AAA[I,1:(J4-J3+2)]])
+
             goto .lbl300
 
             label .lbl87
@@ -1717,9 +1753,31 @@ def main():
                     IJ=I*(I-1)//2+J
                     JJ=J*(J-1)//2+J
                     gauss.BM[J]=gauss.B[IJ]/np.sqrt(gauss.B[II]*gauss.B[JJ])
+                    # CVP lines below are added by VP, 26 July, 2004
+                    gauss.RELTRG[I-J1+1,J-J1+1] = gauss.B[IJ]
+                    data.AAA[I-J1+1, J-J1+1] = gauss.BM[I]
+                    data.AAA[J-J1+1, I-J1+1] = gauss.BM[J]
+                    # CVP end
+
                 label .lbl27
                 label .lbl55
                 fort_write(file_IO4, format151, [gauss.BM[J1:(I+1)]])
+
+            format389 = '(2x,f7.3,1x,200(E10.4,1x))'
+            IMAX = J2-J1+1
+            # for I in fort_range(1,IMAX):
+            #     fort_write(file_IO4, format389,
+            #             [APR.EN[JA+I-1], data.AAA[I,1:(J2-J1+2)]])
+            # TODO
+            # 	do 387 i=1,IMAX
+            # CG  write(4,389) EN(ja+i-1),(AAA(i,j),j=1,j2-j1+1)
+            #   387 continue
+
+            # CVP   Lines below are added by VP, 26 July, 2004
+            # CG    WRITE(4,388) (EGR(KI),KI=1,NROW),
+            # CG   1 ((RELTRG(III,JJJ),III=JJJ,NROW-1),JJJ=1,NROW-1)
+            #   388 FORMAT(6E11.4)
+            # CVP
 
             label .lbl300
             label .lbl80
