@@ -1755,7 +1755,7 @@ def main():
                     gauss.BM[J]=gauss.B[IJ]/np.sqrt(gauss.B[II]*gauss.B[JJ])
                     # CVP lines below are added by VP, 26 July, 2004
                     gauss.RELTRG[I-J1+1,J-J1+1] = gauss.B[IJ]
-                    data.AAA[I-J1+1, J-J1+1] = gauss.BM[I]
+                    data.AAA[I-J1+1, J-J1+1] = gauss.BM[J]
                     data.AAA[J-J1+1, I-J1+1] = gauss.BM[J]
                     # CVP end
 
