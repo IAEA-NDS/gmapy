@@ -44,6 +44,8 @@ if [ ! -d result/fortran ]; then
     sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' gma.res
     sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
     sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
+    sed -i -e 's/-\(\.00*\)\([^0-9]\|$\)/0\1\2/g' gma.res
+    sed -i -e 's/-\(\.00*\)\([^0-9]\|$\)/0\1\2/g' gma.res
     cd "$basedir"
 fi
 
