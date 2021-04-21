@@ -6,7 +6,7 @@
 
 basedir=`pwd`
 GMAP_fortran_url="https://github.com/IAEA-NDS/GMAP-Fortran.git"
-GMAP_fortran_commit_id="a99ef97bff517aa9c1ebd3bb47cae2157ab538de"
+GMAP_fortran_commit_id="04da79839b979f99cad225bc49e3b2ed8104d1bb"
 GMAP_python_dir="$basedir/../../source"
 GMAP_python_exe="$GMAP_python_dir/GMAP.py"
 
