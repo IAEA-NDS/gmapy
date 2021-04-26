@@ -1238,3 +1238,92 @@ def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
     if MODREP == 0:
         fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, SIGL])
     return (NRS, NTOT, SIGMA2)
+
+
+
+@with_goto
+def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
+#
+#      GETTING THE RESULT
+#
+    file_IO3.seek(0,0)
+    format6919 = "(' start getting the result ')"
+    fort_write(None, format6919, [])
+    SIGMAA=SIGMA2/float(NTOT-NRS)
+    format9679 = "(/' UNCERTENTY SCALING   ',E12.4/)"
+    fort_write(file_IO4, format9679, [SIGMAA])
+    NRST=NRS*(NRS+1)/2
+    if IPP[8] ==  0:
+        force_stop(file_IO4)
+    if IPP[4] == 0:
+        goto .lbl68
+    format116 = "(1H*//,'  MATRIX PRODUCT'//)"
+    fort_write(file_IO4, format116, [])
+    format152 = "(2X,10E10.4)"
+    fort_write(file_IO4, format152, gauss.B[1:(NRST+1)])
+    label .lbl68
+    format2840 = "(80X,9HLDB,NRS= ,2I6,6H  NTOT,I8)"
+    fort_write(file_IO4, format2840, [LDB, NRS, NTOT])
+    format7103 = "(2E16.8)"
+    format6918 = "(' start on matrix inversion ')"
+    fort_write(None, format6918, [])
+
+
+    # CALL DPPFA(B,NRS,INFO)
+    NUMEL = NRS*(NRS+1)//2
+    INFO = 0.
+    tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
+    linpack_slim.dppfa(ap=tmp, n=NRS, info=INFO)
+    gauss.B[1:(NUMEL+1)] = tmp
+
+    # ALTERNATIVE: numpy does not know about the packed storaged format
+    #              of symmetric matrices used by DPPFA, so we need to
+    #              unpack the matrix first
+
+    # INFO = 0
+    # try:
+    #     tmp[1:NRS+1,1:NRS+1] = cholesky(tmp[1:NRS+1,1:NRS+1]).T 
+    # except np.linalg.LinAlgError:
+    #     INFO = 1
+
+    if INFO != 0:
+        format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
+        format106 = "( '  SOLUTION  CORREL. MATRIX NOT PD ' )"
+        fort_write(file_IO4, format106)
+        exit()
+
+    format9171 = "(' INVERT SOLUTION MATRIX')"
+    fort_write(file_IO4, format9171, [])
+    fort_write(None, format9171, [])
+
+    JOB = 1
+    # CALL DPPDI(gauss.B,NRS,DET,JOB)
+    NUMEL = NRS*(NRS+1)//2
+    tmp_det = np.array([0., 0.], dtype='float64', order='F')
+    tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
+    linpack_slim.dppdi(ap=tmp, n=NRS, det=tmp_det, job=JOB)
+    gauss.B[1:(NUMEL+1)] = tmp
+
+    # ALTERNATIVE: using numpy/scipy functions instead of LINPACK functions
+    # invert the matrix, we do it a bit complicated to use the cholesky factor
+    # we invert the cholesky factor and then mutliply its inverse by its transposed inverse
+    # tmp = unpack_utriang_matrix(tmp)
+    # tmp = inv(tmp)
+    # tmp = np.matmul(tmp, tmp.T)
+    # # pack the result again
+    # gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
+
+
+    format6917 = "(' completed inversion of matrix')"
+    fort_write(None, format6917, [])
+
+    for I in fort_range(1,NRS):  # .lbl13
+        gauss.DE[I]=0.
+        for K in fort_range(1,NRS):  # .lbl13
+            IK=K*(K-1)//2+I
+            if K < I:
+                IK = I*(I-1)//2 + K
+            gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
+        label .lbl13
+
+
