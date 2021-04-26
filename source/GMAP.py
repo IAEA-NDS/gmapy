@@ -380,27 +380,22 @@ def main():
     #
     #     reset for repeat of fit with replaced apriori from first fit
     #
-    if MODAP == 0 or MODREP == MODAP:
-        goto .lbl64
-    MODREP=MODREP+1
-    NTOT=0
-    SIGMA2=0.
-    NSHP=0
-    for L in fort_range(1,LDB):  # .lbl72
-        gauss.DE[L]=0.
-        gauss.BM[L]=0.
+    if not (MODAP == 0 or MODREP == MODAP):
 
-    for L in fort_range(1,LDBB2):  # .lbl73
-        gauss.B[L]=0.
-    
-    format130 = "(A4)"
-    for L in fort_range(1,2000):  # .lbl69
-        DUM = fort_read(file_IO3, format130)[0]
-        if DUM == LABL.AKON[4]:
-            ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
-            goto .lbl50
-        label .lbl69
-    label .lbl64
+        MODREP=MODREP+1
+        NTOT=0
+        SIGMA2=0.
+        NSHP=0
+        gauss.DE[0:(LDB+1)] = 0.
+        gauss.BM[0:(LDB+1)] = 0.
+        gauss.B[0:(LDBB2+1)] = 0.
+
+        format130 = "(A4)"
+        for L in fort_range(1,2000):  # .lbl69
+            DUM = fort_read(file_IO3, format130)[0]
+            if DUM == LABL.AKON[4]:
+                ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+                goto .lbl50
 
     #
     #   OUTPUT OF CORRELATION MATRIX OF THE RESULT
