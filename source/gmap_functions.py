@@ -7,6 +7,15 @@ import linpack_slim
 from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
                            unpack_utriang_matrix)
 
+#
+#      test option:  forced stop for testing purpose
+#
+def force_stop(file_IO4):
+    format107 = "( '  REQUESTED STOP ' )"
+    fort_write(file_IO4, format107)
+    exit()
+
+
 @with_goto
 def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     #

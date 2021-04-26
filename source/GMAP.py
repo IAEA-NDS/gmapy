@@ -12,7 +12,7 @@ import os
 import numpy as np
 
 # refactoring
-from gmap_functions import (read_prior, read_block_input,
+from gmap_functions import (force_stop, read_prior, read_block_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
         fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
@@ -261,7 +261,7 @@ def main():
             if K == 9:
                 goto .lbl9
             if K == 10:
-                goto .lbl51
+                force_stop(file_IO4)
             if K == 11:
                 # input:  data set numbers which are to be excluded from the evaluation
                 IELIM = MC1
@@ -271,13 +271,6 @@ def main():
 
     # end loop: .lbl10
 
-    #
-    #      test option:  forced stop for testing purpose
-    #
-    label .lbl51
-    format107 = "( '  REQUESTED STOP ' )"
-    fort_write(file_IO4, format107)
-    exit()
     #
     #      I/O CONTROL
     #
@@ -391,7 +384,7 @@ def main():
     fort_write(file_IO4, format9679, [SIGMAA])
     NRST=NRS*(NRS+1)/2
     if IPP[8] ==  0:
-        goto .lbl51
+        force_stop(file_IO4)
     if IPP[4] == 0:
         goto .lbl68
     format116 = "(1H*//,'  MATRIX PRODUCT'//)"
