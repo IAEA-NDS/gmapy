@@ -695,7 +695,6 @@ def main():
                 fort_write(file_IO4, format151, [gauss.BM[J3:(J4+1)]]) 
             label .lbl88  # end loop
 
-            # TODO
             # CVP   Lines below are added by VP, 26 July, 2004
             format388 = '(6E11.4)'
             fort_write(file_IO4, format388,
