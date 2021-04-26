@@ -16,7 +16,8 @@ from gmap_functions import (force_stop, read_prior, read_block_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
         fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
-        invert_Ecor, get_matrix_products, get_result, output_result)
+        invert_Ecor, get_matrix_products, get_result, output_result,
+        output_result_correlation_matrix)
 
 
 #################################################
@@ -397,109 +398,9 @@ def main():
                 ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
                 goto .lbl50
 
-    #
-    #   OUTPUT OF CORRELATION MATRIX OF THE RESULT
-    #
-    if IPP[6] == 0:
-        goto .lbl184
 
-    format151 = "(1X,24F7.4)"
-    for K in fort_range(1,NC):  # .lbl78
-        J1=APR.MCS[K,2]
-        J2=APR.MCS[K,3]
-
-        # CVP 3 lines below are added by VP, 26 July, 2004
-        NROW=J2-J1+2
-        for III in fort_range(1, NROW):
-            gauss.EGR[III] = 1.0*III
-        # CVP
-
-        for L in fort_range(1,K):  # .lbl80
-            format122 = "(1H1, '  CORRELATION MATRIX OF THE RESULT   ',2A8,2A8///)"
-            fort_write(file_IO4, format122, [LABL.CLAB[K,1:3], LABL.CLAB[L,1:3]])
-            J3=APR.MCS[L,2]
-            J4=APR.MCS[L,3]
-
-            # CVP 3 lines below are added by VP, 26 July 2004
-            NCOL = J4-J3+2
-            for III in fort_range(1, NROW+NCOL):
-                gauss.EEGR[III] = 1.0*III
-            # CVP
-
-            if K == L:
-                goto .lbl87
-
-            for I in fort_range(J1, J2):  # .lbl88
-                II=I*(I-1)//2+I
-                for J in fort_range(J3, J4):  # .lbl16
-                    IJ=I*(I-1)//2+J
-                    JJ=J*(J-1)//2+J
-                    gauss.BM[J]=gauss.B[IJ]/np.sqrt(gauss.B[II]*gauss.B[JJ])
-                    # CVP three lines below are inserted by VP
-                    gauss.RELCOV[I-J1+1, J-J3+1] = gauss.B[IJ]
-                    data.AAA[I-J1+1, J-J3+1] = gauss.BM[J]
-                    data.AAA[J-J3+1, I-J1+1] = gauss.BM[J]
-                    # CVP
-                label .lbl16  # end loop
-                fort_write(file_IO4, format151, [gauss.BM[J3:(J4+1)]]) 
-            label .lbl88  # end loop
-
-            # CVP   Lines below are added by VP, 26 July, 2004
-            format388 = '(6E11.4)'
-            fort_write(file_IO4, format388,
-                    [gauss.EEGR[1:(NROW+NCOL+1)],
-                        gauss.RELCOV[1:NROW, 1:NCOL].flatten()])
-            fort_write(file_IO4, format388,
-                    [gauss.EEGR[1:(NROW+NCOL+1)],
-                     gauss.RELCOV[1:NROW, 1:NCOL].flatten(order='F')])
-            # CVP   print below is inserted by VP Aug2013
-            IMAX = J2-J1+1
-            format389 = '(2x,f7.3,1x,200(E10.4,1x))'
-            for I in fort_range(1, IMAX):
-                fort_write(file_IO4, format389,
-                        [APR.EN[JA+I-1],
-                         data.AAA[I,1:(J4-J3+2)]])
-
-            goto .lbl300
-
-            label .lbl87
-            for I in fort_range(J1, J2):  # .lbl55
-                II=I*(I-1)//2+I
-                for J in fort_range(J1,I):  # .lbl27
-                    IJ=I*(I-1)//2+J
-                    JJ=J*(J-1)//2+J
-                    gauss.BM[J]=gauss.B[IJ]/np.sqrt(gauss.B[II]*gauss.B[JJ])
-                    # CVP lines below are added by VP, 26 July, 2004
-                    gauss.RELTRG[I-J1+1,J-J1+1] = gauss.B[IJ]
-                    data.AAA[I-J1+1, J-J1+1] = gauss.BM[J]
-                    data.AAA[J-J1+1, I-J1+1] = gauss.BM[J]
-                    # CVP end
-
-                label .lbl27
-                label .lbl55
-                fort_write(file_IO4, format151, [gauss.BM[J1:(I+1)]])
-
-            format389 = '(2x,f7.3,1x,200(E10.4,1x))'
-            IMAX = J2-J1+1
-            for I in fort_range(1,IMAX):
-                fort_write(file_IO4, format389,
-                        [APR.EN[JA+I-1], data.AAA[I,1:(J2-J1+2)]])
-
-            # CVP   Lines below are added by VP, 26 July, 2004
-            format388 = '(6E11.4)'
-            tmp = [[gauss.RELTRG[III,JJJ]
-                    for III in fort_range(JJJ,NROW-1)]
-                    for JJJ in fort_range(1, NROW-1)]
-            fort_write(file_IO4, format388,
-                    [gauss.EGR[1:(NROW+1)], tmp])
-            # CVP
-
-            label .lbl300
-            label .lbl80
-        L = L + 1  # to match L value of fortran after loop
-    label .lbl78
-    label .lbl184
-    exit()
+    output_result_correlation_matrix(gauss, data, APR, IPP, NC,
+            LABL, JA, file_IO4)
 
     #
     #      INPUT OF FISSION SPECTRUM
