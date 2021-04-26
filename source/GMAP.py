@@ -16,7 +16,7 @@ from gmap_functions import (force_stop, read_prior, read_block_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
         fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
-        invert_Ecor, get_matrix_products, get_result)
+        invert_Ecor, get_matrix_products, get_result, output_result)
 
 
 #################################################
@@ -374,111 +374,11 @@ def main():
     label .lbl3
     get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
 
-    #
-    #      output of the result
-    #
-    for L in fort_range(1,NC):  # .lbl14
-        format117 = "(1H1,'   RESULT',5X,2A8//)" 
-        fort_write(file_IO4, format117, [LABL.CLAB[L,1:3]])
-        fort_write(file_IO5, format117, [LABL.CLAB[L,1:3]])
-        format112 = "( '   E/MEV         CS/B            DCS/B       DCS/%" + \
-                    "     DIF/%    CS*SQRT(E)'/)"
-        fort_write(file_IO4, format112, [])
-        JA=APR.MCS[L,2]
-        JI=APR.MCS[L,3]
-        FLX=0.
+    JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
+            NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
 
-        for K in fort_range(JA, JI):  # .lbl77
-            KBK=K*(K-1)//2+K
-            DDX=APR.CS[K]*np.sqrt(gauss.B[KBK])
-            CXX=APR.CS[K]*(1.+gauss.DE[K])
-            CXXD=100.*(CXX-APR.CS[K])/CXX
-            for KK in fort_range(1,NFIS):  # .lbl705
-                if data.ENFIS[KK] > .999*APR.EN[K] and data.ENFIS[KK] < 1.001*APR.EN[K]:
-                    goto .lbl703
-            label .lbl705
-
-            goto .lbl706
-            label .lbl703
-            if K == JA or K == JI:
-                goto .lbl295
-
-            EL1=(APR.EN[K]+APR.EN[K-1])*0.5
-            EL2=(APR.EN[K]+APR.EN[K+1])*0.5
-            DE1=(APR.EN[K]-EL1)*0.5
-            DE2=(EL2-APR.EN[K])*0.5
-            SS1=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K-1])*APR.CS[K-1]))
-            SS2=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K+1])*APR.CS[K+1]))
-            CSSK=(SS1*DE1+SS2*DE2)/(DE1+DE2)
-            goto .lbl296
-            label .lbl295
-            CSSK=CXX
-            label .lbl296
-            FLX=FLX+data.FIS[KK]*CSSK
-            label .lbl706
-            FQW=DDX*100./CXX
-            SECS=np.sqrt(APR.EN[K])*CXX
-            format153 = "(1X,E10.4,2F15.8,2X,F6.1,3X,F7.2,3X,F10.5)" 
-            fort_write(file_IO4, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
-            fort_write(file_IO5, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
-            if MODAP == 0:
-                goto .lbl58
-            if MODAP == 2 and K <= APR.MCS[5,3]:
-                goto .lbl58
-            APR.CS[K]=CXX
-            label .lbl58
-        label .lbl77
-
-        # VP: 13 lines below are added by VP, 26 July, 2004
-        format588 = "(6(1X,E10.5))"
-        fort_write(file_IO4, format588, [
-            (APR.EN[JA]*500000.),
-            (APR.EN[JA:JI]+APR.EN[(JA+1):(JI+1)])*500000.,
-            (-APR.EN[JI-1]+3*APR.EN[JI])*500000.
-        ])
-
-        tmp = np.vstack([APR.EN[JA:(JI+1)]*1000000., APR.CS[JA:(JI+1)]])
-        tmp = tmp.T.flatten()
-        fort_write(file_IO4, format588, tmp)
-        for K in fort_range(JA+1, JI-1):
-            DSMOOA = (APR.CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
-                    +APR.CS[K-1] * (APR.EN[K+1] - APR.EN[K]) \
-                    -APR.CS[K] * (APR.EN[K+1] - APR.EN[K-1])) \
-                    /2./(APR.EN[K+1] - APR.EN[K-1])
-            DSMOOR = DSMOOA / APR.CS[K]*100.
-            SSMOO = APR.CS[K] + DSMOOA
-            fort_write(file_IO4, format153, [APR.EN[K], APR.CS[K], SSMOO, DSMOOR])
-        # VP above is writing CS in B-6 format and smoothing with CS conserving
-
-        format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
-        fort_write(file_IO4, format158, [FLX])
-        # label .lbl14  # end of for loop
-    L = L + 1  # to match L value of fortran after loop
-
-    #
-    #   OUTPUT OF NORM. FACTORS FOR SHAPE DATA
-    #
-    format114 = "(1H*///, '  NORMALIZATION  OF SHAPE DATA '///)"
-    fort_write(file_IO4, format114, [])
-    NR1=NR+1
-    LLX=0
-    if NSHP == 0:
-        goto .lbl292
-
-    for K in fort_range(NR1, NRS):  # .lbl82
-        LLX=LLX+1
-        KK=K*(K-1)//2+K
-        ZCS=APR.CS[K]
-        DDX=APR.CS[K]*np.sqrt(gauss.B[KK])
-        CXX=APR.CS[K]*(1.+gauss.DE[K])
-        DDXD=DDX*100./CXX
-        format115 = "(2I6,4F10.4)"
-        fort_write(file_IO4, format115, [K,NSETN[LLX],CXX,DDX,DDXD,ZCS])
-        APR.CS[K]=CXX
-    label .lbl82  # end for loop
 
     format5115 = "(2I6,2D20.12,F10.4)"
-    label .lbl292
     #
     #     reset for repeat of fit with replaced apriori from first fit
     #
