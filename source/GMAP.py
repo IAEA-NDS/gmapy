@@ -377,8 +377,6 @@ def main():
     JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
             NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
 
-
-    format5115 = "(2I6,2D20.12,F10.4)"
     #
     #     reset for repeat of fit with replaced apriori from first fit
     #
