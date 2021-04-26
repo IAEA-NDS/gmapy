@@ -16,7 +16,7 @@ from gmap_functions import (read_prior, read_block_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
         fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
-        invert_Ecor)
+        invert_Ecor, get_matrix_products)
 
 
 #################################################
@@ -373,67 +373,9 @@ def main():
         if not invertible:
             goto .lbl50
 
-    #
-    #      GET MATRIX PRODUCTS
-    #
-    NRS=NR+NSHP
-    for I in fort_range(1,NRS):  # .lbl90
-        NI=KA[I,1]
-        if NI == 0:
-            goto .lbl92
-
-        for J in fort_range(I, NRS):  # .lbl83
-            NJ=KA[J,1]
-            if NJ == 0:
-                goto .lbl84
-            IJ=J*(J-1)//2+I
-
-            for MI in fort_range(1,NI):  # .lbl85
-                MIX=KA[I,MI+1]
-                for MJ in fort_range(1,NJ):  # .lbl85
-                    MJX=KA[J,MJ+1]
-                    gauss.B[IJ]=gauss.B[IJ]+gauss.AA[I,MI]*gauss.AA[J,MJ]*data.ECOR[MIX,MJX]
-                    
-                label .lbl85
-
-            label .lbl84
-        label .lbl83
-        label .lbl92
-    label .lbl90
-
-    for I in fort_range(1,NRS):  # .lbl91
-        NI=KA[I,1]
-        if NI == 0:
-            goto .lbl93
-
-        for MI in fort_range(1,NI):  # .lbl86
-            MIX=KA[I,MI+1]
-            for MJ in fort_range(1,N):  #.lbl86
-                gauss.BM[I]=gauss.BM[I]+gauss.AA[I,MI]*data.ECOR[MIX,MJ]*gauss.AM[MJ]
-
-        label .lbl93
-    label .lbl91
-
-    for I in fort_range(1,N):  # .lbl26
-        SUX=0.
-        for J in fort_range(1,N):  # .lbl52
-            SUX=SUX+data.ECOR[I,J]*gauss.AM[J]
-        
-        SIGMA2=SIGMA2+gauss.AM[I]*SUX
-    label .lbl26
-
-    NTOT=NTOT+N
-    SIGL=SIGMA2/NTOT
-    format476 = "(/' ADDED ',I5,' TO GIVE ',I5,' TOTAL',2I5,F10.2/)"
-    fort_write(None, format476, [N, NTOT, NSHP, NRS, SIGL])
-    if N > LDA:
-        exit()
-    if NRS > LDB:
-        exit()
-    if MODREP != 0:
-        goto .lbl50
-
-    fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, SIGL])
+    
+    NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
+            NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
     goto .lbl50
 
     #
