@@ -79,9 +79,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
             LQ += 1
             fort_write(file_IO4, format138, [LQ, L, APR.EN[L], APR.CS[L]])
             # label .lbl 23
-        L = L + 1  # to match L value of fortran after loop
     # .lbl24
-    K = K + 1
     label .lbl665
     format113 = "(/,' TOTAL NO OF PARAMETERS ',I4/)"
     fort_write(file_IO4, format113, [NR])
