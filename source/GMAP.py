@@ -386,8 +386,43 @@ def main():
             if K == 8:
                 NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
                 goto .lbl50
+
+
             if K == 9:
-                goto .lbl9
+                #
+                #   MODE DEFINITION
+                #
+                MODC = MC1
+                MOD2 = MC2
+                #VPBEG MPPP=1 allows to use anti-PPP option, when errors of exp data 
+                #VP   are taken as % uncertainties from true (posterior) evaluation 
+                MPPP = MC5
+                #VPEND
+                AMO3=MC3/10.
+                MODAP=MC4
+                if MC2 != 10:
+                    goto .lbl50
+                #
+                #      test option:  input of data set numbers which are to be downweighted
+                #
+                K1=1
+                K2=16
+                format677 = "(16I5)"
+                for K in fort_range(1,10):  # .lbl678
+                    fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
+                    if NRED[K2] == 0:
+                        break
+                    K1=K1+16
+                    K2=K2+16
+
+                for K in fort_range(K1,K2):  # .lbl680
+                    if NRED[K] == 0:
+                        break
+
+                NELI=K-1
+                goto .lbl50
+
+
             if K == 10:
                 force_stop(file_IO4)
             if K == 11:
@@ -398,40 +433,6 @@ def main():
                 goto .lbl50
 
     # end loop: .lbl10
-
-    #
-    #   MODE DEFINITION
-    #
-    label .lbl9
-    MODC = MC1
-    MOD2 = MC2
-    #VPBEG MPPP=1 allows to use anti-PPP option, when errors of exp data 
-    #VP   are taken as % uncertainties from true (posterior) evaluation 
-    MPPP = MC5
-    #VPEND
-    AMO3=MC3/10.
-    MODAP=MC4
-    if MC2 != 10:
-        goto .lbl50
-    #
-    #      test option:  input of data set numbers which are to be downweighted
-    #
-    K1=1
-    K2=16
-    format677 = "(16I5)"
-    for K in fort_range(1,10):  # .lbl678
-        fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
-        if NRED[K2] == 0:
-            break
-        K1=K1+16
-        K2=K2+16
-
-    for K in fort_range(K1,K2):  # .lbl680
-        if NRED[K] == 0:
-            break
-
-    NELI=K-1
-    goto .lbl50
 
 
 main()
