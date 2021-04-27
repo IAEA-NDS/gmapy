@@ -122,7 +122,6 @@ def read_block_input(data, gauss, KA, KAS, MODREP, file_IO4):
     return (ID, N, NADD)
 
 
-@with_goto
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
         ID, N, file_IO3, file_IO4):
@@ -160,18 +159,9 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #
     MTTP = 1
     IDEN[ID, 8] = 1
-    if MT == 2 or MT == 4:
-        goto .lbl510
-    if MT == 8 or MT == 9:
-        goto .lbl510
-    goto .lbl511
-
-    label .lbl510
-
-    MTTP = 2
-    IDEN[ID, 8] = 2
-
-    label .lbl511
+    if (MT == 2 or MT == 4 or MT == 8 or MT == 9):
+        MTTP = 2
+        IDEN[ID, 8] = 2
 
     # VP      if(modrep .ne. 0) go to 140
     format142 = "(//, ' ***********DATASET**************************** '/)"
@@ -186,16 +176,12 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     L = 3  # to reflect value of L after loop in Fortran
            # because L in list comprehension goes immediately out of scope
     fort_write(file_IO4, format139, [MC1, LABL.TYPE[MT],tmp])
-    if NCT2 <= 0:
-        goto .lbl140
-
-    format149 = "(2X,6(2X,2A8))"
-    tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
-    L = 3  # to reflect value of L after loop in Fortran
-           # because L in list comprehension goes immediately out of scope
-    fort_write(file_IO4, format149, tmp)
-
-    label .lbl140
+    if NCT2 > 0:
+        format149 = "(2X,6(2X,2A8))"
+        tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
+        L = 3  # to reflect value of L after loop in Fortran
+               # because L in list comprehension goes immediately out of scope
+        fort_write(file_IO4, format149, tmp)
 
     #
     #       NAME ID AND REFERENCE I/O
@@ -207,26 +193,23 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     # VP      if(modrep .ne. 0) go to 183
     fort_write(file_IO4, format132, [IDEN[ID, 3:5], LABL.CLABL[1:5], LABL.BREF[1:5]])
 
-    label .lbl183
+    # label .lbl183
     NCCS = IDEN[ID, 5]
     #
     #       READ(3,    ) NORMALIZATION UNCERTAINTIES
     #
     XNORU = 0.
-    if MTTP == 2:
-        goto .lbl200
+    if MTTP != 2:
+        format201 = "(10F5.1,10I3)"
+        data.ENFF[ID, 1:11], NENF[ID, 1:11] = unflatten(fort_read(file_IO3, format201), [[10],[10]])
 
-    format201 = "(10F5.1,10I3)"
-    data.ENFF[ID, 1:11], NENF[ID, 1:11] = unflatten(fort_read(file_IO3, format201), [[10],[10]])
+        #
+        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
+        #
+        for L in fort_range(1,10):  # .lbl208
+            XNORU = XNORU + (data.ENFF[ID,L])**2
+        L = L + 1  # to match L value of fortran after loop
 
-    #
-    #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
-    #
-    for L in fort_range(1,10):  # .lbl208
-        XNORU = XNORU + (data.ENFF[ID,L])**2
-    L = L + 1  # to match L value of fortran after loop
-
-    label .lbl200
     #
     #       READ(3,    ) ENERGY DEPENDENT UNCERTAINTY PARAMETERS
     #
@@ -237,7 +220,6 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #       READ(3,    ) CORRELATIONS INFORMATION
     #
     if NCCS == 0:
-        #goto .lbl203
         return (MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN)
 
     format841 = "(10F5.1)"
