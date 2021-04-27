@@ -328,8 +328,30 @@ def main():
                 format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
                 fort_write(file_IO4, format104, [ACON])
                 exit()
+
             if K == 7:
-                goto .lbl7
+                #
+                #    Data BLOCK complete
+                #
+                N1=N-1
+                if ID == 0:
+                    goto .lbl50
+
+                IREP = 0
+                complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
+
+                if not (IPP[3] == 0 or N == 1 or MODC == 2):
+                    output_Ecor_matrix(data, N, file_IO4)
+
+                if not (MODC == 2 or N == 1):
+                    invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
+                    if not invertible:
+                        goto .lbl50
+
+                NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
+                        NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
+                goto .lbl50
+
             if K == 8:
                 NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
                 goto .lbl50
@@ -345,30 +367,6 @@ def main():
                 goto .lbl50
 
     # end loop: .lbl10
-
-    #
-    #    Data BLOCK complete
-    #
-    label .lbl7
-    N1=N-1
-    if ID == 0:
-        goto .lbl50
-
-    IREP = 0
-    complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
-
-    if not (IPP[3] == 0 or N == 1 or MODC == 2):
-        output_Ecor_matrix(data, N, file_IO4)
-
-    if not (MODC == 2 or N == 1):
-        invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
-        if not invertible:
-            goto .lbl50
-
-    
-    NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
-            NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
-    goto .lbl50
 
     label .lbl3
     get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
