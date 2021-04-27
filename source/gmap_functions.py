@@ -300,56 +300,23 @@ def accounting(data, APR, MT, NT, NCT,
         #
         #      changing weights of data based on year or data set tag
         #
-        if MOD2 > 1000:
-            goto .lbl321
-        elif MOD2 == 10:
-            goto .lbl322
-        elif MOD2 == 0 or MOD2 > 10:
-            goto .lbl320
-        elif MOD2 == 1:
-            goto .lbl331
+
+        # 1st if line: downweighting based on year of measurement
+        # 2nd if line: downweighting of specified data sets
+        # 3rd+ if line: downweighting data sets with tags .NE. 1
+        if (MOD2 > 1000 and IDEN[ID, 3] < MOD2) or \
+           (MOD2 == 10 and IDEN[ID, 6] in NRED[1:(NELI+1)]) or \
+           (MOD2 == 1 and IDEN[ID, 4] != 1) or \
+           (MOD2 < 0 and IDEN[ID, 4] != 1):
+
+                for I in fort_range(3,11):
+                    data.CO[I, NADD] = AMO3*data.CO[I, NADD]
+
         elif MOD2 > 1 and MOD2 < 10:
-            goto .lbl336
 
-        label .lbl331
+            format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)"
+            fort_write(file_IO4, format339, NS)
 
-        #
-        #      downweighting data sets with tags .NE. 1
-        #
-        if IDEN[ID,4] == 1:
-            goto .lbl320
-
-        label .lbl342
-        for I in fort_range(3,11):
-            data.CO[I, NADD] = AMO3*data.CO[I, NADD]
-
-        goto .lbl320
-
-        #
-        #      downweighting based on year of measurement
-        #
-        label .lbl321
-        if IDEN[ID, 3] < MOD2:
-            goto .lbl342
-
-        goto .lbl320
-
-        label .lbl322
-        #
-        #      downweighting of specified data sets
-        #
-        for IST in fort_range(1,NELI): # .lbl391
-            if IDEN[ID, 6] == NRED[IST]:
-                goto .lbl342
-
-        label .lbl391
-        goto .lbl320
-
-        label .lbl336
-        format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)" 
-        fort_write(file_IO4, format339, NS)
-
-        label .lbl320
         #
         #      CALCULATE TOTAL UNCERTAINTY  DCS
         #
