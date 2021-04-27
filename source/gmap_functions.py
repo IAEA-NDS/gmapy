@@ -219,18 +219,16 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #
     #       READ(3,    ) CORRELATIONS INFORMATION
     #
-    if NCCS == 0:
-        return (MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN)
+    if NCCS != 0:
+        format841 = "(10F5.1)"
+        format205 = "(I5,20I3)"
+        for K in fort_range(1,NCCS):  # .lbl204
+            NCSST[K], tmp = unflatten(fort_read(file_IO3, format205), [1,[20]])
+            NEC[1:3, 1:11, K] = np.reshape(tmp, (2,10), order='F')
+            #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
+            data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
-    format841 = "(10F5.1)"
-    format205 = "(I5,20I3)"
-    for K in fort_range(1,NCCS):  # .lbl204
-        NCSST[K], tmp = unflatten(fort_read(file_IO3, format205), [1,[20]])
-        NEC[1:3, 1:11, K] = np.reshape(tmp, (2,10), order='F')
-        #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
-        data.FCFC[1:11, K] = fort_read(file_IO3, format841)
     return (MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN)
-
 
 
 @with_goto
