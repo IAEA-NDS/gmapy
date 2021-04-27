@@ -16,7 +16,6 @@ def force_stop(file_IO4):
     exit()
 
 
-@with_goto
 def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     #
     #      INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
@@ -25,7 +24,6 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     #      MC2=NC      NO OF CROSS SECTION TYPES
     #      NR          NO OF PARAMETERS (cross sections)
     #
-    label .lbl1
     NE = MC1
     NC = MC2
     NE1 = NE+1
@@ -56,6 +54,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
         APR.MCS[K, 2] = APR.MCS[K-1, 2] + APR.MCS[K-1, 1]
         APR.MCS[K, 3] = APR.MCS[K-1, 3] + APR.MCS[K, 1]
 
+    # from here onwards only output
     # label .lbl30
     format134 = r"(//2X,36HCROSS SECTIONS OF PRESENT EVALUATION//)"
     fort_write(file_IO4, format134, [])
