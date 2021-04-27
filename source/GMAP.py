@@ -280,26 +280,23 @@ def main():
                     XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
             )
 
-            if MT == 6:
-                goto .lbl28
-            #
-            #   output of KAS for checking
-            #
-            if IPP[7] == 0:
-                goto .lbl2309
+            if MT != 6:
+                #
+                #   output of KAS for checking
+                #
+                if IPP[7] == 0:
+                    goto .lbl2309
 
-            format702 = "(20I5)"
-            for K in fort_range(1,NCT):
-                fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
+                format702 = "(20I5)"
+                for K in fort_range(1,NCT):
+                    fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
 
-            label .lbl2309
+                label .lbl2309
 
-            (NSHP, L, AP) = \
-            determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
-                    MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
-                    MODREP, LDB, MC1, NCT, file_IO4)
-
-            label .lbl28
+                (NSHP, L, AP) = \
+                determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
+                        MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
+                        MODREP, LDB, MC1, NCT, file_IO4)
 
             N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
 
