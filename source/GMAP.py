@@ -1,5 +1,4 @@
 # helpful for fortran to python conversion
-from goto import with_goto
 from generic_utils import Bunch, unflatten
 from fortran_utils import fort_range, fort_read, fort_write
 
@@ -24,7 +23,6 @@ from gmap_functions import (force_stop, read_prior, read_block_input,
 #   START OF GMAP PROGRAM
 ##################################################
 
-@with_goto
 def main():
 
     # IMPLICIT definitions in original version
