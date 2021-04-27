@@ -236,11 +236,13 @@ def main():
         format100 = "(A4,1X,8I5)"
         ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
 
+        # LABL.AKON[1] == 'APRI'
         if ACON == LABL.AKON[1]:
             # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
             NC, NR = read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
 
 
+        # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
 
             MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
@@ -295,6 +297,7 @@ def main():
             N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
 
 
+        # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
             get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
             JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
@@ -327,10 +330,12 @@ def main():
             exit()
 
 
+        # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
             ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
 
 
+        # LABL.AKON[5] == 'I/OC'
         elif ACON == LABL.AKON[5]:
             #
             #      I/O CONTROL
@@ -352,6 +357,7 @@ def main():
             exit()
 
 
+        # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             #
             #    Data BLOCK complete
@@ -375,10 +381,12 @@ def main():
                     NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
 
 
+        # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
             NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
 
 
+        # LABL.AKON[9] == 'MODE'
         elif ACON == LABL.AKON[9]:
             #
             #   MODE DEFINITION
@@ -413,10 +421,12 @@ def main():
             NELI=K-1
 
 
+        # LABL.AKON[10] == 'STOP'
         elif ACON == LABL.AKON[10]:
             force_stop(file_IO4)
 
 
+        # LABL.AKON[11] == 'ELIM'
         elif ACON == LABL.AKON[11]:
             # input:  data set numbers which are to be excluded from the evaluation
             IELIM = MC1
