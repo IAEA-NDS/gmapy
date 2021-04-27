@@ -97,7 +97,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     return (NC, NR)
 
 
-def read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4):
+def read_block_input(data, gauss, KA, KAS, MODREP, file_IO4):
     #
     #      BLOCK INPUT
     #

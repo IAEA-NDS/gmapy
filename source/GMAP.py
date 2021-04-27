@@ -322,7 +322,7 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+                    ID, N, NADD = read_block_input(data, gauss, KA, KAS, MODREP, file_IO4)
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP, NC,
@@ -332,7 +332,7 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+            ID, N, NADD = read_block_input(data, gauss, KA, KAS, MODREP, file_IO4)
 
 
         # LABL.AKON[5] == 'I/OC'
