@@ -97,7 +97,6 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     return (NC, NR)
 
 
-@with_goto
 def read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4):
     #
     #      BLOCK INPUT
@@ -108,29 +107,18 @@ def read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4):
 
     N = 0
     ID = 0
-    for K in fort_range(1,LDA):  # .lbl32
-        gauss.AM[K] = 0.
-        for I in fort_range(1,LDB):  # .lbl81
-            # VP line with BM(I)=0.D0  was commented because BM(I) cleaning should 
-            # VP done outside of the cycle on measured data 
-            # VPBEG*****************************************************************
-            # VP      BM(I)=0.D0
-            # VPEND*****************************************************************
-            KA[I,K] = 0
-            gauss.AA[I,K] = 0.
-            # .lbl81
-        for J in fort_range(1,5):
-            KAS[K, J] = 0
-        for L in fort_range(1,LDA):
-            data.ECOR[K,L] = 0.
-        L = L + 1  # to match L value of fortran after loop
-        # .lbl32
+    gauss.AM.fill(0.)
+    gauss.AA.fill(0.)
+    KA.fill(0.)
+    KAS.fill(0.)
+    data.ECOR.fill(0.)
+
+    if MODREP == 0:
+        format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
+                    "******************************************DATABLOCK '/)"
+        fort_write(file_IO4, format108, [])
+
     NADD = 1
-    if MODREP != 0:
-        return (ID, N, NADD)   
-    format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
-                "******************************************DATABLOCK '/)"
-    fort_write(file_IO4, format108, [])
     return (ID, N, NADD)
 
 
