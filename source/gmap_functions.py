@@ -225,7 +225,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     return (MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN)
 
 
-@with_goto
+
 def accounting(data, APR, MT, NT, NCT,
         KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3):
     #
@@ -244,7 +244,6 @@ def accounting(data, APR, MT, NT, NCT,
         L = 13  # to reflect fortran value after READ loop
         if data.E[NADD] == 0:
             return (NALT, L, NADD)
-            #goto .lbl95
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
@@ -288,12 +287,9 @@ def accounting(data, APR, MT, NT, NCT,
         #      this is the Axton special (uncertainties have been multiplied by 10
         #         in order to preserve precision beyond 0.1%)
         #
-        if NNCOX == 0:
-            goto .lbl59
-        for LZ in fort_range(1,11):  # .lbl57
-            data.CO[LZ, NADD] = data.CO[LZ, NADD] / 10.
-
-        label .lbl59
+        if NNCOX != 0:
+            for LZ in fort_range(1,11):  # .lbl57
+                data.CO[LZ, NADD] = data.CO[LZ, NADD] / 10.
 
         #
         #      test option:  as set with mode control
@@ -328,8 +324,6 @@ def accounting(data, APR, MT, NT, NCT,
         data.DCS[NADD] = np.sqrt(XNORU + RELU) 
         NADD += 1
 
-        label .lbl15
-    label .lbl21
     return (NALT, L, NADD)
 
 
