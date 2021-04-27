@@ -300,19 +300,15 @@ def accounting(data, APR, MT, NT, NCT,
         #
         #      changing weights of data based on year or data set tag
         #
-        if MOD2 == 0:
-            goto .lbl320
         if MOD2 > 1000:
             goto .lbl321
-        if MOD2 == 10:
+        elif MOD2 == 10:
             goto .lbl322
-        if MOD2 > 10:
+        elif MOD2 == 0 or MOD2 > 10:
             goto .lbl320
-
-        # replaces computed goto
-        if MOD2 == 1:
+        elif MOD2 == 1:
             goto .lbl331
-        if MOD2 > 1 and MOD2 < 10:
+        elif MOD2 > 1 and MOD2 < 10:
             goto .lbl336
 
         label .lbl331
