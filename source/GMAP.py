@@ -304,8 +304,39 @@ def main():
                 N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
                 goto .lbl50
 
+
             if K == 3:
-                goto .lbl3
+                get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
+                JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
+                        NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
+                #
+                #     reset for repeat of fit with replaced apriori from first fit
+                #
+                if not (MODAP == 0 or MODREP == MODAP):
+
+                    MODREP=MODREP+1
+                    NTOT=0
+                    SIGMA2=0.
+                    NSHP=0
+                    gauss.DE[0:(LDB+1)] = 0.
+                    gauss.BM[0:(LDB+1)] = 0.
+                    gauss.B[0:(LDBB2+1)] = 0.
+
+                    format130 = "(A4)"
+                    for L in fort_range(1,2000):  # .lbl69
+                        DUM = fort_read(file_IO3, format130)[0]
+                        if DUM == LABL.AKON[4]:
+                            break
+
+                    if DUM == LABL.AKON[4]:
+                        ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+                        goto .lbl50
+
+                output_result_correlation_matrix(gauss, data, APR, IPP, NC,
+                        LABL, JA, file_IO4)
+                exit()
+
+
             if K == 4:
                 ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
                 goto .lbl50
@@ -367,38 +398,6 @@ def main():
                 goto .lbl50
 
     # end loop: .lbl10
-
-    label .lbl3
-    get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
-
-    JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
-            NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
-
-    #
-    #     reset for repeat of fit with replaced apriori from first fit
-    #
-    if not (MODAP == 0 or MODREP == MODAP):
-
-        MODREP=MODREP+1
-        NTOT=0
-        SIGMA2=0.
-        NSHP=0
-        gauss.DE[0:(LDB+1)] = 0.
-        gauss.BM[0:(LDB+1)] = 0.
-        gauss.B[0:(LDBB2+1)] = 0.
-
-        format130 = "(A4)"
-        for L in fort_range(1,2000):  # .lbl69
-            DUM = fort_read(file_IO3, format130)[0]
-            if DUM == LABL.AKON[4]:
-                ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
-                goto .lbl50
-
-
-    output_result_correlation_matrix(gauss, data, APR, IPP, NC,
-            LABL, JA, file_IO4)
-
-    exit()
 
     #
     #   MODE DEFINITION
