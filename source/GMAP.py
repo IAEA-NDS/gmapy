@@ -432,16 +432,14 @@ def main():
     for K in fort_range(1,10):  # .lbl678
         fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
         if NRED[K2] == 0:
-            goto .lbl679
+            break
         K1=K1+16
         K2=K2+16
-    label .lbl678
-    label .lbl679
+
     for K in fort_range(K1,K2):  # .lbl680
         if NRED[K] == 0:
-            goto .lbl681
-    label .lbl680
-    label .lbl681
+            break
+
     NELI=K-1
     goto .lbl50
 
