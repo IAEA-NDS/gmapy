@@ -230,211 +230,212 @@ def main():
                  r"'    W.P.POENITZ,ANL'///")
     fort_write(file_IO4, format110, [])
 
-    label .lbl50
+    while True:
+        label .lbl50
 
-    #
-    #      Control parameter input
-    #
-    format100 = "(A4,1X,8I5)"
-    ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
-    #
-    for K in fort_range(1, 11):  # .lbl10
-        if ACON == LABL.AKON[K]:
-            if K == 1:
-                # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
-                NC, NR = read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
-                goto .lbl50
-
-            if K == 2:
-
-                MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
-                read_dataset_input(
-                        MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                        data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
-                        ID, N, file_IO3, file_IO4
-                )
-
-                NALT, L, NADD = \
-                accounting(
-                        data, APR, MT, NT, NCT,
-                        KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
-                )
-
-
-                exclflag, NP, ID, NADD = \
-                should_exclude_dataset(
-                        NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4
-                )
-
-                if exclflag:
+        #
+        #      Control parameter input
+        #
+        format100 = "(A4,1X,8I5)"
+        ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
+        #
+        for K in fort_range(1, 11):  # .lbl10
+            if ACON == LABL.AKON[K]:
+                if K == 1:
+                    # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
+                    NC, NR = read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
                     goto .lbl50
 
-                #
-                #      continue for valid data
-                #
-                IDEN[ID, 1] = NP
-                NADD1 = NADD - 1
+                if K == 2:
 
-                MODC, L = \
-                construct_Ecor(
-                        data, NETG, IDEN, NCSST, NEC,
-                        L, MODC, NCOX, NALT, NP, NADD1, ID,
-                        XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
-                )
+                    MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
+                    read_dataset_input(
+                            MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+                            data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
+                            ID, N, file_IO3, file_IO4
+                    )
 
-                if MT == 6:
-                    goto .lbl28
-                #
-                #   output of KAS for checking
-                #
-                if IPP[7] == 0:
-                    goto .lbl2309
-
-                format702 = "(20I5)"
-                for K in fort_range(1,NCT):
-                    fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
-
-                label .lbl2309
-
-                (NSHP, L, AP) = \
-                determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
-                        MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
-                        MODREP, LDB, MC1, NCT, file_IO4)
-
-                label .lbl28
-
-                N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
-                goto .lbl50
+                    NALT, L, NADD = \
+                    accounting(
+                            data, APR, MT, NT, NCT,
+                            KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
+                    )
 
 
-            if K == 3:
-                get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
-                JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
-                        NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
-                #
-                #     reset for repeat of fit with replaced apriori from first fit
-                #
-                if not (MODAP == 0 or MODREP == MODAP):
+                    exclflag, NP, ID, NADD = \
+                    should_exclude_dataset(
+                            NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4
+                    )
 
-                    MODREP=MODREP+1
-                    NTOT=0
-                    SIGMA2=0.
-                    NSHP=0
-                    gauss.DE[0:(LDB+1)] = 0.
-                    gauss.BM[0:(LDB+1)] = 0.
-                    gauss.B[0:(LDBB2+1)] = 0.
+                    if exclflag:
+                        goto .lbl50
 
-                    format130 = "(A4)"
-                    for L in fort_range(1,2000):  # .lbl69
-                        DUM = fort_read(file_IO3, format130)[0]
+                    #
+                    #      continue for valid data
+                    #
+                    IDEN[ID, 1] = NP
+                    NADD1 = NADD - 1
+
+                    MODC, L = \
+                    construct_Ecor(
+                            data, NETG, IDEN, NCSST, NEC,
+                            L, MODC, NCOX, NALT, NP, NADD1, ID,
+                            XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
+                    )
+
+                    if MT == 6:
+                        goto .lbl28
+                    #
+                    #   output of KAS for checking
+                    #
+                    if IPP[7] == 0:
+                        goto .lbl2309
+
+                    format702 = "(20I5)"
+                    for K in fort_range(1,NCT):
+                        fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
+
+                    label .lbl2309
+
+                    (NSHP, L, AP) = \
+                    determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
+                            MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
+                            MODREP, LDB, MC1, NCT, file_IO4)
+
+                    label .lbl28
+
+                    N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
+                    goto .lbl50
+
+
+                if K == 3:
+                    get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
+                    JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
+                            NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
+                    #
+                    #     reset for repeat of fit with replaced apriori from first fit
+                    #
+                    if not (MODAP == 0 or MODREP == MODAP):
+
+                        MODREP=MODREP+1
+                        NTOT=0
+                        SIGMA2=0.
+                        NSHP=0
+                        gauss.DE[0:(LDB+1)] = 0.
+                        gauss.BM[0:(LDB+1)] = 0.
+                        gauss.B[0:(LDBB2+1)] = 0.
+
+                        format130 = "(A4)"
+                        for L in fort_range(1,2000):  # .lbl69
+                            DUM = fort_read(file_IO3, format130)[0]
+                            if DUM == LABL.AKON[4]:
+                                break
+
                         if DUM == LABL.AKON[4]:
+                            ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+                            goto .lbl50
+
+                    output_result_correlation_matrix(gauss, data, APR, IPP, NC,
+                            LABL, JA, file_IO4)
+                    exit()
+
+
+                if K == 4:
+                    ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
+                    goto .lbl50
+                if K == 5:
+                    #
+                    #      I/O CONTROL
+                    #
+                    IPP = [None for i in range(9)]
+                    IPP[1] = MC1
+                    IPP[2] = MC2
+                    IPP[3] = MC3
+                    IPP[4] = MC4
+                    IPP[5] = MC5
+                    IPP[6] = MC6
+                    IPP[7] = MC7
+                    IPP[8] = MC8
+                    goto .lbl50
+
+                if K == 6:
+                    format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
+                    fort_write(file_IO4, format104, [ACON])
+                    exit()
+
+                if K == 7:
+                    #
+                    #    Data BLOCK complete
+                    #
+                    N1=N-1
+                    if ID == 0:
+                        goto .lbl50
+
+                    IREP = 0
+                    complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
+
+                    if not (IPP[3] == 0 or N == 1 or MODC == 2):
+                        output_Ecor_matrix(data, N, file_IO4)
+
+                    if not (MODC == 2 or N == 1):
+                        invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
+                        if not invertible:
+                            goto .lbl50
+
+                    NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
+                            NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
+                    goto .lbl50
+
+                if K == 8:
+                    NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
+                    goto .lbl50
+
+
+                if K == 9:
+                    #
+                    #   MODE DEFINITION
+                    #
+                    MODC = MC1
+                    MOD2 = MC2
+                    #VPBEG MPPP=1 allows to use anti-PPP option, when errors of exp data 
+                    #VP   are taken as % uncertainties from true (posterior) evaluation 
+                    MPPP = MC5
+                    #VPEND
+                    AMO3=MC3/10.
+                    MODAP=MC4
+                    if MC2 != 10:
+                        goto .lbl50
+                    #
+                    #      test option:  input of data set numbers which are to be downweighted
+                    #
+                    K1=1
+                    K2=16
+                    format677 = "(16I5)"
+                    for K in fort_range(1,10):  # .lbl678
+                        fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
+                        if NRED[K2] == 0:
+                            break
+                        K1=K1+16
+                        K2=K2+16
+
+                    for K in fort_range(K1,K2):  # .lbl680
+                        if NRED[K] == 0:
                             break
 
-                    if DUM == LABL.AKON[4]:
-                        ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
-                        goto .lbl50
-
-                output_result_correlation_matrix(gauss, data, APR, IPP, NC,
-                        LABL, JA, file_IO4)
-                exit()
-
-
-            if K == 4:
-                ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
-                goto .lbl50
-            if K == 5:
-                #
-                #      I/O CONTROL
-                #
-                IPP = [None for i in range(9)]
-                IPP[1] = MC1
-                IPP[2] = MC2
-                IPP[3] = MC3
-                IPP[4] = MC4
-                IPP[5] = MC5
-                IPP[6] = MC6
-                IPP[7] = MC7
-                IPP[8] = MC8
-                goto .lbl50
-
-            if K == 6:
-                format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
-                fort_write(file_IO4, format104, [ACON])
-                exit()
-
-            if K == 7:
-                #
-                #    Data BLOCK complete
-                #
-                N1=N-1
-                if ID == 0:
+                    NELI=K-1
                     goto .lbl50
 
-                IREP = 0
-                complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
 
-                if not (IPP[3] == 0 or N == 1 or MODC == 2):
-                    output_Ecor_matrix(data, N, file_IO4)
-
-                if not (MODC == 2 or N == 1):
-                    invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
-                    if not invertible:
-                        goto .lbl50
-
-                NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
-                        NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
-                goto .lbl50
-
-            if K == 8:
-                NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
-                goto .lbl50
-
-
-            if K == 9:
-                #
-                #   MODE DEFINITION
-                #
-                MODC = MC1
-                MOD2 = MC2
-                #VPBEG MPPP=1 allows to use anti-PPP option, when errors of exp data 
-                #VP   are taken as % uncertainties from true (posterior) evaluation 
-                MPPP = MC5
-                #VPEND
-                AMO3=MC3/10.
-                MODAP=MC4
-                if MC2 != 10:
+                if K == 10:
+                    force_stop(file_IO4)
+                if K == 11:
+                    # input:  data set numbers which are to be excluded from the evaluation
+                    IELIM = MC1
+                    format171 = r"(16I5)"
+                    NELIM = fort_read(file_IO3, format171)
                     goto .lbl50
-                #
-                #      test option:  input of data set numbers which are to be downweighted
-                #
-                K1=1
-                K2=16
-                format677 = "(16I5)"
-                for K in fort_range(1,10):  # .lbl678
-                    fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
-                    if NRED[K2] == 0:
-                        break
-                    K1=K1+16
-                    K2=K2+16
 
-                for K in fort_range(K1,K2):  # .lbl680
-                    if NRED[K] == 0:
-                        break
-
-                NELI=K-1
-                goto .lbl50
-
-
-            if K == 10:
-                force_stop(file_IO4)
-            if K == 11:
-                # input:  data set numbers which are to be excluded from the evaluation
-                IELIM = MC1
-                format171 = r"(16I5)"
-                NELIM = fort_read(file_IO3, format171)
-                goto .lbl50
-
-    # end loop: .lbl10
+        # end loop: .lbl10
 
 
 main()
