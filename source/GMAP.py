@@ -242,8 +242,68 @@ def main():
                 # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
                 NC, NR = read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
                 goto .lbl50
+
             if K == 2:
-                goto .lbl2
+
+                MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
+                read_dataset_input(
+                        MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+                        data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
+                        ID, N, file_IO3, file_IO4
+                )
+
+                NALT, L, NADD = \
+                accounting(
+                        data, APR, MT, NT, NCT,
+                        KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
+                )
+
+
+                exclflag, NP, ID, NADD = \
+                should_exclude_dataset(
+                        NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4
+                )
+
+                if exclflag:
+                    goto .lbl50
+
+                #
+                #      continue for valid data
+                #
+                IDEN[ID, 1] = NP
+                NADD1 = NADD - 1
+
+                MODC, L = \
+                construct_Ecor(
+                        data, NETG, IDEN, NCSST, NEC,
+                        L, MODC, NCOX, NALT, NP, NADD1, ID,
+                        XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
+                )
+
+                if MT == 6:
+                    goto .lbl28
+                #
+                #   output of KAS for checking
+                #
+                if IPP[7] == 0:
+                    goto .lbl2309
+
+                format702 = "(20I5)"
+                for K in fort_range(1,NCT):
+                    fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
+
+                label .lbl2309
+
+                (NSHP, L, AP) = \
+                determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
+                        MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
+                        MODREP, LDB, MC1, NCT, file_IO4)
+
+                label .lbl28
+
+                N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
+                goto .lbl50
+
             if K == 3:
                 goto .lbl3
             if K == 4:
@@ -285,66 +345,6 @@ def main():
                 goto .lbl50
 
     # end loop: .lbl10
-
-    label .lbl2
-    MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
-    read_dataset_input(
-            MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-            data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
-            ID, N, file_IO3, file_IO4
-    )
-
-    NALT, L, NADD = \
-    accounting(
-            data, APR, MT, NT, NCT,
-            KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
-    )
-
-
-    exclflag, NP, ID, NADD = \
-    should_exclude_dataset(
-            NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4
-    )
-
-    if exclflag:
-        goto .lbl50
-
-    #
-    #      continue for valid data
-    #
-    IDEN[ID, 1] = NP
-    NADD1 = NADD - 1
-
-    MODC, L = \
-    construct_Ecor(
-            data, NETG, IDEN, NCSST, NEC,
-            L, MODC, NCOX, NALT, NP, NADD1, ID,
-            XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
-    )
-
-    if MT == 6:
-        goto .lbl28
-    #
-    #   output of KAS for checking
-    #
-    if IPP[7] == 0:
-        goto .lbl2309
-
-    format702 = "(20I5)"
-    for K in fort_range(1,NCT):
-        fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
-
-    label .lbl2309
-
-    (NSHP, L, AP) = \
-    determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
-            MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
-            MODREP, LDB, MC1, NCT, file_IO4)
-
-    label .lbl28
-
-    N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
-    goto .lbl50
 
     #
     #    Data BLOCK complete
