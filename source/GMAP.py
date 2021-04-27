@@ -258,7 +258,8 @@ def main():
             if K == 7:
                 goto .lbl7
             if K == 8:
-                goto .lbl8
+                NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
+                goto .lbl50
             if K == 9:
                 goto .lbl9
             if K == 10:
@@ -401,13 +402,6 @@ def main():
 
     output_result_correlation_matrix(gauss, data, APR, IPP, NC,
             LABL, JA, file_IO4)
-
-
-    label .lbl8
-
-    NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
-
-    goto .lbl50
 
     #
     #   MODE DEFINITION
