@@ -250,7 +250,20 @@ def main():
                 ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
                 goto .lbl50
             if K == 5:
-                goto .lbl5
+                #
+                #      I/O CONTROL
+                #
+                IPP = [None for i in range(9)]
+                IPP[1] = MC1
+                IPP[2] = MC2
+                IPP[3] = MC3
+                IPP[4] = MC4
+                IPP[5] = MC5
+                IPP[6] = MC6
+                IPP[7] = MC7
+                IPP[8] = MC8
+                goto .lbl50
+
             if K == 6:
                 format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
                 fort_write(file_IO4, format104, [ACON])
@@ -272,22 +285,6 @@ def main():
                 goto .lbl50
 
     # end loop: .lbl10
-
-    #
-    #      I/O CONTROL
-    #
-    label .lbl5
-    IPP = [None for i in range(9)]
-    IPP[1] = MC1
-    IPP[2] = MC2
-    IPP[3] = MC3
-    IPP[4] = MC4
-    IPP[5] = MC5
-    IPP[6] = MC6
-    IPP[7] = MC7
-    IPP[8] = MC8
-    goto .lbl50
-
 
     label .lbl2
     MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
