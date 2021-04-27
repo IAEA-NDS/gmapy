@@ -229,11 +229,13 @@ def main():
                  r"'    GAUSS-MARKOV-AITKEN LEAST SQUARES NUCLEAR DATA EVALUATION'//," +
                  r"'    W.P.POENITZ,ANL'///")
     fort_write(file_IO4, format110, [])
+
+    label .lbl50
+
     #
     #      Control parameter input
     #
     format100 = "(A4,1X,8I5)"
-    label .lbl50
     ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
     #
     for K in fort_range(1, 11):  # .lbl10
