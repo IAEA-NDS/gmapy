@@ -149,7 +149,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     format123 = "(16I5)"
     if NCT > 3:
         NT[4:(NCT+1)] = fort_read(file_IO3, format123)
-        L = NCT + 1  # to match L value of fortran after READ loop
+
     ID = ID+1
     IDEN[ID,2] = N+1
     IDEN[ID,6] = NS
@@ -173,14 +173,10 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NU1 = NU + 1
     format139 = "(2X,8HDATA SET,I5,2X,A16,4(2X,2A8))"
     tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(1,NU)]
-    L = 3  # to reflect value of L after loop in Fortran
-           # because L in list comprehension goes immediately out of scope
     fort_write(file_IO4, format139, [MC1, LABL.TYPE[MT],tmp])
     if NCT2 > 0:
         format149 = "(2X,6(2X,2A8))"
         tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
-        L = 3  # to reflect value of L after loop in Fortran
-               # because L in list comprehension goes immediately out of scope
         fort_write(file_IO4, format149, tmp)
 
     #
@@ -202,13 +198,11 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     if MTTP != 2:
         format201 = "(10F5.1,10I3)"
         data.ENFF[ID, 1:11], NENF[ID, 1:11] = unflatten(fort_read(file_IO3, format201), [[10],[10]])
-
         #
         #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
         #
         for L in fort_range(1,10):  # .lbl208
             XNORU = XNORU + (data.ENFF[ID,L])**2
-        L = L + 1  # to match L value of fortran after loop
 
     #
     #       READ(3,    ) ENERGY DEPENDENT UNCERTAINTY PARAMETERS
