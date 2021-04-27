@@ -231,7 +231,6 @@ def main():
     fort_write(file_IO4, format110, [])
 
     while True:
-        label .lbl50
 
         #
         #      Control parameter input
@@ -266,7 +265,7 @@ def main():
             )
 
             if exclflag:
-                goto .lbl50
+                continue
 
             #
             #      continue for valid data
@@ -330,7 +329,7 @@ def main():
 
                 if DUM == LABL.AKON[4]:
                     ID, N, NADD = read_block_input(data, gauss, LDA, LDB, KA, KAS, MODREP, file_IO4)
-                    goto .lbl50
+                    continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP, NC,
                     LABL, JA, file_IO4)
@@ -368,7 +367,7 @@ def main():
             #
             N1=N-1
             if ID == 0:
-                goto .lbl50
+                continue
 
             IREP = 0
             complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
@@ -379,7 +378,7 @@ def main():
             if not (MODC == 2 or N == 1):
                 invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
                 if not invertible:
-                    goto .lbl50
+                    continue
 
             NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
                     NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
@@ -402,7 +401,7 @@ def main():
             AMO3=MC3/10.
             MODAP=MC4
             if MC2 != 10:
-                goto .lbl50
+                continue
             #
             #      test option:  input of data set numbers which are to be downweighted
             #
