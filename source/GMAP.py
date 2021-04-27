@@ -398,6 +398,8 @@ def main():
     output_result_correlation_matrix(gauss, data, APR, IPP, NC,
             LABL, JA, file_IO4)
 
+    exit()
+
     #
     #   MODE DEFINITION
     #

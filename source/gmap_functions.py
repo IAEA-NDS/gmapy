@@ -1539,7 +1539,6 @@ def output_result_correlation_matrix(gauss, data, APR, IPP, NC,
         L = L + 1  # to match L value of fortran after loop
     label .lbl78
     label .lbl184
-    exit()
 
 
 
