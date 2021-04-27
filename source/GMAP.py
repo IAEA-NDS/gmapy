@@ -399,26 +399,25 @@ def main():
             #VPEND
             AMO3=MC3/10.
             MODAP=MC4
-            if MC2 != 10:
-                continue
-            #
-            #      test option:  input of data set numbers which are to be downweighted
-            #
-            K1=1
-            K2=16
-            format677 = "(16I5)"
-            for K in fort_range(1,10):  # .lbl678
-                fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
-                if NRED[K2] == 0:
-                    break
-                K1=K1+16
-                K2=K2+16
+            if MC2 == 10:
+                #
+                #      test option:  input of data set numbers which are to be downweighted
+                #
+                K1=1
+                K2=16
+                format677 = "(16I5)"
+                for K in fort_range(1,10):  # .lbl678
+                    fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
+                    if NRED[K2] == 0:
+                        break
+                    K1=K1+16
+                    K2=K2+16
 
-            for K in fort_range(K1,K2):  # .lbl680
-                if NRED[K] == 0:
-                    break
+                for K in fort_range(K1,K2):  # .lbl680
+                    if NRED[K] == 0:
+                        break
 
-            NELI=K-1
+                NELI=K-1
 
 
         # LABL.AKON[10] == 'STOP'
