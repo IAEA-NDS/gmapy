@@ -252,38 +252,42 @@ def accounting(data, APR, MT, NT, NCT,
         #      KAS(I,L)   GIVES INDEX OF EVALUATION ENERGY FOR I.TH EXP POINT
         #                 AND L.TH CROSS SECTION
         #
-        if MT == 6:
-            goto .lbl70
-
-        #
-        #      NCT is the number of cross sections involved
-        #
-        for L in fort_range(1,NCT):  # .lbl48
-            JE = APR.MCS[NT[L], 2]
-            JI = APR.MCS[NT[L], 3]
-
-            for K in fort_range(JE, JI):  # .lbl12
-                E1 = .999*APR.EN[K]
-                E2 = 1.001*APR.EN[K]
-                if data.E[NADD] > E1 and data.E[NADD] < E2:
-                    goto .lbl75
-            # .lbl12
-            goto .lbl15
-            label .lbl75
-            KAS[NADD, L] = K
+        if MT != 6:
             #
-            #      Exception for dummy data sets
+            #      NCT is the number of cross sections involved
             #
-            if NS >= 900 and NS <= 909:
-                data.CSS[NADD] = APR.CS[K]
-            # .lbl48
-        L = L + 1  # to match L value of fortran after loop
+            for L in fort_range(1,NCT):  # .lbl48
+                JE = APR.MCS[NT[L], 2]
+                JI = APR.MCS[NT[L], 3]
+
+                found = False
+                for K in fort_range(JE, JI):  # .lbl12
+                    E1 = .999*APR.EN[K]
+                    E2 = 1.001*APR.EN[K]
+                    if data.E[NADD] > E1 and data.E[NADD] < E2:
+                        found = True
+                        break
+
+                if not found:
+                    break
+
+                KAS[NADD, L] = K
+                #
+                #      Exception for dummy data sets
+                #
+                if NS >= 900 and NS <= 909:
+                    data.CSS[NADD] = APR.CS[K]
+                # .lbl48
+
+            if not found:
+                break
+
+            L = L + 1  # to match L value of fortran after loop
 
         #
         #      this is the Axton special (uncertainties have been multiplied by 10
         #         in order to preserve precision beyond 0.1%)
         #
-        label .lbl70
         if NNCOX == 0:
             goto .lbl59
         for LZ in fort_range(1,11):  # .lbl57
