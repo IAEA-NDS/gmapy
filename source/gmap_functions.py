@@ -398,7 +398,6 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
         #
         #       UNCORRELATED OR SINGLE VALUE
         #
-        label .lbl1779
         for KLK in fort_range(NALT, NADD1):  # .lbl74
             data.ECOR[KLK,KLK] = 1.
 
@@ -408,44 +407,38 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
         #       CONSTRUCT ECOR FROM UNCERTAINTY COMPONENTS
         #
         data.ECOR[NALT, NALT] = 1.
-        if NP == 1:
-            goto .lbl1789
-        NALT1 = NALT + 1
-        for KS in fort_range(NALT1, NADD1):  # .lbl62
-            C1 = data.DCS[KS]
-            KS1 = KS - 1
+        if NP != 1:
+            NALT1 = NALT + 1
+            for KS in fort_range(NALT1, NADD1):  # .lbl62
+                C1 = data.DCS[KS]
+                KS1 = KS - 1
 
-            for KT in fort_range(NALT, KS1):  # .lbl162
-                Q1 = 0.
-                C2 = data.DCS[KT]
-                for L in fort_range(3,11):  # .lbl215
-                    if NETG[L, ID] == 9:
-                        goto .lbl214
-                    if NETG[L, ID] == 0:
-                        goto .lbl214
+                for KT in fort_range(NALT, KS1):  # .lbl162
+                    Q1 = 0.
+                    C2 = data.DCS[KT]
+                    for L in fort_range(3,11):  # .lbl215
+                        if NETG[L, ID] == 9:
+                            continue
+                        if NETG[L, ID] == 0:
+                            continue
 
-                    FKS = data.EPAF[1,L,ID] + data.EPAF[2,L,ID]
-                    XYY = data.EPAF[2,L,ID] - (data.E[KS]-data.E[KT])/(data.EPAF[3,L,ID]*data.E[KS])
-                    if XYY < 0.:
-                        XYY = 0.
-                    FKT = data.EPAF[1, L, ID] + XYY
-                    Q1=Q1+data.CO[L,KS]*data.CO[L,KT]*FKS*FKT
+                        FKS = data.EPAF[1,L,ID] + data.EPAF[2,L,ID]
+                        XYY = data.EPAF[2,L,ID] - (data.E[KS]-data.E[KT])/(data.EPAF[3,L,ID]*data.E[KS])
+                        if XYY < 0.:
+                            XYY = 0.
+                        FKT = data.EPAF[1, L, ID] + XYY
+                        Q1=Q1+data.CO[L,KS]*data.CO[L,KT]*FKS*FKT
 
-                    label .lbl214
-                    label .lbl215
-                L = L + 1  # to match L value of fortran after loop
-                CERR = (Q1 + XNORU) / (C1*C2)
+                    L = L + 1  # to match L value of fortran after loop
+                    CERR = (Q1 + XNORU) / (C1*C2)
 
-                if CERR > .99:
-                    CERR = .99
-                # limit accuracy of comparison to reflect
-                # Fortran behavior
+                    if CERR > .99:
+                        CERR = .99
+                    # limit accuracy of comparison to reflect
+                    # Fortran behavior
+                    data.ECOR[KS,KT] = CERR
 
-                label .lbl162
-                data.ECOR[KS,KT] = CERR
-
-            data.ECOR[KS, KS] = 1.
-        label .lbl62
+                data.ECOR[KS, KS] = 1.
 
         #
         #   ADD CROSS CORRELATIONS OF EXPERIMENTAL DATA BLOCK
