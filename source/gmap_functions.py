@@ -474,7 +474,6 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
                     if not (MTT == 2 and NP == 1) and \
                        not (MTTP == 2 and NCPP == 1):
 
-                        label .lbl469
                         NCST = IDEN[II, 2]
                         NCED = NCPP + NCST - 1
                         for K in fort_range(NALT, NADD1):  # .lbl278
@@ -495,13 +494,9 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
                                     if NC1 > 10:
                                         NC1 = NC1 - 10
                                         if NETG[NC1, ID] == 9:
-                                            goto .lbl2800
-                                        FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
-                                        goto .lbl2801
-
-                                        label .lbl2800
-                                        FKT = 1.
-                                        label .lbl2801
+                                            FKT = 1.
+                                        else:
+                                            FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
 
                                         C11 = FKT*data.CO[NC1, K]
                                     else:
