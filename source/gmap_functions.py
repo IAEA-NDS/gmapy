@@ -521,25 +521,21 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
 
 
 
-@with_goto
 def determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
         MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
         MODREP, LDB, MC1, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
-    if MTTP == 1:
-        goto .lbl2828
+    if MTTP != 1:
+        NSHP = NSHP + 1
+        NSETN[NSHP] = NS
+        L = NR + NSHP
+        if L > LDB:
+            format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
+            fort_write(file_IO4, format701, [MC1])
+            exit()
 
-    NSHP = NSHP + 1
-    NSETN[NSHP] = NS
-    L = NR + NSHP
-    if L > LDB:
-        format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
-        fort_write(file_IO4, format701, [MC1])
-        exit()
-
-    label .lbl2828
     #VP   PRIOR/EXP column is added
     format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \
                  " PRIOR/EXP UNCERT./%    DIFF./%" + \
@@ -553,7 +549,6 @@ def determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
         WXX = 1./(DCSK*DCSK)
         WWT = WWT + WXX
 
-        label .lbl97
         KX = KAS[K, 1]
         KY=KAS[K,2]
         KZ=KAS[K, 3]
@@ -578,45 +573,30 @@ def determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
         #
         #      DATA OUTPUT
         #
-        if IPP[2] == 0:
-            goto .lbl99
+        if IPP[2] != 0:
+            SECS = np.sqrt(data.E[K])*CSSK
+            FDQ = DCSK * CSSK/100.
+            DIFF = (CSSK-AX)*100./AX
+            #VP   AZ print out was added
+            format133 = "(2X,E10.4,2X,E10.4,2X,E10.4,3X,F6.4,3X,F6.2," + \
+                        " 3X,F10.2,3X,F10.4)"
+            fort_write(file_IO4, format133, [data.E[K], CSSK, FDQ, AZ, DCSK, DIFF, SECS])
+            #VP   Print out for Ratio of pior/exp value is added
 
-        SECS = np.sqrt(data.E[K])*CSSK
-        FDQ = DCSK * CSSK/100.
-        DIFF = (CSSK-AX)*100./AX
-        #VP   AZ print out was added
-        format133 = "(2X,E10.4,2X,E10.4,2X,E10.4,3X,F6.4,3X,F6.2," + \
-                    " 3X,F10.2,3X,F10.4)"
-        fort_write(file_IO4, format133, [data.E[K], CSSK, FDQ, AZ, DCSK, DIFF, SECS])
-        #VP   Print out for Ratio of pior/exp value is added
-        label .lbl99
-        #
         AP=AP+AZ*WXX
-    label .lbl29  # end for loop
 
 
     AP=AP/WWT
     # VP      if(modrep .ne. 0) go to 2627
     format111 = "(/' APRIORI NORM ',I4,F10.4,I5,2X,4A8)"
     fort_write(file_IO4, format111, [L, AP, NS, LABL.CLABL[1:5]])
-    label .lbl2627
     if MTTP == 2:
-        goto .lbl2826
+        if MODREP == 0:
+            AP = 1.0 / AP
+            APR.CS[L] = AP
+        else:
+            AP=APR.CS[L]
 
-    goto .lbl28a
-
-    label .lbl2826
-    if MODREP != 0:
-        goto .lbl63
-
-    AP = 1.0 / AP
-    APR.CS[L] = AP
-    goto .lbl28a
-
-    label .lbl63
-    AP=APR.CS[L]
-
-    label .lbl28a
     return (NSHP, L, AP)
 
 
