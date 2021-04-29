@@ -356,7 +356,6 @@ def should_exclude_dataset(NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4):
 
 
 
-@with_goto
 def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
         L, MODC, NCOX, NALT, NP, NADD1, ID,
         XNORU, NCCS, MTTP, NS, file_IO3, file_IO4):
@@ -367,12 +366,10 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
     #               2   UNCORRELATED
     #               3   ALL CORRELATED ERRORS GIVEN
     #
-    if NCOX == 0:
-        goto .lbl5001
-    MODAL = MODC
-    MODC = 1
+    if NCOX != 0:
+        MODAL = MODC
+        MODC = 1
 
-    label .lbl5001
     if MODC == 1:
         #
         #      INPUT OF ECOR
@@ -443,7 +440,6 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
         #
         #   ADD CROSS CORRELATIONS OF EXPERIMENTAL DATA BLOCK
         #
-        label .lbl1789
         if ID != 1 and NCCS != 0:
 
             ID1 = ID - 1
@@ -465,7 +461,6 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
                     fort_write(file_IO4, format274, [NSET, NS])
 
                 else:
-                    label .lbl273
                     NCPP = IDEN[II, 1]
                     #
                     #      cross correlation
@@ -506,18 +501,13 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
                                         NC2 = NC2 - 10
 
                                         if NETG[NC2, II] == 9:
-                                            goto .lbl2802
+                                            FKS = 1.
+                                        else:
+                                            XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
+                                            if XYY < 0.:
+                                                XYY = 0.
+                                            FKS = data.EPAF[1, NC2, II] + XYY
 
-                                        XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
-                                        if XYY < 0.:
-                                            XYY = 0.
-                                        FKS = data.EPAF[1, NC2, II] + XYY
-                                        goto .lbl2803
-
-                                        label .lbl2802
-                                        FKS = 1.
-
-                                        label .lbl2803
                                         C22 = FKS * data.CO[NC2, KK]
 
                                     else:
@@ -525,9 +515,6 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
 
                                     Q1 = Q1 + AMUFA*C11*C22
 
-                                    label .lbl2811
-                                label .lbl281
-                                label .lbl2753
                                 data.ECOR[K,KK] = Q1/(C1*C2)
 
     return (MODC, L)
