@@ -486,11 +486,11 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
                                     NC1 = NEC[1, KKK, I]
                                     NC2 = NEC[2, KKK, I]
                                     if NC1 > 21 or NC2 > 21:
-                                        goto .lbl2811
-                                    if NC1 == 0:
-                                        goto .lbl2753
-                                    if NC2 == 0:
-                                        goto .lbl2753
+                                        continue
+
+                                    if NC1 == 0 or NC2 == 0:
+                                        break
+
                                     AMUFA = data.FCFC[KKK, I]
                                     if NC1 > 10:
                                         goto .lbl310
