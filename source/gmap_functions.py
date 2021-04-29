@@ -503,29 +503,26 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
                                         C11 = data.ENFF[ID, NC1]
 
                                     if NC2 > 10:
-                                        goto .lbl312
-                                    C22 = data.ENFF[II, NC2]
-                                    goto .lbl313
+                                        NC2 = NC2 - 10
 
-                                    label .lbl312
-                                    NC2 = NC2 - 10
+                                        if NETG[NC2, II] == 9:
+                                            goto .lbl2802
 
-                                    if NETG[NC2, II] == 9:
-                                        goto .lbl2802
+                                        XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
+                                        if XYY < 0.:
+                                            XYY = 0.
+                                        FKS = data.EPAF[1, NC2, II] + XYY
+                                        goto .lbl2803
 
-                                    XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
-                                    if XYY < 0.:
-                                        XYY = 0.
-                                    FKS = data.EPAF[1, NC2, II] + XYY
-                                    goto .lbl2803
+                                        label .lbl2802
+                                        FKS = 1.
 
-                                    label .lbl2802
-                                    FKS = 1.
+                                        label .lbl2803
+                                        C22 = FKS * data.CO[NC2, KK]
 
-                                    label .lbl2803
-                                    C22 = FKS * data.CO[NC2, KK]
+                                    else:
+                                        C22 = data.ENFF[II, NC2]
 
-                                    label .lbl313
                                     Q1 = Q1 + AMUFA*C11*C22
 
                                     label .lbl2811
