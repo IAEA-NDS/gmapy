@@ -493,24 +493,20 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
 
                                     AMUFA = data.FCFC[KKK, I]
                                     if NC1 > 10:
-                                        goto .lbl310
-                                    C11 = data.ENFF[ID, NC1]
-                                    goto .lbl311
+                                        NC1 = NC1 - 10
+                                        if NETG[NC1, ID] == 9:
+                                            goto .lbl2800
+                                        FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
+                                        goto .lbl2801
 
-                                    label .lbl310
-                                    NC1 = NC1 - 10
-                                    if NETG[NC1, ID] == 9:
-                                        goto .lbl2800
-                                    FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
-                                    goto .lbl2801
+                                        label .lbl2800
+                                        FKT = 1.
+                                        label .lbl2801
 
-                                    label .lbl2800
-                                    FKT = 1.
-                                    label .lbl2801
+                                        C11 = FKT*data.CO[NC1, K]
+                                    else:
+                                        C11 = data.ENFF[ID, NC1]
 
-                                    C11 = FKT*data.CO[NC1, K]
-
-                                    label .lbl311
                                     if NC2 > 10:
                                         goto .lbl312
                                     C22 = data.ENFF[II, NC2]
