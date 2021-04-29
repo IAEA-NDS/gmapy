@@ -450,100 +450,97 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
             for I in fort_range(1,NCCS):  # .lbl271
 
                 NSET = NCSST[I]
+                found = False
                 for II in fort_range(1,ID1):  # .lbl272
                     if IDEN[II,6] == NSET:
-                        goto .lbl273
-                #
-                #   CORRELATED DATA SET NOT FOUND AHEAD OF PRESENT DATA
-                #   SET WITHIN DATA BLOCK
-                #
-                format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)" 
-                fort_write(file_IO4, format274, [NSET, NS])
-                goto .lbl275
+                        found = True
+                        break
 
-                label .lbl273
-                NCPP = IDEN[II, 1]
-                #
-                #      cross correlation
-                #
-                MTT = IDEN[II, 8]
-                if MTT == 2 and NP == 1:
-                    goto .lbl275
-                if MTTP == 2 and NCPP == 1:
-                    goto .lbl275
+                if not found:
+                    #
+                    #   CORRELATED DATA SET NOT FOUND AHEAD OF PRESENT DATA
+                    #   SET WITHIN DATA BLOCK
+                    #
+                    format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)" 
+                    fort_write(file_IO4, format274, [NSET, NS])
 
-                label .lbl469
-                NCST = IDEN[II, 2]
-                NCED = NCPP + NCST - 1
-                for K in fort_range(NALT, NADD1):  # .lbl278
-                    C1 = data.DCS[K]
-                    for KK in fort_range(NCST, NCED):  # .lbl279
-                        C2 = data.DCS[KK]
-                        Q1 = 0.
-                        for KKK in fort_range(1,10):  # .lbl281
-                            NC1 = NEC[1, KKK, I]
-                            NC2 = NEC[2, KKK, I]
-                            if NC1 > 21 or NC2 > 21:
-                                goto .lbl2811
-                            if NC1 == 0:
-                                goto .lbl2753
-                            if NC2 == 0:
-                                goto .lbl2753
-                            AMUFA = data.FCFC[KKK, I]
-                            if NC1 > 10:
-                                goto .lbl310
-                            C11 = data.ENFF[ID, NC1]
-                            goto .lbl311
+                else:
+                    label .lbl273
+                    NCPP = IDEN[II, 1]
+                    #
+                    #      cross correlation
+                    #
+                    MTT = IDEN[II, 8]
+                    if not (MTT == 2 and NP == 1) and \
+                       not (MTTP == 2 and NCPP == 1):
 
-                            label .lbl310
-                            NC1 = NC1 - 10
-                            if NETG[NC1, ID] == 9:
-                                goto .lbl2800
-                            FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
-                            goto .lbl2801
+                        label .lbl469
+                        NCST = IDEN[II, 2]
+                        NCED = NCPP + NCST - 1
+                        for K in fort_range(NALT, NADD1):  # .lbl278
+                            C1 = data.DCS[K]
+                            for KK in fort_range(NCST, NCED):  # .lbl279
+                                C2 = data.DCS[KK]
+                                Q1 = 0.
+                                for KKK in fort_range(1,10):  # .lbl281
+                                    NC1 = NEC[1, KKK, I]
+                                    NC2 = NEC[2, KKK, I]
+                                    if NC1 > 21 or NC2 > 21:
+                                        goto .lbl2811
+                                    if NC1 == 0:
+                                        goto .lbl2753
+                                    if NC2 == 0:
+                                        goto .lbl2753
+                                    AMUFA = data.FCFC[KKK, I]
+                                    if NC1 > 10:
+                                        goto .lbl310
+                                    C11 = data.ENFF[ID, NC1]
+                                    goto .lbl311
 
-                            label .lbl2800
-                            FKT = 1.
-                            label .lbl2801
+                                    label .lbl310
+                                    NC1 = NC1 - 10
+                                    if NETG[NC1, ID] == 9:
+                                        goto .lbl2800
+                                    FKT = data.EPAF[1, NC1, ID] + data.EPAF[2, NC1, ID]
+                                    goto .lbl2801
 
-                            C11 = FKT*data.CO[NC1, K]
+                                    label .lbl2800
+                                    FKT = 1.
+                                    label .lbl2801
 
-                            label .lbl311
-                            if NC2 > 10:
-                                goto .lbl312
-                            C22 = data.ENFF[II, NC2]
-                            goto .lbl313
+                                    C11 = FKT*data.CO[NC1, K]
 
-                            label .lbl312
-                            NC2 = NC2 - 10
+                                    label .lbl311
+                                    if NC2 > 10:
+                                        goto .lbl312
+                                    C22 = data.ENFF[II, NC2]
+                                    goto .lbl313
 
-                            if NETG[NC2, II] == 9:
-                                goto .lbl2802
+                                    label .lbl312
+                                    NC2 = NC2 - 10
 
-                            XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
-                            if XYY < 0.:
-                                XYY = 0.
-                            FKS = data.EPAF[1, NC2, II] + XYY
-                            goto .lbl2803
+                                    if NETG[NC2, II] == 9:
+                                        goto .lbl2802
 
-                            label .lbl2802
-                            FKS = 1.
+                                    XYY = data.EPAF[2,NC2,II] - np.abs(data.E[K]-data.E[KK])/ (data.EPAF[3,NC2,II]*data.E[KK])
+                                    if XYY < 0.:
+                                        XYY = 0.
+                                    FKS = data.EPAF[1, NC2, II] + XYY
+                                    goto .lbl2803
 
-                            label .lbl2803
-                            C22 = FKS * data.CO[NC2, KK]
+                                    label .lbl2802
+                                    FKS = 1.
 
-                            label .lbl313
-                            Q1 = Q1 + AMUFA*C11*C22
+                                    label .lbl2803
+                                    C22 = FKS * data.CO[NC2, KK]
 
-                            label .lbl2811
-                        label .lbl281
-                        label .lbl2753
-                        data.ECOR[K,KK] = Q1/(C1*C2)
+                                    label .lbl313
+                                    Q1 = Q1 + AMUFA*C11*C22
 
-                    label .lbl279
-                label .lbl278
-                label .lbl275
-            label .lbl271
+                                    label .lbl2811
+                                label .lbl281
+                                label .lbl2753
+                                data.ECOR[K,KK] = Q1/(C1*C2)
 
     return (MODC, L)
 
