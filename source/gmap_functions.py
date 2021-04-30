@@ -1020,7 +1020,6 @@ def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
 
 
 
-@with_goto
 def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
 #
 #      GETTING THE RESULT
@@ -1034,13 +1033,12 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
     NRST=NRS*(NRS+1)/2
     if IPP[8] ==  0:
         force_stop(file_IO4)
-    if IPP[4] == 0:
-        goto .lbl68
-    format116 = "(1H*//,'  MATRIX PRODUCT'//)"
-    fort_write(file_IO4, format116, [])
-    format152 = "(2X,10E10.4)"
-    fort_write(file_IO4, format152, gauss.B[1:(NRST+1)])
-    label .lbl68
+    if IPP[4] != 0:
+        format116 = "(1H*//,'  MATRIX PRODUCT'//)"
+        fort_write(file_IO4, format116, [])
+        format152 = "(2X,10E10.4)"
+        fort_write(file_IO4, format152, gauss.B[1:(NRST+1)])
+
     format2840 = "(80X,9HLDB,NRS= ,2I6,6H  NTOT,I8)"
     fort_write(file_IO4, format2840, [LDB, NRS, NTOT])
     format7103 = "(2E16.8)"
@@ -1103,7 +1101,6 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
             if K < I:
                 IK = I*(I-1)//2 + K
             gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
-        label .lbl13
 
 
 @with_goto
