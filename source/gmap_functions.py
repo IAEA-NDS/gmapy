@@ -677,7 +677,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
 
                 gauss.AA[J,KR]=CSSJ*data.FIS[K]/DQQQ
 
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
         elif MT == 5:
             #
@@ -696,7 +697,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
                 KA[J,KR+1] = N
                 gauss.AA[J,KR] = APR.CS[J]/DQQQ
 
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
         elif MT == 8:
             #
@@ -719,7 +721,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KR=KA[L,1]
             KA[L,KR+1]=N
             gauss.AA[L,KR]=CX/DQQQ
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
 
         KA[J,1] = KA[J,1] + 1
@@ -732,7 +735,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             #
             CX = APR.CS[J]
             gauss.AA[J,KR] = CX / DQQQ
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
         elif MT == 2:
             #
@@ -745,7 +749,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KR = KA[L,1]
             KA[L,KR+1] = N
             gauss.AA[L,KR] =  CXX
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
         elif MT == 3:
             #
@@ -758,7 +763,9 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KR = KA[I,1]
             KA[I,KR+1] = N
             gauss.AA[I,KR] = -CCX
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
+
         elif MT == 4:
             #
             #      RATIO SHAPE
@@ -774,7 +781,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KR = KA[L,1]
             KA[L,KR+1] = N
             gauss.AA[L,KR] =  CXX
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
         elif MT == 5 or MT == 6 or MT == 8:
             format447 = "(10H ERROR 446)"
@@ -801,7 +809,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KA[I8,KR+1]=N
             CCX=CBX2*APR.CS[I8]
             gauss.AA[I8,KR]=-CCX
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
             label .lbl251
             CBX=CX*CX*APR.CS[I8]/(APR.CS[J]*DQQQ)
@@ -810,7 +819,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KR=KA[I8,1]
             KA[I8,KR+1]=N
             gauss.AA[I8,KR]=-CBX
-            goto .lbl36
+            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            continue
 
         elif MT == 9:
             #
@@ -830,6 +840,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
                 KR=KA[L,1]
                 KA[L,KR+1]=N
                 gauss.AA[L,KR]=CBX
+                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                continue
             else:
                 gauss.AA[J,KR]=CBX
                 KA[I,1]=KA[I,1]+1
@@ -846,9 +858,8 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
                 KR=KA[L,1]
                 KA[L,KR+1]=N
                 gauss.AA[L,KR]=CBX
-
-        label .lbl36
-        gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                continue
 
     label .lbl18  # end of for loop
     return N
