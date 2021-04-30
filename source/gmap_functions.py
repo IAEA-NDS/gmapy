@@ -651,76 +651,65 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
         KA[J,KR+1] = N
 
         if MT == 1:
-            goto .lbl41
+            #
+            #      CROSS SECTION
+            #
+            CX = APR.CS[J]
+            gauss.AA[J,KR] = CX / DQQQ
+            goto .lbl36
+
         if MT == 2:
-            goto .lbl42
+            #
+            #      CROSS SECTION SHAPE    L is shape data norm. const. index
+            #
+            CX = APR.CS[J]*AP
+            CXX = CX/DQQQ
+            gauss.AA[J,KR] = CXX
+            KA[L,1] = KA[L,1]+1
+            KR = KA[L,1]
+            KA[L,KR+1] = N
+            gauss.AA[L,KR] =  CXX
+            goto .lbl36
+
         if MT == 3:
-            goto .lbl43
+            #
+            #      RATIO
+            #
+            CX = APR.CS[J]/APR.CS[I]
+            CCX = CX/DQQQ
+            gauss.AA[J,KR] = CCX
+            KA[I,1] = KA[I,1]+1
+            KR = KA[I,1]
+            KA[I,KR+1] = N
+            gauss.AA[I,KR] = -CCX
+            goto .lbl36
         if MT == 4:
-            goto .lbl44
-        if MT == 5:
-            goto .lbl446
-        if MT == 6:
-            goto .lbl446
+            #
+            #      RATIO SHAPE
+            #
+            CX = APR.CS[J]*AP/APR.CS[I]
+            CXX = CX/DQQQ
+            gauss.AA[J,KR] = CXX
+            KA[I,1] = KA[I,1]+1
+            KR = KA[I,1]
+            KA[I,KR+1] = N
+            gauss.AA[I,KR] = -CXX
+            KA[L,1] = KA[L,1]+1
+            KR = KA[L,1]
+            KA[L,KR+1] = N
+            gauss.AA[L,KR] =  CXX
+            goto .lbl36
+
+        if MT == 5 or MT == 6 or MT == 8:
+            format447 = "(10H ERROR 446)"
+            fort_write(file_IO4, format447, [])
+            exit()
+
         if MT == 7:
             goto .lbl247
-        if MT == 8:
-            goto .lbl446
         if MT == 9:
             goto .lbl249
 
-        label .lbl446
-        format447 = "(10H ERROR 446)"
-        fort_write(file_IO4, format447, [])
-        exit()
-        #
-        #      CROSS SECTION
-        #
-        label .lbl41
-        CX = APR.CS[J]
-        gauss.AA[J,KR] = CX / DQQQ
-        goto .lbl36
-
-        #
-        #      CROSS SECTION SHAPE    L is shape data norm. const. index
-        #
-        label .lbl42
-        CX = APR.CS[J]*AP
-        CXX = CX/DQQQ
-        gauss.AA[J,KR] = CXX
-        KA[L,1] = KA[L,1]+1
-        KR = KA[L,1]
-        KA[L,KR+1] = N
-        gauss.AA[L,KR] =  CXX
-        goto .lbl36
-        #
-        #      RATIO
-        #
-        label .lbl43
-        CX = APR.CS[J]/APR.CS[I]
-        CCX = CX/DQQQ
-        gauss.AA[J,KR] = CCX
-        KA[I,1] = KA[I,1]+1
-        KR = KA[I,1]
-        KA[I,KR+1] = N
-        gauss.AA[I,KR] = -CCX
-        goto .lbl36
-        #
-        #      RATIO SHAPE
-        #
-        label .lbl44
-        CX = APR.CS[J]*AP/APR.CS[I]
-        CXX = CX/DQQQ
-        gauss.AA[J,KR] = CXX
-        KA[I,1] = KA[I,1]+1
-        KR = KA[I,1]
-        KA[I,KR+1] = N
-        gauss.AA[I,KR] = -CXX
-        KA[L,1] = KA[L,1]+1
-        KR = KA[L,1]
-        KA[L,KR+1] = N
-        gauss.AA[L,KR] =  CXX
-        goto .lbl36
         #
         #      TOTAL CROSS SECTION
         #
