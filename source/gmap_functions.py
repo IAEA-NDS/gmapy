@@ -621,11 +621,106 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
         N = N + 1
 
         if MT == 6:
-            goto .lbl46
+            #
+            #      FISSION AVERAGE
+            #
+            K = 0
+            if NT[1] == 9:
+                K = 1
+            JA = APR.MCS[NT[1],2]
+            JE = APR.MCS[NT[1],3]
+            NW1=1
+            if NT[1] == 9:
+                NW1 = 2
+            NW=NW1
+            FL=0.
+            SFL=0.
+            J1=JA+1
+            J2=JE-1
+
+            for LI in fort_range(J1, J2):  # .lbl53
+                NW=NW+1
+                FL=FL+data.FIS[NW]
+                EL1=(APR.EN[LI]+APR.EN[LI-1])*0.5
+                EL2=(APR.EN[LI]+APR.EN[LI+1])*0.5
+                DE1=(APR.EN[LI]-EL1)*0.5
+                DE2=(EL2-APR.EN[LI])*0.5
+                SS1=.5*(APR.CS[LI]+0.5*(APR.CS[LI]+APR.CS[LI-1]))
+                SS2=.5*(APR.CS[LI]+0.5*(APR.CS[LI]+APR.CS[LI+1]))
+                CSSLI=(SS1*DE1+SS2*DE2)/(DE1+DE2)
+                SFL=SFL+CSSLI*data.FIS[NW]
+
+            FL=FL+data.FIS[1]+data.FIS[NW+1]
+            SFL=SFL+data.FIS[1]*APR.CS[JA]+data.FIS[NW+1]*APR.CS[JE]
+            SFIS=SFL/FL
+            format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
+            fort_write(file_IO4, format156, [EAVR, SFIS, FL, data.CSS[KS], data.DCS[KS]])
+            CX=SFIS
+            for J in fort_range(JA, JE):  # .lbl39
+                K=K+1
+                KA[J,1]=KA[J,1]+1
+                KR=KA[J,1]
+                KA[J,KR+1]=N
+                if J == JA or J == JE:
+                    goto .lbl195
+                EL1=(APR.EN[J]+APR.EN[J-1])*0.5
+                EL2=(APR.EN[J]+APR.EN[J+1])*0.5
+                DE1=(APR.EN[J]-EL1)*0.5
+                DE2=(EL2-APR.EN[J])*0.5
+                SS1=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J-1]))
+                SS2=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J+1]))
+                CSSJ=(SS1*DE1+SS2*DE2)/(DE1+DE2)
+                goto .lbl196
+                label .lbl195
+                CSSJ = APR.CS[J]
+                label .lbl196
+
+                gauss.AA[J,KR]=CSSJ*data.FIS[K]/DQQQ
+
+            goto .lbl36
+
         if MT == 5:
-            goto .lbl45
+            #
+            #      TOTAL CROSS SECTION
+            #
+            CX = 0.
+            for I in fort_range(1,NCT):  # .lbl49
+                II = KAS[KS,I]
+                CX = CX+APR.CS[II]
+
+
+            for I in fort_range(1,NCT):  # .lbl60
+                J  = KAS[KS,I]
+                KA[J,1] = KA[J,1]+1
+                KR = KA[J,1]
+                KA[J,KR+1] = N
+                gauss.AA[J,KR] = APR.CS[J]/DQQQ
+
+            goto .lbl36
+
         if MT == 8:
-            goto .lbl248
+            #
+            #   SHAPE OF SUM
+            #
+            CX = 0.
+            for I in fort_range(1,NCT):  # .lbl253
+                II=KAS[KS,I]
+                CX=CX+APR.CS[II]*AP
+
+            APDQ=AP/DQQQ
+            for I in fort_range(1,NCT):  # .lbl254
+                J=KAS[KS,I]
+                KA[J,1]=KA[J,1]+1
+                KR=KA[J,1]
+                KA[J,KR+1]=N
+                gauss.AA[J,KR]=APR.CS[J]*APDQ
+
+            KA[L,1]=KA[L,1]+1
+            KR=KA[L,1]
+            KA[L,KR+1]=N
+            gauss.AA[L,KR]=CX/DQQQ
+            goto .lbl36
+
 
         KA[J,1] = KA[J,1] + 1
         KR = KA[J,1]
@@ -692,84 +787,6 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             goto .lbl249
 
         #
-        #      TOTAL CROSS SECTION
-        #
-        label .lbl45
-        CX = 0.
-        for I in fort_range(1,NCT):  # .lbl49
-            II = KAS[KS,I]
-            CX = CX+APR.CS[II]
-
-
-        for I in fort_range(1,NCT):  # .lbl60
-            J  = KAS[KS,I]
-            KA[J,1] = KA[J,1]+1
-            KR = KA[J,1]
-            KA[J,KR+1] = N
-            gauss.AA[J,KR] = APR.CS[J]/DQQQ
-
-        goto .lbl36
-
-        #
-        #      FISSION AVERAGE
-        #
-        label .lbl46
-        K = 0
-        if NT[1] == 9:
-            K = 1
-        JA = APR.MCS[NT[1],2]
-        JE = APR.MCS[NT[1],3]
-        NW1=1
-        if NT[1] == 9:
-            NW1 = 2
-        NW=NW1
-        FL=0.
-        SFL=0.
-        J1=JA+1
-        J2=JE-1
-
-        for LI in fort_range(J1, J2):  # .lbl53
-            NW=NW+1
-            FL=FL+data.FIS[NW]
-            EL1=(APR.EN[LI]+APR.EN[LI-1])*0.5
-            EL2=(APR.EN[LI]+APR.EN[LI+1])*0.5
-            DE1=(APR.EN[LI]-EL1)*0.5
-            DE2=(EL2-APR.EN[LI])*0.5
-            SS1=.5*(APR.CS[LI]+0.5*(APR.CS[LI]+APR.CS[LI-1]))
-            SS2=.5*(APR.CS[LI]+0.5*(APR.CS[LI]+APR.CS[LI+1]))
-            CSSLI=(SS1*DE1+SS2*DE2)/(DE1+DE2)
-            SFL=SFL+CSSLI*data.FIS[NW]
-
-        FL=FL+data.FIS[1]+data.FIS[NW+1]
-        SFL=SFL+data.FIS[1]*APR.CS[JA]+data.FIS[NW+1]*APR.CS[JE]
-        SFIS=SFL/FL
-        format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
-        fort_write(file_IO4, format156, [EAVR, SFIS, FL, data.CSS[KS], data.DCS[KS]])
-        CX=SFIS
-        for J in fort_range(JA, JE):  # .lbl39
-            K=K+1
-            KA[J,1]=KA[J,1]+1
-            KR=KA[J,1]
-            KA[J,KR+1]=N
-            if J == JA or J == JE:
-                goto .lbl195
-            EL1=(APR.EN[J]+APR.EN[J-1])*0.5
-            EL2=(APR.EN[J]+APR.EN[J+1])*0.5
-            DE1=(APR.EN[J]-EL1)*0.5
-            DE2=(EL2-APR.EN[J])*0.5
-            SS1=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J-1]))
-            SS2=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J+1]))
-            CSSJ=(SS1*DE1+SS2*DE2)/(DE1+DE2)
-            goto .lbl196
-            label .lbl195
-            CSSJ = APR.CS[J]
-            label .lbl196
-
-            gauss.AA[J,KR]=CSSJ*data.FIS[K]/DQQQ
-
-        goto .lbl36
-
-        #
         #   ABSOLUTE RATIO S1/(S2+S3)
         #
         label .lbl247
@@ -799,29 +816,6 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
         KA[I8,KR+1]=N
         gauss.AA[I8,KR]=-CBX
         goto .lbl36
-        #
-        #   SHAPE OF SUM
-        #
-        label .lbl248
-        CX = 0.
-        for I in fort_range(1,NCT):  # .lbl253
-            II=KAS[KS,I]
-            CX=CX+APR.CS[II]*AP
-
-        APDQ=AP/DQQQ
-        for I in fort_range(1,NCT):  # .lbl254
-            J=KAS[KS,I]
-            KA[J,1]=KA[J,1]+1
-            KR=KA[J,1]
-            KA[J,KR+1]=N
-            gauss.AA[J,KR]=APR.CS[J]*APDQ
-
-        KA[L,1]=KA[L,1]+1
-        KR=KA[L,1]
-        KA[L,KR+1]=N
-        gauss.AA[L,KR]=CX/DQQQ
-        goto .lbl36
-
         #
         #   SHAPE OF RATIO S1/(S2+S3)
         #
