@@ -966,7 +966,6 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
 
 
 
-@with_goto
 def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
         NR, NSHP, KA, NTOT, SIGMA2, file_IO4):
     #
@@ -976,12 +975,12 @@ def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
     for I in fort_range(1,NRS):  # .lbl90
         NI=KA[I,1]
         if NI == 0:
-            goto .lbl92
+            continue
 
         for J in fort_range(I, NRS):  # .lbl83
             NJ=KA[J,1]
             if NJ == 0:
-                goto .lbl84
+                continue
             IJ=J*(J-1)//2+I
 
             for MI in fort_range(1,NI):  # .lbl85
@@ -989,26 +988,16 @@ def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
                 for MJ in fort_range(1,NJ):  # .lbl85
                     MJX=KA[J,MJ+1]
                     gauss.B[IJ]=gauss.B[IJ]+gauss.AA[I,MI]*gauss.AA[J,MJ]*data.ECOR[MIX,MJX]
-                    
-                label .lbl85
-
-            label .lbl84
-        label .lbl83
-        label .lbl92
-    label .lbl90
 
     for I in fort_range(1,NRS):  # .lbl91
         NI=KA[I,1]
         if NI == 0:
-            goto .lbl93
+            continue
 
         for MI in fort_range(1,NI):  # .lbl86
             MIX=KA[I,MI+1]
             for MJ in fort_range(1,N):  #.lbl86
                 gauss.BM[I]=gauss.BM[I]+gauss.AA[I,MI]*data.ECOR[MIX,MJ]*gauss.AM[MJ]
-
-        label .lbl93
-    label .lbl91
 
     for I in fort_range(1,N):  # .lbl26
         SUX=0.
@@ -1016,7 +1005,6 @@ def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
             SUX=SUX+data.ECOR[I,J]*gauss.AM[J]
         
         SIGMA2=SIGMA2+gauss.AM[I]*SUX
-    label .lbl26
 
     NTOT=NTOT+N
     SIGL=SIGMA2/NTOT
