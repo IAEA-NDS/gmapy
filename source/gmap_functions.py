@@ -888,7 +888,6 @@ def output_Ecor_matrix(data, N, file_IO4):
 
 
 
-@with_goto
 def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
     #
     #      INVERT ECOR
@@ -925,7 +924,7 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
                     if MODC == 2:
                         data.ECOR[L,K] = 0.
                     data.ECOR[K,L] = data.ECOR[L,K]
-            label .lbl2211
+
             for K in fort_range(1,N):  # .lbl2212
                 data.ECOR[K,K] = 1.
 
@@ -935,7 +934,7 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
                     data.ECOR[K,L]=data.ECOR[K,L]/(1.+CXZ)
                     if K == L:
                         data.ECOR[K,L] = 1.
-            label .lbl37
+
             if IREP >= 15:
                 return (False, IREP)
 
@@ -958,14 +957,11 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
     #
     #      output of inverted correlation matrix of data block
     #
-    if IPP[5] == 0:
-        goto .lbl19
+    if IPP[5] != 0:
+        format151 = "(1X,24F7.4)"
+        for K in fort_range(1,N):
+            fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
-    format151 = "(1X,24F7.4)"
-    for K in fort_range(1,N):
-        fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
-
-    label .lbl19
     return (True, IREP)
 
 
