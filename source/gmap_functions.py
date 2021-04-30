@@ -1295,7 +1295,6 @@ def output_result_correlation_matrix(gauss, data, APR, IPP, NC,
 
 
 
-@with_goto
 def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
     #
     #      INPUT OF FISSION SPECTRUM
@@ -1311,7 +1310,7 @@ def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
         LL=0
         for K in fort_range(JA, JE):  # .lbl693
             LL=LL+1
-        label .lbl693
+
         data.ENFIS[LL] = APR.EN[K]
         NFIS1=NFIS-1
         FISUM=0.
@@ -1325,7 +1324,6 @@ def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
             F3=np.sqrt(E12)*np.exp(-1.5*E12/EAVR)
             data.FIS[K]=((F1+F2)*.5+F3)*.5
             FISUM=FISUM+DE12*data.FIS[K]
-        label .lbl695
 
         data.FIS[1]=np.sqrt(APR.EN[JA])*np.exp(-1.5*APR.EN[JA]/EAVR)
         data.FIS[NFIS]=np.sqrt(APR.EN[JE])*np.exp(-1.5*APR.EN[JE]/EAVR)
@@ -1346,17 +1344,16 @@ def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
 
     format800 = "(/' FISSION SPECTRUM * BIN WIDTH'/)"
     fort_write(file_IO4, format800, [])
-    if MC1 != 0:
-        goto .lbl189
-    for K in fort_range(2, NFIS1):  # .lbl696
-        E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
-        E2=(data.ENFIS[K+1]+data.ENFIS[K])/2.
-        DE12=E2-E1
-    label .lbl696
-    data.FIS[K]=data.FIS[K]*DE12/FISUM
-    data.FIS[NFIS]=data.FIS[NFIS]*DE14/FISUM
-    data.FIS[1]=data.FIS[1]*DE13/FISUM
-    label .lbl189
+    if MC1 == 0:
+        for K in fort_range(2, NFIS1):  # .lbl696
+            E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
+            E2=(data.ENFIS[K+1]+data.ENFIS[K])/2.
+            DE12=E2-E1
+
+        data.FIS[K]=data.FIS[K]*DE12/FISUM
+        data.FIS[NFIS]=data.FIS[NFIS]*DE14/FISUM
+        data.FIS[1]=data.FIS[1]*DE13/FISUM
+
     format157 = "(2F10.6)"
     for KQ in fort_range(1,NFIS):  # .lbl694
         fort_write(file_IO4, format157, [data.ENFIS[KQ], data.FIS[KQ]])
