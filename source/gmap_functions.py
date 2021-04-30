@@ -1103,7 +1103,6 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
             gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
 
 
-@with_goto
 def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
         NSHP, NRS, LABL, NSETN, file_IO4, file_IO5):
     #
@@ -1199,7 +1198,7 @@ def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
             format115 = "(2I6,4F10.4)"
             fort_write(file_IO4, format115, [K,NSETN[LLX],CXX,DDX,DDXD,ZCS])
             APR.CS[K]=CXX
-        label .lbl82  # end for loop
+
     return JA
 
 
