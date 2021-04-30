@@ -782,79 +782,70 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             exit()
 
         if MT == 7:
-            goto .lbl247
+            #
+            #   ABSOLUTE RATIO S1/(S2+S3)
+            #
+            CX=APR.CS[J]/(APR.CS[I]+APR.CS[I8])
+            if I == J:
+                goto .lbl251
+            CBX=CX/DQQQ
+            gauss.AA[J,KR]=CBX
+            KA[I,1]=KA[I,1]+1
+            KR=KA[I,1]
+            KA[I,KR+1]=N
+            CBX2=CBX*CBX*DQQQ/APR.CS[J]
+            CCX=CBX2*APR.CS[I]
+            gauss.AA[I,KR]=-CCX
+            KA[I8,1]=KA[I8,1]+1
+            KR=KA[I8,1]
+            KA[I8,KR+1]=N
+            CCX=CBX2*APR.CS[I8]
+            gauss.AA[I8,KR]=-CCX
+            goto .lbl36
+
+            label .lbl251
+            CBX=CX*CX*APR.CS[I8]/(APR.CS[J]*DQQQ)
+            gauss.AA[J,KR]=CBX
+            KA[I8,1]=KA[I8,1]+1
+            KR=KA[I8,1]
+            KA[I8,KR+1]=N
+            gauss.AA[I8,KR]=-CBX
+            goto .lbl36
+
         if MT == 9:
-            goto .lbl249
-
-        #
-        #   ABSOLUTE RATIO S1/(S2+S3)
-        #
-        label .lbl247
-        CX=APR.CS[J]/(APR.CS[I]+APR.CS[I8])
-        if I == J:
-            goto .lbl251
-        CBX=CX/DQQQ
-        gauss.AA[J,KR]=CBX
-        KA[I,1]=KA[I,1]+1
-        KR=KA[I,1]
-        KA[I,KR+1]=N
-        CBX2=CBX*CBX*DQQQ/APR.CS[J]
-        CCX=CBX2*APR.CS[I]
-        gauss.AA[I,KR]=-CCX
-        KA[I8,1]=KA[I8,1]+1
-        KR=KA[I8,1]
-        KA[I8,KR+1]=N
-        CCX=CBX2*APR.CS[I8]
-        gauss.AA[I8,KR]=-CCX
-        goto .lbl36
-
-        label .lbl251
-        CBX=CX*CX*APR.CS[I8]/(APR.CS[J]*DQQQ)
-        gauss.AA[J,KR]=CBX
-        KA[I8,1]=KA[I8,1]+1
-        KR=KA[I8,1]
-        KA[I8,KR+1]=N
-        gauss.AA[I8,KR]=-CBX
-        goto .lbl36
-        #
-        #   SHAPE OF RATIO S1/(S2+S3)
-        #
-        label .lbl249
-        CII8=APR.CS[I]+APR.CS[I8]
-        CX=AP*APR.CS[J]/CII8
-        CBX=CX/DQQQ
-        if I == J:
-            goto .lbl390
-
-        gauss.AA[J,KR]=CBX
-        KA[I,1]=KA[I,1]+1
-        KR=KA[I,1]
-        KA[I,KR+1]=N
-        CDX=CBX*APR.CS[I]/CII8
-        gauss.AA[I,KR]=-CDX
-        KA[I8,1]=KA[I8,1]+1
-        KR=KA[I8,1]
-        KA[I8,KR+1]=N
-        CDX=CBX*APR.CS[I8]/CII8
-        gauss.AA[I8,KR]=-CDX
-        KA[L,1]=KA[L,1]+1
-        KR=KA[L,1]
-        KA[L,KR+1]=N
-        gauss.AA[L,KR]=CBX
-        goto .lbl36
-
-        label .lbl390
-        CCX=CBX*APR.CS[I8]/CII8
-        gauss.AA[J,KR]=CCX
-        KA[I8,1]=KA[I8,1]+1
-        KR=KA[I8,1]
-        KA[I8,KR+1]=N
-        gauss.AA[I8,KR]=-CCX
-        KA[L,1]=KA[L,1]+1
-        KR=KA[L,1]
-        KA[L,KR+1]=N
-        gauss.AA[L,KR]=CBX
-        goto .lbl36
+            #
+            #   SHAPE OF RATIO S1/(S2+S3)
+            #
+            CII8=APR.CS[I]+APR.CS[I8]
+            CX=AP*APR.CS[J]/CII8
+            CBX=CX/DQQQ
+            if I == J:
+                CCX=CBX*APR.CS[I8]/CII8
+                gauss.AA[J,KR]=CCX
+                KA[I8,1]=KA[I8,1]+1
+                KR=KA[I8,1]
+                KA[I8,KR+1]=N
+                gauss.AA[I8,KR]=-CCX
+                KA[L,1]=KA[L,1]+1
+                KR=KA[L,1]
+                KA[L,KR+1]=N
+                gauss.AA[L,KR]=CBX
+            else:
+                gauss.AA[J,KR]=CBX
+                KA[I,1]=KA[I,1]+1
+                KR=KA[I,1]
+                KA[I,KR+1]=N
+                CDX=CBX*APR.CS[I]/CII8
+                gauss.AA[I,KR]=-CDX
+                KA[I8,1]=KA[I8,1]+1
+                KR=KA[I8,1]
+                KA[I8,KR+1]=N
+                CDX=CBX*APR.CS[I8]/CII8
+                gauss.AA[I8,KR]=-CDX
+                KA[L,1]=KA[L,1]+1
+                KR=KA[L,1]
+                KA[L,KR+1]=N
+                gauss.AA[L,KR]=CBX
 
         label .lbl36
         gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
