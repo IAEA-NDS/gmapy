@@ -1301,54 +1301,49 @@ def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
     #      INPUT OF FISSION SPECTRUM
     #
     if MC1 == 0:
-        goto .lbl692
-    format119 = "(2E13.5)"
-    for K in fort_range(1,LDF):  # .lbl690
-        data.ENFIS[K], data.FIS[K] = fort_read(file_IO3, format119)
-        if data.ENFIS[K] == 0:
-            goto .lbl691
-    K = K + 1  # to match K value of fortran after loop
-    label .lbl690
-    label .lbl691
-    NFIS = K - 1
-    goto .lbl38
+        #
+        #       MAXWELLIAN SPECTRUM
+        #
+        EAVR=MC2/1000.
+        NFIS=APR.MCS[MC3,1]
+        JA=APR.MCS[MC3, 2]
+        JE=APR.MCS[MC3, 3]
+        LL=0
+        for K in fort_range(JA, JE):  # .lbl693
+            LL=LL+1
+        label .lbl693
+        data.ENFIS[LL] = APR.EN[K]
+        NFIS1=NFIS-1
+        FISUM=0.
+        for K in fort_range(1, NFIS1):  # .lbl695
+            E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
+            E2=(data.ENFIS[K+1]+data.ENFIS[K])/2.
+            DE12=E2-E1
+            F1=np.sqrt(E1)*np.exp(-1.5*E1/EAVR)
+            F2=np.sqrt(E2)*np.exp(-1.5*E2/EAVR)
+            E12=(E1+E2)/2.
+            F3=np.sqrt(E12)*np.exp(-1.5*E12/EAVR)
+            data.FIS[K]=((F1+F2)*.5+F3)*.5
+            FISUM=FISUM+DE12*data.FIS[K]
+        label .lbl695
 
-    #
-    #       MAXWELLIAN SPECTRUM
-    #
-    label .lbl692
-    EAVR=MC2/1000.
-    NFIS=APR.MCS[MC3,1]
-    JA=APR.MCS[MC3, 2]
-    JE=APR.MCS[MC3, 3]
-    LL=0
-    for K in fort_range(JA, JE):  # .lbl693
-        LL=LL+1
-    label .lbl693
-    data.ENFIS[LL] = APR.EN[K]
-    NFIS1=NFIS-1
-    FISUM=0.
-    for K in fort_range(1, NFIS1):  # .lbl695
-        E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
-        E2=(data.ENFIS[K+1]+data.ENFIS[K])/2.
-        DE12=E2-E1
-        F1=np.sqrt(E1)*np.exp(-1.5*E1/EAVR)
-        F2=np.sqrt(E2)*np.exp(-1.5*E2/EAVR)
-        E12=(E1+E2)/2.
-        F3=np.sqrt(E12)*np.exp(-1.5*E12/EAVR)
-        data.FIS[K]=((F1+F2)*.5+F3)*.5
-        FISUM=FISUM+DE12*data.FIS[K]
-    label .lbl695
+        data.FIS[1]=np.sqrt(APR.EN[JA])*np.exp(-1.5*APR.EN[JA]/EAVR)
+        data.FIS[NFIS]=np.sqrt(APR.EN[JE])*np.exp(-1.5*APR.EN[JE]/EAVR)
+        DE12=(data.ENFIS[2]-data.ENFIS[1])/2.
+        DE13=data.ENFIS[1]+DE12
+        FISUM=FISUM+data.FIS[1]*DE13
+        DE14=(data.ENFIS(NFIS)-data.ENFIS[NFIS1])/2.
+        FISUM=FISUM+data.FIS[NFIS]*2.*DE14
 
-    data.FIS[1]=np.sqrt(APR.EN[JA])*np.exp(-1.5*APR.EN[JA]/EAVR)
-    data.FIS[NFIS]=np.sqrt(APR.EN[JE])*np.exp(-1.5*APR.EN[JE]/EAVR)
-    DE12=(data.ENFIS[2]-data.ENFIS[1])/2.
-    DE13=data.ENFIS[1]+DE12
-    FISUM=FISUM+data.FIS[1]*DE13
-    DE14=(data.ENFIS(NFIS)-data.ENFIS[NFIS1])/2.
-    FISUM=FISUM+data.FIS[NFIS]*2.*DE14
+    else:
+        format119 = "(2E13.5)"
+        for K in fort_range(1,LDF):  # .lbl690
+            data.ENFIS[K], data.FIS[K] = fort_read(file_IO3, format119)
+            if data.ENFIS[K] == 0:
+                break
 
-    label .lbl38
+        NFIS = K - 1
+
     format800 = "(/' FISSION SPECTRUM * BIN WIDTH'/)"
     fort_write(file_IO4, format800, [])
     if MC1 != 0:
