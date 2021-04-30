@@ -679,7 +679,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
 
             goto .lbl36
 
-        if MT == 5:
+        elif MT == 5:
             #
             #      TOTAL CROSS SECTION
             #
@@ -698,7 +698,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
 
             goto .lbl36
 
-        if MT == 8:
+        elif MT == 8:
             #
             #   SHAPE OF SUM
             #
@@ -734,7 +734,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             gauss.AA[J,KR] = CX / DQQQ
             goto .lbl36
 
-        if MT == 2:
+        elif MT == 2:
             #
             #      CROSS SECTION SHAPE    L is shape data norm. const. index
             #
@@ -747,7 +747,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             gauss.AA[L,KR] =  CXX
             goto .lbl36
 
-        if MT == 3:
+        elif MT == 3:
             #
             #      RATIO
             #
@@ -759,7 +759,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             KA[I,KR+1] = N
             gauss.AA[I,KR] = -CCX
             goto .lbl36
-        if MT == 4:
+        elif MT == 4:
             #
             #      RATIO SHAPE
             #
@@ -776,12 +776,12 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             gauss.AA[L,KR] =  CXX
             goto .lbl36
 
-        if MT == 5 or MT == 6 or MT == 8:
+        elif MT == 5 or MT == 6 or MT == 8:
             format447 = "(10H ERROR 446)"
             fort_write(file_IO4, format447, [])
             exit()
 
-        if MT == 7:
+        elif MT == 7:
             #
             #   ABSOLUTE RATIO S1/(S2+S3)
             #
@@ -812,7 +812,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             gauss.AA[I8,KR]=-CBX
             goto .lbl36
 
-        if MT == 9:
+        elif MT == 9:
             #
             #   SHAPE OF RATIO S1/(S2+S3)
             #
