@@ -1,4 +1,3 @@
-from goto import with_goto
 from generic_utils import unflatten
 from fortran_utils import fort_range, fort_read, fort_write
 import numpy as np
