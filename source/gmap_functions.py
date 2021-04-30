@@ -611,32 +611,13 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
         J = KAS[KS,1]
         I = KAS[KS,2]
         I8 = KAS[KS,3]
-        if J == 0 and MT != 6:
-            goto .lbl89
-        if I != 0:
-            goto .lbl148
-        if MT == 3:
-            goto .lbl89
-        if MT == 5:
-            goto .lbl89
-        if MT == 4:
-            goto .lbl89
-        if MT == 7:
-            goto .lbl89
-        if MT == 8:
-            goto .lbl89
-        if MT == 9:
-            goto .lbl89
+        if (J == 0 and MT != 6) or \
+           (I == 0 and MT in (3,4,5,7,8,9)) or \
+           (I8 == 0 and MT in (7,9)):
+                format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
+                fort_write(file_IO4, format704, [MC1, KS])
+                continue
 
-        label .lbl148
-        if I8 != 0:
-            goto .lbl147
-        if MT == 7:
-            goto .lbl89
-        if MT == 9:
-            goto .lbl89
-
-        label .lbl147
         N = N + 1
 
         if MT == 6:
@@ -883,13 +864,7 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
 
         label .lbl36
         gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
-        goto .lbl667
 
-        label .lbl89
-        format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
-        fort_write(file_IO4, format704, [MC1, KS])
-
-        label .lbl667
     label .lbl18  # end of for loop
     return N
 
