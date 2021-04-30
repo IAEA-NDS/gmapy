@@ -1177,8 +1177,6 @@ def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
 
         format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
         fort_write(file_IO4, format158, [FLX])
-        # label .lbl14  # end of for loop
-    L = L + 1  # to match L value of fortran after loop
 
     #
     #   OUTPUT OF NORM. FACTORS FOR SHAPE DATA
