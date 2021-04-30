@@ -1128,25 +1128,23 @@ def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
             for KK in fort_range(1,NFIS):  # .lbl705
                 if data.ENFIS[KK] > .999*APR.EN[K] and data.ENFIS[KK] < 1.001*APR.EN[K]:
                     goto .lbl703
-            label .lbl705
 
             goto .lbl706
             label .lbl703
-            if K == JA or K == JI:
-                goto .lbl295
 
-            EL1=(APR.EN[K]+APR.EN[K-1])*0.5
-            EL2=(APR.EN[K]+APR.EN[K+1])*0.5
-            DE1=(APR.EN[K]-EL1)*0.5
-            DE2=(EL2-APR.EN[K])*0.5
-            SS1=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K-1])*APR.CS[K-1]))
-            SS2=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K+1])*APR.CS[K+1]))
-            CSSK=(SS1*DE1+SS2*DE2)/(DE1+DE2)
-            goto .lbl296
-            label .lbl295
-            CSSK=CXX
-            label .lbl296
+            if K == JA or K == JI:
+                CSSK=CXX
+            else:
+                EL1=(APR.EN[K]+APR.EN[K-1])*0.5
+                EL2=(APR.EN[K]+APR.EN[K+1])*0.5
+                DE1=(APR.EN[K]-EL1)*0.5
+                DE2=(EL2-APR.EN[K])*0.5
+                SS1=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K-1])*APR.CS[K-1]))
+                SS2=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K+1])*APR.CS[K+1]))
+                CSSK=(SS1*DE1+SS2*DE2)/(DE1+DE2)
+
             FLX=FLX+data.FIS[KK]*CSSK
+
             label .lbl706
             FQW=DDX*100./CXX
             SECS=np.sqrt(APR.EN[K])*CXX
