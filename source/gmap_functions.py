@@ -601,7 +601,6 @@ def determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
 
 
 
-@with_goto
 def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4):
     #
     #      FILL AA,AM,AND COV
@@ -662,18 +661,15 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
                 KR=KA[J,1]
                 KA[J,KR+1]=N
                 if J == JA or J == JE:
-                    goto .lbl195
-                EL1=(APR.EN[J]+APR.EN[J-1])*0.5
-                EL2=(APR.EN[J]+APR.EN[J+1])*0.5
-                DE1=(APR.EN[J]-EL1)*0.5
-                DE2=(EL2-APR.EN[J])*0.5
-                SS1=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J-1]))
-                SS2=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J+1]))
-                CSSJ=(SS1*DE1+SS2*DE2)/(DE1+DE2)
-                goto .lbl196
-                label .lbl195
-                CSSJ = APR.CS[J]
-                label .lbl196
+                    CSSJ = APR.CS[J]
+                else:
+                    EL1=(APR.EN[J]+APR.EN[J-1])*0.5
+                    EL2=(APR.EN[J]+APR.EN[J+1])*0.5
+                    DE1=(APR.EN[J]-EL1)*0.5
+                    DE2=(EL2-APR.EN[J])*0.5
+                    SS1=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J-1]))
+                    SS2=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J+1]))
+                    CSSJ=(SS1*DE1+SS2*DE2)/(DE1+DE2)
 
                 gauss.AA[J,KR]=CSSJ*data.FIS[K]/DQQQ
 
@@ -795,32 +791,30 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
             #
             CX=APR.CS[J]/(APR.CS[I]+APR.CS[I8])
             if I == J:
-                goto .lbl251
-            CBX=CX/DQQQ
-            gauss.AA[J,KR]=CBX
-            KA[I,1]=KA[I,1]+1
-            KR=KA[I,1]
-            KA[I,KR+1]=N
-            CBX2=CBX*CBX*DQQQ/APR.CS[J]
-            CCX=CBX2*APR.CS[I]
-            gauss.AA[I,KR]=-CCX
-            KA[I8,1]=KA[I8,1]+1
-            KR=KA[I8,1]
-            KA[I8,KR+1]=N
-            CCX=CBX2*APR.CS[I8]
-            gauss.AA[I8,KR]=-CCX
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
-            continue
-
-            label .lbl251
-            CBX=CX*CX*APR.CS[I8]/(APR.CS[J]*DQQQ)
-            gauss.AA[J,KR]=CBX
-            KA[I8,1]=KA[I8,1]+1
-            KR=KA[I8,1]
-            KA[I8,KR+1]=N
-            gauss.AA[I8,KR]=-CBX
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
-            continue
+                CBX=CX*CX*APR.CS[I8]/(APR.CS[J]*DQQQ)
+                gauss.AA[J,KR]=CBX
+                KA[I8,1]=KA[I8,1]+1
+                KR=KA[I8,1]
+                KA[I8,KR+1]=N
+                gauss.AA[I8,KR]=-CBX
+                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                continue
+            else:
+                CBX=CX/DQQQ
+                gauss.AA[J,KR]=CBX
+                KA[I,1]=KA[I,1]+1
+                KR=KA[I,1]
+                KA[I,KR+1]=N
+                CBX2=CBX*CBX*DQQQ/APR.CS[J]
+                CCX=CBX2*APR.CS[I]
+                gauss.AA[I,KR]=-CCX
+                KA[I8,1]=KA[I8,1]+1
+                KR=KA[I8,1]
+                KA[I8,KR+1]=N
+                CCX=CBX2*APR.CS[I8]
+                gauss.AA[I8,KR]=-CCX
+                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                continue
 
         elif MT == 9:
             #
@@ -861,7 +855,6 @@ def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT,
                 gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
 
-    label .lbl18  # end of for loop
     return N
 
 
