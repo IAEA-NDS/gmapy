@@ -1,4 +1,4 @@
-from generic_utils import unflatten
+from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 import numpy as np
 
@@ -614,7 +614,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, NALT, NADD1, file_IO4):
+def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, NALT, NADD1, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -654,7 +654,7 @@ def fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,
 
             for LI in fort_range(J1, J2):  # .lbl53
                 NW=NW+1
-                FL=FL+data.FIS[NW]
+                FL=FL+fisdata.FIS[NW]
                 EL1=(APR.EN[LI]+APR.EN[LI-1])*0.5
                 EL2=(APR.EN[LI]+APR.EN[LI+1])*0.5
                 DE1=(APR.EN[LI]-EL1)*0.5
@@ -662,10 +662,10 @@ def fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,
                 SS1=.5*(APR.CS[LI]+0.5*(APR.CS[LI]+APR.CS[LI-1]))
                 SS2=.5*(APR.CS[LI]+0.5*(APR.CS[LI]+APR.CS[LI+1]))
                 CSSLI=(SS1*DE1+SS2*DE2)/(DE1+DE2)
-                SFL=SFL+CSSLI*data.FIS[NW]
+                SFL=SFL+CSSLI*fisdata.FIS[NW]
 
-            FL=FL+data.FIS[1]+data.FIS[NW+1]
-            SFL=SFL+data.FIS[1]*APR.CS[JA]+data.FIS[NW+1]*APR.CS[JE]
+            FL=FL+fisdata.FIS[1]+fisdata.FIS[NW+1]
+            SFL=SFL+fisdata.FIS[1]*APR.CS[JA]+fisdata.FIS[NW+1]*APR.CS[JE]
             SFIS=SFL/FL
             format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
             fort_write(file_IO4, format156, [EAVR, SFIS, FL, data.CSS[KS], data.DCS[KS]])
@@ -686,7 +686,7 @@ def fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,
                     SS2=.5*(APR.CS[J]+0.5*(APR.CS[J]+APR.CS[J+1]))
                     CSSJ=(SS1*DE1+SS2*DE2)/(DE1+DE2)
 
-                gauss.AA[J,KR]=CSSJ*data.FIS[K]/DQQQ
+                gauss.AA[J,KR]=CSSJ*fisdata.FIS[K]/DQQQ
 
             gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
@@ -1118,7 +1118,7 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
             gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
 
 
-def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
+def output_result(gauss, data, fisdata, APR, MODAP, NFIS, NR, NC,
         NSHP, NRS, LABL, NSETN, file_IO4, file_IO5):
     #
     #      output of the result
@@ -1142,7 +1142,7 @@ def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
 
             found = False
             for KK in fort_range(1,NFIS):  # .lbl705
-                if data.ENFIS[KK] > .999*APR.EN[K] and data.ENFIS[KK] < 1.001*APR.EN[K]:
+                if fisdata.ENFIS[KK] > .999*APR.EN[K] and fisdata.ENFIS[KK] < 1.001*APR.EN[K]:
                     found = True
                     break
 
@@ -1158,7 +1158,7 @@ def output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
                     SS2=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K+1])*APR.CS[K+1]))
                     CSSK=(SS1*DE1+SS2*DE2)/(DE1+DE2)
 
-                FLX=FLX+data.FIS[KK]*CSSK
+                FLX=FLX+fisdata.FIS[KK]*CSSK
 
             FQW=DDX*100./CXX
             SECS=np.sqrt(APR.EN[K])*CXX
@@ -1310,10 +1310,22 @@ def output_result_correlation_matrix(gauss, data, APR, IPP, NC,
 
 
 
-def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
+def input_fission_spectrum(MC1, LDF, file_IO3, file_IO4):
     #
     #      INPUT OF FISSION SPECTRUM
     #
+    #
+
+    #   Fission Data block / data set
+    #
+    #      ENFIS   ENERGIES OF FISSION SPECTRUM
+    #      FIS     FISSION SPECTRUM*BINWIDTH
+    #
+    data = Bunch({
+        'FIS': np.zeros(250+1, dtype=float),
+        'ENFIS': np.zeros(250+1, dtype=float),
+        })
+
     if MC1 == 0:
         #
         #       MAXWELLIAN SPECTRUM
@@ -1372,5 +1384,5 @@ def input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4):
     format157 = "(2F10.6)"
     for KQ in fort_range(1,NFIS):  # .lbl694
         fort_write(file_IO4, format157, [data.ENFIS[KQ], data.FIS[KQ]])
-    return NFIS
+    return data, NFIS
 

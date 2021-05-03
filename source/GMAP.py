@@ -89,8 +89,6 @@ def main():
     #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
     #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
     #      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
-    #      ENFIS   ENERGIES OF FISSION SPECTRUM
-    #      FIS     FISSION SPECTRUM*BINWIDTH
     #      ENFF    NORMALIZATION UNCERTAINTIES COMPONENTS
     #      EPAF    UNCERTAINTY COMPONENT PARAMETERS
     #      FCFC    CROSS CORRELATION FACTORS
@@ -293,13 +291,13 @@ def main():
                         L, NSHP, MPPP, IPP, NR, NALT, NADD1,
                         MODREP, LDB, MC1, NCT, file_IO4)
 
-            N = fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD1, file_IO4)
+            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD1, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
             get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
-            JA = output_result(gauss, data, APR, MODAP, NFIS, NR, NC,
+            JA = output_result(gauss, data, fisdata, APR, MODAP, NFIS, NR, NC,
                     NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
             #
             #     reset for repeat of fit with replaced apriori from first fit
@@ -382,7 +380,7 @@ def main():
 
         # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
-            NFIS = input_fission_spectrum(data, MC1, LDF, file_IO3, file_IO4)
+            fisdata, NFIS = input_fission_spectrum(MC1, LDF, file_IO3, file_IO4)
 
 
         # LABL.AKON[9] == 'MODE'
