@@ -253,9 +253,8 @@ def main():
             )
 
             NALT, L, NADD = \
-            accounting(
-                    data, APR, MT, NT, NCT,
-                    KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
+            accounting(ID, IDEN, data, APR, NT, NCT,
+                    KAS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
             )
 
 

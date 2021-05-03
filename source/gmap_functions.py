@@ -225,8 +225,8 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 
-def accounting(data, APR, MT, NT, NCT,
-        KAS, NS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3):
+def accounting(ID, IDEN, data, APR, NT, NCT,
+        KAS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
     #
@@ -234,6 +234,8 @@ def accounting(data, APR, MT, NT, NCT,
     #      ID          NO OF EXPERIMENTAL DATA SETS
     #      NP          NO OF DATA POINTS IN THIS SET
     #
+    NS = IDEN[ID, 6]
+    MT = IDEN[ID, 7]
     NALT = NADD
 
     for KS in fort_range(1,LDA):  # .lbl21
