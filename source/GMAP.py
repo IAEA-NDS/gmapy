@@ -310,9 +310,9 @@ def main():
                 NTOT=0
                 SIGMA2=0.
                 NSHP=0
-                gauss.DE[0:(LDB+1)] = 0.
-                gauss.BM[0:(LDB+1)] = 0.
-                gauss.B[0:(LDBB2+1)] = 0.
+                gauss.DE.fill(0.)
+                gauss.BM.fill(0.)
+                gauss.B.fill(0.)
 
                 format130 = "(A4)"
                 for L in fort_range(1,2000):  # .lbl69
