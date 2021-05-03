@@ -221,7 +221,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
             data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
-    return (MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN)
+    return (NCT, NCOX, NNCOX, XNORU, ID, IDEN)
 
 
 
@@ -329,9 +329,12 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
 
 
 
-def should_exclude_dataset(NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4): 
+def should_exclude_dataset(ID, IDEN, IELIM, NELIM, NADD, NALT, file_IO4): 
 
     should_exclude = False
+    NS = IDEN[ID, 6]
+    MTTP = IDEN[ID, 8]
+
     NP = NADD - NALT
     if IELIM > 0:
         #      data set excluded ?
@@ -357,9 +360,9 @@ def should_exclude_dataset(NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4):
 
 
 
-def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
-        L, MODC, NCOX, NALT, NP, NADD1, ID,
-        XNORU, NCCS, MTTP, NS, file_IO3, file_IO4):
+def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
+        L, MODC, NCOX, NALT, NP, NADD1,
+        XNORU, file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
     #
@@ -367,6 +370,11 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
     #               2   UNCORRELATED
     #               3   ALL CORRELATED ERRORS GIVEN
     #
+    NCCS = IDEN[ID, 5]
+    MTTP = IDEN[ID, 8]
+    NS = IDEN[ID, 6]
+
+
     if NCOX != 0:
         MODAL = MODC
         MODC = 1
@@ -522,12 +530,16 @@ def construct_Ecor(data, NETG, IDEN, NCSST, NEC,
 
 
 
-def determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
-        MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
+def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
+        L, NSHP, MPPP, IPP, NR, NALT, NADD1,
         MODREP, LDB, MC1, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
+    NS = IDEN[ID, 6]
+    MT = IDEN[ID, 7]
+    MTTP = IDEN[ID, 8]
+
     if MTTP != 1:
         NSHP = NSHP + 1
         NSETN[NSHP] = NS
@@ -602,10 +614,12 @@ def determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4):
+def fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, NALT, NADD1, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
+    MT =  IDEN[ID, 7]
+
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
         J = KAS[KS,1]

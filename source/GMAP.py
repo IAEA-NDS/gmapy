@@ -245,7 +245,7 @@ def main():
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
 
-            MT, NCT, NS, NCOX, NNCOX, XNORU, NCCS, MTTP, ID, IDEN = \
+            NCT, NCOX, NNCOX, XNORU, ID, IDEN = \
             read_dataset_input(
                     MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
@@ -259,8 +259,8 @@ def main():
 
 
             exclflag, NP, ID, NADD = \
-            should_exclude_dataset(
-                    NS, IELIM, NELIM, MTTP, ID, NADD, NALT, file_IO4
+            should_exclude_dataset(ID, IDEN,
+                    IELIM, NELIM, NADD, NALT, file_IO4
             )
 
             if exclflag:
@@ -273,13 +273,13 @@ def main():
             NADD1 = NADD - 1
 
             MODC, L = \
-            construct_Ecor(
-                    data, NETG, IDEN, NCSST, NEC,
-                    L, MODC, NCOX, NALT, NP, NADD1, ID,
-                    XNORU, NCCS, MTTP, NS, file_IO3, file_IO4
+            construct_Ecor(ID, IDEN, 
+                    data, NETG, NCSST, NEC,
+                    L, MODC, NCOX, NALT, NP, NADD1,
+                    XNORU, file_IO3, file_IO4
             )
 
-            if MT != 6:
+            if IDEN[ID, 7] != 6:
                 #
                 #   output of KAS for checking
                 #
@@ -289,11 +289,11 @@ def main():
                         fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
 
                 (NSHP, L, AP) = \
-                determine_apriori_norm_shape(data, APR, KAS, LABL, NSETN,
-                        MT, L, NSHP, MTTP, MPPP, IPP, NS, NR, NALT, NADD1,
+                determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
+                        L, NSHP, MPPP, IPP, NR, NALT, NADD1,
                         MODREP, LDB, MC1, NCT, file_IO4)
 
-            N = fill_AA_AM_COV(data, APR, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, MT, NALT, NADD1, file_IO4)
+            N = fill_AA_AM_COV(ID, data, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD1, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
