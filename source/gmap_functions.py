@@ -244,6 +244,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
     #
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
+    NALT = NADD
 
     for KS in fort_range(1,LDA):  # .lbl21
 
@@ -251,6 +252,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
         data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = unflatten(fort_read(file_IO3, format109), [2,[12]])
         L = 13  # to reflect fortran value after READ loop
         if data.E[NADD] == 0:
+            IDEN[ID, 1] = NADD - NALT
             return NADD
 
         #
@@ -365,12 +367,12 @@ def should_exclude_dataset(ID, IDEN, IELIM, NELIM, NADD, NALT, file_IO4):
         ID = ID - 1
         NADD = NALT
 
-    return (should_exclude, NP, ID, NADD)
+    return (should_exclude, ID, NADD)
 
 
 
 def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
-        MODC, NCOX, NALT, NP, NADD,
+        MODC, NCOX, NALT, NADD,
         XNORU, file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
@@ -383,6 +385,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
     MTTP = IDEN[ID, 8]
     NS = IDEN[ID, 6]
     NADD1 = NADD - 1
+    NP = IDEN[ID, 1]
 
     if NCOX != 0:
         MODAL = MODC

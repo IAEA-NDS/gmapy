@@ -87,6 +87,7 @@ def main():
     #
     #   Data block / data set   
     #
+    #      NP      NUMBER OF DATA POINTS
     #      E       ENERGIES OF EXPERIMENTAL DATA SET
     #      CSS     MEASUREMENT VALUES OF EXPERIMENTAL DATA SET
     #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
@@ -97,6 +98,7 @@ def main():
     #      FCFC    CROSS CORRELATION FACTORS
     #
     data = Bunch({
+        'NP': 0,
         'E': np.zeros(250+1, dtype=float),
         'CSS': np.zeros(250+1, dtype=float),
         'DCS': np.zeros(250+1, dtype=float),
@@ -255,7 +257,7 @@ def main():
             )
 
 
-            exclflag, NP, ID, NADD = \
+            exclflag, ID, NADD = \
             should_exclude_dataset(ID, IDEN,
                     IELIM, NELIM, NADD, NALT, file_IO4
             )
@@ -266,12 +268,11 @@ def main():
             #
             #      continue for valid data
             #
-            IDEN[ID, 1] = NP
 
             MODC, L = \
             construct_Ecor(ID, IDEN, 
                     data, NETG, NCSST, NEC,
-                    MODC, NCOX, NALT, NP, NADD,
+                    MODC, NCOX, NALT, NADD,
                     XNORU, file_IO3, file_IO4
             )
 
