@@ -626,7 +626,8 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, NALT, NADD, file_IO4):
+def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, NSHP,
+        EAVR, NT, NCT, NALT, NADD, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -741,6 +742,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR,
                 KA[J,KR+1]=N
                 gauss.AA[J,KR]=APR.CS[J]*APDQ
 
+            L = APR.NR + NSHP
             KA[L,1]=KA[L,1]+1
             KR=KA[L,1]
             KA[L,KR+1]=N
@@ -769,6 +771,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR,
             CX = APR.CS[J]*AP
             CXX = CX/DQQQ
             gauss.AA[J,KR] = CXX
+            L = APR.NR + NSHP
             KA[L,1] = KA[L,1]+1
             KR = KA[L,1]
             KA[L,KR+1] = N
@@ -801,6 +804,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR,
             KR = KA[I,1]
             KA[I,KR+1] = N
             gauss.AA[I,KR] = -CXX
+            L = APR.NR + NSHP
             KA[L,1] = KA[L,1]+1
             KR = KA[L,1]
             KA[L,KR+1] = N
@@ -858,6 +862,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR,
                 KR=KA[I8,1]
                 KA[I8,KR+1]=N
                 gauss.AA[I8,KR]=-CCX
+                L = APR.NR + NSHP
                 KA[L,1]=KA[L,1]+1
                 KR=KA[L,1]
                 KA[L,KR+1]=N
@@ -876,6 +881,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR,
                 KA[I8,KR+1]=N
                 CDX=CBX*APR.CS[I8]/CII8
                 gauss.AA[I8,KR]=-CDX
+                L = APR.NR + NSHP
                 KA[L,1]=KA[L,1]+1
                 KR=KA[L,1]
                 KA[L,KR+1]=N

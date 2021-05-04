@@ -289,7 +289,8 @@ def main():
                         L, NSHP, MPPP, IPP, NALT, NADD,
                         MODREP, MC1, NCT, file_IO4)
 
-            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD, file_IO4)
+            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N,
+                    NSHP, EAVR, NT, NCT,  NALT, NADD, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
