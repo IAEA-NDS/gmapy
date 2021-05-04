@@ -203,7 +203,6 @@ def main():
     LDF = 200
     LDA = 250
     LDB = 1200
-    LDBB2 = LDB*(LDB+1)//2
     MODC = 3
     NSHP = 0
     NFIS = 0
