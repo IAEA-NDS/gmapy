@@ -270,12 +270,11 @@ def main():
             #      continue for valid data
             #
             IDEN[ID, 1] = NP
-            NADD1 = NADD - 1
 
             MODC, L = \
             construct_Ecor(ID, IDEN, 
                     data, NETG, NCSST, NEC,
-                    L, MODC, NCOX, NALT, NP, NADD1,
+                    L, MODC, NCOX, NALT, NP, NADD,
                     XNORU, file_IO3, file_IO4
             )
 
@@ -286,14 +285,14 @@ def main():
                 if IPP[7] != 0:
                     format702 = "(20I5)"
                     for K in fort_range(1,NCT):
-                        fort_write(file_IO4, format702, [KAS[NALT:(NADD1+1)], K])
+                        fort_write(file_IO4, format702, [KAS[NALT:NADD], K])
 
                 (NSHP, L, AP) = \
                 determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
-                        L, NSHP, MPPP, IPP, NR, NALT, NADD1,
+                        L, NSHP, MPPP, IPP, NR, NALT, NADD,
                         MODREP, LDB, MC1, NCT, file_IO4)
 
-            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD1, file_IO4)
+            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'

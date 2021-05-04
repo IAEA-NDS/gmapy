@@ -360,7 +360,7 @@ def should_exclude_dataset(ID, IDEN, IELIM, NELIM, NADD, NALT, file_IO4):
 
 
 def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
-        L, MODC, NCOX, NALT, NP, NADD1,
+        L, MODC, NCOX, NALT, NP, NADD,
         XNORU, file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
@@ -372,6 +372,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
     NCCS = IDEN[ID, 5]
     MTTP = IDEN[ID, 8]
     NS = IDEN[ID, 6]
+    NADD1 = NADD - 1
 
 
     if NCOX != 0:
@@ -530,7 +531,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
 
 
 def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
-        L, NSHP, MPPP, IPP, NR, NALT, NADD1,
+        L, NSHP, MPPP, IPP, NR, NALT, NADD,
         MODREP, LDB, MC1, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
@@ -538,6 +539,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
     MTTP = IDEN[ID, 8]
+    NADD1 = NADD - 1
 
     if MTTP != 1:
         NSHP = NSHP + 1
@@ -613,11 +615,12 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, NALT, NADD1, file_IO4):
+def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT, NALT, NADD, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
     MT =  IDEN[ID, 7]
+    NADD1 = NADD - 1
 
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
