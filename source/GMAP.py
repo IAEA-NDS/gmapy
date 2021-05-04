@@ -250,7 +250,9 @@ def main():
                     ID, N, file_IO3, file_IO4
             )
 
-            NALT, L, NADD = \
+            NALT = NADD
+
+            L, NADD = \
             accounting(ID, IDEN, data, APR, NT, NCT,
                     KAS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
             )

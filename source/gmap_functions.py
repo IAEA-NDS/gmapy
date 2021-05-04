@@ -236,7 +236,6 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
     #
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
-    NALT = NADD
 
     for KS in fort_range(1,LDA):  # .lbl21
 
@@ -244,7 +243,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
         data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = unflatten(fort_read(file_IO3, format109), [2,[12]])
         L = 13  # to reflect fortran value after READ loop
         if data.E[NADD] == 0:
-            return (NALT, L, NADD)
+            return (L, NADD)
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
@@ -325,7 +324,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
         data.DCS[NADD] = np.sqrt(XNORU + RELU) 
         NADD += 1
 
-    return (NALT, L, NADD)
+    return (L, NADD)
 
 
 
