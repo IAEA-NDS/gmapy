@@ -6,6 +6,14 @@ import linpack_slim
 from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
                            unpack_utriang_matrix)
 
+
+# constants for size limits
+#      LDA   MAX NO IN DATA BLOCK
+#      LDB NO OF UNKNOWNS
+LDA = 250
+LDB = 1200
+LDF = 200
+
 #
 #      test option:  forced stop for testing purpose
 #
@@ -226,7 +234,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 def accounting(ID, IDEN, data, APR, NT, NCT,
-        KAS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3):
+        KAS, NADD, NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
     #
@@ -532,7 +540,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
 
 def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
         L, NSHP, MPPP, IPP, NR, NALT, NADD,
-        MODREP, LDB, MC1, NCT, file_IO4):
+        MODREP, MC1, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
@@ -983,7 +991,7 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
 
 
 
-def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
+def get_matrix_products(gauss, data, N, MODREP,
         NR, NSHP, KA, NTOT, SIGMA2, file_IO4):
     #
     #      GET MATRIX PRODUCTS
@@ -1037,7 +1045,7 @@ def get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
 
 
 
-def get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4):
+def get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4):
 #
 #      GETTING THE RESULT
 #
@@ -1312,7 +1320,7 @@ def output_result_correlation_matrix(gauss, data, APR, IPP, NC,
 
 
 
-def input_fission_spectrum(MC1, LDF, file_IO3, file_IO4):
+def input_fission_spectrum(MC1, file_IO3, file_IO4):
     #
     #      INPUT OF FISSION SPECTRUM
     #

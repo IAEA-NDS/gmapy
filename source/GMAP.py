@@ -192,17 +192,12 @@ def main():
     #      INITIALIZE PARAMETERS
     #
     #      NTOT TOTAL NO OF DATA POINTS
-    #      LDA   MAX NO IN DATA BLOCK
-    #      LDB NO OF UNKNOWNS
     #
     #      DATA DE/1200*0.D0/,BM/1200*0.D0/,B/720600*0.D0/,NRED/160*0/
     #
     MODREP = 0
     NTOT = 0
     SIGMA2 = 0.
-    LDF = 200
-    LDA = 250
-    LDB = 1200
     MODC = 3
     NSHP = 0
     NFIS = 0
@@ -253,7 +248,7 @@ def main():
 
             L, NADD = \
             accounting(ID, IDEN, data, APR, NT, NCT,
-                    KAS, NADD, LDA, NNCOX, MOD2, XNORU, file_IO3
+                    KAS, NADD, NNCOX, MOD2, XNORU, file_IO3
             )
 
 
@@ -289,14 +284,14 @@ def main():
                 (NSHP, L, AP) = \
                 determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
                         L, NSHP, MPPP, IPP, NR, NALT, NADD,
-                        MODREP, LDB, MC1, NCT, file_IO4)
+                        MODREP, MC1, NCT, file_IO4)
 
             N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
-            get_result(gauss, SIGMA2, NTOT, NRS, IPP, LDB, file_IO3, file_IO4)
+            get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4)
             JA = output_result(gauss, data, fisdata, APR, MODAP, NFIS, NR, NC,
                     NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
             #
@@ -374,13 +369,13 @@ def main():
                 if not invertible:
                     continue
 
-            NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, LDA, LDB, MODREP,
+            NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
                     NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
 
 
         # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
-            fisdata, NFIS = input_fission_spectrum(MC1, LDF, file_IO3, file_IO4)
+            fisdata, NFIS = input_fission_spectrum(MC1, file_IO3, file_IO4)
 
 
         # LABL.AKON[9] == 'MODE'
