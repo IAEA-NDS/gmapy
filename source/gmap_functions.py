@@ -551,7 +551,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
 
 def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
         L, NSHP, MPPP, IPP, NALT, NADD,
-        MODREP, MC1, NCT, file_IO4):
+        MODREP, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
@@ -567,7 +567,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
         L = NR + NSHP
         if L > LDB:
             format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
-            fort_write(file_IO4, format701, [MC1])
+            fort_write(file_IO4, format701, [NS])
             exit()
 
     #VP   PRIOR/EXP column is added
