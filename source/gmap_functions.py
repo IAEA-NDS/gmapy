@@ -287,7 +287,8 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
                 # .lbl48
 
             if not found:
-                break
+                print('ERROR: experimental energy does not match energy mesh')
+                exit()
 
             L = L + 1  # to match L value of fortran after loop
 
@@ -332,7 +333,8 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
         data.DCS[NADD] = np.sqrt(XNORU + RELU) 
         NADD += 1
 
-    return (L, NADD)
+    print('ERROR: too many datapoints regarding current LDA setting')
+    exit()
 
 
 
