@@ -251,7 +251,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
         data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = unflatten(fort_read(file_IO3, format109), [2,[12]])
         L = 13  # to reflect fortran value after READ loop
         if data.E[NADD] == 0:
-            return (L, NADD)
+            return NADD
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
@@ -370,7 +370,7 @@ def should_exclude_dataset(ID, IDEN, IELIM, NELIM, NADD, NALT, file_IO4):
 
 
 def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
-        L, MODC, NCOX, NALT, NP, NADD,
+        MODC, NCOX, NALT, NP, NADD,
         XNORU, file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
@@ -383,7 +383,6 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
     MTTP = IDEN[ID, 8]
     NS = IDEN[ID, 6]
     NADD1 = NADD - 1
-
 
     if NCOX != 0:
         MODAL = MODC
@@ -414,6 +413,9 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
         #
         #       UNCORRELATED OR SINGLE VALUE
         #
+        L = 13  # this values is due to line 252
+                # caused by read statement starting with
+                # E[NADD], ... in accounting
         for KLK in fort_range(NALT, NADD1):  # .lbl74
             data.ECOR[KLK,KLK] = 1.
 
@@ -423,7 +425,11 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
         #       CONSTRUCT ECOR FROM UNCERTAINTY COMPONENTS
         #
         data.ECOR[NALT, NALT] = 1.
-        if NP != 1:
+        if NP == 1:
+            L = 13  # this value is due to line 252
+                    # caused by read statement starting with
+                    # N[NADD], ... in accounting
+        else:
             NALT1 = NALT + 1
             for KS in fort_range(NALT1, NADD1):  # .lbl62
                 C1 = data.DCS[KS]
@@ -615,6 +621,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
     # VP      if(modrep .ne. 0) go to 2627
     format111 = "(/' APRIORI NORM ',I4,F10.4,I5,2X,4A8)"
     fort_write(file_IO4, format111, [L, AP, NS, LABL.CLABL[1:5]])
+
     if MTTP == 2:
         if MODREP == 0:
             AP = 1.0 / AP
@@ -622,7 +629,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
         else:
             AP=APR.CS[L]
 
-    return (NSHP, L, AP)
+    return (NSHP, AP)
 
 
 

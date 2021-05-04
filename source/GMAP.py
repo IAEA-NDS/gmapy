@@ -249,7 +249,7 @@ def main():
 
             NALT = NADD
 
-            L, NADD = \
+            NADD = \
             accounting(ID, IDEN, data, APR, NT, NCT,
                     KAS, NADD, NNCOX, MOD2, XNORU, file_IO3
             )
@@ -271,7 +271,7 @@ def main():
             MODC, L = \
             construct_Ecor(ID, IDEN, 
                     data, NETG, NCSST, NEC,
-                    L, MODC, NCOX, NALT, NP, NADD,
+                    MODC, NCOX, NALT, NP, NADD,
                     XNORU, file_IO3, file_IO4
             )
 
@@ -284,7 +284,7 @@ def main():
                     for K in fort_range(1,NCT):
                         fort_write(file_IO4, format702, [KAS[NALT:NADD], K])
 
-                (NSHP, L, AP) = \
+                (NSHP, AP) = \
                 determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
                         L, NSHP, MPPP, IPP, NALT, NADD,
                         MODREP, MC1, NCT, file_IO4)
