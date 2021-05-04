@@ -74,11 +74,14 @@ def main():
     #      EN    ENERGY GRID
     #      CS    APRIORI CROSS SECTIONS
     #      MCS   INDEXES
-    #
+    #      NR    number of parameters (cross sections)
+    #      NC    number of cross section types
     APR = Bunch({
         'EN': np.zeros(1200+1, dtype=float),
         'CS': np.zeros(1200+1, dtype=float),
-        'MCS': np.zeros((35+1,3+1), dtype=int)
+        'MCS': np.zeros((35+1,3+1), dtype=int),
+        'NR': 0,
+        'NC': 0
         })
 
     #
@@ -231,7 +234,7 @@ def main():
         # LABL.AKON[1] == 'APRI'
         if ACON == LABL.AKON[1]:
             # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
-            NC, NR = read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
+            read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
 
 
         # LABL.AKON[2] == 'DATA'
@@ -283,7 +286,7 @@ def main():
 
                 (NSHP, L, AP) = \
                 determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
-                        L, NSHP, MPPP, IPP, NR, NALT, NADD,
+                        L, NSHP, MPPP, IPP, NALT, NADD,
                         MODREP, MC1, NCT, file_IO4)
 
             N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, L, EAVR, NT, NCT,  NALT, NADD, file_IO4)
@@ -292,7 +295,7 @@ def main():
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
             get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4)
-            JA = output_result(gauss, data, fisdata, APR, MODAP, NFIS, NR, NC,
+            JA = output_result(gauss, data, fisdata, APR, MODAP, NFIS,
                     NSHP, NRS, LABL, NSETN, file_IO4, file_IO5)
             #
             #     reset for repeat of fit with replaced apriori from first fit
@@ -317,7 +320,7 @@ def main():
                     ID, N, NADD = read_block_input(data, gauss, KA, KAS, MODREP, file_IO4)
                     continue
 
-            output_result_correlation_matrix(gauss, data, APR, IPP, NC,
+            output_result_correlation_matrix(gauss, data, APR, IPP,
                     LABL, JA, file_IO4)
             exit()
 
@@ -370,7 +373,7 @@ def main():
                     continue
 
             NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
-                    NR, NSHP, KA, NTOT, SIGMA2, file_IO4)
+                    APR, NSHP, KA, NTOT, SIGMA2, file_IO4)
 
 
         # LABL.AKON[8] == 'FIS*'

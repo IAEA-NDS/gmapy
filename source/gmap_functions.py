@@ -33,6 +33,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     #
     NE = MC1
     NC = MC2
+    APR.NC = NC
     NE1 = NE+1
     NR = 0
     for K in fort_range(1,NC):  # .lbl33
@@ -47,6 +48,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
                 break
             APR.MCS[K,1] += 1
             NR += 1
+            APR.NR = NR
             APR.EN[NR] = EX1
             APR.CS[NR] = CSX1
 
@@ -100,8 +102,6 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
         format4392 = "(/' End Address '/)"
         fort_write(file_IO4, format4392, [])
         fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
-
-    return (NC, NR)
 
 
 def read_block_input(data, gauss, KA, KAS, MODREP, file_IO4):
@@ -541,7 +541,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
 
 
 def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
-        L, NSHP, MPPP, IPP, NR, NALT, NADD,
+        L, NSHP, MPPP, IPP, NALT, NADD,
         MODREP, MC1, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
@@ -550,6 +550,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
     MT = IDEN[ID, 7]
     MTTP = IDEN[ID, 8]
     NADD1 = NADD - 1
+    NR = APR.NR
 
     if MTTP != 1:
         NSHP = NSHP + 1
@@ -994,10 +995,11 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
 
 
 def get_matrix_products(gauss, data, N, MODREP,
-        NR, NSHP, KA, NTOT, SIGMA2, file_IO4):
+        APR, NSHP, KA, NTOT, SIGMA2, file_IO4):
     #
     #      GET MATRIX PRODUCTS
     #
+    NR = APR.NR
     NRS=NR+NSHP
     for I in fort_range(1,NRS):  # .lbl90
         NI=KA[I,1]
@@ -1130,11 +1132,14 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4):
             gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
 
 
-def output_result(gauss, data, fisdata, APR, MODAP, NFIS, NR, NC,
+def output_result(gauss, data, fisdata, APR, MODAP, NFIS,
         NSHP, NRS, LABL, NSETN, file_IO4, file_IO5):
     #
     #      output of the result
     #
+    NR = APR.NR
+    NC = APR.NC
+
     for L in fort_range(1,NC):  # .lbl14
         format117 = "(1H1,'   RESULT',5X,2A8//)" 
         fort_write(file_IO4, format117, [LABL.CLAB[L,1:3]])
@@ -1228,11 +1233,13 @@ def output_result(gauss, data, fisdata, APR, MODAP, NFIS, NR, NC,
 
 
 
-def output_result_correlation_matrix(gauss, data, APR, IPP, NC,
+def output_result_correlation_matrix(gauss, data, APR, IPP,
         LABL, JA, file_IO4):
     #
     #   OUTPUT OF CORRELATION MATRIX OF THE RESULT
     #
+    NC = APR.NC
+
     if IPP[6] != 0:
         format151 = "(1X,24F7.4)"
         for K in fort_range(1,NC):  # .lbl78
