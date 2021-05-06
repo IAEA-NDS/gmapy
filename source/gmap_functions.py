@@ -130,7 +130,7 @@ def read_block_input(data, gauss, MODREP, file_IO4):
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, LABL, NENF, NETG, NCSST, NEC, NT,
+        data, LABL, NETG, NCSST, NEC, NT,
         ID, N, file_IO3, file_IO4):
     #
     #      DATA SET INPUT
@@ -153,6 +153,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NT[2] = MC6
     NT[3] = MC7
     NNCOX = MC8
+    NENF = data.NENF
     format123 = "(16I5)"
     if NCT > 3:
         NT[4:(NCT+1)] = fort_read(file_IO3, format123)
