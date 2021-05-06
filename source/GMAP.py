@@ -47,6 +47,8 @@ def main():
     #      NENF       tags of norm. uncertainty components
     #      NETG       tags of energy dependent uncertainty components
     #      NCSST      data set Nr.s for cross correlations
+    #      NEC        error component pairs for cross correlations
+    #
     #      NT         id of cross sections involved in measured quantity
     #
     data = Bunch({
@@ -69,6 +71,7 @@ def main():
         'NENF': np.zeros((40+1, 10+1), dtype=int),
         'NETG': np.zeros((11+1,40+1), dtype=int),
         'NCSST': np.zeros(10+1, dtype=int),
+        'NEC': np.zeros((2+1,10+1,10+1), dtype=int),
 
         # TODO: convert following to arrays with index ID
         'NT': np.zeros(5+1, dtype=int)
@@ -77,7 +80,6 @@ def main():
     #
     #      NSETN      shape data set numbers
     #      IPP        i/o choices
-    #      NEC        error component pairs for cross correlations
     #      NRED       data set Nr.s for downweighting
     #      NELIM      data set Nr.s to exclude from evaluation
     #
@@ -86,7 +88,6 @@ def main():
     #  2 ,KA(1200,250),NELIM(40)
     NSETN = np.zeros(200+1, dtype=int)
     IPP = np.zeros(8+1, dtype=int)
-    NEC = np.zeros((2+1,10+1,10+1), dtype=int)
     NRED = np.zeros(160+1, dtype=int)
     NELIM = np.zeros(40+1, dtype=int)
 
@@ -248,7 +249,7 @@ def main():
             NCT, NCOX, NNCOX, XNORU, ID = \
             read_dataset_input(
                     MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, LABL, NEC,
+                    data, LABL,
                     ID, N, file_IO3, file_IO4
             )
 
@@ -273,7 +274,7 @@ def main():
             #
 
             MODC, L = \
-            construct_Ecor(ID, data, NEC,
+            construct_Ecor(ID, data,
                     MODC, NCOX, NALT, NADD,
                     XNORU, file_IO3, file_IO4
             )

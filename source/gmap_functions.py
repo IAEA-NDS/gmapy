@@ -130,7 +130,7 @@ def read_block_input(data, gauss, MODREP, file_IO4):
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, LABL, NEC,
+        data, LABL,
         ID, N, file_IO3, file_IO4):
     #
     #      DATA SET INPUT
@@ -157,6 +157,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NENF = data.NENF
     NETG = data.NETG
     NCSST = data.NCSST
+    NEC = data.NEC
 
     format123 = "(16I5)"
     if NCT > 3:
@@ -381,7 +382,7 @@ def should_exclude_dataset(ID, data, IELIM, NELIM, NADD, NALT, file_IO4):
 
 
 
-def construct_Ecor(ID, data, NEC,
+def construct_Ecor(ID, data,
         MODC, NCOX, NALT, NADD,
         XNORU, file_IO3, file_IO4):
     #
@@ -399,6 +400,7 @@ def construct_Ecor(ID, data, NEC,
     NADD1 = NADD - 1
     NP = IDEN[ID, 1]
     NCSST = data.NCSST
+    NEC = data.NEC
 
     if NCOX != 0:
         MODAL = MODC
