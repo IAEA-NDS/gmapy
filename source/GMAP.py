@@ -45,6 +45,7 @@ def main():
     #      KA         indexes
     #      IDEN       data set info (see below)
     #      NENF       tags of norm. uncertainty components
+    #      NETG       tags of energy dependent uncertainty components
     #
     data = Bunch({
         'NP': 0,
@@ -63,14 +64,14 @@ def main():
         'KAS': np.zeros((250+1, 5+1), dtype=int),
         'KA': np.zeros((1200+1, 250+1), dtype=int),
         'IDEN': np.zeros((30+1, 8+1), dtype=int),
-        'NENF': np.zeros((40+1, 10+1), dtype=int) # read but not considered in Bayes update
+        'NENF': np.zeros((40+1, 10+1), dtype=int),
+        'NETG': np.zeros((11+1,40+1), dtype=int)
         })
 
     #
     #      NT         id of cross sections involved in measured quantity
     #      NSETN      shape data set numbers
     #      IPP        i/o choices
-    #      NETG       tags of energy dependent uncertainty components
     #      NCSST      data set Nr.s for cross correlations
     #      NEC        error component pairs for cross correlations
     #      NRED       data set Nr.s for downweighting
@@ -82,7 +83,6 @@ def main():
     NT = np.zeros(5+1, dtype=int)
     NSETN = np.zeros(200+1, dtype=int)
     IPP = np.zeros(8+1, dtype=int)
-    NETG = np.zeros((11+1,40+1), dtype=int)
     NCSST = np.zeros(10+1, dtype=int)
     NEC = np.zeros((2+1,10+1,10+1), dtype=int)
     NRED = np.zeros(160+1, dtype=int)
@@ -246,7 +246,7 @@ def main():
             NCT, NCOX, NNCOX, XNORU, ID = \
             read_dataset_input(
                     MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, LABL, NETG, NCSST, NEC, NT,
+                    data, LABL, NCSST, NEC, NT,
                     ID, N, file_IO3, file_IO4
             )
 
@@ -272,7 +272,7 @@ def main():
 
             MODC, L = \
             construct_Ecor(ID, data,
-                    NETG, NCSST, NEC,
+                    NCSST, NEC,
                     MODC, NCOX, NALT, NADD,
                     XNORU, file_IO3, file_IO4
             )
