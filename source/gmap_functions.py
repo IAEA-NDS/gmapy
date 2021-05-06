@@ -130,7 +130,7 @@ def read_block_input(data, gauss, MODREP, file_IO4):
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, LABL, NEC, NT,
+        data, LABL, NEC,
         ID, N, file_IO3, file_IO4):
     #
     #      DATA SET INPUT
@@ -149,6 +149,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     MT = MC2
     NCOX = MC3
     NCT = MC4
+    NT = data.NT
     NT[1] = MC5
     NT[2] = MC6
     NT[3] = MC7
@@ -238,7 +239,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 
-def accounting(ID, data, APR, NT, NCT,
+def accounting(ID, data, APR, NCT,
         NADD, NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
@@ -252,6 +253,7 @@ def accounting(ID, data, APR, NT, NCT,
     MT = IDEN[ID, 7]
     NALT = NADD
     KAS = data.KAS
+    NT = data.NT
 
     for KS in fort_range(1,LDA):  # .lbl21
 
@@ -650,7 +652,7 @@ def determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
 
 
 def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP,
-        EAVR, NT, NCT, NALT, NADD, file_IO4):
+        EAVR, NCT, NALT, NADD, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -659,6 +661,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP,
     NADD1 = NADD - 1
     KAS = data.KAS
     KA = data.KA
+    NT = data.NT
 
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
