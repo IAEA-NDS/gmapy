@@ -29,6 +29,34 @@ def main():
     # IMPLICIT REAL*8 (A-H,O-Z)
 
     #
+    #   Data block / data set   
+    #
+    #      NP      NUMBER OF DATA POINTS
+    #      E       ENERGIES OF EXPERIMENTAL DATA SET
+    #      CSS     MEASUREMENT VALUES OF EXPERIMENTAL DATA SET
+    #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
+    #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
+    #      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
+    #      ENFF    NORMALIZATION UNCERTAINTIES COMPONENTS
+    #      EPAF    UNCERTAINTY COMPONENT PARAMETERS
+    #      FCFC    CROSS CORRELATION FACTORS
+    #
+    data = Bunch({
+        'NP': 0,
+        'E': np.zeros(250+1, dtype=float),
+        'CSS': np.zeros(250+1, dtype=float),
+        'DCS': np.zeros(250+1, dtype=float),
+        'FIS': np.zeros(250+1, dtype=float),
+        'ECOR': np.zeros((250+1, 250+1), dtype=float),
+        'ENFIS': np.zeros(250+1, dtype=float),
+        'CO': np.zeros((12+1, 250+1), dtype=float),
+        'ENFF': np.zeros((30+1, 10+1), dtype=float),
+        'EPAF': np.zeros((3+1, 11+1, 30+1), dtype=float),
+        'FCFC': np.zeros((10+1, 10+1), dtype=float),
+        'AAA': np.zeros((250+1, 250+1), dtype=float)
+        })
+
+    #
     #      KAS        indexes of experimental cross sections
     #      NT         id of cross sections involved in measured quantity
     #      IDEN       data set info (see below)
@@ -82,34 +110,6 @@ def main():
         'MCS': np.zeros((35+1,3+1), dtype=int),
         'NR': 0,
         'NC': 0
-        })
-
-    #
-    #   Data block / data set   
-    #
-    #      NP      NUMBER OF DATA POINTS
-    #      E       ENERGIES OF EXPERIMENTAL DATA SET
-    #      CSS     MEASUREMENT VALUES OF EXPERIMENTAL DATA SET
-    #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
-    #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
-    #      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
-    #      ENFF    NORMALIZATION UNCERTAINTIES COMPONENTS
-    #      EPAF    UNCERTAINTY COMPONENT PARAMETERS
-    #      FCFC    CROSS CORRELATION FACTORS
-    #
-    data = Bunch({
-        'NP': 0,
-        'E': np.zeros(250+1, dtype=float),
-        'CSS': np.zeros(250+1, dtype=float),
-        'DCS': np.zeros(250+1, dtype=float),
-        'FIS': np.zeros(250+1, dtype=float),
-        'ECOR': np.zeros((250+1, 250+1), dtype=float),
-        'ENFIS': np.zeros(250+1, dtype=float),
-        'CO': np.zeros((12+1, 250+1), dtype=float),
-        'ENFF': np.zeros((30+1, 10+1), dtype=float),
-        'EPAF': np.zeros((3+1, 11+1, 30+1), dtype=float),
-        'FCFC': np.zeros((10+1, 10+1), dtype=float),
-        'AAA': np.zeros((250+1, 250+1), dtype=float)
         })
 
     #
