@@ -130,7 +130,7 @@ def read_block_input(data, gauss, MODREP, file_IO4):
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
+        data, LABL, NENF, NETG, NCSST, NEC, NT,
         ID, N, file_IO3, file_IO4):
     #
     #      DATA SET INPUT
@@ -158,6 +158,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         NT[4:(NCT+1)] = fort_read(file_IO3, format123)
 
     ID = ID+1
+    IDEN = data.IDEN
     IDEN[ID,2] = N+1
     IDEN[ID,6] = NS
     IDEN[ID,7] = MT
@@ -229,11 +230,11 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
             data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
-    return (NCT, NCOX, NNCOX, XNORU, ID, IDEN)
+    return (NCT, NCOX, NNCOX, XNORU, ID)
 
 
 
-def accounting(ID, IDEN, data, APR, NT, NCT,
+def accounting(ID, data, APR, NT, NCT,
         NADD, NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
@@ -242,6 +243,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
     #      ID          NO OF EXPERIMENTAL DATA SETS
     #      NP          NO OF DATA POINTS IN THIS SET
     #
+    IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
     NALT = NADD
@@ -341,9 +343,10 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
 
 
 
-def should_exclude_dataset(ID, IDEN, IELIM, NELIM, NADD, NALT, file_IO4): 
+def should_exclude_dataset(ID, data, IELIM, NELIM, NADD, NALT, file_IO4): 
 
     should_exclude = False
+    IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MTTP = IDEN[ID, 8]
 
@@ -372,7 +375,7 @@ def should_exclude_dataset(ID, IDEN, IELIM, NELIM, NADD, NALT, file_IO4):
 
 
 
-def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
+def construct_Ecor(ID, data, NETG, NCSST, NEC,
         MODC, NCOX, NALT, NADD,
         XNORU, file_IO3, file_IO4):
     #
@@ -382,6 +385,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
     #               2   UNCORRELATED
     #               3   ALL CORRELATED ERRORS GIVEN
     #
+    IDEN = data.IDEN
     NCCS = IDEN[ID, 5]
     MTTP = IDEN[ID, 8]
     NS = IDEN[ID, 6]
@@ -550,12 +554,13 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
 
 
 
-def determine_apriori_norm_shape(ID, IDEN, data, APR, LABL, NSETN,
+def determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
         L, NSHP, MPPP, IPP, NALT, NADD,
         MODREP, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
+    IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
     MTTP = IDEN[ID, 8]
@@ -638,11 +643,12 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, N, NSHP,
+def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP,
         EAVR, NT, NCT, NALT, NADD, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
+    IDEN = data.IDEN
     MT =  IDEN[ID, 7]
     NADD1 = NADD - 1
     KAS = data.KAS

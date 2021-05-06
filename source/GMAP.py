@@ -43,6 +43,7 @@ def main():
     #
     #      KAS        indexes of experimental cross sections
     #      KA         indexes
+    #      IDEN       data set info (see below)
     #
     data = Bunch({
         'NP': 0,
@@ -59,12 +60,12 @@ def main():
         'AAA': np.zeros((250+1, 250+1), dtype=float),
 
         'KAS': np.zeros((250+1, 5+1), dtype=int),
-        'KA': np.zeros((1200+1, 250+1), dtype=int)
+        'KA': np.zeros((1200+1, 250+1), dtype=int),
+        'IDEN': np.zeros((30+1, 8+1), dtype=int)
         })
 
     #
     #      NT         id of cross sections involved in measured quantity
-    #      IDEN       data set info (see below)
     #      NSETN      shape data set numbers
     #      IPP        i/o choices
     #      NENF       tags of norm. uncertainty components
@@ -78,7 +79,6 @@ def main():
     #  1 NENF(40,10),NETG(11,40),NCSST(10),NEC(2,10,10),NRED(160)
     #  2 ,KA(1200,250),NELIM(40)
     NT = np.zeros(5+1, dtype=int)
-    IDEN = np.zeros((30+1, 8+1), dtype=int)
     NSETN = np.zeros(200+1, dtype=int)
     IPP = np.zeros(8+1, dtype=int)
     NENF = np.zeros((40+1, 10+1), dtype=int)
@@ -243,23 +243,23 @@ def main():
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
 
-            NCT, NCOX, NNCOX, XNORU, ID, IDEN = \
+            NCT, NCOX, NNCOX, XNORU, ID = \
             read_dataset_input(
                     MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, LABL, IDEN, NENF, NETG, NCSST, NEC, NT,
+                    data, LABL, NENF, NETG, NCSST, NEC, NT,
                     ID, N, file_IO3, file_IO4
             )
 
             NALT = NADD
 
             NADD = \
-            accounting(ID, IDEN, data, APR, NT, NCT,
+            accounting(ID, data, APR, NT, NCT,
                     NADD, NNCOX, MOD2, XNORU, file_IO3
             )
 
 
             exclflag, ID, NADD = \
-            should_exclude_dataset(ID, IDEN,
+            should_exclude_dataset(ID, data,
                     IELIM, NELIM, NADD, NALT, file_IO4
             )
 
@@ -271,13 +271,13 @@ def main():
             #
 
             MODC, L = \
-            construct_Ecor(ID, IDEN, 
-                    data, NETG, NCSST, NEC,
+            construct_Ecor(ID, data,
+                    NETG, NCSST, NEC,
                     MODC, NCOX, NALT, NADD,
                     XNORU, file_IO3, file_IO4
             )
 
-            if IDEN[ID, 7] != 6:
+            if data.IDEN[ID, 7] != 6:
                 #
                 #   output of KAS for checking
                 #
@@ -287,11 +287,11 @@ def main():
                         fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
 
                 (NSHP, AP) = \
-                determine_apriori_norm_shape(ID, IDEN, data, APR, LABL, NSETN,
+                determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
                         L, NSHP, MPPP, IPP, NALT, NADD,
                         MODREP, NCT, file_IO4)
 
-            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, N,
+            N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
                     NSHP, EAVR, NT, NCT,  NALT, NADD, file_IO4)
 
 
