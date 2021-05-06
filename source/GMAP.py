@@ -41,6 +41,9 @@ def main():
     #      EPAF    UNCERTAINTY COMPONENT PARAMETERS
     #      FCFC    CROSS CORRELATION FACTORS
     #
+    #      KAS        indexes of experimental cross sections
+    #      KA         indexes
+    #
     data = Bunch({
         'NP': 0,
         'E': np.zeros(250+1, dtype=float),
@@ -53,11 +56,13 @@ def main():
         'ENFF': np.zeros((30+1, 10+1), dtype=float),
         'EPAF': np.zeros((3+1, 11+1, 30+1), dtype=float),
         'FCFC': np.zeros((10+1, 10+1), dtype=float),
-        'AAA': np.zeros((250+1, 250+1), dtype=float)
+        'AAA': np.zeros((250+1, 250+1), dtype=float),
+
+        'KAS': np.zeros((250+1, 5+1), dtype=int),
+        'KA': np.zeros((1200+1, 250+1), dtype=int)
         })
 
     #
-    #      KAS        indexes of experimental cross sections
     #      NT         id of cross sections involved in measured quantity
     #      IDEN       data set info (see below)
     #      NSETN      shape data set numbers
@@ -67,14 +72,11 @@ def main():
     #      NCSST      data set Nr.s for cross correlations
     #      NEC        error component pairs for cross correlations
     #      NRED       data set Nr.s for downweighting
-    #      KA         indexes
     #      NELIM      data set Nr.s to exclude from evaluation
     #
-
     #   INTEGER*2 KAS(250,5),NT(5),IDEN(30,8),NSETN(200),IPP(8),
     #  1 NENF(40,10),NETG(11,40),NCSST(10),NEC(2,10,10),NRED(160)
     #  2 ,KA(1200,250),NELIM(40)
-    KAS = np.zeros((250+1, 5+1), dtype=int)
     NT = np.zeros(5+1, dtype=int)
     IDEN = np.zeros((30+1, 8+1), dtype=int)
     NSETN = np.zeros(200+1, dtype=int)
@@ -84,7 +86,6 @@ def main():
     NCSST = np.zeros(10+1, dtype=int)
     NEC = np.zeros((2+1,10+1,10+1), dtype=int)
     NRED = np.zeros(160+1, dtype=int)
-    KA = np.zeros((1200+1, 250+1), dtype=int)
     NELIM = np.zeros(40+1, dtype=int)
 
     # TODO: otherwise error thrown 'variable accessed before assignment'
@@ -253,7 +254,7 @@ def main():
 
             NADD = \
             accounting(ID, IDEN, data, APR, NT, NCT,
-                    KAS, NADD, NNCOX, MOD2, XNORU, file_IO3
+                    NADD, NNCOX, MOD2, XNORU, file_IO3
             )
 
 
@@ -283,14 +284,14 @@ def main():
                 if IPP[7] != 0:
                     format702 = "(20I5)"
                     for K in fort_range(1,NCT):
-                        fort_write(file_IO4, format702, [KAS[NALT:NADD], K])
+                        fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
 
                 (NSHP, AP) = \
-                determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
+                determine_apriori_norm_shape(ID, IDEN, data, APR, LABL, NSETN,
                         L, NSHP, MPPP, IPP, NALT, NADD,
                         MODREP, NCT, file_IO4)
 
-            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N,
+            N = fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, N,
                     NSHP, EAVR, NT, NCT,  NALT, NADD, file_IO4)
 
 
@@ -319,7 +320,7 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    ID, N, NADD = read_block_input(data, gauss, KA, KAS, MODREP, file_IO4)
+                    ID, N, NADD = read_block_input(data, gauss, MODREP, file_IO4)
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
@@ -329,7 +330,7 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            ID, N, NADD = read_block_input(data, gauss, KA, KAS, MODREP, file_IO4)
+            ID, N, NADD = read_block_input(data, gauss, MODREP, file_IO4)
 
 
         # LABL.AKON[5] == 'I/OC'
@@ -375,7 +376,7 @@ def main():
                     continue
 
             NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
-                    APR, NSHP, KA, NTOT, SIGMA2, file_IO4)
+                    APR, NSHP, NTOT, SIGMA2, file_IO4)
 
 
         # LABL.AKON[8] == 'FIS*'

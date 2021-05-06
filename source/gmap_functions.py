@@ -104,7 +104,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
         fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
 
 
-def read_block_input(data, gauss, KA, KAS, MODREP, file_IO4):
+def read_block_input(data, gauss, MODREP, file_IO4):
     #
     #      BLOCK INPUT
     #
@@ -116,8 +116,8 @@ def read_block_input(data, gauss, KA, KAS, MODREP, file_IO4):
     ID = 0
     gauss.AM.fill(0.)
     gauss.AA.fill(0.)
-    KA.fill(0.)
-    KAS.fill(0.)
+    data.KA.fill(0.)
+    data.KAS.fill(0.)
     data.ECOR.fill(0.)
 
     if MODREP == 0:
@@ -234,7 +234,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 def accounting(ID, IDEN, data, APR, NT, NCT,
-        KAS, NADD, NNCOX, MOD2, XNORU, file_IO3):
+        NADD, NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
     #
@@ -245,6 +245,7 @@ def accounting(ID, IDEN, data, APR, NT, NCT,
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
     NALT = NADD
+    KAS = data.KAS
 
     for KS in fort_range(1,LDA):  # .lbl21
 
@@ -549,7 +550,7 @@ def construct_Ecor(ID, IDEN, data, NETG, NCSST, NEC,
 
 
 
-def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
+def determine_apriori_norm_shape(ID, IDEN, data, APR, LABL, NSETN,
         L, NSHP, MPPP, IPP, NALT, NADD,
         MODREP, NCT, file_IO4):
     #
@@ -560,6 +561,7 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
     MTTP = IDEN[ID, 8]
     NADD1 = NADD - 1
     NR = APR.NR
+    KAS = data.KAS
 
     if MTTP != 1:
         NSHP = NSHP + 1
@@ -636,13 +638,15 @@ def determine_apriori_norm_shape(ID, IDEN, data, APR, KAS, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, KAS, KA, N, NSHP,
+def fill_AA_AM_COV(ID, data, fisdata, APR, IDEN, gauss, AP, N, NSHP,
         EAVR, NT, NCT, NALT, NADD, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
     MT =  IDEN[ID, 7]
     NADD1 = NADD - 1
+    KAS = data.KAS
+    KA = data.KA
 
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
@@ -1011,12 +1015,14 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
 
 
 def get_matrix_products(gauss, data, N, MODREP,
-        APR, NSHP, KA, NTOT, SIGMA2, file_IO4):
+        APR, NSHP, NTOT, SIGMA2, file_IO4):
     #
     #      GET MATRIX PRODUCTS
     #
     NR = APR.NR
     NRS=NR+NSHP
+    KA = data.KA
+
     for I in fort_range(1,NRS):  # .lbl90
         NI=KA[I,1]
         if NI == 0:
