@@ -235,10 +235,71 @@ def main():
         format100 = "(A4,1X,8I5)"
         ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
 
+
+        # LABL.AKON[9] == 'MODE'
+        if ACON == LABL.AKON[9]:
+            #
+            #   MODE DEFINITION
+            #
+            MODC = MC1
+            MOD2 = MC2
+            #VPBEG MPPP=1 allows to use anti-PPP option, when errors of exp data 
+            #VP   are taken as % uncertainties from true (posterior) evaluation 
+            MPPP = MC5
+            #VPEND
+            AMO3=MC3/10.
+            MODAP=MC4
+            if MC2 == 10:
+                #
+                #      test option:  input of data set numbers which are to be downweighted
+                #
+                K1=1
+                K2=16
+                format677 = "(16I5)"
+                for K in fort_range(1,10):  # .lbl678
+                    fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
+                    if NRED[K2] == 0:
+                        break
+                    K1=K1+16
+                    K2=K2+16
+
+                for K in fort_range(K1,K2):  # .lbl680
+                    if NRED[K] == 0:
+                        break
+
+                NELI=K-1
+
+
+        # LABL.AKON[5] == 'I/OC'
+        elif ACON == LABL.AKON[5]:
+            #
+            #      I/O CONTROL
+            #
+            IPP = [None for i in range(9)]
+            IPP[1] = MC1
+            IPP[2] = MC2
+            IPP[3] = MC3
+            IPP[4] = MC4
+            IPP[5] = MC5
+            IPP[6] = MC6
+            IPP[7] = MC7
+            IPP[8] = MC8
+
+
         # LABL.AKON[1] == 'APRI'
-        if ACON == LABL.AKON[1]:
+        elif ACON == LABL.AKON[1]:
             # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
             read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
+
+
+        # LABL.AKON[8] == 'FIS*'
+        elif ACON == LABL.AKON[8]:
+            fisdata, NFIS = input_fission_spectrum(MC1, file_IO3, file_IO4)
+
+
+        # LABL.AKON[4] == 'BLCK'
+        elif ACON == LABL.AKON[4]:
+            ID, N, NADD = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
 
 
         # LABL.AKON[2] == 'DATA'
@@ -248,6 +309,30 @@ def main():
                     LABL, APR, IELIM, NELIM, NSETN,
                     MODC, MOD2, MPPP, MODREP, N, NADD, NSHP, ID,
                     IPP, file_IO3, file_IO4)
+
+
+        # LABL.AKON[7] == 'EDBL'
+        elif ACON == LABL.AKON[7]:
+            #
+            #    Data BLOCK complete
+            #
+            N1=N-1
+            if ID == 0:
+                continue
+
+            IREP = 0
+            complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
+
+            if not (IPP[3] == 0 or N == 1 or MODC == 2):
+                output_Ecor_matrix(data, N, file_IO4)
+
+            if not (MODC == 2 or N == 1):
+                invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
+                if not invertible:
+                    continue
+
+            NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
+                    APR, NSHP, NTOT, SIGMA2, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
@@ -283,101 +368,6 @@ def main():
             exit()
 
 
-        # LABL.AKON[4] == 'BLCK'
-        elif ACON == LABL.AKON[4]:
-            ID, N, NADD = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
-
-
-        # LABL.AKON[5] == 'I/OC'
-        elif ACON == LABL.AKON[5]:
-            #
-            #      I/O CONTROL
-            #
-            IPP = [None for i in range(9)]
-            IPP[1] = MC1
-            IPP[2] = MC2
-            IPP[3] = MC3
-            IPP[4] = MC4
-            IPP[5] = MC5
-            IPP[6] = MC6
-            IPP[7] = MC7
-            IPP[8] = MC8
-
-
-        elif ACON == LABL.AKON[6]:
-            format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
-            fort_write(file_IO4, format104, [ACON])
-            exit()
-
-
-        # LABL.AKON[7] == 'EDBL'
-        elif ACON == LABL.AKON[7]:
-            #
-            #    Data BLOCK complete
-            #
-            N1=N-1
-            if ID == 0:
-                continue
-
-            IREP = 0
-            complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
-
-            if not (IPP[3] == 0 or N == 1 or MODC == 2):
-                output_Ecor_matrix(data, N, file_IO4)
-
-            if not (MODC == 2 or N == 1):
-                invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
-                if not invertible:
-                    continue
-
-            NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
-                    APR, NSHP, NTOT, SIGMA2, file_IO4)
-
-
-        # LABL.AKON[8] == 'FIS*'
-        elif ACON == LABL.AKON[8]:
-            fisdata, NFIS = input_fission_spectrum(MC1, file_IO3, file_IO4)
-
-
-        # LABL.AKON[9] == 'MODE'
-        elif ACON == LABL.AKON[9]:
-            #
-            #   MODE DEFINITION
-            #
-            MODC = MC1
-            MOD2 = MC2
-            #VPBEG MPPP=1 allows to use anti-PPP option, when errors of exp data 
-            #VP   are taken as % uncertainties from true (posterior) evaluation 
-            MPPP = MC5
-            #VPEND
-            AMO3=MC3/10.
-            MODAP=MC4
-            if MC2 == 10:
-                #
-                #      test option:  input of data set numbers which are to be downweighted
-                #
-                K1=1
-                K2=16
-                format677 = "(16I5)"
-                for K in fort_range(1,10):  # .lbl678
-                    fort_write(file_IO3, format677, [NRED[K1:(K2+1)]])
-                    if NRED[K2] == 0:
-                        break
-                    K1=K1+16
-                    K2=K2+16
-
-                for K in fort_range(K1,K2):  # .lbl680
-                    if NRED[K] == 0:
-                        break
-
-                NELI=K-1
-
-
-        # LABL.AKON[10] == 'STOP'
-        elif ACON == LABL.AKON[10]:
-            force_stop(file_IO4)
-
-
         # LABL.AKON[11] == 'ELIM'
         elif ACON == LABL.AKON[11]:
             # input:  data set numbers which are to be excluded from the evaluation
@@ -385,6 +375,16 @@ def main():
             format171 = r"(16I5)"
             NELIM = fort_read(file_IO3, format171)
 
+
+        # LABL.AKON[10] == 'STOP'
+        elif ACON == LABL.AKON[10]:
+            force_stop(file_IO4)
+
+
+        elif ACON == LABL.AKON[6]:
+            format104 = "(A4,2X,'  CONTROL CODE UNKNOWN')"
+            fort_write(file_IO4, format104, [ACON])
+            exit()
 
 
 main()
