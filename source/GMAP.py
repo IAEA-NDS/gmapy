@@ -16,7 +16,8 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         construct_Ecor, determine_apriori_norm_shape,
         fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
         invert_Ecor, get_matrix_products, get_result, output_result,
-        output_result_correlation_matrix, input_fission_spectrum)
+        output_result_correlation_matrix, input_fission_spectrum,
+        deal_with_dataset)
 
 
 #################################################
@@ -243,55 +244,12 @@ def main():
 
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
-
-            NCT, NCOX, NNCOX, XNORU, ID = \
-            read_dataset_input(
-                    MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, LABL,
-                    ID, N, file_IO3, file_IO4
-            )
-
-            NALT = NADD
-
-            NADD = \
-            accounting(ID, data, APR, NCT,
-                    NADD, NNCOX, MOD2, XNORU, file_IO3
-            )
-
-
-            exclflag, ID, NADD = \
-            should_exclude_dataset(ID, data,
-                    IELIM, NELIM, NADD, NALT, file_IO4
-            )
-
-            if not exclflag:
-                #
-                #      continue for valid data
-                #
-
-                MODC, L = \
-                construct_Ecor(ID, data,
-                        MODC, NCOX, NALT, NADD,
-                        XNORU, file_IO3, file_IO4
-                )
-
-                AP = 0.
-                if data.IDEN[ID, 7] != 6:
-                    #
-                    #   output of KAS for checking
-                    #
-                    if IPP[7] != 0:
-                        format702 = "(20I5)"
-                        for K in fort_range(1,NCT):
-                            fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
-
-                    (NSHP, AP) = \
-                    determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
-                            L, NSHP, MPPP, IPP, NALT, NADD,
-                            MODREP, NCT, file_IO4)
-
-                N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
-                        NSHP, EAVR, NCT,  NALT, NADD, file_IO4)
+            (ID, NADD, MODC, NSHP, N) = deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+                    data, fisdata, gauss,
+                    LABL, APR, IELIM, NELIM, NSETN,
+                    MODC, MOD2, MPPP, MODREP, N, NADD, NSHP, ID,
+                    IPP, file_IO3, file_IO4,
+                    EAVR)
 
 
         # LABL.AKON[3] == 'END*'

@@ -129,6 +129,65 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
     return (ID, N, NADD)
 
 
+def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+        data, fisdata, gauss,
+        LABL, APR, IELIM, NELIM, NSETN,
+        MODC, MOD2, MPPP, MODREP, N, NADD, NSHP, ID,
+        IPP, file_IO3, file_IO4,
+        EAVR):
+
+    NCT, NCOX, NNCOX, XNORU, ID = \
+    read_dataset_input(
+            MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+            data, LABL,
+            ID, N, file_IO3, file_IO4
+    )
+
+    NALT = NADD
+
+    NADD = \
+    accounting(ID, data, APR, NCT,
+            NADD, NNCOX, MOD2, XNORU, file_IO3
+    )
+
+
+    exclflag, ID, NADD = \
+    should_exclude_dataset(ID, data,
+            IELIM, NELIM, NADD, NALT, file_IO4
+    )
+
+    if not exclflag:
+        #
+        #      continue for valid data
+        #
+
+        MODC, L = \
+        construct_Ecor(ID, data,
+                MODC, NCOX, NALT, NADD,
+                XNORU, file_IO3, file_IO4
+        )
+
+        AP = 0.
+        if data.IDEN[ID, 7] != 6:
+            #
+            #   output of KAS for checking
+            #
+            if IPP[7] != 0:
+                format702 = "(20I5)"
+                for K in fort_range(1,NCT):
+                    fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
+
+            (NSHP, AP) = \
+            determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
+                    L, NSHP, MPPP, IPP, NALT, NADD,
+                    MODREP, NCT, file_IO4)
+
+        N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
+                NSHP, EAVR, NCT,  NALT, NADD, file_IO4)
+
+    return (ID, NADD, MODC, NSHP, N)
+
+
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, LABL,
         ID, N, file_IO3, file_IO4):
