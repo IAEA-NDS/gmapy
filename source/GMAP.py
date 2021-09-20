@@ -264,35 +264,33 @@ def main():
                     IELIM, NELIM, NADD, NALT, file_IO4
             )
 
-            if exclflag:
-                continue
-
-            #
-            #      continue for valid data
-            #
-
-            MODC, L = \
-            construct_Ecor(ID, data,
-                    MODC, NCOX, NALT, NADD,
-                    XNORU, file_IO3, file_IO4
-            )
-
-            if data.IDEN[ID, 7] != 6:
+            if not exclflag:
                 #
-                #   output of KAS for checking
+                #      continue for valid data
                 #
-                if IPP[7] != 0:
-                    format702 = "(20I5)"
-                    for K in fort_range(1,NCT):
-                        fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
 
-                (NSHP, AP) = \
-                determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
-                        L, NSHP, MPPP, IPP, NALT, NADD,
-                        MODREP, NCT, file_IO4)
+                MODC, L = \
+                construct_Ecor(ID, data,
+                        MODC, NCOX, NALT, NADD,
+                        XNORU, file_IO3, file_IO4
+                )
 
-            N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
-                    NSHP, EAVR, NCT,  NALT, NADD, file_IO4)
+                if data.IDEN[ID, 7] != 6:
+                    #
+                    #   output of KAS for checking
+                    #
+                    if IPP[7] != 0:
+                        format702 = "(20I5)"
+                        for K in fort_range(1,NCT):
+                            fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
+
+                    (NSHP, AP) = \
+                    determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
+                            L, NSHP, MPPP, IPP, NALT, NADD,
+                            MODREP, NCT, file_IO4)
+
+                N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
+                        NSHP, EAVR, NCT,  NALT, NADD, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
