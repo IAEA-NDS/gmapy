@@ -133,8 +133,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, fisdata, gauss,
         LABL, APR, IELIM, NELIM, NSETN,
         MODC, MOD2, MPPP, MODREP, N, NADD, NSHP, ID,
-        IPP, file_IO3, file_IO4,
-        EAVR):
+        IPP, file_IO3, file_IO4):
 
     NCT, NCOX, NNCOX, XNORU, ID = \
     read_dataset_input(
@@ -183,7 +182,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     MODREP, NCT, file_IO4)
 
         N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
-                NSHP, EAVR, NCT,  NALT, NADD, file_IO4)
+                NSHP, NCT,  NALT, NADD, file_IO4)
 
     return (ID, NADD, MODC, NSHP, N)
 
@@ -712,8 +711,7 @@ def determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP,
-        EAVR, NCT, NALT, NADD, file_IO4):
+def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP, NCT, NALT, NADD, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -723,6 +721,8 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP,
     KAS = data.KAS
     KA = data.KA
     NT = data.NT
+
+    EAVR = 0.
 
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01

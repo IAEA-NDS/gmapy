@@ -92,7 +92,6 @@ def main():
 
     # TODO: otherwise error thrown 'variable accessed before assignment'
     #       is this an issue in the original Fortran code?
-    EAVR = 0.
     K1 = 0
 
     basedir = '.'
@@ -248,8 +247,7 @@ def main():
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM, NSETN,
                     MODC, MOD2, MPPP, MODREP, N, NADD, NSHP, ID,
-                    IPP, file_IO3, file_IO4,
-                    EAVR)
+                    IPP, file_IO3, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
