@@ -275,6 +275,7 @@ def main():
                         XNORU, file_IO3, file_IO4
                 )
 
+                AP = 0.
                 if data.IDEN[ID, 7] != 6:
                     #
                     #   output of KAS for checking
