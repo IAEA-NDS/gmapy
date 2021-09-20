@@ -11,7 +11,7 @@ import os
 import numpy as np
 
 # refactoring
-from gmap_functions import (force_stop, read_prior, read_block_input,
+from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         read_dataset_input, accounting, should_exclude_dataset,
         construct_Ecor, determine_apriori_norm_shape,
         fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
@@ -320,7 +320,7 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    ID, N, NADD = read_block_input(data, gauss, MODREP, file_IO4)
+                    ID, N, NADD = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
@@ -330,7 +330,7 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            ID, N, NADD = read_block_input(data, gauss, MODREP, file_IO4)
+            ID, N, NADD = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
 
 
         # LABL.AKON[5] == 'I/OC'
