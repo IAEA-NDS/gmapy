@@ -88,10 +88,6 @@ def main():
     NRED = np.zeros(160+1, dtype=int)
     NELIM = np.zeros(40+1, dtype=int)
 
-    # TODO: otherwise error thrown 'variable accessed before assignment'
-    #       is this an issue in the original Fortran code?
-    K1 = 0
-
     basedir = '.'
     file_IO3 = open('data.gma', 'r')
     file_IO4 = open('gma.res', 'w')
