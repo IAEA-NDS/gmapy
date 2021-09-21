@@ -116,9 +116,30 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
     ID = 0
     gauss.AM.fill(0.)
     gauss.AA.fill(0.)
-    data.KA.fill(0.)
-    data.KAS.fill(0.)
+
+    data.NP = 0
+    data.E.fill(0.)
+    data.CSS.fill(0.)
+    data.DCS.fill(0.)
     data.ECOR.fill(0.)
+    data.CO.fill(0.)
+    data.EPAF.fill(0.)
+    data.FCFC.fill(0.)
+    data.AAA.fill(0.)
+
+    data.KAS.fill(0.)
+    data.KA.fill(0.)
+    data.IDEN.fill(0)
+    data.NENF.fill(0)
+    data.NETG.fill(0)
+    data.NCSST.fill(0)
+    data.NEC.fill(0)
+
+    data.NT.fill(0)
+
+    # data.ENFF should also be reset probably
+    # but it is not done in the Fortran version
+    # data.ENFF.fill(0.) # problem
 
     if MODREP == 0:
         format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
