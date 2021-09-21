@@ -19,27 +19,26 @@ developments and extensions.
 ### Launching the Python version
 
 The following steps are necessary to run the Python version.
-We recommend to use a package manager, such as `Anaconda`.
+We recommend to use a package manager, such as `Anaconda`, and
+to work in a new environment (e.g., `conda create -n gmap` and
+then `conda activate gmap`).
 
-1. Make sure that Python 3 is installed and don't use a version
-later than 3.8.
-
-2. Install the `goto-statement` and `fortranformat` package.
+1. Install the `fortranformat` and the `numpy` package.
 ```
-  pip install goto-statement
+  pip install numpy
   pip install fortranformat
 ```
 
-3. Compile the `LINPACK` module to be accessible by Python
+2. Compile the `LINPACK` module to be accessible by Python
 ```
  cd source
  f2py -c linpack_slim.pyf linpack_slim.f
 ```
-4. Point the `PYTHONPATH` to the directory of `GMAP.py`
+3. Point the `PYTHONPATH` to the directory of `GMAP.py`
 ```
  PYTHONPATH="<path-to-GMAP.py>"
 ```
-5. Create a directory, create an input file inside named `data.gma`
+4. Create a directory, create an input file inside named `data.gma`
 (e.g., take it from `tests/test_001/input`), change into that directory
 and launch GMAP:
 ```
@@ -48,17 +47,16 @@ python "<path-to-GMAP.py>/GMAP.py"
 
 ### Comments on conversion
 
-- Presently, the Python version in this repository is a line-by-line translation
-of the original Fortran code.
-The `goto` statement was introduced using the
-[goto-statement] module and reading and writing information to files and
-console using Fortran format descriptors was achieved by relying on the
-[fortranformat] module.
+- This Python version of GMAP was initially a line-by-line translation of the
+original Fortran code including goto-statements enabled by the
+[goto-statement] module.
+Afterwards it has been extensively refactored to
+improve readability. All goto-statements have been removed and replaced
+by other control structures, such as if-blocks and loop control statements
+and consequently the dependence on the [goto-statement] module has been removed.
 
-- A particularity in the translated version is the
-artificial incrementing of counter variables after loops---the reason for that
-being that a loop in Fortran up to `N` will leave the counter variable at `N+1`
-after the termination of the loop whereas it is `N` in Python.
+- The [fortranformat] module is used to read and write files using the
+same Fortran format descriptors as present in the original Fortran code.
 
 - The Fortran version relies on `LINPACK` routines for Cholesky decomposition and
 inversion whereas the `scipy` module in Python employs `LAPACK`---the successor
@@ -78,12 +76,14 @@ a test case was introduced that compares the output of the Python and Fortran
 version. As both versions work with double precision, implement
 the same code logic and rely on the same Fortran functions for the
 Cholesky decomposition and inversion, they produce exactly the same output.
+The test case is written in bash and has only been tested with Linux.
 
-### Additional `debug` branch
+To run the test case, change into the `tests/test_002` directory and run
+```
+./run_fort.sh
+```
+The return code accessible by typing `$?` is zero if successful.
+If differences exist, they will be written out to the console.
+Please note that if you re-run the test case after a modification of the Python
+source code, you should first delete the `result` directory in `tests/test_002`.
 
-During the creation of this Python version based on the Fortran version,
-statements have been introducedd to write additional information to file
-`debug.out` for debugging and ensuring the equivalence of the codes.
-The Python code with these additional statements is stored in the
-`debug` branch and those extra code blocks are enclosed by
-`if VERIFY ... #endif` to facilitate enabling and disabling them.
