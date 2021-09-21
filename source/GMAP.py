@@ -12,9 +12,7 @@ import numpy as np
 
 # refactoring
 from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
-        read_dataset_input, accounting, should_exclude_dataset,
-        construct_Ecor, determine_apriori_norm_shape,
-        fill_AA_AM_COV, complete_symmetric_Ecor, output_Ecor_matrix,
+        complete_symmetric_Ecor, output_Ecor_matrix,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset)
