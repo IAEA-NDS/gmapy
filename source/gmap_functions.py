@@ -1230,7 +1230,7 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4):
             gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
 
 
-def output_result(gauss, data, fisdata, APR, MODAP, NFIS,
+def output_result(gauss, fisdata, APR, MODAP, NFIS,
         NSHP, NRS, LABL, NSETN, file_IO4, file_IO5):
     #
     #      output of the result
