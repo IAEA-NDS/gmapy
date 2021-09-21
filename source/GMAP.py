@@ -50,6 +50,17 @@ def main():
     #
     #      NT         id of cross sections involved in measured quantity
     #
+    #
+    #      IDEN(K,I)  K DATA SET SEQUENCE
+    #
+    #                 I=1 NO OF DATA POINTS IN SET
+    #                 I=2 INDEX OF FIRST VALUE IN ECOR
+    #                 I=3 YEAR
+    #                 I=4 DATA SET TAG
+    #                 I=5 NO OF OTHER SETS WITH WHICH CORRELATIONS ARE GIVEN
+    #                 I=6 DATA SET NR
+    #                 I=7 MT-TYPE OF DATA
+    #                 I=8 1 ABSOLUTE, 2 SHAPE
     data = Bunch({
         'NP': 0,
         'E': np.zeros(250+1, dtype=float),
@@ -132,17 +143,6 @@ def main():
             'RELCOV': np.zeros((200+1, 200+1), dtype=float)
     })
 
-    #
-    #  IDEN(K,I)  K DATA SET SEQUENCE
-    #
-    #             I=1 NO OF DATA POINTS IN SET
-    #             I=2 INDEX OF FIRST VALUE IN ECOR
-    #             I=3 YEAR
-    #             I=4 DATA SET TAG
-    #             I=5 NO OF OTHER SETS WITH WHICH CORRELATIONS ARE GIVEN
-    #             I=6 DATA SET NR
-    #             I=7 MT-TYPE OF DATA
-    #             I=8 1 ABSOLUTE, 2 SHAPE
     #
     #  CONTROLS/LABELS
     #
