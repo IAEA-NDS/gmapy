@@ -151,7 +151,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NNCOX = data.NNCOX[data.num_datasets]
 
     accounting(data, APR,
-            NNCOX, MOD2, file_IO3
+            MOD2, file_IO3
     )
 
     exclflag = \
@@ -308,7 +308,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 def accounting(data, APR,
-        NNCOX, MOD2, file_IO3):
+        MOD2, file_IO3):
     #
     #      ACCOUNTING
     #
@@ -326,6 +326,7 @@ def accounting(data, APR,
     KAS = data.KAS
     NT = data.NT[ID,:]
     NCT = data.NCT[ID]
+    NNCOX = data.NNCOX[ID]
 
     XNORU = 0.
     if data.MTTP[ID] != 2:
