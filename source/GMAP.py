@@ -73,11 +73,6 @@ def main():
     NFIS = 0
     IELIM = 0
     LLL = 0
-    # VP nullning of the vector BM and vector (matrix) B which keep
-    # VP accumilate sum in cycle on experimental data
-    # VPBEG********************************************************
-    gauss.BM.fill(0.0)
-    gauss.B.fill(0.0)
 
     #
     #      CONTROL
