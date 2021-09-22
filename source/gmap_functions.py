@@ -143,15 +143,15 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         MODC, MOD2, MPPP, MODREP, N, NSHP,
         IPP, file_IO3, file_IO4):
 
-    NCT, NCOX, NNCOX, XNORU = \
+    NCT, NCOX, NNCOX = \
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
             N, file_IO3, file_IO4
     )
 
-    accounting(data, APR, NCT,
-            NNCOX, MOD2, XNORU, file_IO3
+    XNORU = accounting(data, APR, NCT,
+            NNCOX, MOD2, file_IO3
     )
 
     exclflag = \
@@ -275,15 +275,9 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #
     #       READ(3,    ) NORMALIZATION UNCERTAINTIES
     #
-    XNORU = 0.
     if MTTP != 2:
         format201 = "(10F5.1,10I3)"
         data.ENFF[ID, 1:11], NENF[ID, 1:11] = unflatten(fort_read(file_IO3, format201), [[10],[10]])
-        #
-        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
-        #
-        for L in fort_range(1,10):  # .lbl208
-            XNORU = XNORU + (data.ENFF[ID,L])**2
 
     #
     #       READ(3,    ) ENERGY DEPENDENT UNCERTAINTY PARAMETERS
@@ -304,12 +298,12 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
     data.num_datasets += 1
-    return (NCT, NCOX, NNCOX, XNORU)
+    return (NCT, NCOX, NNCOX)
 
 
 
 def accounting(data, APR, NCT,
-        NNCOX, MOD2, XNORU, file_IO3):
+        NNCOX, MOD2, file_IO3):
     #
     #      ACCOUNTING
     #
@@ -327,6 +321,14 @@ def accounting(data, APR, NCT,
     KAS = data.KAS
     NT = data.NT
 
+    XNORU = 0.
+    if data.MTTP != 2:
+        #
+        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
+        #
+        for L in fort_range(1,10):  # .lbl208
+            XNORU = XNORU + (data.ENFF[ID,L])**2
+
     for KS in fort_range(1,LDA):  # .lbl21
 
         format109 = "(2E10.4,12F5.1)"
@@ -335,7 +337,7 @@ def accounting(data, APR, NCT,
         if data.E[NADD] == 0:
             IDEN[ID, 1] = NADD - NALT
             data.num_datapoints = NADD - 1
-            return
+            return XNORU
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
