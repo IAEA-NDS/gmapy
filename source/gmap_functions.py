@@ -164,7 +164,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #      continue for valid data
         #
 
-        MODC, L = \
+        L = \
         construct_Ecor(data,
                 MODC,
                 file_IO3, file_IO4
@@ -659,7 +659,7 @@ def construct_Ecor(data,
 
                                 data.ECOR[K,KK] = Q1/(C1*C2)
 
-    return (MODC, L)
+    return L
 
 
 
