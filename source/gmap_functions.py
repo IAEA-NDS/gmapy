@@ -155,10 +155,10 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NADD = data.num_datapoints + 1
     NALT = NADD
 
-    NADD = \
     accounting(ID, data, APR, NCT,
-            NADD, NNCOX, MOD2, XNORU, file_IO3
+            NNCOX, MOD2, XNORU, file_IO3
     )
+    NADD = data.num_datapoints + 1
 
 
     exclflag, ID, NADD = \
@@ -314,7 +314,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 def accounting(ID, data, APR, NCT,
-        NADD, NNCOX, MOD2, XNORU, file_IO3):
+        NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
     #
@@ -322,6 +322,8 @@ def accounting(ID, data, APR, NCT,
     #      ID          NO OF EXPERIMENTAL DATA SETS
     #      NP          NO OF DATA POINTS IN THIS SET
     #
+    NADD = data.num_datapoints + 1
+
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
@@ -336,7 +338,8 @@ def accounting(ID, data, APR, NCT,
         L = 13  # to reflect fortran value after READ loop
         if data.E[NADD] == 0:
             IDEN[ID, 1] = NADD - NALT
-            return NADD
+            data.num_datapoints = NADD - 1
+            return
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
