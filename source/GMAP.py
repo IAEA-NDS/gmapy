@@ -253,7 +253,7 @@ def main():
             (MODC, NSHP, N) = deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM, NSETN,
-                    MODC, MOD2, MPPP, MODREP, N, NSHP, ID,
+                    MODC, MOD2, MPPP, MODREP, N, NSHP,
                     IPP, file_IO3, file_IO4)
             ID = data.num_datasets
 
