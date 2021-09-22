@@ -155,7 +155,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
     NALT = data.num_datapoints + 1
 
-    accounting(ID, data, APR, NCT,
+    accounting(data, APR, NCT,
             NNCOX, MOD2, XNORU, file_IO3
     )
 
@@ -313,7 +313,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 
-def accounting(ID, data, APR, NCT,
+def accounting(data, APR, NCT,
         NNCOX, MOD2, XNORU, file_IO3):
     #
     #      ACCOUNTING
@@ -322,6 +322,7 @@ def accounting(ID, data, APR, NCT,
     #      ID          NO OF EXPERIMENTAL DATA SETS
     #      NP          NO OF DATA POINTS IN THIS SET
     #
+    ID = data.num_datasets
     NADD = data.num_datapoints + 1
 
     IDEN = data.IDEN
