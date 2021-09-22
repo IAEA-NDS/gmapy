@@ -174,7 +174,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
         MODC, L = \
         construct_Ecor(ID, data,
-                MODC, NCOX, NALT, NADD,
+                MODC, NCOX, NALT,
                 XNORU, file_IO3, file_IO4
         )
 
@@ -462,7 +462,7 @@ def should_exclude_dataset(ID, data, IELIM, NELIM, NALT, file_IO4):
 
 
 def construct_Ecor(ID, data,
-        MODC, NCOX, NALT, NADD,
+        MODC, NCOX, NALT,
         XNORU, file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
@@ -471,6 +471,7 @@ def construct_Ecor(ID, data,
     #               2   UNCORRELATED
     #               3   ALL CORRELATED ERRORS GIVEN
     #
+    NADD = data.num_datapoints + 1
     IDEN = data.IDEN
     NETG = data.NETG
     NCCS = IDEN[ID, 5]
