@@ -17,7 +17,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset)
 
-from data_management import init_gauss
+from data_management import init_gauss, init_prior
 
 
 #################################################
@@ -54,22 +54,7 @@ def main():
     file_IO4 = open('gma.res', 'w')
     file_IO5 = open('plot.dta', 'w')
 
-    #   Parameters/apriori
-    #
-    #      EN    ENERGY GRID
-    #      CS    APRIORI CROSS SECTIONS
-    #      MCS   INDEXES
-    #      NR    number of parameters (cross sections)
-    #      NC    number of cross section types
-    APR = Bunch({
-        'EN': np.zeros(1200+1, dtype=float),
-        'CS': np.zeros(1200+1, dtype=float),
-        'MCS': np.zeros((35+1,3+1), dtype=int),
-        'NR': 0,
-        'NC': 0
-        })
-
-
+    APR = init_prior()
     gauss = init_gauss()
 
     #

@@ -1,6 +1,27 @@
 from generic_utils import Bunch
 import numpy as np
 
+
+#   Parameters/apriori
+#
+#      EN    ENERGY GRID
+#      CS    APRIORI CROSS SECTIONS
+#      MCS   INDEXES
+#      NR    number of parameters (cross sections)
+#      NC    number of cross section types
+
+def init_prior():
+
+    APR = Bunch({
+        'EN': np.zeros(1200+1, dtype=float),
+        'CS': np.zeros(1200+1, dtype=float),
+        'MCS': np.zeros((35+1,3+1), dtype=int),
+        'NR': 0,
+        'NC': 0
+        })
+    return APR
+
+
 #
 #   Data block / data set   
 #
