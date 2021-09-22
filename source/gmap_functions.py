@@ -152,20 +152,16 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             ID, N, file_IO3, file_IO4
     )
 
-    NADD = data.num_datapoints + 1
-    NALT = NADD
+    NALT = data.num_datapoints + 1
 
     accounting(ID, data, APR, NCT,
             NNCOX, MOD2, XNORU, file_IO3
     )
-    NADD = data.num_datapoints + 1
-
 
     exclflag, ID, = \
     should_exclude_dataset(ID, data,
             IELIM, NELIM, NALT, file_IO4
     )
-    NADD = data.num_datapoints + 1
 
     if not exclflag:
         #
@@ -186,7 +182,8 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             if IPP[7] != 0:
                 format702 = "(20I5)"
                 for K in fort_range(1,NCT):
-                    fort_write(file_IO4, format702, [data.KAS[NALT:NADD], K])
+                    fort_write(file_IO4, format702,
+                            [data.KAS[NALT:(data.num_datapoints+1)], K])
 
             (NSHP, AP) = \
             determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
@@ -197,7 +194,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                 NSHP, NCT,  NALT, file_IO4)
 
     # keep track
-    data.num_datapoints = NADD - 1
     data.num_datasets = ID
 
     return (MODC, NSHP, N)
