@@ -194,6 +194,10 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
                 NSHP, NCT,  NALT, NADD, file_IO4)
 
+    # keep track
+    data.num_datapoints = NADD - 1
+    data.num_datasets = ID
+
     return (ID, NADD, MODC, NSHP, N)
 
 
