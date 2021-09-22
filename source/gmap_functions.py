@@ -143,15 +143,12 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         MODC, MOD2, MPPP, MODREP, N, NSHP,
         IPP, file_IO3, file_IO4):
 
-    ID = data.num_datasets
-
     NCT, NCOX, NNCOX, XNORU = \
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
             N, file_IO3, file_IO4
     )
-    ID = data.num_datasets
 
     NALT = data.num_datapoints + 1
 
@@ -176,7 +173,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         )
 
         AP = 0.
-        if data.IDEN[ID, 7] != 6:
+        if data.IDEN[data.num_datasets, 7] != 6:
             #
             #   output of KAS for checking
             #
@@ -193,9 +190,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
         N = fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N,
                 NSHP, NCT,  NALT, file_IO4)
-
-    # keep track
-    data.num_datasets = ID
 
     return (MODC, NSHP, N)
 
