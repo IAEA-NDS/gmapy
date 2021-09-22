@@ -215,7 +215,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     MT = MC2
     NCOX = MC3
     NCT = MC4
-    NT = data.NT
+    NT = data.NT[ID,:]
     NT[1] = MC5
     NT[2] = MC6
     NT[3] = MC7
@@ -230,6 +230,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         NT[4:(NCT+1)] = fort_read(file_IO3, format123)
 
     ID = ID+1
+    data.NT[ID,:] = NT
     IDEN = data.IDEN
     IDEN[ID,2] = N+1
     IDEN[ID,6] = NS
@@ -319,7 +320,7 @@ def accounting(data, APR, NCT,
     MT = IDEN[ID, 7]
     NALT = NADD
     KAS = data.KAS
-    NT = data.NT
+    NT = data.NT[ID,:]
 
     XNORU = 0.
     if data.MTTP[ID] != 2:
@@ -759,7 +760,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, NCT, file_IO4):
     NADD1 = NADD - 1
     KAS = data.KAS
     KA = data.KA
-    NT = data.NT
+    NT = data.NT[ID,:]
 
     EAVR = 0.
 

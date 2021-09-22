@@ -94,7 +94,7 @@ def init_prior():
 #      NCSST      data set Nr.s for cross correlations
 #      NEC        error component pairs for cross correlations
 #
-#      NT         id of cross sections involved in measured quantity
+#      NT         id of cross sections involved in measured quantity for each dataset
 #
 #      MTTP       array of shape-flag; element is 2 if dataset contains shape data else 1
 #
@@ -134,8 +134,7 @@ def init_datablock():
         'NCSST': np.zeros(10+1, dtype=int),
         'NEC': np.zeros((2+1,10+1,10+1), dtype=int),
 
-        # TODO: convert following to arrays with index ID
-        'NT': np.zeros(5+1, dtype=int),
+        'NT': np.zeros((30+1, 5+1), dtype=int),
 
         'MTTP': np.zeros(30+1, dtype=int)
         })
