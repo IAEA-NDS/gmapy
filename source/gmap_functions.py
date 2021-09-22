@@ -145,12 +145,13 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
     ID = data.num_datasets
 
-    NCT, NCOX, NNCOX, XNORU, ID = \
+    NCT, NCOX, NNCOX, XNORU = \
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
-            ID, N, file_IO3, file_IO4
+            N, file_IO3, file_IO4
     )
+    ID = data.num_datasets
 
     NALT = data.num_datapoints + 1
 
@@ -201,7 +202,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, LABL,
-        ID, N, file_IO3, file_IO4):
+        N, file_IO3, file_IO4):
     #
     #      DATA SET INPUT
     #
@@ -215,6 +216,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #      MC8 NNCOX   DIVIDE UNCERTAINTIES BY 10.
     #
     # label .lbl2
+    ID = data.num_datasets
     NS = MC1
     MT = MC2
     NCOX = MC3
@@ -306,7 +308,8 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
             data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
-    return (NCT, NCOX, NNCOX, XNORU, ID)
+    data.num_datasets += 1
+    return (NCT, NCOX, NNCOX, XNORU)
 
 
 
