@@ -150,8 +150,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             N, file_IO3, file_IO4
     )
 
-    NALT = data.num_datapoints + 1
-
     accounting(data, APR, NCT,
             NNCOX, MOD2, XNORU, file_IO3
     )
@@ -180,8 +178,10 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             if IPP[7] != 0:
                 format702 = "(20I5)"
                 for K in fort_range(1,NCT):
+                    NADD = data.num_datapoints + 1
+                    NALT = NADD - ID[IDEN, 1]
                     fort_write(file_IO4, format702,
-                            [data.KAS[NALT:(data.num_datapoints+1)], K])
+                            [data.KAS[NALT:NADD], K])
 
             (NSHP, AP) = \
             determine_apriori_norm_shape(data, APR, LABL, NSETN,
