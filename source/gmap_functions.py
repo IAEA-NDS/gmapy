@@ -233,6 +233,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     ID = ID+1
     data.NT[ID,:] = NT
     data.NCT[ID] = NCT
+    data.NCOX[ID] = NCOX
     IDEN = data.IDEN
     IDEN[ID,2] = N+1
     IDEN[ID,6] = NS

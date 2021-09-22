@@ -97,6 +97,7 @@ def init_prior():
 #      NT         id of cross sections involved in measured quantity for each dataset
 #      NCT        number of cross section types involved for each dataset
 #
+#      NCOX       array of flags: if element not zero, correlation matrix is given for respective dataset
 #      MTTP       array of shape-flag; element is 2 if dataset contains shape data else 1
 #
 #
@@ -138,6 +139,7 @@ def init_datablock():
         'NT': np.zeros((30+1, 5+1), dtype=int),
         'NCT': np.zeros(30+1, dtype=int),
 
+        'NCOX': np.zeros(30+1, dtype=int),
         'MTTP': np.zeros(30+1, dtype=int)
         })
 
