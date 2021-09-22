@@ -67,3 +67,33 @@ def init_datablock():
 
     return data
 
+
+#
+#       AA      COEFFICIENT MATRIX
+#       AM      MEASUREMENT VECTOR
+# VP    ECOR    inverse of correlation matrix of measurement vector AM
+# VP            or relative weight matrix
+# VP    BM      vector accumulating (in data block cycle) sum of 
+# VP            AA(transpose)*ECOR*AM
+# VP    B       matrix accumulating (in data block cycle) sum of 
+# VP            AA(transpose)*ECOR*AA
+#       DE      ADJUSTMENT VECTOR
+# VP            equals B(inverse)*BM
+#
+
+def init_gauss():
+
+    gauss = Bunch({
+            'AA': np.zeros((1200+1, 250+1), dtype=float),
+            'AM': np.zeros(250+1, dtype=float),
+            'DE': np.zeros(1200+1, dtype=float),
+            'BM': np.zeros(1200+1, dtype=float),
+            'B': np.zeros(720600+1, dtype=float),
+            'EGR': np.zeros(199+1, dtype=float),
+            'EEGR': np.zeros(400+1, dtype=float),
+            'RELTRG': np.zeros((200+1, 200+1), dtype=float),
+            'RELCOV': np.zeros((200+1, 200+1), dtype=float)
+    })
+
+    return gauss
+
