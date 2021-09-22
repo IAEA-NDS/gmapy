@@ -161,10 +161,11 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NADD = data.num_datapoints + 1
 
 
-    exclflag, ID, NADD = \
+    exclflag, ID, = \
     should_exclude_dataset(ID, data,
-            IELIM, NELIM, NADD, NALT, file_IO4
+            IELIM, NELIM, NALT, file_IO4
     )
+    NADD = data.num_datapoints + 1
 
     if not exclflag:
         #
@@ -426,12 +427,13 @@ def accounting(ID, data, APR, NCT,
 
 
 
-def should_exclude_dataset(ID, data, IELIM, NELIM, NADD, NALT, file_IO4): 
+def should_exclude_dataset(ID, data, IELIM, NELIM, NALT, file_IO4):
 
     should_exclude = False
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MTTP = IDEN[ID, 8]
+    NADD = data.num_datapoints + 1
 
     NP = NADD - NALT
     if IELIM > 0:
@@ -454,7 +456,8 @@ def should_exclude_dataset(ID, data, IELIM, NELIM, NADD, NALT, file_IO4):
         ID = ID - 1
         NADD = NALT
 
-    return (should_exclude, ID, NADD)
+    data.num_datapoints = NADD - 1
+    return (should_exclude, ID)
 
 
 
