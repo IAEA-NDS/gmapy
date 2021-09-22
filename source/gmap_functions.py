@@ -242,6 +242,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     if (MT == 2 or MT == 4 or MT == 8 or MT == 9):
         MTTP = 2
         IDEN[ID, 8] = 2
+    data.MTTP = MTTP
 
     # VP      if(modrep .ne. 0) go to 140
     format142 = "(//, ' ***********DATASET**************************** '/)"

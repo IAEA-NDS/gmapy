@@ -96,6 +96,8 @@ def init_prior():
 #
 #      NT         id of cross sections involved in measured quantity
 #
+#      MTTP       should be 2 if shape data else 1
+#
 #
 #      IDEN(K,I)  K DATA SET SEQUENCE
 #
@@ -133,7 +135,9 @@ def init_datablock():
         'NEC': np.zeros((2+1,10+1,10+1), dtype=int),
 
         # TODO: convert following to arrays with index ID
-        'NT': np.zeros(5+1, dtype=int)
+        'NT': np.zeros(5+1, dtype=int),
+
+        'MTTP': 0
         })
 
     return data
