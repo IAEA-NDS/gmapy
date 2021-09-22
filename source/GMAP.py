@@ -17,7 +17,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset)
 
-from data_management import init_gauss, init_prior
+from data_management import init_gauss, init_prior, init_labels
 
 
 #################################################
@@ -56,53 +56,8 @@ def main():
 
     APR = init_prior()
     gauss = init_gauss()
+    LABL = init_labels()
 
-    #
-    #  CONTROLS/LABELS
-    #
-    LABL = Bunch({
-        'AKON':  [None for i in range(12)],
-        'CLAB': np.empty((35+1,2+1), dtype=object),
-        'CLABL': np.empty(4+1, dtype=object),
-        'TYPE': np.zeros(10+1, dtype=object),
-        'BREF': np.zeros(4+1, dtype=object)
-
-        })
-    #
-    #      CONTROL
-    #      MODE    MODE OF EXP. CORRELATION MATRIX CONSTRUCTION
-    #      I/OC    I/O CONTROL
-    #      APRI    INPUT OF APRIORI CROSS SECTIONS
-    #      FIS*    FISSION FLUX FACTORS
-    #      BLCK    START OF DATA BLOCK
-    #      DATA    INPUT OF DATA
-    #      END*    END OF EXP  DATA, START OF EVALUATION
-    #      EDBL    END OF EXP. DATA SET BLOCK
-    #      ELIM    DATA SETS TO BE ELIMINATED
-    #
-
-    LABL.AKON[1] = 'APRI'
-    LABL.AKON[2] = 'DATA'
-    LABL.AKON[3] = 'END*'
-    LABL.AKON[4] = 'BLCK'
-    LABL.AKON[5] = 'I/OC'
-    LABL.AKON[7] = 'EDBL'
-    LABL.AKON[8] = 'FIS*'
-    LABL.AKON[9] = 'MODE'
-    LABL.AKON[10] = 'STOP'
-    LABL.AKON[11] = 'ELIM'
-    #
-    #      MEASUREMENT TYPE IDENTIFICATION
-    #
-    LABL.TYPE[1] = 'CROSS SECTION   '
-    LABL.TYPE[2] = 'CS-SHAPE        '
-    LABL.TYPE[3] = 'RATIO           '
-    LABL.TYPE[4] = 'RATIO SHAPE     '
-    LABL.TYPE[5] = 'TOTAL  CS       '
-    LABL.TYPE[6] = 'FISSION AVERAGE '
-    LABL.TYPE[7] = 'ABS. S1/(S2+S3) '
-    LABL.TYPE[8] = 'SHAPE OF SUM    '
-    LABL.TYPE[9] = 'SHP. S1/(S2+S3) '
     #
     #      INITIALIZE PARAMETERS
     #
