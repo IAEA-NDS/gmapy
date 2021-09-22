@@ -150,7 +150,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             N, file_IO3, file_IO4
     )
 
-    XNORU = accounting(data, APR, NCT,
+    accounting(data, APR, NCT,
             NNCOX, MOD2, file_IO3
     )
 
@@ -337,7 +337,7 @@ def accounting(data, APR, NCT,
         if data.E[NADD] == 0:
             IDEN[ID, 1] = NADD - NALT
             data.num_datapoints = NADD - 1
-            return XNORU
+            return
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
