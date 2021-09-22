@@ -297,7 +297,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
             data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
-    data.num_datasets += 1
+    data.num_datasets = ID
     return (NCT, NCOX, NNCOX)
 
 
