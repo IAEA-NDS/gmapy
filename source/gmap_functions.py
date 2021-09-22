@@ -187,7 +187,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                             [data.KAS[NALT:(data.num_datapoints+1)], K])
 
             (NSHP, AP) = \
-            determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
+            determine_apriori_norm_shape(data, APR, LABL, NSETN,
                     L, NSHP, MPPP, IPP, NALT,
                     MODREP, NCT, file_IO4)
 
@@ -647,12 +647,13 @@ def construct_Ecor(data,
 
 
 
-def determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
+def determine_apriori_norm_shape(data, APR, LABL, NSETN,
         L, NSHP, MPPP, IPP, NALT,
         MODREP, NCT, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
+    ID = data.num_datasets
     NADD = data.num_datapoints + 1
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
