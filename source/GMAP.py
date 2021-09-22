@@ -246,7 +246,6 @@ def main():
             #       leaking into the next datablock
             data, N, = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
             ID = data.num_datasets
-            NADD = data.num_datapoints + 1
 
 
         # LABL.AKON[2] == 'DATA'
@@ -257,7 +256,6 @@ def main():
                     MODC, MOD2, MPPP, MODREP, N, NSHP, ID,
                     IPP, file_IO3, file_IO4)
             ID = data.num_datasets
-            NADD = data.num_datapoints + 1
 
 
         # LABL.AKON[7] == 'EDBL'
@@ -311,7 +309,6 @@ def main():
                 if DUM == LABL.AKON[4]:
                     data, N = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
                     ID = data.num_datasets
-                    NADD = data.num_datapoints + 1
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
