@@ -194,7 +194,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     MODREP, NCT, file_IO4)
 
         N = fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N,
-                NSHP, NCT,  NALT, NADD, file_IO4)
+                NSHP, NCT,  NALT, file_IO4)
 
     # keep track
     data.num_datapoints = NADD - 1
@@ -734,10 +734,11 @@ def determine_apriori_norm_shape(ID, data, APR, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP, NCT, NALT, NADD, file_IO4):
+def fill_AA_AM_COV(ID, data, fisdata, APR, gauss, AP, N, NSHP, NCT, NALT, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
+    NADD = data.num_datapoints + 1
     IDEN = data.IDEN
     MT =  IDEN[ID, 7]
     NADD1 = NADD - 1
