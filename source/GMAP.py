@@ -275,9 +275,7 @@ def main():
                 NTOT=0
                 SIGMA2=0.
                 NSHP=0
-                gauss.DE.fill(0.)
-                gauss.BM.fill(0.)
-                gauss.B.fill(0.)
+                gauss = init_gauss()
 
                 format130 = "(A4)"
                 for L in fort_range(1,2000):  # .lbl69
