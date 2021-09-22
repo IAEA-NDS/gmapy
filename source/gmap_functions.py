@@ -167,7 +167,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         MODC, L = \
         construct_Ecor(data,
                 MODC, NCOX,
-                XNORU, file_IO3, file_IO4
+                file_IO3, file_IO4
         )
 
         AP = 0.
@@ -463,7 +463,7 @@ def should_exclude_dataset(data, IELIM, NELIM, file_IO4):
 
 def construct_Ecor(data,
         MODC, NCOX,
-        XNORU, file_IO3, file_IO4):
+        file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
     #
@@ -552,6 +552,15 @@ def construct_Ecor(data,
                         Q1=Q1+data.CO[L,KS]*data.CO[L,KT]*FKS*FKT
 
                     L = L + 1  # to match L value of fortran after loop
+
+                    #
+                    #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
+                    #
+                    XNORU = 0.
+                    if data.MTTP != 2:
+                        for K in fort_range(1,10):  # .lbl208
+                            XNORU = XNORU + (data.ENFF[ID,K])**2
+
                     CERR = (Q1 + XNORU) / (C1*C2)
 
                     if CERR > .99:
