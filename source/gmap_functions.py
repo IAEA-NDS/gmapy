@@ -140,7 +140,7 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, fisdata, gauss,
         LABL, APR, IELIM, NELIM, NSETN,
-        MODC, MOD2, MPPP, MODREP, N, NADD, NSHP, ID,
+        MODC, MOD2, MPPP, MODREP, N, NSHP, ID,
         IPP, file_IO3, file_IO4):
 
     NCT, NCOX, NNCOX, XNORU, ID = \
@@ -150,6 +150,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             ID, N, file_IO3, file_IO4
     )
 
+    NADD = data.num_datapoints + 1
     NALT = NADD
 
     NADD = \
