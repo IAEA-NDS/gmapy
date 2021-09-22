@@ -143,12 +143,13 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         MODC, MOD2, MPPP, MODREP, N, NSHP,
         IPP, file_IO3, file_IO4):
 
-    NCT, NCOX, NNCOX = \
+    NCOX, NNCOX = \
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
             N, file_IO3, file_IO4
     )
+    NCT = data.NCT[data.num_datasets]
 
     accounting(data, APR, NCT,
             NNCOX, MOD2, file_IO3
@@ -300,7 +301,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data.FCFC[1:11, K] = fort_read(file_IO3, format841)
 
     data.num_datasets = ID
-    return (NCT, NCOX, NNCOX)
+    return (NCOX, NNCOX)
 
 
 
