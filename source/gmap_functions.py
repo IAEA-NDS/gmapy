@@ -190,7 +190,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     MODREP, file_IO4)
 
         N = fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N,
-                NSHP, NCT, file_IO4)
+                NSHP, file_IO4)
 
     return (MODC, NSHP, N)
 
@@ -752,7 +752,7 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, NCT, file_IO4):
+def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -765,6 +765,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, NCT, file_IO4):
     KAS = data.KAS
     KA = data.KA
     NT = data.NT[ID,:]
+    NCT = data.NCT[ID]
 
     EAVR = 0.
 
