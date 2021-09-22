@@ -114,7 +114,6 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
     #
 
     N = 0
-    ID = 0
     gauss.AM.fill(0.)
     gauss.AA.fill(0.)
 
@@ -135,8 +134,7 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
                     "******************************************DATABLOCK '/)"
         fort_write(file_IO4, format108, [])
 
-    NADD = 1
-    return (data, ID, N, NADD)
+    return (data, N)
 
 
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
@@ -198,7 +196,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     data.num_datapoints = NADD - 1
     data.num_datasets = ID
 
-    return (ID, NADD, MODC, NSHP, N)
+    return (MODC, NSHP, N)
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
