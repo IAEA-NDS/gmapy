@@ -245,7 +245,6 @@ def main():
             #       in the Fortran version that causes values of ENFF
             #       leaking into the next datablock
             data, N, = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
-            ID = data.num_datasets
 
 
         # LABL.AKON[2] == 'DATA'
@@ -255,7 +254,6 @@ def main():
                     LABL, APR, IELIM, NELIM, NSETN,
                     MODC, MOD2, MPPP, MODREP, N, NSHP,
                     IPP, file_IO3, file_IO4)
-            ID = data.num_datasets
 
 
         # LABL.AKON[7] == 'EDBL'
@@ -264,7 +262,7 @@ def main():
             #    Data BLOCK complete
             #
             N1=N-1
-            if ID == 0:
+            if data.num_datasets == 0:
                 continue
 
             IREP = 0
@@ -308,7 +306,6 @@ def main():
 
                 if DUM == LABL.AKON[4]:
                     data, N = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
-                    ID = data.num_datasets
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
