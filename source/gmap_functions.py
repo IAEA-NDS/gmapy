@@ -167,7 +167,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
         MODC, L = \
         construct_Ecor(data,
-                MODC, NCOX,
+                MODC,
                 file_IO3, file_IO4
         )
 
@@ -468,7 +468,7 @@ def should_exclude_dataset(data, IELIM, NELIM, file_IO4):
 
 
 def construct_Ecor(data,
-        MODC, NCOX,
+        MODC,
         file_IO3, file_IO4):
     #
     #      CONSTRUCT ECOR
@@ -489,6 +489,7 @@ def construct_Ecor(data,
     NP = IDEN[ID, 1]
     NCSST = data.NCSST
     NEC = data.NEC
+    NCOX = data.NCOX[ID]
 
     if NCOX != 0:
         MODAL = MODC
