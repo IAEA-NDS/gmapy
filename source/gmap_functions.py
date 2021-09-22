@@ -1,5 +1,6 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
+from data_management import init_datablock
 import numpy as np
 
 import linpack_slim
@@ -117,29 +118,17 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
     gauss.AM.fill(0.)
     gauss.AA.fill(0.)
 
-    data.NP = 0
-    data.E.fill(0.)
-    data.CSS.fill(0.)
-    data.DCS.fill(0.)
-    data.ECOR.fill(0.)
-    data.CO.fill(0.)
-    data.EPAF.fill(0.)
-    data.FCFC.fill(0.)
-    data.AAA.fill(0.)
+    if data is not None:
+        last_ENFF = data.ENFF
+    else:
+        last_ENFF = None
 
-    data.KAS.fill(0.)
-    data.KA.fill(0.)
-    data.IDEN.fill(0)
-    data.NENF.fill(0)
-    data.NETG.fill(0)
-    data.NCSST.fill(0)
-    data.NEC.fill(0)
+    data = init_datablock()
 
-    data.NT.fill(0)
-
-    # data.ENFF should also be reset probably
-    # but it is not done in the Fortran version
-    # data.ENFF.fill(0.) # problem
+    # NOTE: take ENFF of last datablock to
+    # reproduce bug in GMAP Fortran version
+    if last_ENFF is not None:
+        data.ENFF = last_ENFF
 
     if MODREP == 0:
         format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
@@ -147,7 +136,7 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
         fort_write(file_IO4, format108, [])
 
     NADD = 1
-    return (ID, N, NADD)
+    return (data, ID, N, NADD)
 
 
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
