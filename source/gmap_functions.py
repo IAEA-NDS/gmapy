@@ -1284,12 +1284,13 @@ def get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4):
 
 
 def output_result(gauss, fisdata, APR, MODAP, NFIS,
-        NSHP, NRS, LABL, NSETN, file_IO4, file_IO5):
+        NRS, LABL, NSETN, file_IO4, file_IO5):
     #
     #      output of the result
     #
     NR = APR.NR
     NC = APR.NC
+    NSHP = APR.NSHP
 
     for L in fort_range(1,NC):  # .lbl14
         format117 = "(1H1,'   RESULT',5X,2A8//)" 
