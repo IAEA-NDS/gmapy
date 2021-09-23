@@ -68,7 +68,8 @@ def init_prior():
         'CS': np.zeros(1200+1, dtype=float),
         'MCS': np.zeros((35+1,3+1), dtype=int),
         'NR': 0,
-        'NC': 0
+        'NC': 0,
+        'NSHP': 0
         })
     return APR
 
