@@ -681,7 +681,7 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
     KAS = data.KAS
     NCT = data.NCT[ID]
 
-    if MTTP != 1:
+    if MTTP == 2:
         NSHP = NSHP + 1
         NSETN[NSHP] = NS
         L = NR + NSHP
