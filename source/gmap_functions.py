@@ -184,15 +184,13 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     fort_write(file_IO4, format702,
                             [data.KAS[NALT:NADD], K])
 
-            APR.NSHP = NSHP
             determine_apriori_norm_shape(data, APR, LABL, NSETN,
                     L, MPPP, IPP,
                     MODREP, file_IO4)
-            NSHP = APR.NSHP
 
         N = fill_AA_AM_COV(data, fisdata, APR, gauss, N, file_IO4)
 
-    return (MODC, NSHP, N)
+    return (MODC, N)
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,

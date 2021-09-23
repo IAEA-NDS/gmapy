@@ -69,7 +69,7 @@ def main():
     NTOT = 0
     SIGMA2 = 0.
     MODC = 3
-    NSHP = 0
+    NSHP = APR.NSHP
     NFIS = 0
     IELIM = 0
     LLL = 0
@@ -165,11 +165,13 @@ def main():
 
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
-            (MODC, NSHP, N) = deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+            APR.NSHP = NSHP
+            (MODC, N) = deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM, NSETN,
                     MODC, MOD2, MPPP, AMO3, MODREP, N, NSHP,
                     IPP, file_IO3, file_IO4)
+            NSHP = APR.NSHP
 
 
         # LABL.AKON[7] == 'EDBL'
