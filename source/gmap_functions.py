@@ -1379,7 +1379,7 @@ def output_result(gauss, fisdata, APR, MODAP, NFIS,
             fort_write(file_IO4, format115, [K,NSETN[LLX],CXX,DDX,DDXD,ZCS])
             APR.CS[K]=CXX
 
-    return JA
+    return (JA, APR)
 
 
 
