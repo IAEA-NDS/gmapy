@@ -184,10 +184,10 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     fort_write(file_IO4, format702,
                             [data.KAS[NALT:NADD], K])
 
-            NSHP = \
             determine_apriori_norm_shape(data, APR, LABL, NSETN,
                     L, NSHP, MPPP, IPP,
                     MODREP, file_IO4)
+            NSHP = APR.NSHP
 
         N = fill_AA_AM_COV(data, fisdata, APR, gauss, N,
                 NSHP, file_IO4)
@@ -752,7 +752,8 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
         else:
             AP=APR.CS[L]
 
-    return NSHP
+    APR.NSHP = NSHP
+    return
 
 
 
