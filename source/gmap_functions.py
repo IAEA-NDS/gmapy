@@ -189,7 +189,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     L, NSHP, MPPP, IPP,
                     MODREP, file_IO4)
 
-        N = fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N,
+        N = fill_AA_AM_COV(data, fisdata, APR, gauss, N,
                 NSHP, file_IO4)
 
     return (MODC, NSHP, N)
@@ -756,7 +756,7 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
+def fill_AA_AM_COV(data, fisdata, APR, gauss, N, NSHP, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -868,6 +868,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
             #
             #   SHAPE OF SUM
             #
+            L = APR.NR + NSHP
+            AP = APR.CS[L]
             CX = 0.
             for I in fort_range(1,NCT):  # .lbl253
                 II=KAS[KS,I]
@@ -881,7 +883,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
                 KA[J,KR+1]=N
                 gauss.AA[J,KR]=APR.CS[J]*APDQ
 
-            L = APR.NR + NSHP
             KA[L,1]=KA[L,1]+1
             KR=KA[L,1]
             KA[L,KR+1]=N
@@ -907,10 +908,11 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
             #
             #      CROSS SECTION SHAPE    L is shape data norm. const. index
             #
+            L = APR.NR + NSHP
+            AP = APR.CS[L]
             CX = APR.CS[J]*AP
             CXX = CX/DQQQ
             gauss.AA[J,KR] = CXX
-            L = APR.NR + NSHP
             KA[L,1] = KA[L,1]+1
             KR = KA[L,1]
             KA[L,KR+1] = N
@@ -936,6 +938,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
             #
             #      RATIO SHAPE
             #
+            L = APR.NR + NSHP
+            AP = APR.CS[L]
             CX = APR.CS[J]*AP/APR.CS[I]
             CXX = CX/DQQQ
             gauss.AA[J,KR] = CXX
@@ -943,7 +947,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
             KR = KA[I,1]
             KA[I,KR+1] = N
             gauss.AA[I,KR] = -CXX
-            L = APR.NR + NSHP
             KA[L,1] = KA[L,1]+1
             KR = KA[L,1]
             KA[L,KR+1] = N
@@ -991,6 +994,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
             #
             #   SHAPE OF RATIO S1/(S2+S3)
             #
+            L = APR.NR + NSHP
+            AP = APR.CS[L]
             CII8=APR.CS[I]+APR.CS[I8]
             CX=AP*APR.CS[J]/CII8
             CBX=CX/DQQQ
@@ -1001,7 +1006,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
                 KR=KA[I8,1]
                 KA[I8,KR+1]=N
                 gauss.AA[I8,KR]=-CCX
-                L = APR.NR + NSHP
                 KA[L,1]=KA[L,1]+1
                 KR=KA[L,1]
                 KA[L,KR+1]=N
@@ -1020,7 +1024,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, AP, N, NSHP, file_IO4):
                 KA[I8,KR+1]=N
                 CDX=CBX*APR.CS[I8]/CII8
                 gauss.AA[I8,KR]=-CDX
-                L = APR.NR + NSHP
                 KA[L,1]=KA[L,1]+1
                 KR=KA[L,1]
                 KA[L,KR+1]=N
