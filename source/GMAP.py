@@ -195,7 +195,7 @@ def main():
                     continue
 
             NRS, NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
-                    APR, NSHP, NTOT, SIGMA2, file_IO4)
+                    APR, NTOT, SIGMA2, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'

@@ -1143,10 +1143,11 @@ def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
 
 
 def get_matrix_products(gauss, data, N, MODREP,
-        APR, NSHP, NTOT, SIGMA2, file_IO4):
+        APR, NTOT, SIGMA2, file_IO4):
     #
     #      GET MATRIX PRODUCTS
     #
+    NSHP = APR.NSHP
     NR = APR.NR
     NRS=NR+NSHP
     KA = data.KA
