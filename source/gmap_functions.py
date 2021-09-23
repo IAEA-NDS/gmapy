@@ -190,8 +190,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     MODREP, file_IO4)
             NSHP = APR.NSHP
 
-        N = fill_AA_AM_COV(data, fisdata, APR, gauss, N,
-                NSHP, file_IO4)
+        N = fill_AA_AM_COV(data, fisdata, APR, gauss, N, file_IO4)
 
     return (MODC, NSHP, N)
 
@@ -759,7 +758,7 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
 
 
 
-def fill_AA_AM_COV(data, fisdata, APR, gauss, N, NSHP, file_IO4):
+def fill_AA_AM_COV(data, fisdata, APR, gauss, N, file_IO4):
     #
     #      FILL AA,AM,AND COV
     #
@@ -871,7 +870,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, N, NSHP, file_IO4):
             #
             #   SHAPE OF SUM
             #
-            L = APR.NR + NSHP
+            L = APR.NR + APR.NSHP
             AP = APR.CS[L]
             CX = 0.
             for I in fort_range(1,NCT):  # .lbl253
@@ -911,7 +910,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, N, NSHP, file_IO4):
             #
             #      CROSS SECTION SHAPE    L is shape data norm. const. index
             #
-            L = APR.NR + NSHP
+            L = APR.NR + APR.NSHP
             AP = APR.CS[L]
             CX = APR.CS[J]*AP
             CXX = CX/DQQQ
@@ -941,7 +940,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, N, NSHP, file_IO4):
             #
             #      RATIO SHAPE
             #
-            L = APR.NR + NSHP
+            L = APR.NR + APR.NSHP
             AP = APR.CS[L]
             CX = APR.CS[J]*AP/APR.CS[I]
             CXX = CX/DQQQ
@@ -997,7 +996,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, N, NSHP, file_IO4):
             #
             #   SHAPE OF RATIO S1/(S2+S3)
             #
-            L = APR.NR + NSHP
+            L = APR.NR + APR.NSHP
             AP = APR.CS[L]
             CII8=APR.CS[I]+APR.CS[I8]
             CX=AP*APR.CS[J]/CII8
