@@ -456,7 +456,7 @@ def should_exclude_dataset(data, IELIM, NELIM, file_IO4):
         should_exclude = True
 
     if should_exclude:
-        label .lbl517
+        # label .lbl517
         format168 = "(' SET ',I5,' W/O VALID POINTS OR ELIMINATED'/)"
         fort_write(file_IO4, format168, [NS])
         ID = ID - 1
