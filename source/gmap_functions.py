@@ -184,8 +184,9 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     fort_write(file_IO4, format702,
                             [data.KAS[NALT:NADD], K])
 
+            APR.NSHP = NSHP
             determine_apriori_norm_shape(data, APR, LABL, NSETN,
-                    L, NSHP, MPPP, IPP,
+                    L, MPPP, IPP,
                     MODREP, file_IO4)
             NSHP = APR.NSHP
 
@@ -664,7 +665,7 @@ def construct_Ecor(data,
 
 
 def determine_apriori_norm_shape(data, APR, LABL, NSETN,
-        L, NSHP, MPPP, IPP,
+        L, MPPP, IPP,
         MODREP, file_IO4):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
@@ -680,6 +681,7 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
     NR = APR.NR
     KAS = data.KAS
     NCT = data.NCT[ID]
+    NSHP = APR.NSHP
 
     if MTTP == 2:
         NSHP = NSHP + 1
