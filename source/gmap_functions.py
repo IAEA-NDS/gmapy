@@ -140,7 +140,7 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, fisdata, gauss,
         LABL, APR, IELIM, NELIM, NSETN,
-        MODC, MOD2, MPPP, MODREP, N, NSHP,
+        MODC, MOD2, MPPP, AMO3, MODREP, N, NSHP,
         IPP, file_IO3, file_IO4):
 
     read_dataset_input(
@@ -151,7 +151,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NNCOX = data.NNCOX[data.num_datasets]
 
     accounting(data, APR,
-            MOD2, file_IO3
+            MOD2, AMO3, file_IO3
     )
 
     exclflag = \
@@ -308,7 +308,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 def accounting(data, APR,
-        MOD2, file_IO3):
+        MOD2, AMO3, file_IO3):
     #
     #      ACCOUNTING
     #
