@@ -170,7 +170,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                 file_IO3, file_IO4
         )
 
-        AP = 0.
         if data.IDEN[data.num_datasets, 7] != 6:
             #
             #   output of KAS for checking
