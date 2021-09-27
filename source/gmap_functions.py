@@ -1200,9 +1200,9 @@ def get_matrix_products(gauss, data, N, MODREP,
 
 
 def get_result(gauss, SIGMA2, NTOT, NRS, IPP, file_IO3, file_IO4):
-#
-#      GETTING THE RESULT
-#
+    #
+    #      GETTING THE RESULT
+    #
     file_IO3.seek(0,0)
     format6919 = "(' start getting the result ')"
     fort_write(None, format6919, [])
