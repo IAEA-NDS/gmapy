@@ -1195,7 +1195,7 @@ def get_matrix_products(gauss, data, N, MODREP,
         exit()
     if MODREP == 0:
         fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, SIGL])
-    return (NRS, NTOT, SIGMA2)
+    return (NTOT, SIGMA2)
 
 
 
