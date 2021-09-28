@@ -122,6 +122,7 @@ def init_datablock():
     data = Bunch({
         'num_datasets': 0,
         'num_datapoints': 0,
+        'num_datapoints_used': 0,
 
         'E': np.zeros(250+1, dtype=float),
         'CSS': np.zeros(250+1, dtype=float),
