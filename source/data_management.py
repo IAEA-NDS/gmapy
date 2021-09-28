@@ -131,6 +131,7 @@ def init_prior():
 def init_datablock():
 
     MAXDP = SIZE_LIMITS.MAX_NUM_DATAPOINTS_PER_DATABLOCK
+    MAXDS = SIZE_LIMITS.MAX_NUM_DATASETS_PER_DATABLOCK
 
     data = Bunch({
         'num_datasets': 0,
@@ -142,25 +143,25 @@ def init_datablock():
         'DCS': np.zeros(MAXDP+1, dtype=float),
         'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'CO': np.zeros((12+1, MAXDP+1), dtype=float),
-        'ENFF': np.zeros((30+1, 10+1), dtype=float),
-        'EPAF': np.zeros((3+1, 11+1, 30+1), dtype=float),
+        'ENFF': np.zeros((MAXDS+1, 10+1), dtype=float),
+        'EPAF': np.zeros((3+1, 11+1, MAXDS+1), dtype=float),
         'FCFC': np.zeros((10+1, 10+1), dtype=float),
         'AAA': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
 
         'KAS': np.zeros((MAXDP+1, 5+1), dtype=int),
         'KA': np.zeros((1200+1, MAXDP+1), dtype=int),
-        'IDEN': np.zeros((30+1, 8+1), dtype=int),
+        'IDEN': np.zeros((MAXDS+1, 8+1), dtype=int),
         'NENF': np.zeros((40+1, 10+1), dtype=int),
         'NETG': np.zeros((11+1,40+1), dtype=int),
         'NCSST': np.zeros(10+1, dtype=int),
         'NEC': np.zeros((2+1,10+1,10+1), dtype=int),
 
-        'NT': np.zeros((30+1, 5+1), dtype=int),
-        'NCT': np.zeros(30+1, dtype=int),
+        'NT': np.zeros((MAXDS+1, 5+1), dtype=int),
+        'NCT': np.zeros(MAXDS+1, dtype=int),
 
-        'NCOX': np.zeros(30+1, dtype=int),
-        'NNCOX': np.zeros(30+1, dtype=int),
-        'MTTP': np.zeros(30+1, dtype=int),
+        'NCOX': np.zeros(MAXDS+1, dtype=int),
+        'NNCOX': np.zeros(MAXDS+1, dtype=int),
+        'MTTP': np.zeros(MAXDS+1, dtype=int),
 
         'MODC': 0
         })
