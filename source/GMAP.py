@@ -36,7 +36,6 @@ def main():
     data = None
 
     #
-    #      NSETN      shape data set numbers
     #      IPP        i/o choices
     #      NRED       data set Nr.s for downweighting
     #      NELIM      data set Nr.s to exclude from evaluation
@@ -56,8 +55,6 @@ def main():
     APR = init_prior()
     gauss = init_gauss()
     LABL = init_labels()
-
-    NSETN = APR.NSETN
 
     #
     #      INITIALIZE PARAMETERS
