@@ -164,7 +164,7 @@ def main():
 
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
-            MODC = deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+            deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM,
                     MODC, MOD2, MPPP, AMO3, MODREP,
