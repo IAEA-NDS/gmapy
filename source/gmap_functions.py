@@ -1404,6 +1404,7 @@ def output_result_correlation_matrix(gauss, data, APR, IPP,
     #   OUTPUT OF CORRELATION MATRIX OF THE RESULT
     #
     NC = APR.NC
+    JA = APR.MCS[NC, 2]
 
     if IPP[6] != 0:
         format151 = "(1X,24F7.4)"
