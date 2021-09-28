@@ -1195,7 +1195,6 @@ def get_matrix_products(gauss, data, MODREP,
         
         SIGMA2=SIGMA2+gauss.AM[I]*SUX
 
-    NTOT=NTOT+N
     SIGL=SIGMA2/NTOT
     format476 = "(/' ADDED ',I5,' TO GIVE ',I5,' TOTAL',2I5,F10.2/)"
     fort_write(None, format476, [N, NTOT, NSHP, NRS, SIGL])

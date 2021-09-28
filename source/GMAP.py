@@ -190,9 +190,9 @@ def main():
                 if not invertible:
                     continue
 
+            NTOT += data.num_datapoints_used
             SIGMA2 = get_matrix_products(gauss, data, MODREP,
                     APR, NTOT, SIGMA2, file_IO4)
-            NTOT += data.num_datapoints_used
 
 
         # LABL.AKON[3] == 'END*'
