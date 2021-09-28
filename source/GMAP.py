@@ -69,7 +69,6 @@ def main():
     NTOT = 0
     SIGMA2 = 0.
     MODC = 3
-    NFIS = 0
     IELIM = 0
     LLL = 0
 
@@ -152,7 +151,6 @@ def main():
         # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
             fisdata = input_fission_spectrum(MC1, file_IO3, file_IO4)
-            NFIS = fisdata.NFIS
 
 
         # LABL.AKON[4] == 'BLCK'
