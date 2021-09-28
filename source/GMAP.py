@@ -176,6 +176,8 @@ def main():
             #    Data BLOCK complete
             #
             N = data.num_datapoints_used
+            MODC = data.MODC
+
             if data.num_datasets == 0:
                 continue
 
