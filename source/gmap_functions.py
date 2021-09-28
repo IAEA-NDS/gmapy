@@ -105,7 +105,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
         fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
 
 
-def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
+def prepare_for_datablock_input(data, gauss, MODC, MODREP, file_IO4):
     #
     #      BLOCK INPUT
     #
@@ -122,6 +122,7 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
         last_ENFF = None
 
     data = init_datablock()
+    data.MODC = MODC
 
     # NOTE: take ENFF of last datablock to
     # reproduce bug in GMAP Fortran version
