@@ -1497,6 +1497,7 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
     data = Bunch({
         'FIS': np.zeros(250+1, dtype=float),
         'ENFIS': np.zeros(250+1, dtype=float),
+        'NFIS': 0
         })
 
     if MC1 == 0:
@@ -1557,5 +1558,7 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
     format157 = "(2F10.6)"
     for KQ in fort_range(1,NFIS):  # .lbl694
         fort_write(file_IO4, format157, [data.ENFIS[KQ], data.FIS[KQ]])
-    return data, NFIS
+
+    data.NFIS = NFIS
+    return data
 
