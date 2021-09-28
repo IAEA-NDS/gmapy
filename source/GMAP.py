@@ -167,7 +167,7 @@ def main():
             MODC = deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM,
-                    MODC, MOD2, MPPP, AMO3, MODREP, N,
+                    MODC, MOD2, MPPP, AMO3, MODREP,
                     IPP, file_IO3, file_IO4)
             N = data.num_datapoints_used
 
