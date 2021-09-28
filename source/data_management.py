@@ -105,6 +105,10 @@ def init_prior():
 #      NNCOX      array of flags: if element not zero, divide uncertainties by 10 for respective dataset
 #      MTTP       array of shape-flag; element is 2 if dataset contains shape data else 1
 #
+#      MODC       mode of uncertainty specification: 1 - Ecor matrix provided
+#                                                    2 - uncorrelated uncertainties
+#                                                    3 - all correleated errors given
+#
 #
 #      IDEN(K,I)  K DATA SET SEQUENCE
 #
@@ -147,7 +151,9 @@ def init_datablock():
 
         'NCOX': np.zeros(30+1, dtype=int),
         'NNCOX': np.zeros(30+1, dtype=int),
-        'MTTP': np.zeros(30+1, dtype=int)
+        'MTTP': np.zeros(30+1, dtype=int),
+
+        'MODC': 0
         })
 
     return data
