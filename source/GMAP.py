@@ -180,15 +180,12 @@ def main():
                 continue
 
             IREP = 0
-            data.num_datapoints_used = N
             complete_symmetric_Ecor(data, MODC, file_IO4)
 
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
-                data.num_datapoints_used = N
                 output_Ecor_matrix(data, file_IO4)
 
             if not (MODC == 2 or N == 1):
-                data.num_datapoints_used = N
                 invertible, IREP = invert_Ecor(data, IPP, MODC, IREP, file_IO4)
                 if not invertible:
                     continue
