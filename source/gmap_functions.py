@@ -1074,10 +1074,11 @@ def output_Ecor_matrix(data, file_IO4):
 
 
 
-def invert_Ecor(data, IPP, MODC, file_IO4):
+def invert_Ecor(data, IPP, file_IO4):
     #
     #      INVERT ECOR
     #
+    MODC = data.MODC
     N = data.num_datapoints_used
 
     IREP = 0

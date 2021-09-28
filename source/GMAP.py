@@ -185,7 +185,7 @@ def main():
                 output_Ecor_matrix(data, file_IO4)
 
             if not (MODC == 2 or N == 1):
-                invertible = invert_Ecor(data, IPP, MODC, file_IO4)
+                invertible = invert_Ecor(data, IPP, file_IO4)
                 if not invertible:
                     continue
 
