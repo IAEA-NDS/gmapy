@@ -175,13 +175,13 @@ def main():
             #
             #    Data BLOCK complete
             #
-            N = data.num_datapoints_used
-            MODC = data.MODC
-
             if data.num_datasets == 0:
                 continue
 
             complete_symmetric_Ecor(data, file_IO4)
+
+            N = data.num_datapoints_used
+            MODC = data.MODC
 
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 output_Ecor_matrix(data, file_IO4)
