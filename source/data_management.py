@@ -1,6 +1,13 @@
 from generic_utils import Bunch
 import numpy as np
 
+
+SIZE_LIMITS = Bunch({
+    'MAX_NUM_DATAPOINTS_PER_DATABLOCK': 250,
+    'MAX_NUM_DATASETS_PER_DATABLOCK': 30
+})
+
+
 def init_labels():
 
     #
