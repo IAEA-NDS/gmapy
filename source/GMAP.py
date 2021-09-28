@@ -176,13 +176,12 @@ def main():
             #    Data BLOCK complete
             #
             N = data.num_datapoints_used
-            N1=N-1
             if data.num_datasets == 0:
                 continue
 
             IREP = 0
             data.num_datapoints_used = N
-            complete_symmetric_Ecor(data, MODC, N1, file_IO4)
+            complete_symmetric_Ecor(data, MODC, file_IO4)
 
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 data.num_datapoints_used = N
