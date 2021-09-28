@@ -182,7 +182,8 @@ def main():
                 continue
 
             IREP = 0
-            complete_symmetric_Ecor(data, MODC, N, N1, file_IO4)
+            data.num_datapoints_used = N
+            complete_symmetric_Ecor(data, MODC, N1, file_IO4)
 
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 output_Ecor_matrix(data, N, file_IO4)

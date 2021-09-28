@@ -1037,10 +1037,12 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
 
 
 
-def complete_symmetric_Ecor(data, MODC, N, N1, file_IO4):
+def complete_symmetric_Ecor(data, MODC, N1, file_IO4):
     #
     #      FILL IN SYMMETRIC TERM
     #
+    N = data.num_datapoints_used
+
     format2830 = "(80X,4HN = ,I5)"
     fort_write(file_IO4, format2830, [N])
     for K in fort_range(1,N1):  # .lbl25
