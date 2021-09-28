@@ -190,7 +190,8 @@ def main():
                 output_Ecor_matrix(data, file_IO4)
 
             if not (MODC == 2 or N == 1):
-                invertible, IREP = invert_Ecor(data, N, IPP, MODC, IREP, file_IO4)
+                data.num_datapoints_used = N
+                invertible, IREP = invert_Ecor(data, IPP, MODC, IREP, file_IO4)
                 if not invertible:
                     continue
 

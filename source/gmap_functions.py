@@ -1070,10 +1070,11 @@ def output_Ecor_matrix(data, file_IO4):
 
 
 
-def invert_Ecor(data, N, IPP, MODC, IREP, file_IO4):
+def invert_Ecor(data, IPP, MODC, IREP, file_IO4):
     #
     #      INVERT ECOR
     #
+    N = data.num_datapoints_used
 
     while True:
         # cholesky decomposition
