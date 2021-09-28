@@ -160,7 +160,6 @@ def main():
             #       in the Fortran version that causes values of ENFF
             #       leaking into the next datablock
             data = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
-            N = data.num_datapoints_used
 
 
         # LABL.AKON[2] == 'DATA'
@@ -170,13 +169,13 @@ def main():
                     LABL, APR, IELIM, NELIM,
                     MODC, MOD2, MPPP, AMO3, MODREP,
                     IPP, file_IO3, file_IO4)
-            N = data.num_datapoints_used
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             #
             #    Data BLOCK complete
             #
+            N = data.num_datapoints_used
             N1=N-1
             if data.num_datasets == 0:
                 continue
@@ -195,7 +194,6 @@ def main():
                 if not invertible:
                     continue
 
-            data.num_datapoints_used = N
             NTOT, SIGMA2 = get_matrix_products(gauss, data, MODREP,
                     APR, NTOT, SIGMA2, file_IO4)
 
@@ -224,7 +222,6 @@ def main():
 
                 if DUM == LABL.AKON[4]:
                     data = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
-                    N = data.num_datapoints_used
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
