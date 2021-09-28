@@ -187,8 +187,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     L, MPPP, IPP,
                     MODREP, file_IO4)
 
-        N = fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4)
-        data.num_datapoints_used = N
+        fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4)
 
     return MODC
 
@@ -1033,7 +1032,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
                 gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
 
-    return N
+    data.num_datapoints_used = N
+    return
 
 
 
