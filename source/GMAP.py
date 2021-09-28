@@ -197,7 +197,7 @@ def main():
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
             get_result(gauss, APR, SIGMA2, NTOT, IPP, file_IO3, file_IO4)
-            JA, APR = output_result(gauss, fisdata, APR, MODAP,
+            APR = output_result(gauss, fisdata, APR, MODAP,
                     LABL, NSETN, file_IO4, file_IO5)
             #
             #     reset for repeat of fit with replaced apriori from first fit
