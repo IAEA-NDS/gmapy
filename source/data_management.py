@@ -130,23 +130,25 @@ def init_prior():
 
 def init_datablock():
 
+    MAXDP = SIZE_LIMITS.MAX_NUM_DATAPOINTS_PER_DATABLOCK
+
     data = Bunch({
         'num_datasets': 0,
         'num_datapoints': 0,
         'num_datapoints_used': 0,
 
-        'E': np.zeros(250+1, dtype=float),
-        'CSS': np.zeros(250+1, dtype=float),
-        'DCS': np.zeros(250+1, dtype=float),
-        'ECOR': np.zeros((250+1, 250+1), dtype=float),
-        'CO': np.zeros((12+1, 250+1), dtype=float),
+        'E': np.zeros(MAXDP+1, dtype=float),
+        'CSS': np.zeros(MAXDP+1, dtype=float),
+        'DCS': np.zeros(MAXDP+1, dtype=float),
+        'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
+        'CO': np.zeros((12+1, MAXDP+1), dtype=float),
         'ENFF': np.zeros((30+1, 10+1), dtype=float),
         'EPAF': np.zeros((3+1, 11+1, 30+1), dtype=float),
         'FCFC': np.zeros((10+1, 10+1), dtype=float),
-        'AAA': np.zeros((250+1, 250+1), dtype=float),
+        'AAA': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
 
-        'KAS': np.zeros((250+1, 5+1), dtype=int),
-        'KA': np.zeros((1200+1, 250+1), dtype=int),
+        'KAS': np.zeros((MAXDP+1, 5+1), dtype=int),
+        'KA': np.zeros((1200+1, MAXDP+1), dtype=int),
         'IDEN': np.zeros((30+1, 8+1), dtype=int),
         'NENF': np.zeros((40+1, 10+1), dtype=int),
         'NETG': np.zeros((11+1,40+1), dtype=int),
