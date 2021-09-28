@@ -146,7 +146,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
-            N, file_IO3, file_IO4
+            file_IO3, file_IO4
     )
     NNCOX = data.NNCOX[data.num_datasets]
 
@@ -194,7 +194,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, LABL,
-        N, file_IO3, file_IO4):
+        file_IO3, file_IO4):
     #
     #      DATA SET INPUT
     #
@@ -209,6 +209,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #
     # label .lbl2
     ID = data.num_datasets
+    N = data.num_datapoints_used
     NS = MC1
     MT = MC2
     NCOX = MC3
