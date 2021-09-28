@@ -1071,12 +1071,13 @@ def output_Ecor_matrix(data, file_IO4):
 
 
 
-def invert_Ecor(data, IPP, MODC, IREP, file_IO4):
+def invert_Ecor(data, IPP, MODC, file_IO4):
     #
     #      INVERT ECOR
     #
     N = data.num_datapoints_used
 
+    IREP = 0
     while True:
         # cholesky decomposition
         #CALL DPOFA(ECOR,LDA,N,INFO)
@@ -1120,7 +1121,7 @@ def invert_Ecor(data, IPP, MODC, IREP, file_IO4):
                         data.ECOR[K,L] = 1.
 
             if IREP >= 15:
-                return (False, IREP)
+                return False
 
     JOB=1
     # CALL DPODI(ECOR,LDA,N,DET,JOB)
@@ -1146,7 +1147,7 @@ def invert_Ecor(data, IPP, MODC, IREP, file_IO4):
         for K in fort_range(1,N):
             fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
-    return (True, IREP)
+    return True
 
 
 

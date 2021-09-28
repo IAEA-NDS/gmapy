@@ -179,14 +179,13 @@ def main():
             if data.num_datasets == 0:
                 continue
 
-            IREP = 0
             complete_symmetric_Ecor(data, MODC, file_IO4)
 
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 output_Ecor_matrix(data, file_IO4)
 
             if not (MODC == 2 or N == 1):
-                invertible, IREP = invert_Ecor(data, IPP, MODC, IREP, file_IO4)
+                invertible = invert_Ecor(data, IPP, MODC, file_IO4)
                 if not invertible:
                     continue
 
