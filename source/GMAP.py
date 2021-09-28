@@ -44,7 +44,6 @@ def main():
     #   INTEGER*2 KAS(250,5),NT(5),IDEN(30,8),NSETN(200),IPP(8),
     #  1 NENF(40,10),NETG(11,40),NCSST(10),NEC(2,10,10),NRED(160)
     #  2 ,KA(1200,250),NELIM(40)
-    NSETN = np.zeros(200+1, dtype=int)
     IPP = np.zeros(8+1, dtype=int)
     NRED = np.zeros(160+1, dtype=int)
     NELIM = np.zeros(40+1, dtype=int)
@@ -57,6 +56,8 @@ def main():
     APR = init_prior()
     gauss = init_gauss()
     LABL = init_labels()
+
+    NSETN = APR.NSETN
 
     #
     #      INITIALIZE PARAMETERS
