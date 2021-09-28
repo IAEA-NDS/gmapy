@@ -1056,10 +1056,12 @@ def complete_symmetric_Ecor(data, MODC, N1, file_IO4):
 
 
 
-def output_Ecor_matrix(data, N, file_IO4):
+def output_Ecor_matrix(data, file_IO4):
     #
     #      output of correlation matrix of data block
     #
+    N = data.num_datapoints_used
+
     format101 = "(1H*//,'   CORRELATION MATRIX OF DATA BLOCK'/)"
     fort_write(file_IO4, format101, [])
     format151 = "(1X,24F7.4)"
