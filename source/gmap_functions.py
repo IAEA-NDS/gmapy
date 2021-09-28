@@ -143,8 +143,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         MODC, MOD2, MPPP, AMO3, MODREP, N,
         IPP, file_IO3, file_IO4):
 
-    NSETN = APR.NSETN
-
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
@@ -185,7 +183,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     fort_write(file_IO4, format702,
                             [data.KAS[NALT:NADD], K])
 
-            determine_apriori_norm_shape(data, APR, LABL, NSETN,
+            determine_apriori_norm_shape(data, APR, LABL,
                     L, MPPP, IPP,
                     MODREP, file_IO4)
 
@@ -662,7 +660,7 @@ def construct_Ecor(data,
 
 
 
-def determine_apriori_norm_shape(data, APR, LABL, NSETN,
+def determine_apriori_norm_shape(data, APR, LABL,
         L, MPPP, IPP,
         MODREP, file_IO4):
     #
@@ -680,6 +678,7 @@ def determine_apriori_norm_shape(data, APR, LABL, NSETN,
     KAS = data.KAS
     NCT = data.NCT[ID]
     NSHP = APR.NSHP
+    NSETN = APR.NSETN
 
     if MTTP == 2:
         NSHP = NSHP + 1
