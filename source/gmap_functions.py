@@ -113,7 +113,6 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
     #      ID    TOTAL NO OF DATA SETS IN BLOCK
     #
 
-    N = 0
     gauss.AM.fill(0.)
     gauss.AA.fill(0.)
 
@@ -134,7 +133,7 @@ def prepare_for_datablock_input(data, gauss, MODREP, file_IO4):
                     "******************************************DATABLOCK '/)"
         fort_write(file_IO4, format108, [])
 
-    return (data, N)
+    return data
 
 
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,

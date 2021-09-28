@@ -159,7 +159,8 @@ def main():
             # NOTE: data is provided as argument to reproduce a bug
             #       in the Fortran version that causes values of ENFF
             #       leaking into the next datablock
-            data, N, = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
+            data = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
+            N = data.num_datapoints_used
 
 
         # LABL.AKON[2] == 'DATA'
@@ -218,7 +219,8 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    data, N = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
+                    data = prepare_for_datablock_input(data, gauss, MODREP, file_IO4)
+                    N = data.num_datapoints_used
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
