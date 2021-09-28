@@ -179,7 +179,7 @@ def main():
             if data.num_datasets == 0:
                 continue
 
-            complete_symmetric_Ecor(data, MODC, file_IO4)
+            complete_symmetric_Ecor(data, file_IO4)
 
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 output_Ecor_matrix(data, file_IO4)

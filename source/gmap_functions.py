@@ -1039,10 +1039,11 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
 
 
 
-def complete_symmetric_Ecor(data, MODC, file_IO4):
+def complete_symmetric_Ecor(data, file_IO4):
     #
     #      FILL IN SYMMETRIC TERM
     #
+    MODC = data.MODC
     N = data.num_datapoints_used
     N1 = N - 1
 
