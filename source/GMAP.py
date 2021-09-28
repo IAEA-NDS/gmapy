@@ -195,7 +195,8 @@ def main():
                 if not invertible:
                     continue
 
-            NTOT, SIGMA2 = get_matrix_products(gauss, data, N, MODREP,
+            data.num_datapoints_used = N
+            NTOT, SIGMA2 = get_matrix_products(gauss, data, MODREP,
                     APR, NTOT, SIGMA2, file_IO4)
 
 

@@ -1149,7 +1149,7 @@ def invert_Ecor(data, IPP, MODC, IREP, file_IO4):
 
 
 
-def get_matrix_products(gauss, data, N, MODREP,
+def get_matrix_products(gauss, data, MODREP,
         APR, NTOT, SIGMA2, file_IO4):
     #
     #      GET MATRIX PRODUCTS
@@ -1158,6 +1158,7 @@ def get_matrix_products(gauss, data, N, MODREP,
     NR = APR.NR
     NRS=NR+NSHP
     KA = data.KA
+    N = data.num_datapoints_used
 
     for I in fort_range(1,NRS):  # .lbl90
         NI=KA[I,1]
