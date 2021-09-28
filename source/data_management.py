@@ -60,6 +60,8 @@ def init_labels():
 #      MCS   INDEXES
 #      NR    number of parameters (cross sections)
 #      NC    number of cross section types
+#      NSHP  number of shape data sets
+#      NSETN shape data set numbers
 
 def init_prior():
 
@@ -69,7 +71,8 @@ def init_prior():
         'MCS': np.zeros((35+1,3+1), dtype=int),
         'NR': 0,
         'NC': 0,
-        'NSHP': 0
+        'NSHP': 0,
+        'NSETN': np.zeros(200+1, dtype=int)
         })
     return APR
 
