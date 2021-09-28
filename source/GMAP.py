@@ -221,7 +221,7 @@ def main():
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
-                    LABL, JA, file_IO4)
+                    LABL, file_IO4)
             exit()
 
 
