@@ -188,9 +188,13 @@ def init_datablock():
 
 def init_gauss():
 
+    MAXDP = SIZE_LIMITS.MAX_NUM_DATAPOINTS_PER_DATABLOCK
+    MAXDS = SIZE_LIMITS.MAX_NUM_DATASETS_PER_DATABLOCK
+    MAXCOR = SIZE_LIMITS.MAX_NUM_CORRELATED_DATASETS_PER_DATASET
+
     gauss = Bunch({
-            'AA': np.zeros((1200+1, 250+1), dtype=float),
-            'AM': np.zeros(250+1, dtype=float),
+            'AA': np.zeros((1200+1, MAXDP+1), dtype=float),
+            'AM': np.zeros(MAXDP+1, dtype=float),
             'DE': np.zeros(1200+1, dtype=float),
             'BM': np.zeros(1200+1, dtype=float),
             'B': np.zeros(720600+1, dtype=float),
