@@ -187,6 +187,21 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
     return
 
+def should_downweight(ID, data):
+    MOD2 = data.MOD2
+    AMO3 = data.AMO3
+    IDEN = data.IDEN
+    # 1st if line: downweighting based on year of measurement
+    # 2nd if line: downweighting of specified data sets
+    # 3rd+ if line: downweighting data sets with tags .NE. 1
+    if (MOD2 > 1000 and IDEN[ID, 3] < MOD2) or \
+       (MOD2 == 10 and IDEN[ID, 6] in NRED[1:(NELI+1)]) or \
+       (MOD2 == 1 and IDEN[ID, 4] != 1) or \
+       (MOD2 < 0 and IDEN[ID, 4] != 1):
+        return True
+    else:
+        return False
+
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, LABL,
@@ -358,20 +373,11 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #
         #      changing weights of data based on year or data set tag
         #
-        MOD2 = data.MOD2
-        AMO3 = data.AMO3
-        # 1st if line: downweighting based on year of measurement
-        # 2nd if line: downweighting of specified data sets
-        # 3rd+ if line: downweighting data sets with tags .NE. 1
-        if (MOD2 > 1000 and IDEN[ID, 3] < MOD2) or \
-           (MOD2 == 10 and IDEN[ID, 6] in NRED[1:(NELI+1)]) or \
-           (MOD2 == 1 and IDEN[ID, 4] != 1) or \
-           (MOD2 < 0 and IDEN[ID, 4] != 1):
-
+        if should_downweight(ID, data):
                 for I in fort_range(3,11):
-                    data.CO[I, NADD] = AMO3*data.CO[I, NADD]
+                    data.CO[I, NADD] = data.AMO3*data.CO[I, NADD]
 
-        elif MOD2 > 1 and MOD2 < 10:
+        elif data.MOD2 > 1 and data.MOD2 < 10:
 
             format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)"
             fort_write(file_IO4, format339, NS)
