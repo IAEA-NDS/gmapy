@@ -165,7 +165,8 @@ def init_datablock():
         'NNCOX': np.zeros(MAXDS+1, dtype=int),
         'MTTP': np.zeros(MAXDS+1, dtype=int),
 
-        'MODC': 0
+        'MODC': 0,
+        'MOD2': 0
         })
 
     return data
