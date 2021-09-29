@@ -151,9 +151,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             file_IO3, file_IO4
     )
 
-    accounting(data, APR,
-            MOD2, AMO3, file_IO3
-    )
+    accounting(data, APR, MOD2, AMO3)
 
     exclflag = \
     should_exclude_dataset(data,
@@ -322,8 +320,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 
-def accounting(data, APR,
-        MOD2, AMO3, file_IO3):
+def accounting(data, APR, MOD2, AMO3):
     #
     #      ACCOUNTING
     #
