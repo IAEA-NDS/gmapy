@@ -2,7 +2,7 @@ from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock
 from gmap_snippets import should_downweight
-from output_management import write_dataset_info
+from output_management import write_dataset_info, write_prior_info
 import numpy as np
 
 import linpack_slim
@@ -66,45 +66,8 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
         APR.MCS[K, 2] = APR.MCS[K-1, 2] + APR.MCS[K-1, 1]
         APR.MCS[K, 3] = APR.MCS[K-1, 3] + APR.MCS[K, 1]
 
-    # from here onwards only output
-    # label .lbl30
-    format134 = r"(//2X,36HCROSS SECTIONS OF PRESENT EVALUATION//)"
-    fort_write(file_IO4, format134, [])
-    format135 = "(10X,I3,5X,2A8)"
-    for K in fort_range(1,NC):
-        fort_write(file_IO4, format135, [K, LABL.CLAB[K, 1:3]])
-    # label .lbl22
-    if IPP[1] != 0:
-        format136 = "(1H1//,2X,35HENERGIES AND APRIORI CROSS SECTIONS//)" 
-        fort_write(file_IO4, format136, [])
-        format137 = "(/ '     INDEX     E/MEV   ',7X,2A8 /)"
-        for  K in fort_range(1,NC):  # .lbl24
-            fort_write(file_IO4, format137, LABL.CLAB[K,1:3])
-            JC1 = APR.MCS[K, 2]
-            JC2 = APR.MCS[K, 3]
-            LQ = 0
-            format138 = "(2X,2I4,3X,E10.4,3X,F15.8)"
-            for L in fort_range(JC1, JC2):
-                LQ += 1
-                fort_write(file_IO4, format138, [LQ, L, APR.EN[L], APR.CS[L]])
+    write_prior_info(APR, IPP, LABL, file_IO4)
 
-    format113 = "(/,' TOTAL NO OF PARAMETERS ',I4/)"
-    fort_write(file_IO4, format113, [NR])
-
-    #
-    #      for checking
-    #
-    if IPP[7] != 0:
-        format4390 = "(' No of Parameters per Cross Section '/)"
-        fort_write(file_IO4, format4390, [])
-        format154 = "(3X,3HAPR.MCS,10I5)"
-        fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 1]])
-        format4391 = "(/' Start Address '/)"
-        fort_write(file_IO4, format4391, [])
-        fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 2]])
-        format4392 = "(/' End Address '/)"
-        fort_write(file_IO4, format4392, [])
-        fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
 
 
 def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4):
