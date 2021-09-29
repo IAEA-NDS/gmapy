@@ -339,7 +339,6 @@ def accounting(data, APR,
 
         format109 = "(2E10.4,12F5.1)"
         data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = unflatten(fort_read(file_IO3, format109), [2,[12]])
-        L = 13  # to reflect fortran value after READ loop
         if data.E[NADD] == 0:
             IDEN[ID, 1] = NADD - NALT
             data.num_datapoints = NADD - 1
@@ -382,8 +381,6 @@ def accounting(data, APR,
                 print('ERROR: experimental energy does not match energy mesh')
                 exit()
 
-            L = L + 1  # to match L value of fortran after loop
-
         #
         #      this is the Axton special (uncertainties have been multiplied by 10
         #         in order to preserve precision beyond 0.1%)
@@ -420,7 +417,6 @@ def accounting(data, APR,
         RELU = 0.
         for L in fort_range(3,11):  # .lbl207
             RELU += data.CO[L, NADD]**2
-        L = L + 1  # to match L value of fortran after loop
 
         data.DCS[NADD] = np.sqrt(XNORU + RELU) 
         NADD += 1
