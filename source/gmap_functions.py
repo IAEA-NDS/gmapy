@@ -300,6 +300,23 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
             data.FCFC[ID, 1:11, K] = fort_read(file_IO3, format841)
 
+    # read the energies, cross sections and uncertainty components
+    NADD = data.num_datapoints + 1
+    NALT = NADD
+    for KS in fort_range(1,LDA):
+        format109 = "(2E10.4,12F5.1)"
+        data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = \
+            unflatten(fort_read(file_IO3, format109), [2,[12]])
+        if data.E[NADD] == 0:
+            break
+        NADD += 1
+
+    if data.E[NADD] != 0:
+        print('ERROR: too many datapoints regarding current LDA setting')
+        exit()
+
+    data.num_datapoints = NADD - 1
+    IDEN[ID, 1] = NADD - NALT
     data.num_datasets = ID
     return
 
@@ -315,17 +332,16 @@ def accounting(data, APR,
     #      NP          NO OF DATA POINTS IN THIS SET
     #
     ID = data.num_datasets
-    NADD = data.num_datapoints + 1
-
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
-    NALT = NADD
     KAS = data.KAS
     NT = data.NT[ID,:]
     NCT = data.NCT[ID]
     NNCOX = data.NNCOX[ID]
 
+    NADD = data.num_datapoints - IDEN[ID,1]  + 1
+    NALT = NADD
     XNORU = 0.
     if data.MTTP[ID] != 2:
         #
@@ -336,8 +352,6 @@ def accounting(data, APR,
 
     for KS in fort_range(1,LDA):  # .lbl21
 
-        format109 = "(2E10.4,12F5.1)"
-        data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = unflatten(fort_read(file_IO3, format109), [2,[12]])
         if data.E[NADD] == 0:
             IDEN[ID, 1] = NADD - NALT
             data.num_datapoints = NADD - 1
