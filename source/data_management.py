@@ -133,6 +133,7 @@ def init_datablock():
 
     MAXDP = SIZE_LIMITS.MAX_NUM_DATAPOINTS_PER_DATABLOCK
     MAXDS = SIZE_LIMITS.MAX_NUM_DATASETS_PER_DATABLOCK
+    MAXCOR = SIZE_LIMITS.MAX_NUM_CORRELATED_DATASETS_PER_DATASET
 
     data = Bunch({
         'num_datasets': 0,
@@ -146,7 +147,7 @@ def init_datablock():
         'CO': np.zeros((12+1, MAXDP+1), dtype=float),
         'ENFF': np.zeros((MAXDS+1, 10+1), dtype=float),
         'EPAF': np.zeros((3+1, 11+1, MAXDS+1), dtype=float),
-        'FCFC': np.zeros((10+1, 10+1), dtype=float),
+        'FCFC': np.zeros((10+1, MAXCOR+1), dtype=float),
         'AAA': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
 
         'KAS': np.zeros((MAXDP+1, 5+1), dtype=int),
@@ -154,8 +155,8 @@ def init_datablock():
         'IDEN': np.zeros((MAXDS+1, 8+1), dtype=int),
         'NENF': np.zeros((40+1, 10+1), dtype=int),
         'NETG': np.zeros((11+1,40+1), dtype=int),
-        'NCSST': np.zeros(10+1, dtype=int),
-        'NEC': np.zeros((2+1,10+1,10+1), dtype=int),
+        'NCSST': np.zeros(MAXCOR+1, dtype=int),
+        'NEC': np.zeros((2+1,10+1,MAXCOR+1), dtype=int),
 
         'NT': np.zeros((MAXDS+1, 5+1), dtype=int),
         'NCT': np.zeros(MAXDS+1, dtype=int),
