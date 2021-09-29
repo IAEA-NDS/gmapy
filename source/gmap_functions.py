@@ -388,10 +388,6 @@ def accounting(data, APR):
     KAS = data.KAS
     NT = data.NT[ID,:]
     NCT = data.NCT[ID]
-    NNCOX = data.NNCOX[ID]
-
-    MOD2 = data.MOD2
-    AMO3 = data.AMO3
 
     NADD_MAX = data.num_datapoints
     NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
