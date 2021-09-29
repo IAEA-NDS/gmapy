@@ -150,7 +150,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
             file_IO3, file_IO4
     )
-    NNCOX = data.NNCOX[data.num_datasets]
 
     accounting(data, APR,
             MOD2, AMO3, file_IO3
