@@ -166,7 +166,8 @@ def init_datablock():
         'MTTP': np.zeros(MAXDS+1, dtype=int),
 
         'MODC': 0,
-        'MOD2': 0
+        'MOD2': 0,
+        'AMO3': 0.
         })
 
     return data
