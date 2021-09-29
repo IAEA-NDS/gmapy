@@ -317,6 +317,24 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     IDEN[ID, 1] = NADD - NALT
     data.num_datasets = ID
 
+    # read correlation matrix if given
+    if NCOX != 1:
+        #
+        #      INPUT OF ECOR
+        #
+        format161 = "(10F8.5)"
+        for KS in fort_range(1,NCOX):  # .lbl61
+            num_el_read = 0
+            num_el_desired = KS
+            res = []
+            while num_el_read < num_el_desired:
+                tmp = fort_read(file_IO3, format161)
+                tmp = [x for x in tmp if x is not None]
+                res += tmp
+                num_el_read += len(tmp)
+
+            data.ECOR[KS,1:(KS+1)] = res
+
     #  uncertainty transformations
     XNORU = 0.
     if data.MTTP[ID] != 2:
@@ -500,23 +518,8 @@ def construct_Ecor(data,
         MODC = 1
 
     if MODC == 1:
-        #
-        #      INPUT OF ECOR
-        #
-        format161 = "(10F8.5)"
-        for KS in fort_range(1,NCOX):  # .lbl61
-            num_el_read = 0
-            num_el_desired = KS
-            res = []
-            while num_el_read < num_el_desired:
-                tmp = fort_read(file_IO3, format161)
-                tmp = [x for x in tmp if x is not None]
-                res += tmp
-                num_el_read += len(tmp)
-
-            data.ECOR[KS,1:(KS+1)] = res
-        KS = KS + 1  # to match the value of KS after Fortran loop
-        L = KS  # to match the value of L after READ (label 61 in Fortran code)
+        # related to INPUT OF ECOR
+        L = NCOX+1   # to match the value of L after READ (label 61 in Fortran code)
         MODC = MODAL
 
 
