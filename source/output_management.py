@@ -81,3 +81,18 @@ def write_prior_info(APR, IPP, LABL, file_IO4):
         fort_write(file_IO4, format4392, [])
         fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
 
+
+
+def output_Ecor_matrix(data, file_IO4):
+    #
+    #      output of correlation matrix of data block
+    #
+    N = data.num_datapoints_used
+
+    format101 = "(1H*//,'   CORRELATION MATRIX OF DATA BLOCK'/)"
+    fort_write(file_IO4, format101, [])
+    format151 = "(1X,24F7.4)"
+    for K in fort_range(1,N):
+        fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
+
+
