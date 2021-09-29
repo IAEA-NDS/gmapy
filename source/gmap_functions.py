@@ -340,8 +340,6 @@ def accounting(data, APR,
     NCT = data.NCT[ID]
     NNCOX = data.NNCOX[ID]
 
-    NADD = data.num_datapoints - IDEN[ID,1]  + 1
-    NALT = NADD
     XNORU = 0.
     if data.MTTP[ID] != 2:
         #
@@ -350,10 +348,9 @@ def accounting(data, APR,
         for L in fort_range(1,10):  # .lbl208
             XNORU = XNORU + (data.ENFF[ID,L])**2
 
-    for KS in fort_range(1,LDA):  # .lbl21
-
-        if data.E[NADD] == 0:
-            return
+    NADD_MAX = data.num_datapoints
+    NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
+    for NADD in fort_range(NADD_MIN, NADD_MAX):  # .lbl21
 
         #
         #      SORT EXP ENERGIES  TO FIND CORRESPONDING INDEX OF EVALUATION EN
@@ -430,10 +427,8 @@ def accounting(data, APR,
             RELU += data.CO[L, NADD]**2
 
         data.DCS[NADD] = np.sqrt(XNORU + RELU) 
-        NADD += 1
 
-    print('ERROR: too many datapoints regarding current LDA setting')
-    exit()
+    return
 
 
 
