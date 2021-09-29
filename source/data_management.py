@@ -153,8 +153,8 @@ def init_datablock():
         'KAS': np.zeros((MAXDP+1, 5+1), dtype=int),
         'KA': np.zeros((1200+1, MAXDP+1), dtype=int),
         'IDEN': np.zeros((MAXDS+1, 8+1), dtype=int),
-        'NENF': np.zeros((40+1, 10+1), dtype=int),
-        'NETG': np.zeros((11+1,40+1), dtype=int),
+        'NENF': np.zeros((MAXDS+1, 10+1), dtype=int),
+        'NETG': np.zeros((11+1,MAXDS+1), dtype=int),
         'NCSST': np.zeros(MAXCOR+1, dtype=int),
         'NEC': np.zeros((2+1,10+1,MAXCOR+1), dtype=int),
 
