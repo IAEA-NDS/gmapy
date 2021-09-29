@@ -164,9 +164,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #
 
         L = \
-        construct_Ecor(data,
-                file_IO3, file_IO4
-        )
+        construct_Ecor(data, file_IO4)
 
         if data.IDEN[data.num_datasets, 7] != 6:
             #
@@ -486,8 +484,7 @@ def should_exclude_dataset(data, IELIM, NELIM, file_IO4):
 
 
 
-def construct_Ecor(data,
-        file_IO3, file_IO4):
+def construct_Ecor(data, file_IO4):
     #
     #      CONSTRUCT ECOR
     #
