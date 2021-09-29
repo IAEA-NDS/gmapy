@@ -340,14 +340,6 @@ def accounting(data, APR):
     MOD2 = data.MOD2
     AMO3 = data.AMO3
 
-    XNORU = 0.
-    if data.MTTP[ID] != 2:
-        #
-        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
-        #
-        for L in fort_range(1,10):  # .lbl208
-            XNORU = XNORU + (data.ENFF[ID,L])**2
-
     NADD_MAX = data.num_datapoints
     NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
     for NADD in fort_range(NADD_MIN, NADD_MAX):  # .lbl21
@@ -389,6 +381,14 @@ def accounting(data, APR):
                 print('ERROR: experimental energy does not match energy mesh')
                 exit()
 
+
+    XNORU = 0.
+    if data.MTTP[ID] != 2:
+        #
+        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
+        #
+        for L in fort_range(1,10):  # .lbl208
+            XNORU = XNORU + (data.ENFF[ID,L])**2
 
     NADD_MAX = data.num_datapoints
     NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
