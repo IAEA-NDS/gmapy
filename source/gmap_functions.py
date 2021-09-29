@@ -3,6 +3,7 @@ from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock
 from gmap_snippets import should_downweight
 from output_management import write_dataset_info, write_prior_info
+
 import numpy as np
 
 import linpack_slim
@@ -990,19 +991,6 @@ def complete_symmetric_Ecor(data, file_IO4):
             # label .lbl25
         L = L + 1  # to match L value of fortran after loop
 
-
-
-def output_Ecor_matrix(data, file_IO4):
-    #
-    #      output of correlation matrix of data block
-    #
-    N = data.num_datapoints_used
-
-    format101 = "(1H*//,'   CORRELATION MATRIX OF DATA BLOCK'/)"
-    fort_write(file_IO4, format101, [])
-    format151 = "(1X,24F7.4)"
-    for K in fort_range(1,N):
-        fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
 
 
