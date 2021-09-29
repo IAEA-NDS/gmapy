@@ -297,7 +297,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         format205 = "(I5,20I3)"
         for K in fort_range(1,NCCS):  # .lbl204
             NCSST[ID, K], tmp = unflatten(fort_read(file_IO3, format205), [1,[20]])
-            NEC[1:3, 1:11, K] = np.reshape(tmp, (2,10), order='F')
+            NEC[ID, 1:3, 1:11, K] = np.reshape(tmp, (2,10), order='F')
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
             data.FCFC[ID, 1:11, K] = fort_read(file_IO3, format841)
 
@@ -618,8 +618,8 @@ def construct_Ecor(data,
                                 C2 = data.DCS[KK]
                                 Q1 = 0.
                                 for KKK in fort_range(1,10):  # .lbl281
-                                    NC1 = NEC[1, KKK, I]
-                                    NC2 = NEC[2, KKK, I]
+                                    NC1 = NEC[ID, 1, KKK, I]
+                                    NC2 = NEC[ID, 2, KKK, I]
                                     if NC1 > 21 or NC2 > 21:
                                         continue
 
