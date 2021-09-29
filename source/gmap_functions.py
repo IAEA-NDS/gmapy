@@ -2,7 +2,8 @@ from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock
 from gmap_snippets import should_downweight
-from output_management import write_dataset_info, write_prior_info
+from output_management import (write_dataset_info, write_prior_info,
+                               write_datablock_header)
 
 import numpy as np
 
@@ -98,9 +99,7 @@ def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
         data.ENFF = last_ENFF
 
     if MODREP == 0:
-        format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
-                    "******************************************DATABLOCK '/)"
-        fort_write(file_IO4, format108, [])
+        write_datablock_header(file_IO4)
 
     return data
 

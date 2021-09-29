@@ -1,6 +1,15 @@
 from fortran_utils import fort_range, fort_write
 from gmap_snippets import should_downweight
 
+
+
+def write_datablock_header(file_IO4):
+    format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
+                "******************************************DATABLOCK '/)"
+    fort_write(file_IO4, format108, [])
+
+
+
 def write_dataset_info(ID, data, LABL, file_IO4):
 
     IDEN = data.IDEN
