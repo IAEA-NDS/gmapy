@@ -389,6 +389,10 @@ def accounting(data, APR):
                 print('ERROR: experimental energy does not match energy mesh')
                 exit()
 
+
+    NADD_MAX = data.num_datapoints
+    NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
+    for NADD in fort_range(NADD_MIN, NADD_MAX):
         #
         #      this is the Axton special (uncertainties have been multiplied by 10
         #         in order to preserve precision beyond 0.1%)
