@@ -145,10 +145,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         MPPP, MODREP,
         IPP, file_IO3, file_IO4):
 
-    MODC = data.MODC
-    MOD2 = data.MOD2
-    AMO3 = data.AMO3
-
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
