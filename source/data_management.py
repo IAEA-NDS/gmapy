@@ -147,7 +147,7 @@ def init_datablock():
         'CO': np.zeros((12+1, MAXDP+1), dtype=float),
         'ENFF': np.zeros((MAXDS+1, 10+1), dtype=float),
         'EPAF': np.zeros((3+1, 11+1, MAXDS+1), dtype=float),
-        'FCFC': np.zeros((10+1, MAXCOR+1), dtype=float),
+        'FCFC': np.zeros((MAXDS+1, 10+1, MAXCOR+1), dtype=float),
         'AAA': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
 
         'KAS': np.zeros((MAXDP+1, 5+1), dtype=int),

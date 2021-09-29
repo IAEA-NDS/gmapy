@@ -299,7 +299,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             NCSST[K], tmp = unflatten(fort_read(file_IO3, format205), [1,[20]])
             NEC[1:3, 1:11, K] = np.reshape(tmp, (2,10), order='F')
             #NCSST[K], NEC[0:2, 0:10, K] = unflatten(fort_read(file_IO3, format205), [1,[20]])
-            data.FCFC[1:11, K] = fort_read(file_IO3, format841)
+            data.FCFC[ID, 1:11, K] = fort_read(file_IO3, format841)
 
     data.num_datasets = ID
     return
@@ -626,7 +626,7 @@ def construct_Ecor(data,
                                     if NC1 == 0 or NC2 == 0:
                                         break
 
-                                    AMUFA = data.FCFC[KKK, I]
+                                    AMUFA = data.FCFC[ID, KKK, I]
                                     if NC1 > 10:
                                         NC1 = NC1 - 10
                                         if NETG[NC1, ID] == 9:
