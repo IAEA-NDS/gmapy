@@ -164,7 +164,7 @@ def main():
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM,
-                    MOD2, MPPP, AMO3, MODREP,
+                    MPPP, AMO3, MODREP,
                     IPP, file_IO3, file_IO4)
 
         # LABL.AKON[7] == 'EDBL'
