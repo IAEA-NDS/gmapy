@@ -434,7 +434,8 @@ def accounting(data, APR):
                         break
 
                 if not found:
-                    break
+                    print('ERROR: experimental energy does not match energy mesh')
+                    exit()
 
                 KAS[NADD, L] = K
                 #
@@ -443,10 +444,6 @@ def accounting(data, APR):
                 if NS >= 900 and NS <= 909:
                     data.CSS[NADD] = APR.CS[K]
                 # .lbl48
-
-            if not found:
-                print('ERROR: experimental energy does not match energy mesh')
-                exit()
 
     return
 
