@@ -195,7 +195,7 @@ def main():
 
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
-            get_result(gauss, APR, SIGMA2, NTOT, IPP, file_IO3, file_IO4)
+            get_result(gauss, APR, SIGMA2, NTOT, IPP, file_IO4)
             APR = output_result(gauss, fisdata, APR, MODAP,
                     LABL, file_IO4, file_IO5)
             #
@@ -208,6 +208,7 @@ def main():
                 SIGMA2=0.
                 APR.NSHP=0
                 gauss = init_gauss()
+                file_IO3.seek(0,0)
 
                 format130 = "(A4)"
                 for L in fort_range(1,2000):  # .lbl69
