@@ -316,6 +316,59 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     data.num_datapoints = NADD - 1
     IDEN[ID, 1] = NADD - NALT
     data.num_datasets = ID
+
+    #  uncertainty transformations
+    XNORU = 0.
+    if data.MTTP[ID] != 2:
+        #
+        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
+        #
+        for L in fort_range(1,10):  # .lbl208
+            XNORU = XNORU + (data.ENFF[ID,L])**2
+
+    NADD_MAX = data.num_datapoints
+    NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
+    for NADD in fort_range(NADD_MIN, NADD_MAX):
+        #
+        #      this is the Axton special (uncertainties have been multiplied by 10
+        #         in order to preserve precision beyond 0.1%)
+        #
+        if NNCOX != 0:
+            for LZ in fort_range(1,11):  # .lbl57
+                data.CO[LZ, NADD] = data.CO[LZ, NADD] / 10.
+
+        #
+        #      test option:  as set with mode control
+        #
+        #      changing weights of data based on year or data set tag
+        #
+        MOD2 = data.MOD2
+        AMO3 = data.AMO3
+        # 1st if line: downweighting based on year of measurement
+        # 2nd if line: downweighting of specified data sets
+        # 3rd+ if line: downweighting data sets with tags .NE. 1
+        if (MOD2 > 1000 and IDEN[ID, 3] < MOD2) or \
+           (MOD2 == 10 and IDEN[ID, 6] in NRED[1:(NELI+1)]) or \
+           (MOD2 == 1 and IDEN[ID, 4] != 1) or \
+           (MOD2 < 0 and IDEN[ID, 4] != 1):
+
+                for I in fort_range(3,11):
+                    data.CO[I, NADD] = AMO3*data.CO[I, NADD]
+
+        elif MOD2 > 1 and MOD2 < 10:
+
+            format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)"
+            fort_write(file_IO4, format339, NS)
+
+        #
+        #      CALCULATE TOTAL UNCERTAINTY  DCS
+        #
+        RELU = 0.
+        for L in fort_range(3,11):  # .lbl207
+            RELU += data.CO[L, NADD]**2
+
+        data.DCS[NADD] = np.sqrt(XNORU + RELU) 
+
     return
 
 
@@ -380,57 +433,6 @@ def accounting(data, APR):
             if not found:
                 print('ERROR: experimental energy does not match energy mesh')
                 exit()
-
-
-    XNORU = 0.
-    if data.MTTP[ID] != 2:
-        #
-        #       CALCULATE TOTAL NORMALIZATION UNCERTAINTY
-        #
-        for L in fort_range(1,10):  # .lbl208
-            XNORU = XNORU + (data.ENFF[ID,L])**2
-
-    NADD_MAX = data.num_datapoints
-    NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
-    for NADD in fort_range(NADD_MIN, NADD_MAX):
-        #
-        #      this is the Axton special (uncertainties have been multiplied by 10
-        #         in order to preserve precision beyond 0.1%)
-        #
-        if NNCOX != 0:
-            for LZ in fort_range(1,11):  # .lbl57
-                data.CO[LZ, NADD] = data.CO[LZ, NADD] / 10.
-
-        #
-        #      test option:  as set with mode control
-        #
-        #      changing weights of data based on year or data set tag
-        #
-
-        # 1st if line: downweighting based on year of measurement
-        # 2nd if line: downweighting of specified data sets
-        # 3rd+ if line: downweighting data sets with tags .NE. 1
-        if (MOD2 > 1000 and IDEN[ID, 3] < MOD2) or \
-           (MOD2 == 10 and IDEN[ID, 6] in NRED[1:(NELI+1)]) or \
-           (MOD2 == 1 and IDEN[ID, 4] != 1) or \
-           (MOD2 < 0 and IDEN[ID, 4] != 1):
-
-                for I in fort_range(3,11):
-                    data.CO[I, NADD] = AMO3*data.CO[I, NADD]
-
-        elif MOD2 > 1 and MOD2 < 10:
-
-            format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)"
-            fort_write(file_IO4, format339, NS)
-
-        #
-        #      CALCULATE TOTAL UNCERTAINTY  DCS
-        #
-        RELU = 0.
-        for L in fort_range(3,11):  # .lbl207
-            RELU += data.CO[L, NADD]**2
-
-        data.DCS[NADD] = np.sqrt(XNORU + RELU) 
 
     return
 
