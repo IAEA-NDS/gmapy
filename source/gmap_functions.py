@@ -353,8 +353,6 @@ def accounting(data, APR,
     for KS in fort_range(1,LDA):  # .lbl21
 
         if data.E[NADD] == 0:
-            IDEN[ID, 1] = NADD - NALT
-            data.num_datapoints = NADD - 1
             return
 
         #
