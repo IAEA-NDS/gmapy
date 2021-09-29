@@ -36,3 +36,48 @@ def write_dataset_info(ID, data, LABL, file_IO4):
         format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)"
         fort_write(file_IO4, format339, NS)
 
+
+
+def write_prior_info(APR, IPP, LABL, file_IO4):
+    # from here onwards only output
+    NC = APR.NC
+    NR = APR.NR
+    # label .lbl30
+    format134 = r"(//2X,36HCROSS SECTIONS OF PRESENT EVALUATION//)"
+    fort_write(file_IO4, format134, [])
+    format135 = "(10X,I3,5X,2A8)"
+    for K in fort_range(1,NC):
+        fort_write(file_IO4, format135, [K, LABL.CLAB[K, 1:3]])
+    # label .lbl22
+    if IPP[1] != 0:
+        format136 = "(1H1//,2X,35HENERGIES AND APRIORI CROSS SECTIONS//)" 
+        fort_write(file_IO4, format136, [])
+        format137 = "(/ '     INDEX     E/MEV   ',7X,2A8 /)"
+        for  K in fort_range(1,NC):  # .lbl24
+            fort_write(file_IO4, format137, LABL.CLAB[K,1:3])
+            JC1 = APR.MCS[K, 2]
+            JC2 = APR.MCS[K, 3]
+            LQ = 0
+            format138 = "(2X,2I4,3X,E10.4,3X,F15.8)"
+            for L in fort_range(JC1, JC2):
+                LQ += 1
+                fort_write(file_IO4, format138, [LQ, L, APR.EN[L], APR.CS[L]])
+
+    format113 = "(/,' TOTAL NO OF PARAMETERS ',I4/)"
+    fort_write(file_IO4, format113, [NR])
+
+    #
+    #      for checking
+    #
+    if IPP[7] != 0:
+        format4390 = "(' No of Parameters per Cross Section '/)"
+        fort_write(file_IO4, format4390, [])
+        format154 = "(3X,3HAPR.MCS,10I5)"
+        fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 1]])
+        format4391 = "(/' Start Address '/)"
+        fort_write(file_IO4, format4391, [])
+        fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 2]])
+        format4392 = "(/' End Address '/)"
+        fort_write(file_IO4, format4392, [])
+        fort_write(file_IO4, format154, [APR.MCS[1:(NC+1), 3]])
+
