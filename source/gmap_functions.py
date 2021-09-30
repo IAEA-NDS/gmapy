@@ -3,7 +3,7 @@ from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock
 from gmap_snippets import should_downweight
 from output_management import (write_dataset_info, write_prior_info,
-                               write_datablock_header)
+                               write_datablock_header, output_KAS_check)
 
 import numpy as np
 
@@ -131,19 +131,9 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         L = \
         construct_Ecor(data, file_IO4)
 
-        if data.IDEN[data.num_datasets, 7] != 6:
-            #
-            #   output of KAS for checking
-            #
-            if IPP[7] != 0:
-                format702 = "(20I5)"
-                NCT = data.NCT[data.num_datasets]
-                for K in fort_range(1,NCT):
-                    NADD = data.num_datapoints + 1
-                    NALT = NADD - ID[IDEN, 1]
-                    fort_write(file_IO4, format702,
-                            [data.KAS[NALT:NADD], K])
+        output_KAS_check(data, IPP, file_IO4)
 
+        if data.IDEN[data.num_datasets, 7] != 6:
             determine_apriori_norm_shape(data, APR, LABL,
                     L, MPPP, IPP,
                     MODREP, file_IO4)

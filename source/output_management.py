@@ -2,6 +2,21 @@ from fortran_utils import fort_range, fort_write
 from gmap_snippets import should_downweight
 
 
+def output_KAS_check(data, IPP, file_IO4):
+    if data.IDEN[data.num_datasets, 7] != 6:
+        #
+        #   output of KAS for checking
+        #
+        if IPP[7] != 0:
+            format702 = "(20I5)"
+            NCT = data.NCT[data.num_datasets]
+            for K in fort_range(1,NCT):
+                NADD = data.num_datapoints + 1
+                NALT = NADD - ID[IDEN, 1]
+                fort_write(file_IO4, format702,
+                        [data.KAS[NALT:NADD], K])
+
+
 
 def write_datablock_header(file_IO4):
     format108 = "(/' DATABLOCK************************DATABLOCK**************" + \
