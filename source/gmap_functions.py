@@ -17,7 +17,7 @@ from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
 #      LDA   MAX NO IN DATA BLOCK
 #      LDB NO OF UNKNOWNS
 LDA = SIZE_LIMITS.MAX_NUM_DATAPOINTS_PER_DATABLOCK
-LDB = 1200
+LDB = SIZE_LIMITS.MAX_NUM_UNKNOWNS
 LDF = 200
 
 #
