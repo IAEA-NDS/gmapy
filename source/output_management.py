@@ -9,12 +9,13 @@ def write_overflow_message(data, APR, file_IO4):
     MTTP = IDEN[ID, 8]
     NSHP = APR.NSHP
     NR = APR.NR
-    if MTTP == 2:
-        NSHP = NSHP + 1
-        L = NR + NSHP
-        if L > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
-            format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
-            fort_write(file_IO4, format701, [NS])
+    if data.IDEN[data.num_datasets, 7] != 6:
+        if MTTP == 2:
+            NSHP = NSHP + 1
+            L = NR + NSHP
+            if L > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
+                format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
+                fort_write(file_IO4, format701, [NS])
 
 
 
