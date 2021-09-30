@@ -1,6 +1,6 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
-from data_management import init_datablock
+from data_management import init_datablock, SIZE_LIMITS
 from gmap_snippets import should_downweight
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, output_KAS_check,
@@ -16,7 +16,7 @@ from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
 # constants for size limits
 #      LDA   MAX NO IN DATA BLOCK
 #      LDB NO OF UNKNOWNS
-LDA = 250
+LDA = SIZE_LIMITS.MAX_NUM_DATAPOINTS_PER_DATABLOCK
 LDB = 1200
 LDF = 200
 
