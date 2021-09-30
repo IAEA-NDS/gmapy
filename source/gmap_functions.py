@@ -135,7 +135,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         output_KAS_check(data, IPP, file_IO4)
 
         if data.IDEN[data.num_datasets, 7] != 6:
-            write_overflow_message(data, APR, LDB, file_IO4)
+            write_overflow_message(data, APR, file_IO4)
             determine_apriori_norm_shape(data, APR, LABL,
                     L, MPPP, IPP,
                     MODREP, file_IO4)

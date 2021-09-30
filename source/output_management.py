@@ -1,8 +1,9 @@
 from fortran_utils import fort_range, fort_write
 from gmap_snippets import should_downweight
+from data_management import SIZE_LIMITS
 
 
-def write_overflow_message(data, APR, LDB, file_IO4):
+def write_overflow_message(data, APR, file_IO4):
     ID = data.num_datasets
     IDEN = data.IDEN
     MTTP = IDEN[ID, 8]
@@ -11,7 +12,7 @@ def write_overflow_message(data, APR, LDB, file_IO4):
     if MTTP == 2:
         NSHP = NSHP + 1
         L = NR + NSHP
-        if L > LDB:
+        if L > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
             format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
             fort_write(file_IO4, format701, [NS])
 
