@@ -3,7 +3,8 @@ from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock
 from gmap_snippets import should_downweight
 from output_management import (write_dataset_info, write_prior_info,
-                               write_datablock_header, output_KAS_check)
+                               write_datablock_header, output_KAS_check,
+                               write_overflow_message)
 
 import numpy as np
 
@@ -134,6 +135,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         output_KAS_check(data, IPP, file_IO4)
 
         if data.IDEN[data.num_datasets, 7] != 6:
+            write_overflow_message(data, APR, LDB, file_IO4)
             determine_apriori_norm_shape(data, APR, LABL,
                     L, MPPP, IPP,
                     MODREP, file_IO4)
@@ -609,8 +611,9 @@ def determine_apriori_norm_shape(data, APR, LABL,
         NSETN[NSHP] = NS
         L = NR + NSHP
         if L > LDB:
-            format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
-            fort_write(file_IO4, format701, [NS])
+            # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
+            # fort_write(file_IO4, format701, [NS])
+            # moved into write_overflow_message function
             exit()
 
     #VP   PRIOR/EXP column is added
