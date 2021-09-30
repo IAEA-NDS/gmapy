@@ -1,7 +1,7 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock, SIZE_LIMITS
-from gmap_snippets import should_downweight
+from gmap_snippets import should_downweight, get_AX
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, output_KAS_check,
                                write_overflow_message)
@@ -629,21 +629,7 @@ def determine_apriori_norm_shape(data, APR, LABL,
         WXX = 1./(DCSK*DCSK)
         WWT = WWT + WXX
 
-        KX = KAS[K, 1]
-        KY=KAS[K,2]
-        KZ=KAS[K, 3]
-        AX = APR.CS[KX]
-        if MT == 4 or MT == 3:
-            AX = AX / APR.CS[KY]
-        if MT == 8 or MT == 5:
-            AX = AX + APR.CS[KY]
-        if MT == 5 and NCT == 3:
-            AX = AX + APR.CS[KZ]
-        if MT == 8 and NCT == 3:
-            AX = AX + APR.CS[KZ]
-        if MT == 9 or MT == 7:
-            AX = AX/(APR.CS[KY]+APR.CS[KZ])
-
+        AX = get_AX(ID, K, data, APR)
         AZ = AX / CSSK
 
         #VPBEG Assigning uncertainties as % error relative the prior
