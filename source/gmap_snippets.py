@@ -16,3 +16,26 @@ def should_downweight(ID, data):
     else:
         return False
 
+
+
+def get_AX(ID, K, data, APR):
+    IDEN = data.IDEN
+    MT = IDEN[ID, 7]
+    NCT = data.NCT[ID]
+    KAS = data.KAS
+    KX = KAS[K, 1]
+    KY=KAS[K,2]
+    KZ=KAS[K, 3]
+    AX = APR.CS[KX]
+    if MT == 4 or MT == 3:
+        AX = AX / APR.CS[KY]
+    if MT == 8 or MT == 5:
+        AX = AX + APR.CS[KY]
+    if MT == 5 and NCT == 3:
+        AX = AX + APR.CS[KZ]
+    if MT == 8 and NCT == 3:
+        AX = AX + APR.CS[KZ]
+    if MT == 9 or MT == 7:
+        AX = AX/(APR.CS[KY]+APR.CS[KZ])
+
+    return AX
