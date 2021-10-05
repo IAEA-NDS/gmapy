@@ -385,14 +385,17 @@ def should_exclude_dataset(data, IELIM, NELIM, file_IO4):
     if IELIM > 0:
         #      data set excluded ?
         if NS in NELIM[1:(IELIM+1)]:
+            data.excluded_datasets.add(NS)
             should_exclude = True
     #
     #      NO VALID DATA POINTS OR SET REQUESTED TO BE EXCLUDED
     #
     if NP == 1 and MTTP == 2:
+        data.excluded_datasets.add(NS)
         should_exclude = True
 
     if NP == 0:
+        data.excluded_datasets.add(NS)
         should_exclude = True
 
     if should_exclude:
