@@ -144,3 +144,10 @@ def write_dataset_exclusion_info(NS, data, file_IO4):
         format168 = "(' SET ',I5,' W/O VALID POINTS OR ELIMINATED'/)"
         fort_write(file_IO4, format168, [NS])
 
+
+def write_missing_dataset_info(NS, data, file_IO4):
+    if NS in data.missing_datasets:
+        for NSET in data.missing_datasets[NS]:
+            format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)"
+            fort_write(file_IO4, format274, [NSET, NS])
+
