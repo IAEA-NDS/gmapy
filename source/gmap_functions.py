@@ -114,8 +114,11 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             data, LABL,
-            file_IO3, file_IO4
+            file_IO3
     )
+
+    ID = data.num_datasets
+    write_dataset_info(ID, data, LABL, file_IO4)
 
     accounting(data, APR)
 
@@ -148,7 +151,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, LABL,
-        file_IO3, file_IO4):
+        file_IO3):
     #
     #      DATA SET INPUT
     #
@@ -204,8 +207,6 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     # VP      if(modrep .ne. 0) go to 140
     format131 = "(3I5,4A8,4A8)"
     IDEN[ID,3:6], LABL.CLABL[1:5], LABL.BREF[1:5] = unflatten(fort_read(file_IO3, format131), [[3],[4],[4]])
-
-    write_dataset_info(ID, data, LABL, file_IO4)
 
     # label .lbl183
     NCCS = IDEN[ID, 5]
