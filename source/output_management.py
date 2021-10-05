@@ -137,3 +137,10 @@ def output_Ecor_matrix(data, file_IO4):
         fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
 
+
+def write_dataset_exclusion_info(NS, data, file_IO4):
+    if NS in data.excluded_datasets:
+        # label .lbl517
+        format168 = "(' SET ',I5,' W/O VALID POINTS OR ELIMINATED'/)"
+        fort_write(file_IO4, format168, [NS])
+

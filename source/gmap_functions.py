@@ -4,7 +4,7 @@ from data_management import init_datablock, SIZE_LIMITS
 from gmap_snippets import should_downweight, get_AX
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
-                               write_overflow_message)
+                               write_overflow_message, write_dataset_exclusion_info)
 
 import numpy as np
 
@@ -399,11 +399,10 @@ def should_exclude_dataset(data, IELIM, NELIM, file_IO4):
         should_exclude = True
 
     if should_exclude:
-        # label .lbl517
-        format168 = "(' SET ',I5,' W/O VALID POINTS OR ELIMINATED'/)"
-        fort_write(file_IO4, format168, [NS])
         ID = ID - 1
         NADD = NALT
+
+    write_dataset_exclusion_info(NS, data, file_IO4)
 
     data.num_datasets = ID
     data.num_datapoints = NADD - 1
