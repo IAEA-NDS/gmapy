@@ -4,7 +4,8 @@ from data_management import init_datablock, SIZE_LIMITS
 from gmap_snippets import should_downweight, get_AX
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
-                               write_overflow_message, write_dataset_exclusion_info)
+                               write_overflow_message, write_dataset_exclusion_info,
+                               write_missing_dataset_info)
 
 import numpy as np
 
@@ -528,8 +529,6 @@ def construct_Ecor(data, file_IO4):
                     #   SET WITHIN DATA BLOCK
                     #
                     data.missing_datasets[NS].append(NSET)
-                    format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)" 
-                    fort_write(file_IO4, format274, [NSET, NS])
 
                 else:
                     NCPP = IDEN[II, 1]
@@ -587,6 +586,9 @@ def construct_Ecor(data, file_IO4):
                                     Q1 = Q1 + AMUFA*C11*C22
 
                                 data.ECOR[K,KK] = Q1/(C1*C2)
+
+
+    write_missing_dataset_info(NS, data, file_IO4)
 
     return L
 
