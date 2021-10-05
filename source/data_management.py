@@ -129,6 +129,11 @@ def init_prior():
 #                 I=6 DATA SET NR
 #                 I=7 MT-TYPE OF DATA
 #                 I=8 1 ABSOLUTE, 2 SHAPE
+#
+#
+#      num_datasets          number of datasets in datablock
+#      num_datapoints        number of datapoints in datablocks over all datasets
+#      num_datapoints_used   number of datapoints really used in Bayesian inference
 
 def init_datablock():
 
