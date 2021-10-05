@@ -433,6 +433,8 @@ def construct_Ecor(data, file_IO4):
     NCOX = data.NCOX[ID]
     MODC = data.MODC
 
+    data.missing_datasets[NS] = []
+
     if NCOX != 0:
         MODAL = MODC
         MODC = 1
@@ -525,6 +527,7 @@ def construct_Ecor(data, file_IO4):
                     #   CORRELATED DATA SET NOT FOUND AHEAD OF PRESENT DATA
                     #   SET WITHIN DATA BLOCK
                     #
+                    data.missing_datasets[NS].append(NSET)
                     format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)" 
                     fort_write(file_IO4, format274, [NSET, NS])
 
