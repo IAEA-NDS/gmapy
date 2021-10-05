@@ -695,6 +695,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
 
     EAVR = 0.
 
+    data.invalid_datapoints[NS] = []
+
     for KS in fort_range(NALT, NADD1):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
         J = KAS[KS,1]
@@ -703,9 +705,10 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
         if (J == 0 and MT != 6) or \
            (I == 0 and MT in (3,4,5,7,8,9)) or \
            (I8 == 0 and MT in (7,9)):
-                format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
-                fort_write(file_IO4, format704, [NS, KS])
-                continue
+            data.invalid_datapoints[NS].append(KS)
+            format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
+            fort_write(file_IO4, format704, [NS, KS])
+            continue
 
         N = N + 1
 
