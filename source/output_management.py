@@ -19,7 +19,7 @@ def write_overflow_message(data, APR, file_IO4):
 
 
 
-def output_KAS_check(data, IPP, file_IO4):
+def write_KAS_check(data, IPP, file_IO4):
     if data.IDEN[data.num_datasets, 7] != 6:
         #
         #   output of KAS for checking
