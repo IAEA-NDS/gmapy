@@ -134,6 +134,8 @@ def init_prior():
 #      num_datasets          number of datasets in datablock
 #      num_datapoints        number of datapoints in datablocks over all datasets
 #      num_datapoints_used   number of datapoints really used in Bayesian inference
+#
+#      excluded_datasets     identification numbers of excluded datasets
 
 def init_datablock():
 
@@ -145,6 +147,8 @@ def init_datablock():
         'num_datasets': 0,
         'num_datapoints': 0,
         'num_datapoints_used': 0,
+
+        'excluded_datasets': set(),
 
         'E': np.zeros(MAXDP+1, dtype=float),
         'CSS': np.zeros(MAXDP+1, dtype=float),
