@@ -136,8 +136,9 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #
 
         L = \
-        construct_Ecor(data, file_IO4)
+        construct_Ecor(data)
 
+        write_missing_dataset_info(NS, data, file_IO4)
         write_KAS_check(data, IPP, file_IO4)
         write_overflow_message(data, APR, file_IO4)
 
@@ -411,7 +412,7 @@ def should_exclude_dataset(data, IELIM, NELIM):
 
 
 
-def construct_Ecor(data, file_IO4):
+def construct_Ecor(data):
     #
     #      CONSTRUCT ECOR
     #
@@ -587,8 +588,6 @@ def construct_Ecor(data, file_IO4):
 
                                 data.ECOR[K,KK] = Q1/(C1*C2)
 
-
-    write_missing_dataset_info(NS, data, file_IO4)
 
     return L
 
