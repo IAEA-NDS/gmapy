@@ -138,6 +138,9 @@ def init_prior():
 #
 #      excluded_datasets     identification numbers of excluded datasets
 #      missing_datasets      id numbers of cross-correlated datasets that are missing
+#      invalid_datapoints    dictionary with keys being the dataset number and the
+#                            associated values lists of datapoints that could not be
+#                            mapped to the prior mesh
 
 def init_datablock():
 
@@ -152,6 +155,7 @@ def init_datablock():
 
         'excluded_datasets': set(),
         'missing_datasets': OrderedDict(),
+        'invalid_datapoints': OrderedDict(),
 
         'E': np.zeros(MAXDP+1, dtype=float),
         'CSS': np.zeros(MAXDP+1, dtype=float),
