@@ -1,5 +1,6 @@
 from generic_utils import Bunch
 import numpy as np
+from collections import OrderedDict
 
 
 SIZE_LIMITS = Bunch({
@@ -136,6 +137,7 @@ def init_prior():
 #      num_datapoints_used   number of datapoints really used in Bayesian inference
 #
 #      excluded_datasets     identification numbers of excluded datasets
+#      missing_datasets      id numbers of cross-correlated datasets that are missing
 
 def init_datablock():
 
@@ -149,6 +151,7 @@ def init_datablock():
         'num_datapoints_used': 0,
 
         'excluded_datasets': set(),
+        'missing_datasets': OrderedDict(),
 
         'E': np.zeros(MAXDP+1, dtype=float),
         'CSS': np.zeros(MAXDP+1, dtype=float),
