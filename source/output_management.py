@@ -151,3 +151,10 @@ def write_missing_dataset_info(NS, data, file_IO4):
             format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)"
             fort_write(file_IO4, format274, [NSET, NS])
 
+
+def write_invalid_datapoints_info(NS, data, file_IO4):
+    if NS in data.invalid_datapoints:
+        for KS in data.invalid_datapoints[NS]:
+            format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
+            fort_write(file_IO4, format704, [NS, KS])
+

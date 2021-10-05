@@ -5,7 +5,7 @@ from gmap_snippets import should_downweight, get_AX
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
                                write_overflow_message, write_dataset_exclusion_info,
-                               write_missing_dataset_info)
+                               write_missing_dataset_info, write_invalid_datapoints_info)
 
 import numpy as np
 
@@ -706,8 +706,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
            (I == 0 and MT in (3,4,5,7,8,9)) or \
            (I8 == 0 and MT in (7,9)):
             data.invalid_datapoints[NS].append(KS)
-            format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
-            fort_write(file_IO4, format704, [NS, KS])
             continue
 
         N = N + 1
@@ -955,6 +953,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
                 gauss.AA[L,KR]=CBX
                 gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
+
+    write_invalid_datapoints_info(NS, data, file_IO4)
 
     data.num_datapoints_used = N
     return
