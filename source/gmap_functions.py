@@ -3,7 +3,7 @@ from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock, SIZE_LIMITS
 from gmap_snippets import should_downweight, get_AX
 from output_management import (write_dataset_info, write_prior_info,
-                               write_datablock_header, output_KAS_check,
+                               write_datablock_header, write_KAS_check,
                                write_overflow_message)
 
 import numpy as np
@@ -132,7 +132,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         L = \
         construct_Ecor(data, file_IO4)
 
-        output_KAS_check(data, IPP, file_IO4)
+        write_KAS_check(data, IPP, file_IO4)
         write_overflow_message(data, APR, file_IO4)
 
         if data.IDEN[data.num_datasets, 7] != 6:
