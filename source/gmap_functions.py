@@ -691,6 +691,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
     NT = data.NT[ID,:]
     NCT = data.NCT[ID]
     N = data.num_datapoints_used
+    NS = IDEN[ID,6]
 
     EAVR = 0.
 
@@ -703,7 +704,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
            (I == 0 and MT in (3,4,5,7,8,9)) or \
            (I8 == 0 and MT in (7,9)):
                 format704 = "( '  DATA POINT BUT NOT AN AP FOR SET ',I5,' NO ',I4)"
-                fort_write(file_IO4, format704, [MC1, KS])
+                fort_write(file_IO4, format704, [NS, KS])
                 continue
 
         N = N + 1
