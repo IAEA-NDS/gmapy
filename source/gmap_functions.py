@@ -625,11 +625,6 @@ def determine_apriori_norm_shape(data, APR, LABL,
             # moved into write_overflow_message function
             exit()
 
-    #VP   PRIOR/EXP column is added
-    format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \
-                 " PRIOR/EXP UNCERT./%    DIFF./%" + \
-                 "  VAL.*SQRT(E)'/)"
-    fort_write(file_IO4, format5173, [])
     AP = 0.
     WWT = 0.
     for K in fort_range(NALT, NADD1):  # .lbl29
@@ -648,6 +643,12 @@ def determine_apriori_norm_shape(data, APR, LABL,
 
         AP=AP+AZ*WXX
 
+
+    #VP   PRIOR/EXP column is added
+    format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \
+                 " PRIOR/EXP UNCERT./%    DIFF./%" + \
+                 "  VAL.*SQRT(E)'/)"
+    fort_write(file_IO4, format5173, [])
 
     for K in fort_range(NALT, NADD1):
         CSSK = data.CSS[K]
