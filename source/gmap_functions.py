@@ -160,6 +160,9 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     L, MPPP, IPP,
                     MODREP, file_IO4)
 
+            write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4)
+
+
         fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4)
 
         write_invalid_datapoints_info(NS, data, file_IO4)
@@ -652,8 +655,6 @@ def determine_apriori_norm_shape(data, APR, LABL,
         if MODREP == 0:
             AP = 1.0 / AP
             APR.CS[L] = AP
-
-    write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4)
 
     APR.NSHP = NSHP
     return
