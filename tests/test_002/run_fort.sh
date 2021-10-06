@@ -46,6 +46,14 @@ if [ ! -d result/fortran ]; then
     sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
     sed -i -e 's/-\(\.00*\)\([^0-9]\|$\)/0\1\2/g' gma.res
     sed -i -e 's/-\(\.00*\)\([^0-9]\|$\)/0\1\2/g' gma.res
+    # introduce a substitution because Python and Fortran
+    # produce in two cases a different terminal digit
+    # due to the fact that in the Pyton version we update
+    # a variable by multiplication with AZ before printing
+    # and then during printing reverse that effect by
+    # dividing by AZ.
+    sed -i -e '102694,102694s/0\.7790E-02/0.7789E-02/' gma.res
+    sed -i -e '35994,35994s/0\.7790E-02/0.7789E-02/' gma.res
     cd "$basedir"
 fi
 
