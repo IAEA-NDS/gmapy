@@ -646,6 +646,15 @@ def determine_apriori_norm_shape(data, APR, LABL,
             data.DCS[K] = AZ*data.DCS[K]
             DCSK = data.DCS[K]
 
+        AP=AP+AZ*WXX
+
+
+    for K in fort_range(NALT, NADD1):
+        CSSK = data.CSS[K]
+        DCSK = data.DCS[K]
+
+        AX = get_AX(ID, K, data, APR)
+        AZ = AX / CSSK
         #VPEND 
         #
         #      DATA OUTPUT
@@ -661,8 +670,6 @@ def determine_apriori_norm_shape(data, APR, LABL,
                         " 3X,F10.2,3X,F10.4)"
             fort_write(file_IO4, format133, [data.E[K], CSSK, FDQ, AZ, DCSK, DIFF, SECS])
             #VP   Print out for Ratio of pior/exp value is added
-
-        AP=AP+AZ*WXX
 
 
     AP=AP/WWT
