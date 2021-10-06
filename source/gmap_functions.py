@@ -650,8 +650,6 @@ def determine_apriori_norm_shape(data, APR, LABL,
         if MODREP == 0:
             AP = 1.0 / AP
             APR.CS[L] = AP
-        else:
-            AP=APR.CS[L]
 
     write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4)
 
