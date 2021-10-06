@@ -149,6 +149,8 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
         fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4)
 
+        write_invalid_datapoints_info(NS, data, file_IO4)
+
     return
 
 
@@ -953,8 +955,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
                 gauss.AA[L,KR]=CBX
                 gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
-
-    write_invalid_datapoints_info(NS, data, file_IO4)
 
     data.num_datapoints_used = N
     return
