@@ -156,9 +156,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     # moved into write_overflow_message function
                     exit()
 
-            determine_apriori_norm_shape(data, APR, LABL,
-                    L, MPPP, IPP,
-                    MODREP, file_IO4)
+            determine_apriori_norm_shape(data, APR, MPPP, MODREP)
 
             write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4)
 
@@ -611,9 +609,7 @@ def construct_Ecor(data):
 
 
 
-def determine_apriori_norm_shape(data, APR, LABL,
-        L, MPPP, IPP,
-        MODREP, file_IO4):
+def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
