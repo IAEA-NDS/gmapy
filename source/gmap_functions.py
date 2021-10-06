@@ -643,6 +643,7 @@ def determine_apriori_norm_shape(data, APR, LABL,
 
         AP=AP+AZ*WXX
 
+    AP=AP/WWT
 
     #VP   PRIOR/EXP column is added
     format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \
@@ -672,8 +673,6 @@ def determine_apriori_norm_shape(data, APR, LABL,
             fort_write(file_IO4, format133, [data.E[K], CSSK, FDQ, AZ, DCSK, DIFF, SECS])
             #VP   Print out for Ratio of pior/exp value is added
 
-
-    AP=AP/WWT
     # VP      if(modrep .ne. 0) go to 2627
     format111 = "(/' APRIORI NORM ',I4,F10.4,I5,2X,4A8)"
     fort_write(file_IO4, format111, [L, AP, NS, LABL.CLABL[1:5]])
