@@ -644,11 +644,15 @@ def determine_apriori_norm_shape(data, APR, LABL,
         #VPBEG Assigning uncertainties as % error relative the prior
         if MPPP == 1:
             data.DCS[K] = AZ*data.DCS[K]
+            DCSK = data.DCS[K]
+
         #VPEND 
         #
         #      DATA OUTPUT
         #
         if IPP[2] != 0:
+            if MPPP == 1:
+                DCSK = DCSK/AZ
             SECS = np.sqrt(data.E[K])*CSSK
             FDQ = DCSK * CSSK/100.
             DIFF = (CSSK-AX)*100./AX
