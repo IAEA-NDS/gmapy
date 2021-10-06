@@ -5,7 +5,8 @@ from gmap_snippets import should_downweight, get_AX
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
                                write_overflow_message, write_dataset_exclusion_info,
-                               write_missing_dataset_info, write_invalid_datapoints_info)
+                               write_missing_dataset_info, write_invalid_datapoints_info,
+                               write_dataset_table)
 
 import numpy as np
 
@@ -645,55 +646,14 @@ def determine_apriori_norm_shape(data, APR, LABL,
 
     AP=AP/WWT
 
-    #VP   PRIOR/EXP column is added
-    format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \
-                 " PRIOR/EXP UNCERT./%    DIFF./%" + \
-                 "  VAL.*SQRT(E)'/)"
-    fort_write(file_IO4, format5173, [])
-
-    AP = 0.
-    WWT = 0.
-    for K in fort_range(NALT, NADD1):
-        CSSK = data.CSS[K]
-        DCSK = data.DCS[K]
-
-        AX = get_AX(ID, K, data, APR)
-        AZ = AX / CSSK
-
-        if MPPP == 1:
-            DCSK /= AZ
-
-        WXX = 1./(DCSK*DCSK)
-        WWT = WWT + WXX
-
-        #VPEND 
-        #
-        #      DATA OUTPUT
-        #
-        if IPP[2] != 0:
-            SECS = np.sqrt(data.E[K])*CSSK
-            FDQ = DCSK * CSSK/100.
-            DIFF = (CSSK-AX)*100./AX
-            #VP   AZ print out was added
-            format133 = "(2X,E10.4,2X,E10.4,2X,E10.4,3X,F6.4,3X,F6.2," + \
-                        " 3X,F10.2,3X,F10.4)"
-            fort_write(file_IO4, format133, [data.E[K], CSSK, FDQ, AZ, DCSK, DIFF, SECS])
-            #VP   Print out for Ratio of pior/exp value is added
-
-        AP=AP+AZ*WXX
-
-    AP=AP/WWT
-
-    # VP      if(modrep .ne. 0) go to 2627
-    format111 = "(/' APRIORI NORM ',I4,F10.4,I5,2X,4A8)"
-    fort_write(file_IO4, format111, [L, AP, NS, LABL.CLABL[1:5]])
-
     if MTTP == 2:
         if MODREP == 0:
             AP = 1.0 / AP
             APR.CS[L] = AP
         else:
             AP=APR.CS[L]
+
+    write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4)
 
     APR.NSHP = NSHP
     return
