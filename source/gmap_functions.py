@@ -656,7 +656,6 @@ def determine_apriori_norm_shape(data, APR, LABL,
             AP = 1.0 / AP
             APR.CS[L] = AP
 
-    APR.NSHP = NSHP
     return
 
 
