@@ -653,6 +653,7 @@ def determine_apriori_norm_shape(data, APR, LABL,
 
     if MTTP == 2:
         if MODREP == 0:
+            L = NR + NSHP
             AP = 1.0 / AP
             APR.CS[L] = AP
 
