@@ -1,7 +1,8 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock, SIZE_LIMITS
-from gmap_snippets import should_downweight, get_AX, get_prior_range
+from gmap_snippets import (should_downweight, get_AX, get_prior_range,
+                           get_dataset_range)
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
                                write_overflow_message, write_dataset_exclusion_info,
@@ -663,10 +664,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
     #
     IDEN = data.IDEN
     ID = data.num_datasets
-    NADD = data.num_datapoints + 1
-    NALT = NADD - IDEN[ID, 1]
     MT =  IDEN[ID, 7]
-    NADD1 = NADD - 1
     KAS = data.KAS
     KA = data.KA
     NT = data.NT[ID,:]
@@ -676,7 +674,9 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
 
     data.invalid_datapoints[NS] = []
 
-    for KS in fort_range(NALT, NADD1):  # .lbl18
+    dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
+
+    for KS in fort_range(dataset_start_index, dataset_end_index):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
         J = KAS[KS,1]
         I = KAS[KS,2]

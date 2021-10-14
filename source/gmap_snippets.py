@@ -53,8 +53,8 @@ def get_prior_range(xsid, APR):
 def get_dataset_range(ID, data):
     start_index = 1
     if ID > 1:
-        for ID in fort_range(1, ID-1):
-            num_points = data.IDEN[ID, 1]
+        for k in fort_range(1, ID-1):
+            num_points = data.IDEN[k, 1]
             start_index += num_points
 
     num_points = data.IDEN[ID, 1]
