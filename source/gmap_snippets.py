@@ -1,4 +1,5 @@
 import numpy as np
+from fortran_utils import fort_range
 
 
 def should_downweight(ID, data):
@@ -46,4 +47,17 @@ def get_prior_range(xsid, APR):
     JA = APR.MCS[xsid, 2]
     JE = APR.MCS[xsid, 3]
     return (JA, JE)
+
+
+
+def get_dataset_range(ID, data):
+    start_index = 1
+    if ID > 1:
+        for ID in fort_range(1, ID-1):
+            num_points = data.IDEN[ID, 1]
+            start_index += num_points
+
+    num_points = data.IDEN[ID, 1]
+    end_index = start_index + num_points - 1
+    return (start_index, end_index)
 
