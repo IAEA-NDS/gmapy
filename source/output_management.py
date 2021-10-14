@@ -1,5 +1,5 @@
 from fortran_utils import fort_range, fort_write
-from gmap_snippets import should_downweight, get_AX
+from gmap_snippets import should_downweight, get_AX, get_dataset_range
 from data_management import SIZE_LIMITS
 import numpy as np
 
@@ -211,3 +211,15 @@ def write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4):
     # VP      if(modrep .ne. 0) go to 2627
     format111 = "(/' APRIORI NORM ',I4,F10.4,I5,2X,4A8)"
     fort_write(file_IO4, format111, [L, AP, NS, LABL.CLABL[1:5]])
+
+
+
+def write_fission_average(ID, data, file_IO4):
+    MT = data.INDEN[ID, 7]
+    dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
+    if MT == 6:
+        for KS in fort_range(dataset_start_index, dataset_end_index):
+            format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
+            fort_write(file_IO4, format156, [data.EAVR[KS], data.SFIS[KS], data.FL[KS],
+                data.CSS[KS], data.DCS[KS]])
+
