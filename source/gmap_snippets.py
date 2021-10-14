@@ -39,3 +39,11 @@ def get_AX(ID, K, data, APR):
         AX = AX/(APR.CS[KY]+APR.CS[KZ])
 
     return AX
+
+
+
+def get_prior_range(xsid, APR):
+    JA = APR.MCS[xsid, 2]
+    JE = APR.MCS[xsid, 3]
+    return (JA, JE)
+
