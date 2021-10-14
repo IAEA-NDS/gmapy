@@ -4,13 +4,12 @@ from data_management import SIZE_LIMITS
 import numpy as np
 
 
-def write_overflow_message(data, APR, file_IO4):
-    ID = data.num_datasets
+def write_overflow_message(ID, data, APR, file_IO4):
     IDEN = data.IDEN
     MTTP = IDEN[ID, 8]
     NSHP = APR.NSHP
     NR = APR.NR
-    if data.IDEN[data.num_datasets, 7] != 6:
+    if data.IDEN[ID, 7] != 6:
         if MTTP == 2:
             NSHP = NSHP + 1
             L = NR + NSHP
