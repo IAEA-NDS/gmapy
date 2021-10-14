@@ -20,14 +20,14 @@ def write_overflow_message(data, APR, file_IO4):
 
 
 
-def write_KAS_check(data, IPP, file_IO4):
-    if data.IDEN[data.num_datasets, 7] != 6:
+def write_KAS_check(ID, data, IPP, file_IO4):
+    if data.IDEN[ID, 7] != 6:
         #
         #   output of KAS for checking
         #
         if IPP[7] != 0:
             format702 = "(20I5)"
-            NCT = data.NCT[data.num_datasets]
+            NCT = data.NCT[ID]
             for K in fort_range(1,NCT):
                 NADD = data.num_datapoints + 1
                 NALT = NADD - ID[IDEN, 1]
