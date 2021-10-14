@@ -701,10 +701,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
             NW = 2 if NT[1]==9 else 1
             FL=0.
             SFL=0.
-            J1=JA+1
-            J2=JE-1
 
-            for LI in fort_range(J1, J2):  # .lbl53
+            for LI in fort_range(JA+1, JE-1):  # .lbl53
                 NW=NW+1
                 FL=FL+fisdata.FIS[NW]
                 EL1=(APR.EN[LI]+APR.EN[LI-1])*0.5
