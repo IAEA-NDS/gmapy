@@ -698,10 +698,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
                 K = 1
             JA = APR.MCS[NT[1],2]
             JE = APR.MCS[NT[1],3]
-            NW1=1
-            if NT[1] == 9:
-                NW1 = 2
-            NW=NW1
+            NW = 2 if NT[1]==9 else 1
             FL=0.
             SFL=0.
             J1=JA+1
