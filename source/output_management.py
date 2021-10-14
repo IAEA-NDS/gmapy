@@ -28,11 +28,10 @@ def write_KAS_check(ID, data, IPP, file_IO4):
         if IPP[7] != 0:
             format702 = "(20I5)"
             NCT = data.NCT[ID]
+            dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
             for K in fort_range(1,NCT):
-                NADD = data.num_datapoints + 1
-                NALT = NADD - ID[IDEN, 1]
                 fort_write(file_IO4, format702,
-                        [data.KAS[NALT:NADD], K])
+                        [data.KAS[dataset_start_index:(dataset_end_index+1)], K])
 
 
 
