@@ -858,11 +858,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
             gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
-        elif MT == 5 or MT == 6 or MT == 8:
-            format447 = "(10H ERROR 446)"
-            fort_write(file_IO4, format447, [])
-            exit()
-
         elif MT == 7:
             #
             #   ABSOLUTE RATIO S1/(S2+S3)
