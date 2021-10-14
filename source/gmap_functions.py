@@ -674,8 +674,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
     N = data.num_datapoints_used
     NS = IDEN[ID,6]
 
-    EAVR = 0.
-
     data.invalid_datapoints[NS] = []
 
     for KS in fort_range(NALT, NADD1):  # .lbl18
@@ -724,6 +722,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
             FL=FL+fisdata.FIS[1]+fisdata.FIS[NW+1]
             SFL=SFL+fisdata.FIS[1]*APR.CS[JA]+fisdata.FIS[NW+1]*APR.CS[JE]
             SFIS=SFL/FL
+            EAVR = 0.
             format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
             fort_write(file_IO4, format156, [EAVR, SFIS, FL, data.CSS[KS], data.DCS[KS]])
             CX=SFIS
