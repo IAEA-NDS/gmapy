@@ -1,7 +1,7 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock, SIZE_LIMITS
-from gmap_snippets import should_downweight, get_AX
+from gmap_snippets import should_downweight, get_AX, get_prior_range
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
                                write_overflow_message, write_dataset_exclusion_info,
@@ -696,8 +696,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
             K = 0
             if NT[1] == 9:
                 K = 1
-            JA = APR.MCS[NT[1],2]
-            JE = APR.MCS[NT[1],3]
+
+            JA, JE = get_prior_range(NT[1], APR)
             NW = 2 if NT[1]==9 else 1
             FL=0.
             SFL=0.
