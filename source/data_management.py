@@ -141,6 +141,13 @@ def init_prior():
 #      invalid_datapoints    dictionary with keys being the dataset number and the
 #                            associated values lists of datapoints that could not be
 #                            mapped to the prior mesh
+#
+#      Following variables are added to help in the separation of the
+#      printing from the calculations in fill_AA_AM_COV
+#
+#      EAVR       TODO
+#      SFIS       TODO
+#      FL         TODO
 
 def init_datablock():
 
@@ -181,6 +188,10 @@ def init_datablock():
         'NCOX': np.zeros(MAXDS+1, dtype=int),
         'NNCOX': np.zeros(MAXDS+1, dtype=int),
         'MTTP': np.zeros(MAXDS+1, dtype=int),
+
+        'EAVR': np.zeros(MAXDP+1, dtype=float),
+        'SFIS': np.zeros(MAXDP+1, dtype=float),
+        'FL': np.zeros(MAXDP+1, dtype=float),
 
         'MODC': 0,
         'MOD2': 0,
