@@ -146,7 +146,8 @@ def write_dataset_exclusion_info(NS, data, file_IO4):
         fort_write(file_IO4, format168, [NS])
 
 
-def write_missing_dataset_info(NS, data, file_IO4):
+def write_missing_dataset_info(ID, data, file_IO4):
+    NS = data.IDEN[ID,6]
     if NS in data.missing_datasets:
         for NSET in data.missing_datasets[NS]:
             format274 = "('CORRELATED DATA SET  ',I5,' NOT FOUND FOR SET ',I5)"
