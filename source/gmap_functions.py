@@ -7,7 +7,7 @@ from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
                                write_overflow_message, write_dataset_exclusion_info,
                                write_missing_dataset_info, write_invalid_datapoints_info,
-                               write_dataset_table)
+                               write_dataset_table, write_fission_average)
 
 import numpy as np
 
@@ -723,9 +723,6 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
             data.EAVR[KS] = EAVR
             data.SFIS[KS] = SFIS
             data.FL[KS] = FL
-            format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
-            fort_write(file_IO4, format156, [data.EAVR[KS], data.SFIS[KS], data.FL[KS],
-                data.CSS[KS], data.DCS[KS]])
 
             CX=SFIS
             for J in fort_range(JA, JE):  # .lbl39
@@ -937,6 +934,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss, file_IO4):
                 continue
 
     data.num_datapoints_used = N
+    write_fission_average(ID, data, file_IO4)
     return
 
 

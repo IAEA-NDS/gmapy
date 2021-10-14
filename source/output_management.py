@@ -215,7 +215,7 @@ def write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4):
 
 
 def write_fission_average(ID, data, file_IO4):
-    MT = data.INDEN[ID, 7]
+    MT = data.IDEN[ID, 7]
     dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
     if MT == 6:
         for KS in fort_range(dataset_start_index, dataset_end_index):
