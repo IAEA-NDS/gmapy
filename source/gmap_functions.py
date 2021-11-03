@@ -215,7 +215,8 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
     # VP      if(modrep .ne. 0) go to 140
     format131 = "(3I5,4A8,4A8)"
-    IDEN[ID,3:6], LABL.CLABL[1:5], LABL.BREF[1:5] = unflatten(fort_read(file_IO3, format131), [[3],[4],[4]])
+    IDEN[ID,3:6], data.CLABL[ID, 1:5], data.BREF[ID, 1:5] = \
+            unflatten(fort_read(file_IO3, format131), [[3],[4],[4]])
 
     # label .lbl183
     NCCS = IDEN[ID, 5]

@@ -68,9 +68,9 @@ def write_dataset_info(ID, data, LABL, file_IO4):
     #       NAME ID AND REFERENCE I/O
     #
     format132 = "(/' YEAR',I5,' TAG',I3,' AUTHOR:  ',4A8,4A8/)"
-    fort_write(None, format132, [IDEN[ID, 3:5], LABL.CLABL[1:5], LABL.BREF[1:5]])
+    fort_write(None, format132, [IDEN[ID, 3:5], data.CLABL[ID,1:5], data.BREF[ID,1:5]])
     # VP      if(modrep .ne. 0) go to 183
-    fort_write(file_IO4, format132, [IDEN[ID, 3:5], LABL.CLABL[1:5], LABL.BREF[1:5]])
+    fort_write(file_IO4, format132, [IDEN[ID, 3:5], data.CLABL[ID,1:5], data.BREF[ID,1:5]])
 
     if not should_downweight(ID, data) and (data.MOD2 > 1 and data.MOD2 < 10):
         format339 = "('  WEIGHTING OPTION NOT IMPLEMENTED, DATA SET  ',I5/)"
@@ -216,7 +216,7 @@ def write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4):
 
     # VP      if(modrep .ne. 0) go to 2627
     format111 = "(/' APRIORI NORM ',I4,F10.4,I5,2X,4A8)"
-    fort_write(file_IO4, format111, [L, AP, NS, LABL.CLABL[1:5]])
+    fort_write(file_IO4, format111, [L, AP, NS, data.CLABL[ID,1:5]])
 
 
 
