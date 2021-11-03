@@ -47,7 +47,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
     NR = 0
     for K in fort_range(1,NC):  # .lbl33
         format120 = r"(2A8)"
-        LABL.CLAB[K, 1:3] = fort_read(file_IO3, format120)
+        APR.CLAB[K, 1:3] = fort_read(file_IO3, format120)
 
         APR.MCS[K,1] = 0
         for L in fort_range(1,NE1):  # .lbl34
@@ -1181,8 +1181,8 @@ def output_result(gauss, fisdata, APR, MODAP,
 
     for L in fort_range(1,NC):  # .lbl14
         format117 = "(1H1,'   RESULT',5X,2A8//)" 
-        fort_write(file_IO4, format117, [LABL.CLAB[L,1:3]])
-        fort_write(file_IO5, format117, [LABL.CLAB[L,1:3]])
+        fort_write(file_IO4, format117, [APR.CLAB[L,1:3]])
+        fort_write(file_IO5, format117, [APR.CLAB[L,1:3]])
         format112 = "( '   E/MEV         CS/B            DCS/B       DCS/%" + \
                     "     DIF/%    CS*SQRT(E)'/)"
         fort_write(file_IO4, format112, [])
@@ -1294,7 +1294,7 @@ def output_result_correlation_matrix(gauss, data, APR, IPP,
 
             for L in fort_range(1,K):  # .lbl80
                 format122 = "(1H1, '  CORRELATION MATRIX OF THE RESULT   ',2A8,2A8///)"
-                fort_write(file_IO4, format122, [LABL.CLAB[K,1:3], LABL.CLAB[L,1:3]])
+                fort_write(file_IO4, format122, [APR.CLAB[K,1:3], APR.CLAB[L,1:3]])
                 J3=APR.MCS[L,2]
                 J4=APR.MCS[L,3]
 

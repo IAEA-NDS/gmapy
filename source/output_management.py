@@ -57,11 +57,11 @@ def write_dataset_info(ID, data, APR, LABL, file_IO4):
     NCT2 = NCT - NU
     NU1 = NU + 1
     format139 = "(2X,8HDATA SET,I5,2X,A16,4(2X,2A8))"
-    tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(1,NU)]
+    tmp = [[APR.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(1,NU)]
     fort_write(file_IO4, format139, [NS, LABL.TYPE[MT],tmp])
     if NCT2 > 0:
         format149 = "(2X,6(2X,2A8))"
-        tmp = [[LABL.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
+        tmp = [[APR.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
         fort_write(file_IO4, format149, tmp)
 
     #
@@ -87,14 +87,14 @@ def write_prior_info(APR, IPP, LABL, file_IO4):
     fort_write(file_IO4, format134, [])
     format135 = "(10X,I3,5X,2A8)"
     for K in fort_range(1,NC):
-        fort_write(file_IO4, format135, [K, LABL.CLAB[K, 1:3]])
+        fort_write(file_IO4, format135, [K, APR.CLAB[K, 1:3]])
     # label .lbl22
     if IPP[1] != 0:
         format136 = "(1H1//,2X,35HENERGIES AND APRIORI CROSS SECTIONS//)" 
         fort_write(file_IO4, format136, [])
         format137 = "(/ '     INDEX     E/MEV   ',7X,2A8 /)"
         for  K in fort_range(1,NC):  # .lbl24
-            fort_write(file_IO4, format137, LABL.CLAB[K,1:3])
+            fort_write(file_IO4, format137, APR.CLAB[K,1:3])
             JC1 = APR.MCS[K, 2]
             JC2 = APR.MCS[K, 3]
             LQ = 0
