@@ -129,9 +129,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     exclflag = \
     should_exclude_dataset(data, IELIM, NELIM)
 
-    write_dataset_exclusion_info(NS, data, file_IO4)
-
-
     if not exclflag:
         #
         #      continue for valid data
