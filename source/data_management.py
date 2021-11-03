@@ -148,6 +148,13 @@ def init_prior():
 #      EAVR       TODO
 #      SFIS       TODO
 #      FL         TODO
+#
+#      There is a problematic variable L in the Fortran code which depending
+#      the place of execution contains a different quantity. For reproducibility,
+#      we store the value of L in the data structure for later printing
+#
+#      problematic_L     a dictionary with keys given by dataset ID and L as the value
+#
 
 def init_datablock():
 
@@ -195,7 +202,9 @@ def init_datablock():
 
         'MODC': 0,
         'MOD2': 0,
-        'AMO3': 0.
+        'AMO3': 0.,
+
+        'problematic_L': {}
         })
 
     return data
