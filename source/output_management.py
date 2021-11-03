@@ -159,14 +159,14 @@ def write_invalid_datapoints_info(NS, data, file_IO4):
             fort_write(file_IO4, format704, [NS, KS])
 
 
-def write_dataset_table(L, data, APR, LABL, MPPP, IPP, file_IO4):
+def write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4):
 
     IDEN = data.IDEN
-    ID = data.num_datasets
     NS = IDEN[ID, 6]
     NADD = data.num_datapoints + 1
     NALT = NADD - IDEN[ID, 1]
     NADD1 = NADD - 1
+    L = data.problematic_L[ID]
 
     #VP   PRIOR/EXP column is added
     format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \
