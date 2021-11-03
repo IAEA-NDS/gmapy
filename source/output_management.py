@@ -166,7 +166,11 @@ def write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4):
 
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
-    NADD = data.num_datapoints + 1
+
+    NADD = 1
+    for xID in fort_range(1, ID):
+        NADD += IDEN[xID, 1]
+
     NALT = NADD - IDEN[ID, 1]
     NADD1 = NADD - 1
     L = data.problematic_L[ID]
