@@ -18,7 +18,8 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         deal_with_dataset)
 
 from output_management import (output_Ecor_matrix,
-        write_fission_average, write_invalid_datapoints_info)
+        write_dataset_table, write_fission_average,
+        write_invalid_datapoints_info)
 
 from data_management import init_gauss, init_prior, init_labels
 
@@ -171,6 +172,7 @@ def main():
                     IPP, file_IO3, file_IO4)
 
             ID = data.num_datasets
+            write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4)
             write_fission_average(ID, data, file_IO4)
 
             for NS in data.invalid_datapoints:
