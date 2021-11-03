@@ -73,6 +73,7 @@ def init_labels():
 def init_prior():
 
     APR = Bunch({
+        'CLAB': np.empty((35+1,2+1), dtype=object),
         'EN': np.zeros(1200+1, dtype=float),
         'CS': np.zeros(1200+1, dtype=float),
         'MCS': np.zeros((35+1,3+1), dtype=int),
