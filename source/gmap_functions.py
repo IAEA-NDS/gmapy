@@ -140,8 +140,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         L = \
         construct_Ecor(data)
 
-        write_missing_dataset_info(ID, data, file_IO4)
-
         if data.IDEN[data.num_datasets, 7] != 6:
 
             MTTP = data.IDEN[ID, 8]
