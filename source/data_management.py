@@ -18,7 +18,6 @@ def init_labels():
     #
     LABL = Bunch({
         'AKON':  [None for i in range(12)],
-        'CLAB': np.empty((35+1,2+1), dtype=object),
         'TYPE': np.zeros(10+1, dtype=object)
         })
     #
