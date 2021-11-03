@@ -17,7 +17,9 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset)
 
-from output_management import output_Ecor_matrix
+from output_management import (output_Ecor_matrix,
+        write_invalid_datapoints_info)
+
 from data_management import init_gauss, init_prior, init_labels
 
 
@@ -167,6 +169,9 @@ def main():
                     LABL, APR, IELIM, NELIM,
                     MPPP, MODREP,
                     IPP, file_IO3, file_IO4)
+
+            for NS in data.invalid_datapoints:
+                write_invalid_datapoints_info(NS, data, file_IO4)
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
