@@ -174,20 +174,6 @@ def main():
                     MPPP, MODREP,
                     IPP, file_IO3, file_IO4)
 
-            ID = data.num_datasets
-
-            write_dataset_info(ID, data, APR, LABL, file_IO4)
-            write_missing_dataset_info(ID, data, file_IO4)
-            write_KAS_check(ID, data, IPP, file_IO4)
-            write_overflow_message(ID, data, APR, file_IO4)
-            write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4)
-            write_fission_average(ID, data, file_IO4)
-
-            for NS in data.excluded_datasets:
-                write_dataset_exclusion_info(NS, data, file_IO4)
-            for NS in data.invalid_datapoints:
-                write_invalid_datapoints_info(NS, data, file_IO4)
-
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             #
@@ -195,6 +181,21 @@ def main():
             #
             if data.num_datasets == 0:
                 continue
+
+            for ID in fort_range(lastID+1, data.num_datasets):
+                write_dataset_info(ID, data, APR, LABL, file_IO4)
+                write_missing_dataset_info(ID, data, file_IO4)
+                write_KAS_check(ID, data, IPP, file_IO4)
+                write_overflow_message(ID, data, APR, file_IO4)
+                write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4)
+                write_fission_average(ID, data, file_IO4)
+
+            lastID = data.num_datasets
+
+            for NS in data.excluded_datasets:
+                write_dataset_exclusion_info(NS, data, file_IO4)
+            for NS in data.invalid_datapoints:
+                write_invalid_datapoints_info(NS, data, file_IO4)
 
             complete_symmetric_Ecor(data, file_IO4)
 
