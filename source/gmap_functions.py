@@ -160,8 +160,8 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             determine_apriori_norm_shape(data, APR, MPPP, MODREP)
             data.problematic_L[ID] = L
 
-            write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4)
 
+        write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4)
 
         fill_AA_AM_COV(data, fisdata, APR, gauss)
 

@@ -161,6 +161,9 @@ def write_invalid_datapoints_info(NS, data, file_IO4):
 
 def write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4):
 
+    if data.IDEN[ID, 7] == 6:
+        return
+
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
     NADD = data.num_datapoints + 1
