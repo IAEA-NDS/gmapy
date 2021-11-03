@@ -159,7 +159,7 @@ def write_invalid_datapoints_info(NS, data, file_IO4):
             fort_write(file_IO4, format704, [NS, KS])
 
 
-def write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4):
+def write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4):
 
     if data.IDEN[ID, 7] == 6:
         return

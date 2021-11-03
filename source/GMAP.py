@@ -180,7 +180,7 @@ def main():
             write_missing_dataset_info(ID, data, file_IO4)
             write_KAS_check(ID, data, IPP, file_IO4)
             write_overflow_message(ID, data, APR, file_IO4)
-            write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4)
+            write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4)
             write_fission_average(ID, data, file_IO4)
 
             for NS in data.excluded_datasets:
