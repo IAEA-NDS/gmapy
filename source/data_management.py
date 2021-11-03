@@ -163,6 +163,10 @@ def init_datablock():
     MAXCOR = SIZE_LIMITS.MAX_NUM_CORRELATED_DATASETS_PER_DATASET
 
     data = Bunch({
+
+        'CLABL': np.empty((MAXDS, 4+1), dtype=object),
+        'BREF': np.zeros((MAXDS, 4+1), dtype=object),
+
         'num_datasets': 0,
         'num_datapoints': 0,
         'num_datapoints_used': 0,
