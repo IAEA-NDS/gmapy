@@ -18,6 +18,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         deal_with_dataset)
 
 from output_management import (output_Ecor_matrix,
+        write_missing_dataset_info,
         write_KAS_check, write_overflow_message,
         write_dataset_table, write_fission_average,
         write_invalid_datapoints_info)
@@ -173,6 +174,7 @@ def main():
                     IPP, file_IO3, file_IO4)
 
             ID = data.num_datasets
+            write_missing_dataset_info(ID, data, file_IO4)
             write_KAS_check(ID, data, IPP, file_IO4)
             write_overflow_message(ID, data, APR, file_IO4)
             write_dataset_table(ID, data, APR, LABL, MPPP, IPP, file_IO4)
