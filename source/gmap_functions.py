@@ -165,8 +165,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
         fill_AA_AM_COV(data, fisdata, APR, gauss)
 
-        write_fission_average(ID, data, file_IO4)
-
     return
 
 
