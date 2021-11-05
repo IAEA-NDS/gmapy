@@ -223,6 +223,8 @@ def init_datablock():
 #       DE      ADJUSTMENT VECTOR
 # VP            equals B(inverse)*BM
 #
+#       NTOT    number of datapoints used in fitting
+#
 
 def init_gauss():
 
@@ -239,7 +241,8 @@ def init_gauss():
             'EGR': np.zeros(199+1, dtype=float),
             'EEGR': np.zeros(400+1, dtype=float),
             'RELTRG': np.zeros((200+1, 200+1), dtype=float),
-            'RELCOV': np.zeros((200+1, 200+1), dtype=float)
+            'RELCOV': np.zeros((200+1, 200+1), dtype=float),
+            'NTOT': 0
     })
 
     return gauss
