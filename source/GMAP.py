@@ -164,7 +164,7 @@ def main():
             #       in the Fortran version that causes values of ENFF
             #       leaking into the next datablock
             data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
-
+            lastID = 0
 
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
@@ -239,6 +239,7 @@ def main():
 
                 if DUM == LABL.AKON[4]:
                     data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
+                    lastID = 0
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP,
