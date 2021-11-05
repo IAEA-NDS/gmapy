@@ -223,7 +223,7 @@ def main():
 
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
-            get_result(gauss, APR, SIGMA2, NTOT, IPP, file_IO4)
+            get_result(gauss, APR, SIGMA2, IPP, file_IO4)
             APR = output_result(gauss, fisdata, APR, MODAP,
                     LABL, file_IO4, file_IO5)
             #
