@@ -224,6 +224,7 @@ def init_datablock():
 # VP            equals B(inverse)*BM
 #
 #       NTOT    number of datapoints used in fitting
+#       SIGMA2  TODO
 #
 
 def init_gauss():
@@ -242,7 +243,8 @@ def init_gauss():
             'EEGR': np.zeros(400+1, dtype=float),
             'RELTRG': np.zeros((200+1, 200+1), dtype=float),
             'RELCOV': np.zeros((200+1, 200+1), dtype=float),
-            'NTOT': 0
+            'NTOT': 0,
+            'SIGMA2': 0.
     })
 
     return gauss
