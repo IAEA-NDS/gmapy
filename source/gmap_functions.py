@@ -1016,7 +1016,7 @@ def invert_Ecor(data, IPP, file_IO4):
 
 
 def get_matrix_products(gauss, data, MODREP,
-        APR, SIGMA2, file_IO4):
+        APR, file_IO4):
     #
     #      GET MATRIX PRODUCTS
     #
@@ -1027,6 +1027,7 @@ def get_matrix_products(gauss, data, MODREP,
     N = data.num_datapoints_used
     gauss.NTOT += data.num_datapoints_used
     NTOT = gauss.NTOT
+    SIGMA2 = gauss.SIGMA2
 
     for I in fort_range(1,NRS):  # .lbl90
         NI=KA[I,1]
@@ -1071,7 +1072,8 @@ def get_matrix_products(gauss, data, MODREP,
         exit()
     if MODREP == 0:
         fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, SIGL])
-    return SIGMA2
+
+    gauss.SIGMA2 = SIGMA2
 
 
 
