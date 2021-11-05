@@ -182,6 +182,8 @@ def main():
             if data.num_datasets == 0:
                 continue
 
+            complete_symmetric_Ecor(data)
+
             for ID in fort_range(lastID+1, data.num_datasets):
                 write_dataset_info(ID, data, APR, LABL, file_IO4)
                 write_missing_dataset_info(ID, data, file_IO4)
@@ -199,8 +201,6 @@ def main():
 
             format2830 = "(80X,4HN = ,I5)"
             fort_write(file_IO4, format2830, [data.num_datapoints_used])
-
-            complete_symmetric_Ecor(data)
 
             N = data.num_datapoints_used
             MODC = data.MODC
