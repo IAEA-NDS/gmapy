@@ -244,8 +244,7 @@ def main():
                     lastID = 0
                     continue
 
-            output_result_correlation_matrix(gauss, data, APR, IPP,
-                    LABL, file_IO4)
+            output_result_correlation_matrix(gauss, data, APR, IPP, file_IO4)
             exit()
 
 
