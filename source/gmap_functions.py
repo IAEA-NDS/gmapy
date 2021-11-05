@@ -102,9 +102,6 @@ def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
     if last_ENFF is not None:
         data.ENFF = last_ENFF
 
-    if MODREP == 0:
-        write_datablock_header(file_IO4)
-
     return data
 
 

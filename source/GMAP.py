@@ -18,7 +18,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         deal_with_dataset)
 
 from output_management import (output_Ecor_matrix,
-        write_dataset_info,
+        write_datablock_header, write_dataset_info,
         write_dataset_exclusion_info, write_missing_dataset_info,
         write_KAS_check, write_overflow_message,
         write_dataset_table, write_fission_average,
@@ -163,6 +163,9 @@ def main():
             # NOTE: data is provided as argument to reproduce a bug
             #       in the Fortran version that causes values of ENFF
             #       leaking into the next datablock
+            if MODREP == 0:
+                write_datablock_header(file_IO4)
+
             data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
             lastID = 0
 
