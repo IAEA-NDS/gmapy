@@ -112,7 +112,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, fisdata, gauss,
         LABL, APR, IELIM, NELIM,
         MPPP, MODREP,
-        IPP, file_IO3, file_IO4):
+        IPP, file_IO3):
 
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
