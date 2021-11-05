@@ -166,7 +166,7 @@ def main():
             if MODREP == 0:
                 write_datablock_header(file_IO4)
 
-            data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
+            data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP)
             lastID = 0
 
         # LABL.AKON[2] == 'DATA'
@@ -245,7 +245,7 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP, file_IO4)
+                    data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP)
                     lastID = 0
                     continue
 
