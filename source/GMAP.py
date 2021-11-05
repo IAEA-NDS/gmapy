@@ -170,7 +170,7 @@ def main():
         elif ACON == LABL.AKON[2]:
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
-                    LABL, APR, IELIM, NELIM,
+                    APR, IELIM, NELIM,
                     MPPP, MODREP,
                     IPP, file_IO3)
 
