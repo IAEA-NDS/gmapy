@@ -1269,7 +1269,7 @@ def output_result(gauss, fisdata, APR, MODAP,
 
 
 def output_result_correlation_matrix(gauss, data, APR, IPP,
-        LABL, file_IO4):
+        file_IO4):
     #
     #   OUTPUT OF CORRELATION MATRIX OF THE RESULT
     #
