@@ -1164,7 +1164,7 @@ def get_result(gauss, APR, IPP, file_IO4):
 
 
 def output_result(gauss, fisdata, APR, MODAP,
-        LABL, file_IO4, file_IO5):
+        file_IO4, file_IO5):
     #
     #      output of the result
     #
