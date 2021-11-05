@@ -214,8 +214,10 @@ def main():
                 if not invertible:
                     continue
 
-            SIGMA2 = get_matrix_products(gauss, data, MODREP,
-                    APR, SIGMA2, file_IO4)
+            gauss.SIGMA2 = SIGMA2
+            get_matrix_products(gauss, data, MODREP,
+                    APR, file_IO4)
+            SIGMA2 = gauss.SIGMA2
 
 
         # LABL.AKON[3] == 'END*'
