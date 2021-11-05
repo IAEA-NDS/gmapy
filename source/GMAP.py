@@ -197,6 +197,9 @@ def main():
             for NS in data.invalid_datapoints:
                 write_invalid_datapoints_info(NS, data, file_IO4)
 
+            format2830 = "(80X,4HN = ,I5)"
+            fort_write(file_IO4, format2830, [data.num_datapoints_used])
+
             complete_symmetric_Ecor(data, file_IO4)
 
             N = data.num_datapoints_used

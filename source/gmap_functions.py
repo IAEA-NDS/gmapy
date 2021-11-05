@@ -930,8 +930,6 @@ def complete_symmetric_Ecor(data, file_IO4):
     N = data.num_datapoints_used
     N1 = N - 1
 
-    format2830 = "(80X,4HN = ,I5)"
-    fort_write(file_IO4, format2830, [N])
     for K in fort_range(1,N1):  # .lbl25
         K1 = K + 1
         for L in fort_range(K1, N):  # .lbl25
