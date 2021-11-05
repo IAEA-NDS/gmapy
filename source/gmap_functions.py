@@ -32,7 +32,7 @@ def force_stop(file_IO4):
     exit()
 
 
-def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
+def read_prior(MC1, MC2, APR, IPP, file_IO3, file_IO4):
     #
     #      INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
     #
