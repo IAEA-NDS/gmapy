@@ -172,7 +172,7 @@ def main():
                     data, fisdata, gauss,
                     LABL, APR, IELIM, NELIM,
                     MPPP, MODREP,
-                    IPP, file_IO3, file_IO4)
+                    IPP, file_IO3)
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
