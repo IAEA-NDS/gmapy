@@ -66,12 +66,10 @@ def main():
     #
     #      INITIALIZE PARAMETERS
     #
-    #      NTOT TOTAL NO OF DATA POINTS
     #
     #      DATA DE/1200*0.D0/,BM/1200*0.D0/,B/720600*0.D0/,NRED/160*0/
     #
     MODREP = 0
-    NTOT = 0
     SIGMA2 = 0.
     MODC = 3
     IELIM = 0
@@ -218,7 +216,6 @@ def main():
 
             SIGMA2 = get_matrix_products(gauss, data, MODREP,
                     APR, SIGMA2, file_IO4)
-            NTOT = gauss.NTOT
 
 
         # LABL.AKON[3] == 'END*'
@@ -232,7 +229,7 @@ def main():
             if not (MODAP == 0 or MODREP == MODAP):
 
                 MODREP=MODREP+1
-                NTOT=0
+                gauss.NTOT=0
                 SIGMA2=0.
                 APR.NSHP=0
                 gauss = init_gauss()
