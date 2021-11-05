@@ -78,7 +78,7 @@ def write_dataset_info(ID, data, APR, LABL, file_IO4):
 
 
 
-def write_prior_info(APR, IPP, LABL, file_IO4):
+def write_prior_info(APR, IPP, file_IO4):
     # from here onwards only output
     NC = APR.NC
     NR = APR.NR

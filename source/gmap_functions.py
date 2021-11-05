@@ -72,7 +72,7 @@ def read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4):
         APR.MCS[K, 2] = APR.MCS[K-1, 2] + APR.MCS[K-1, 1]
         APR.MCS[K, 3] = APR.MCS[K-1, 3] + APR.MCS[K, 1]
 
-    write_prior_info(APR, IPP, LABL, file_IO4)
+    write_prior_info(APR, IPP, file_IO4)
 
 
 
