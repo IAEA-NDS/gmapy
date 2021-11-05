@@ -180,7 +180,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     MT = MC2
     NCOX = MC3
     NCT = MC4
-    NT = data.NT[ID,:]
+    NT = np.zeros(data.NT.shape[1], dtype=int)
     NT[1] = MC5
     NT[2] = MC6
     NT[3] = MC7
