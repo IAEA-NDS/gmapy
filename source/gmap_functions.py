@@ -928,17 +928,12 @@ def complete_symmetric_Ecor(data):
     #
     MODC = data.MODC
     N = data.num_datapoints_used
-    N1 = N - 1
-
-    for K in fort_range(1,N1):  # .lbl25
-        K1 = K + 1
-        for L in fort_range(K1, N):  # .lbl25
+    for K in fort_range(1,N-1):  # .lbl25
+        for L in fort_range(K+1, N):  # .lbl25
             if MODC == 2:
                 data.ECOR[L, K] = 0.
             data.ECOR[K, L] = data.ECOR[L, K]
             # label .lbl25
-        L = L + 1  # to match L value of fortran after loop
-
 
 
 
