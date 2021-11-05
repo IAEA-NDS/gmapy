@@ -147,7 +147,7 @@ def main():
         # LABL.AKON[1] == 'APRI'
         elif ACON == LABL.AKON[1]:
             # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
-            read_prior(MC1, MC2, APR, LABL, IPP, file_IO3, file_IO4)
+            read_prior(MC1, MC2, APR, IPP, file_IO3, file_IO4)
 
 
         # LABL.AKON[8] == 'FIS*'
