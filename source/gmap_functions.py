@@ -922,7 +922,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
 
 
 
-def complete_symmetric_Ecor(data, file_IO4):
+def complete_symmetric_Ecor(data):
     #
     #      FILL IN SYMMETRIC TERM
     #

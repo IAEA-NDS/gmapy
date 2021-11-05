@@ -200,7 +200,7 @@ def main():
             format2830 = "(80X,4HN = ,I5)"
             fort_write(file_IO4, format2830, [data.num_datapoints_used])
 
-            complete_symmetric_Ecor(data, file_IO4)
+            complete_symmetric_Ecor(data)
 
             N = data.num_datapoints_used
             MODC = data.MODC
