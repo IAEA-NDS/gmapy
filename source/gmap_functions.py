@@ -1077,12 +1077,13 @@ def get_matrix_products(gauss, data, MODREP,
 
 
 
-def get_result(gauss, APR, SIGMA2, IPP, file_IO4):
+def get_result(gauss, APR, IPP, file_IO4):
     #
     #      GETTING THE RESULT
     #
     NRS = APR.NR + APR.NSHP
     NTOT = gauss.NTOT
+    SIGMA2 = gauss.SIGMA2
 
     format6919 = "(' start getting the result ')"
     fort_write(None, format6919, [])
