@@ -32,7 +32,7 @@ def force_stop(file_IO4):
     exit()
 
 
-def read_prior(MC1, MC2, APR, IPP, file_IO3, file_IO4):
+def read_prior(MC1, MC2, APR, IPP, file_IO3):
     #
     #      INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
     #
@@ -71,8 +71,6 @@ def read_prior(MC1, MC2, APR, IPP, file_IO3, file_IO4):
     for K in fort_range(2,NC):
         APR.MCS[K, 2] = APR.MCS[K-1, 2] + APR.MCS[K-1, 1]
         APR.MCS[K, 3] = APR.MCS[K-1, 3] + APR.MCS[K, 1]
-
-    write_prior_info(APR, IPP, file_IO4)
 
 
 

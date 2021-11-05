@@ -18,6 +18,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         deal_with_dataset)
 
 from output_management import (output_Ecor_matrix,
+        write_prior_info,
         write_datablock_header, write_dataset_info,
         write_dataset_exclusion_info, write_missing_dataset_info,
         write_KAS_check, write_overflow_message,
@@ -147,7 +148,8 @@ def main():
         # LABL.AKON[1] == 'APRI'
         elif ACON == LABL.AKON[1]:
             # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
-            read_prior(MC1, MC2, APR, IPP, file_IO3, file_IO4)
+            read_prior(MC1, MC2, APR, IPP, file_IO3)
+            write_prior_info(APR, IPP, file_IO4)
 
 
         # LABL.AKON[8] == 'FIS*'
