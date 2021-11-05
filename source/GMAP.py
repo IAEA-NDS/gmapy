@@ -70,7 +70,6 @@ def main():
     #      DATA DE/1200*0.D0/,BM/1200*0.D0/,B/720600*0.D0/,NRED/160*0/
     #
     MODREP = 0
-    SIGMA2 = 0.
     MODC = 3
     IELIM = 0
     LLL = 0
@@ -214,10 +213,8 @@ def main():
                 if not invertible:
                     continue
 
-            gauss.SIGMA2 = SIGMA2
             get_matrix_products(gauss, data, MODREP,
                     APR, file_IO4)
-            SIGMA2 = gauss.SIGMA2
 
 
         # LABL.AKON[3] == 'END*'
@@ -232,7 +229,6 @@ def main():
 
                 MODREP=MODREP+1
                 gauss.NTOT=0
-                SIGMA2=0.
                 APR.NSHP=0
                 gauss = init_gauss()
                 file_IO3.seek(0,0)
