@@ -166,7 +166,6 @@ def main():
                 write_datablock_header(file_IO4)
 
             data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP)
-            lastID = 0
 
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
@@ -186,15 +185,13 @@ def main():
 
             complete_symmetric_Ecor(data)
 
-            for ID in fort_range(lastID+1, data.num_datasets):
+            for ID in fort_range(1, data.num_datasets):
                 write_dataset_info(ID, data, APR, LABL, file_IO4)
                 write_missing_dataset_info(ID, data, file_IO4)
                 write_KAS_check(ID, data, IPP, file_IO4)
                 write_overflow_message(ID, data, APR, file_IO4)
                 write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4)
                 write_fission_average(ID, data, file_IO4)
-
-            lastID = data.num_datasets
 
             for NS in data.excluded_datasets:
                 write_dataset_exclusion_info(NS, data, file_IO4)
@@ -243,7 +240,6 @@ def main():
 
                 if DUM == LABL.AKON[4]:
                     data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP)
-                    lastID = 0
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP, file_IO4)
