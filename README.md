@@ -66,6 +66,11 @@ being that some values in the input file (`data.gma`) are only given with four
 digits after the comma and in combination with different algorithmic
 implementations could lead to small numerical differences in the result.
 
+- The Fortran version processed incomplete datablocks (i.e., end of block indicator EDBL
+immediately followed by DATA keyword). Since commit 88fc22c the Python version does
+not reproduce the results of the Fortran version anymore in the case of an incomplete
+datablock.
+
 [goto-statement]: https://pypi.org/project/goto-statement/
 [fortranformat]: https://pypi.org/project/fortranformat/ 
 
