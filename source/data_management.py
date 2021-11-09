@@ -148,6 +148,11 @@ def init_prior():
 #      SFIS       TODO
 #      FL         TODO
 #
+#      Following variables is calculated in get_matrix_products
+#      and saved in the datablock structure for later printing
+#
+#      SIGL       TODO
+#
 #      There is a problematic variable L in the Fortran code which depending
 #      the place of execution contains a different quantity. For reproducibility,
 #      we store the value of L in the data structure for later printing
@@ -204,6 +209,8 @@ def init_datablock():
         'EAVR': np.zeros(MAXDP+1, dtype=float),
         'SFIS': np.zeros(MAXDP+1, dtype=float),
         'FL': np.zeros(MAXDP+1, dtype=float),
+
+        'SIGL': 0.,
 
         'MODC': 0,
         'MOD2': 0,
