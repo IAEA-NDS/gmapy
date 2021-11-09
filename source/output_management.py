@@ -258,7 +258,7 @@ def write_inv_attempt_info(data, IPP, file_IO4):
 
 
 
-def write_datablock_info(APR, data, gauss, MODREP, MPPP, IPP, LABL, file_IO4):
+def write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4):
     for ID in fort_range(1, data.num_datasets):
         write_dataset_info(ID, data, APR, LABL, file_IO4)
         write_missing_dataset_info(ID, data, file_IO4)
