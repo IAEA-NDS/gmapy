@@ -23,7 +23,7 @@ from output_management import (output_Ecor_matrix,
         write_dataset_exclusion_info, write_missing_dataset_info,
         write_KAS_check, write_overflow_message,
         write_dataset_table, write_fission_average,
-        write_invalid_datapoints_info)
+        write_invalid_datapoints_info, write_added_points_info)
 
 from data_management import init_gauss, init_prior, init_labels
 
@@ -213,19 +213,7 @@ def main():
 
             get_matrix_products(gauss, data, MODREP, APR)
 
-
-            def write_added_points_info(data, MODREP):
-                N = data.num_datapoints_used
-                NTOT = gauss.NTOT
-                NSHP = APR.NSHP
-                NR = APR.NR
-                NRS=NR+NSHP
-                format476 = "(/' ADDED ',I5,' TO GIVE ',I5,' TOTAL',2I5,F10.2/)"
-                fort_write(None, format476, [N, NTOT, NSHP, NRS, data.SIGL])
-                if MODREP == 0:
-                    fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, data.SIGL])
-
-            write_added_points_info(data, MODREP)
+            write_added_points_info(APR, gauss, data, MODREP, file_IO4)
 
 
 
