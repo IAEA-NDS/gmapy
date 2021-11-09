@@ -186,6 +186,12 @@ def main():
 
             complete_symmetric_Ecor(data)
 
+            invertible = invert_Ecor(data, IPP, file_IO4)
+            if not invertible:
+                continue
+
+            get_matrix_products(gauss, data, MODREP, APR)
+
             for ID in fort_range(1, data.num_datasets):
                 write_dataset_info(ID, data, APR, LABL, file_IO4)
                 write_missing_dataset_info(ID, data, file_IO4)
@@ -208,16 +214,9 @@ def main():
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 output_Ecor_matrix(data, file_IO4)
 
-            invertible = invert_Ecor(data, IPP, file_IO4)
-            if not invertible:
-                continue
-
             write_inv_attempt_info(data, IPP, file_IO4)
 
-            get_matrix_products(gauss, data, MODREP, APR)
-
             write_added_points_info(APR, gauss, data, MODREP, file_IO4)
-
 
 
         # LABL.AKON[3] == 'END*'
