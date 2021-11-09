@@ -229,3 +229,16 @@ def write_fission_average(ID, data, file_IO4):
             fort_write(file_IO4, format156, [data.EAVR[KS], data.SFIS[KS], data.FL[KS],
                 data.CSS[KS], data.DCS[KS]])
 
+
+
+def write_added_points_info(APR, gauss, data, MODREP, file_IO4):
+    N = data.num_datapoints_used
+    NTOT = gauss.NTOT
+    NSHP = APR.NSHP
+    NR = APR.NR
+    NRS=NR+NSHP
+    format476 = "(/' ADDED ',I5,' TO GIVE ',I5,' TOTAL',2I5,F10.2/)"
+    fort_write(None, format476, [N, NTOT, NSHP, NRS, data.SIGL])
+    if MODREP == 0:
+        fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, data.SIGL])
+
