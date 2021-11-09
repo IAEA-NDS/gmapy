@@ -242,3 +242,17 @@ def write_added_points_info(APR, gauss, data, MODREP, file_IO4):
     if MODREP == 0:
         fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, data.SIGL])
 
+
+
+def write_inv_attempt_info(data, IPP, file_IO4):
+    for k in range(data.num_inv_tries):
+        format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')"
+        fort_write(file_IO4, format105, [])
+    #
+    #      output of inverted correlation matrix of data block
+    #
+    if IPP[5] != 0:
+        format151 = "(1X,24F7.4)"
+        for K in fort_range(1,N):
+            fort_write(file_IO4, format151, [data.invECOR[K,1:(K+1)]])
+

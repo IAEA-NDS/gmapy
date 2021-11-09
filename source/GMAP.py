@@ -23,7 +23,8 @@ from output_management import (output_Ecor_matrix,
         write_dataset_exclusion_info, write_missing_dataset_info,
         write_KAS_check, write_overflow_message,
         write_dataset_table, write_fission_average,
-        write_invalid_datapoints_info, write_added_points_info)
+        write_invalid_datapoints_info, write_added_points_info,
+        write_inv_attempt_info)
 
 from data_management import init_gauss, init_prior, init_labels
 
@@ -210,18 +211,6 @@ def main():
             invertible = invert_Ecor(data, IPP, file_IO4)
             if not invertible:
                 continue
-
-            def write_inv_attempt_info(data, IPP, file_IO4):
-                for k in range(data.num_inv_tries):
-                    format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')"
-                    fort_write(file_IO4, format105, [])
-                #
-                #      output of inverted correlation matrix of data block
-                #
-                if IPP[5] != 0:
-                    format151 = "(1X,24F7.4)"
-                    for K in fort_range(1,N):
-                        fort_write(file_IO4, format151, [data.invECOR[K,1:(K+1)]])
 
             write_inv_attempt_info(data, IPP, file_IO4)
 
