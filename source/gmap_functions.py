@@ -930,6 +930,7 @@ def invert_Ecor(data, IPP, file_IO4):
     N = data.num_datapoints_used
 
     if MODC == 2 or N == 1:
+        data.invECOR = data.ECOR.copy()
         return True
 
     IREP = 0
@@ -1002,6 +1003,8 @@ def invert_Ecor(data, IPP, file_IO4):
         for K in fort_range(1,N):
             fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
 
+    data.invECOR = data.ECOR.copy()
+
     return True
 
 
@@ -1035,7 +1038,7 @@ def get_matrix_products(gauss, data, MODREP,
                 MIX=KA[I,MI+1]
                 for MJ in fort_range(1,NJ):  # .lbl85
                     MJX=KA[J,MJ+1]
-                    gauss.B[IJ]=gauss.B[IJ]+gauss.AA[I,MI]*gauss.AA[J,MJ]*data.ECOR[MIX,MJX]
+                    gauss.B[IJ]=gauss.B[IJ]+gauss.AA[I,MI]*gauss.AA[J,MJ]*data.invECOR[MIX,MJX]
 
     for I in fort_range(1,NRS):  # .lbl91
         NI=KA[I,1]
@@ -1045,12 +1048,12 @@ def get_matrix_products(gauss, data, MODREP,
         for MI in fort_range(1,NI):  # .lbl86
             MIX=KA[I,MI+1]
             for MJ in fort_range(1,N):  #.lbl86
-                gauss.BM[I]=gauss.BM[I]+gauss.AA[I,MI]*data.ECOR[MIX,MJ]*gauss.AM[MJ]
+                gauss.BM[I]=gauss.BM[I]+gauss.AA[I,MI]*data.invECOR[MIX,MJ]*gauss.AM[MJ]
 
     for I in fort_range(1,N):  # .lbl26
         SUX=0.
         for J in fort_range(1,N):  # .lbl52
-            SUX=SUX+data.ECOR[I,J]*gauss.AM[J]
+            SUX=SUX+data.invECOR[I,J]*gauss.AM[J]
         
         SIGMA2=SIGMA2+gauss.AM[I]*SUX
 
