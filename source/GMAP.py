@@ -173,8 +173,7 @@ def main():
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, fisdata, gauss,
                     APR, IELIM, NELIM,
-                    MPPP, MODREP,
-                    IPP, file_IO3)
+                    MPPP, MODREP, file_IO3)
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
