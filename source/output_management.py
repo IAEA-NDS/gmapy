@@ -231,9 +231,9 @@ def write_fission_average(ID, data, file_IO4):
 
 
 
-def write_added_points_info(APR, gauss, data, MODREP, file_IO4):
+def write_added_points_info(APR, data, MODREP, file_IO4):
     N = data.num_datapoints_used
-    NTOT = gauss.NTOT
+    NTOT = data.NTOT
     NSHP = APR.NSHP
     NR = APR.NR
     NRS=NR+NSHP
@@ -283,5 +283,5 @@ def write_datablock_info(APR, data, gauss, MODREP, MPPP, IPP, LABL, file_IO4):
 
     write_inv_attempt_info(data, IPP, file_IO4)
 
-    write_added_points_info(APR, gauss, data, MODREP, file_IO4)
+    write_added_points_info(APR, data, MODREP, file_IO4)
 
