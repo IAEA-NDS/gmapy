@@ -938,9 +938,8 @@ def invert_Ecor(data, IPP, file_IO4):
         # cholesky decomposition
         #CALL DPOFA(ECOR,LDA,N,INFO)
         INFO = np.array(0)
-        tmp = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
-        linpack_slim.dpofa(a=tmp, info=INFO) 
-        data.ECOR[1:(N+1),1:(N+1)] = tmp
+        choleskymat = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
+        linpack_slim.dpofa(a=choleskymat, info=INFO)
 
         # ALTERNATIVE USING NUMPY FUNCTION cholesky
         # INFO = 0
@@ -981,10 +980,10 @@ def invert_Ecor(data, IPP, file_IO4):
 
     JOB=1
     # CALL DPODI(ECOR,LDA,N,DET,JOB)
-    tmp = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
+    tmp = np.array(choleskymat, dtype='float64', order='F')
     tmp_det = np.array([0., 0.], dtype='float64', order='F') 
     linpack_slim.dpodi(tmp, det=tmp_det, job=JOB)
-    data.ECOR[1:(N+1),1:(N+1)] = tmp
+    data.invECOR[1:(N+1),1:(N+1)] = tmp
 
     # ALTERNATIVE USING NUMPY inv function
     # tmp = inv(data.ECOR[1:(N+1),1:(N+1)])
@@ -993,7 +992,7 @@ def invert_Ecor(data, IPP, file_IO4):
     for K in fort_range(2,N):  # .lbl17
         L1=K-1
         for L in fort_range(1,L1):
-            data.ECOR[K,L] = data.ECOR[L,K]
+            data.invECOR[K,L] = data.invECOR[L,K]
         L = L + 1  # to match L value of fortran after loop
     #
     #      output of inverted correlation matrix of data block
@@ -1001,9 +1000,7 @@ def invert_Ecor(data, IPP, file_IO4):
     if IPP[5] != 0:
         format151 = "(1X,24F7.4)"
         for K in fort_range(1,N):
-            fort_write(file_IO4, format151, [data.ECOR[K,1:(K+1)]])
-
-    data.invECOR = data.ECOR.copy()
+            fort_write(file_IO4, format151, [data.invECOR[K,1:(K+1)]])
 
     return True
 
