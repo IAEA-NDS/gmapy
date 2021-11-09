@@ -1007,8 +1007,7 @@ def invert_Ecor(data, IPP, file_IO4):
 
 
 
-def get_matrix_products(gauss, data, MODREP,
-        APR, file_IO4):
+def get_matrix_products(gauss, data, MODREP, APR):
     #
     #      GET MATRIX PRODUCTS
     #
