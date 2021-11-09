@@ -93,6 +93,8 @@ def init_prior():
 #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
 #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
 #      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
+#      effECOR the ECOR as used in the fit, i.e., after a possible adjustment
+#                                                 to ensure it being positive-definite
 #      invECOR inverse CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
 #      num_inv_tries  number of attempts to invert ECOR by modifying it
 #      ENFF    NORMALIZATION UNCERTAINTIES COMPONENTS
@@ -185,6 +187,7 @@ def init_datablock():
         'CSS': np.zeros(MAXDP+1, dtype=float),
         'DCS': np.zeros(MAXDP+1, dtype=float),
         'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
+        'effECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'invECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'num_inv_tries': 0,
         'CO': np.zeros((12+1, MAXDP+1), dtype=float),
