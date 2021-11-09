@@ -207,10 +207,9 @@ def main():
             if not (IPP[3] == 0 or N == 1 or MODC == 2):
                 output_Ecor_matrix(data, file_IO4)
 
-            if not (MODC == 2 or N == 1):
-                invertible = invert_Ecor(data, IPP, file_IO4)
-                if not invertible:
-                    continue
+            invertible = invert_Ecor(data, IPP, file_IO4)
+            if not invertible:
+                continue
 
             get_matrix_products(gauss, data, MODREP,
                     APR, file_IO4)
