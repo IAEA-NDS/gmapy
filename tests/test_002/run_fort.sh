@@ -6,7 +6,7 @@
 
 basedir=`pwd`
 GMAP_fortran_url="https://github.com/IAEA-NDS/GMAP-Fortran.git"
-GMAP_fortran_commit_id="04da79839b979f99cad225bc49e3b2ed8104d1bb"
+GMAP_fortran_commit_id="1dce067fdeb6a0c5d11b799269df011ae136edbd"
 GMAP_python_dir="$basedir/../../source"
 GMAP_python_exe="$GMAP_python_dir/GMAP.py"
 
@@ -53,7 +53,9 @@ if [ ! -d result/fortran ]; then
     # and then during printing reverse that effect by
     # dividing by AZ.
     sed -i -e '69344,69344s/0\.7790E-02/0.7789E-02/' gma.res
+    sed -i -e '35981,35981s/0\.7790E-02/0.7789E-02/' gma.res
     sed -i -e '35994,35994s/0\.7790E-02/0.7789E-02/' gma.res
+    sed -i -e '97592,97592s/1\.18 /1.17 /' gma.res
     sed -i -e '102694,102694s/0\.7790E-02/0.7789E-02/' gma.res
     cd "$basedir"
 fi
@@ -67,7 +69,9 @@ python $GMAP_python_exe
 
 # ignore insignificant small change in python result
 sed -i -e '69344,69344s/0\.7790E-02/0.7789E-02/' gma.res
+sed -i -e '35981,35981s/0\.7790E-02/0.7789E-02/' gma.res
 sed -i -e '35994,35994s/0\.7790E-02/0.7789E-02/' gma.res
+sed -i -e '97592,97592s/1\.18 /1.17 /' gma.res
 sed -i -e '102694,102694s/0\.7790E-02/0.7789E-02/' gma.res
 
 # compare the results

@@ -97,8 +97,8 @@ def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP):
 
     # NOTE: take ENFF of last datablock to
     # reproduce bug in GMAP Fortran version
-    if last_ENFF is not None:
-        data.ENFF = last_ENFF
+    # if last_ENFF is not None:
+    #     data.ENFF = last_ENFF
 
     return data
 
