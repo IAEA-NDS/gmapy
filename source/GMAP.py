@@ -211,8 +211,7 @@ def main():
             if not invertible:
                 continue
 
-            get_matrix_products(gauss, data, MODREP,
-                    APR, file_IO4)
+            get_matrix_products(gauss, data, MODREP, APR)
 
 
             def write_added_points_info(data, MODREP):
