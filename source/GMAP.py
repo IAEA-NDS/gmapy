@@ -189,7 +189,7 @@ def main():
             if not invertible:
                 continue
 
-            get_matrix_products(gauss, data, MODREP, APR)
+            get_matrix_products(gauss, data, APR)
 
             for ID in fort_range(1, data.num_datasets):
                 write_dataset_info(ID, data, APR, LABL, file_IO4)
