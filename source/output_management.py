@@ -256,3 +256,32 @@ def write_inv_attempt_info(data, IPP, file_IO4):
         for K in fort_range(1,N):
             fort_write(file_IO4, format151, [data.invECOR[K,1:(K+1)]])
 
+
+
+def write_datablock_info(APR, data, gauss, MODREP, MPPP, IPP, LABL, file_IO4):
+    for ID in fort_range(1, data.num_datasets):
+        write_dataset_info(ID, data, APR, LABL, file_IO4)
+        write_missing_dataset_info(ID, data, file_IO4)
+        write_KAS_check(ID, data, IPP, file_IO4)
+        write_overflow_message(ID, data, APR, file_IO4)
+        write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4)
+        write_fission_average(ID, data, file_IO4)
+
+    for NS in data.excluded_datasets:
+        write_dataset_exclusion_info(NS, data, file_IO4)
+    for NS in data.invalid_datapoints:
+        write_invalid_datapoints_info(NS, data, file_IO4)
+
+    format2830 = "(80X,4HN = ,I5)"
+    fort_write(file_IO4, format2830, [data.num_datapoints_used])
+
+    N = data.num_datapoints_used
+    MODC = data.MODC
+
+    if not (IPP[3] == 0 or N == 1 or MODC == 2):
+        output_Ecor_matrix(data, file_IO4)
+
+    write_inv_attempt_info(data, IPP, file_IO4)
+
+    write_added_points_info(APR, gauss, data, MODREP, file_IO4)
+
