@@ -85,20 +85,10 @@ def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP):
     gauss.AM.fill(0.)
     gauss.AA.fill(0.)
 
-    if data is not None:
-        last_ENFF = data.ENFF
-    else:
-        last_ENFF = None
-
     data = init_datablock()
     data.MODC = MODC
     data.MOD2 = MOD2
     data.AMO3 = AMO3
-
-    # NOTE: take ENFF of last datablock to
-    # reproduce bug in GMAP Fortran version
-    # if last_ENFF is not None:
-    #     data.ENFF = last_ENFF
 
     return data
 
