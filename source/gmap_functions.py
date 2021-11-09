@@ -922,7 +922,7 @@ def complete_symmetric_Ecor(data):
 
 
 
-def invert_Ecor(data, IPP, file_IO4):
+def invert_Ecor(data):
     #
     #      INVERT ECOR
     #

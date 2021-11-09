@@ -186,7 +186,7 @@ def main():
 
             complete_symmetric_Ecor(data)
 
-            invertible = invert_Ecor(data, IPP, file_IO4)
+            invertible = invert_Ecor(data)
             if not invertible:
                 continue
 
