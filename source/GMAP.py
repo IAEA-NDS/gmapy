@@ -215,6 +215,21 @@ def main():
                     APR, file_IO4)
 
 
+            def write_added_points_info(data, MODREP):
+                N = data.num_datapoints_used
+                NTOT = gauss.NTOT
+                NSHP = APR.NSHP
+                NR = APR.NR
+                NRS=NR+NSHP
+                format476 = "(/' ADDED ',I5,' TO GIVE ',I5,' TOTAL',2I5,F10.2/)"
+                fort_write(None, format476, [N, NTOT, NSHP, NRS, data.SIGL])
+                if MODREP == 0:
+                    fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, data.SIGL])
+
+            write_added_points_info(data, MODREP)
+
+
+
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
             get_result(gauss, APR, IPP, file_IO4)
