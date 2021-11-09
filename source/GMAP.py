@@ -191,7 +191,7 @@ def main():
 
             get_matrix_products(gauss, data, APR)
 
-            write_datablock_info(APR, data, gauss, MODREP, MPPP, IPP, LABL, file_IO4)
+            write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
 
 
         # LABL.AKON[3] == 'END*'
