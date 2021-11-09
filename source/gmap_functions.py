@@ -96,8 +96,7 @@ def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3, MODREP):
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         data, fisdata, gauss,
         APR, IELIM, NELIM,
-        MPPP, MODREP,
-        IPP, file_IO3):
+        MPPP, MODREP, file_IO3):
 
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
