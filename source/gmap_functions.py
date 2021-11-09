@@ -929,6 +929,8 @@ def invert_Ecor(data, IPP, file_IO4):
     MODC = data.MODC
     N = data.num_datapoints_used
 
+    data.effECOR = data.ECOR.copy()
+
     if MODC == 2 or N == 1:
         data.invECOR = data.ECOR.copy()
         return True
@@ -938,7 +940,7 @@ def invert_Ecor(data, IPP, file_IO4):
         # cholesky decomposition
         #CALL DPOFA(ECOR,LDA,N,INFO)
         INFO = np.array(0)
-        choleskymat = np.array(data.ECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
+        choleskymat = np.array(data.effECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
         linpack_slim.dpofa(a=choleskymat, info=INFO)
 
         # ALTERNATIVE USING NUMPY FUNCTION cholesky
@@ -963,18 +965,18 @@ def invert_Ecor(data, IPP, file_IO4):
                 K1=K+1
                 for L in fort_range(K1, N):  # .lbl2211
                     if MODC == 2:
-                        data.ECOR[L,K] = 0.
-                    data.ECOR[K,L] = data.ECOR[L,K]
+                        data.effECOR[L,K] = 0.
+                    data.effECOR[K,L] = data.effECOR[L,K]
 
             for K in fort_range(1,N):  # .lbl2212
-                data.ECOR[K,K] = 1.
+                data.effECOR[K,K] = 1.
 
             CXZ=0.10
             for K in fort_range(1,N):  # .lbl37
                 for L in fort_range(1,N):
-                    data.ECOR[K,L]=data.ECOR[K,L]/(1.+CXZ)
+                    data.effECOR[K,L]=data.effECOR[K,L]/(1.+CXZ)
                     if K == L:
-                        data.ECOR[K,L] = 1.
+                        data.effECOR[K,L] = 1.
 
             if IREP >= 15:
                 return False
