@@ -1055,15 +1055,15 @@ def get_matrix_products(gauss, data, MODREP,
         
         SIGMA2=SIGMA2+gauss.AM[I]*SUX
 
-    SIGL=SIGMA2/NTOT
+    data.SIGL=SIGMA2/NTOT
     format476 = "(/' ADDED ',I5,' TO GIVE ',I5,' TOTAL',2I5,F10.2/)"
-    fort_write(None, format476, [N, NTOT, NSHP, NRS, SIGL])
+    fort_write(None, format476, [N, NTOT, NSHP, NRS, data.SIGL])
     if N > LDA:
         exit()
     if NRS > LDB:
         exit()
     if MODREP == 0:
-        fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, SIGL])
+        fort_write(file_IO4, format476, [N, NTOT, NSHP, NRS, data.SIGL])
 
     gauss.SIGMA2 = SIGMA2
 
