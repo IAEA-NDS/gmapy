@@ -999,7 +999,7 @@ def invert_Ecor(data):
 
 
 
-def get_matrix_products(gauss, data, MODREP, APR):
+def get_matrix_products(gauss, data, APR):
     #
     #      GET MATRIX PRODUCTS
     #
