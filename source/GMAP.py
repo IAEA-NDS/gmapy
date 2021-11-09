@@ -160,9 +160,6 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            # NOTE: data is provided as argument to reproduce a bug
-            #       in the Fortran version that causes values of ENFF
-            #       leaking into the next datablock
             if MODREP == 0:
                 write_datablock_header(file_IO4)
 
