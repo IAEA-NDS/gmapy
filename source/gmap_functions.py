@@ -929,6 +929,9 @@ def invert_Ecor(data, IPP, file_IO4):
     MODC = data.MODC
     N = data.num_datapoints_used
 
+    if MODC == 2 or N == 1:
+        return True
+
     IREP = 0
     while True:
         # cholesky decomposition
