@@ -956,8 +956,6 @@ def invert_Ecor(data, IPP, file_IO4):
             #
             #      ATTEMPT TO MAKE CORR. MATRIX POSITIVE DEFINITE
             #
-            format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
-            fort_write(file_IO4, format105, [])
             data.num_inv_tries += 1
             IREP=IREP+1
             N1=N-1
@@ -997,13 +995,6 @@ def invert_Ecor(data, IPP, file_IO4):
         for L in fort_range(1,L1):
             data.invECOR[K,L] = data.invECOR[L,K]
         L = L + 1  # to match L value of fortran after loop
-    #
-    #      output of inverted correlation matrix of data block
-    #
-    if IPP[5] != 0:
-        format151 = "(1X,24F7.4)"
-        for K in fort_range(1,N):
-            fort_write(file_IO4, format151, [data.invECOR[K,1:(K+1)]])
 
     return True
 
