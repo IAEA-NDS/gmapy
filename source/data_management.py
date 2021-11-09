@@ -152,6 +152,8 @@ def init_prior():
 #      and saved in the datablock structure for later printing
 #
 #      SIGL       TODO
+#      NTOT       number of datapoints to be used in the fit up to
+#                 and including this datablock
 #
 #      There is a problematic variable L in the Fortran code which depending
 #      the place of execution contains a different quantity. For reproducibility,
@@ -211,6 +213,7 @@ def init_datablock():
         'FL': np.zeros(MAXDP+1, dtype=float),
 
         'SIGL': 0.,
+        'NTOT': 0,
 
         'MODC': 0,
         'MOD2': 0,
