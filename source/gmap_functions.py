@@ -1054,6 +1054,7 @@ def get_matrix_products(gauss, data, MODREP, APR):
         
         SIGMA2=SIGMA2+gauss.AM[I]*SUX
 
+    data.NTOT = NTOT
     data.SIGL=SIGMA2/NTOT
     if N > LDA:
         exit()
