@@ -160,9 +160,6 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            if MODREP == 0:
-                write_datablock_header(file_IO4)
-
             data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3)
 
         # LABL.AKON[2] == 'DATA'
