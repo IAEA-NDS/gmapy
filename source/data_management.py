@@ -94,6 +94,7 @@ def init_prior():
 #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
 #      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
 #      invECOR inverse CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
+#      num_inv_tries  number of attempts to invert ECOR by modifying it
 #      ENFF    NORMALIZATION UNCERTAINTIES COMPONENTS
 #      EPAF    UNCERTAINTY COMPONENT PARAMETERS
 #      FCFC    CROSS CORRELATION FACTORS
@@ -178,6 +179,7 @@ def init_datablock():
         'DCS': np.zeros(MAXDP+1, dtype=float),
         'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'invECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
+        'num_inv_tries': 0,
         'CO': np.zeros((12+1, MAXDP+1), dtype=float),
         'ENFF': np.zeros((MAXDS+1, 10+1), dtype=float),
         'EPAF': np.zeros((3+1, 11+1, MAXDS+1), dtype=float),
