@@ -956,6 +956,7 @@ def invert_Ecor(data, IPP, file_IO4):
             #
             format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
             fort_write(file_IO4, format105, [])
+            data.num_inv_tries += 1
             IREP=IREP+1
             N1=N-1
             for K in fort_range(1,N1):  # .lbl2211
