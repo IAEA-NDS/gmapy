@@ -74,7 +74,7 @@ def read_prior(MC1, MC2, APR, file_IO3):
 
 
 
-def prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3):
+def prepare_for_datablock_input(gauss, MODC, MOD2, AMO3):
     #
     #      BLOCK INPUT
     #
