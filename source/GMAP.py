@@ -15,7 +15,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         complete_symmetric_Ecor,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
-        deal_with_dataset)
+        deal_with_dataset, read_datablock)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -162,31 +162,20 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            data = prepare_for_datablock_input(gauss, MODC, MOD2, AMO3)
 
-        # LABL.AKON[2] == 'DATA'
-        elif ACON == LABL.AKON[2]:
-            deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, fisdata, gauss,
-                    APR, IELIM, NELIM,
-                    MPPP, MODREP, file_IO3)
+            file_IO3.seek(file_IO3.get_line_nr()-1)
 
-        # LABL.AKON[7] == 'EDBL'
-        elif ACON == LABL.AKON[7]:
-            #
-            #    Data BLOCK complete
-            #
+            data = read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
+                           IELIM, NELIM, MPPP, MODREP, LABL, file_IO3)
+
             if data.num_datasets == 0:
                 continue
-
-            complete_symmetric_Ecor(data)
 
             invertible = invert_Ecor(data)
             if not invertible:
                 continue
 
             get_matrix_products(gauss, data, APR)
-
             write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
 
 
@@ -213,7 +202,7 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    data = prepare_for_datablock_input(gauss, MODC, MOD2, AMO3)
+                    file_IO3.seek(file_IO3.get_line_nr()-1)
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP, file_IO4)
