@@ -709,9 +709,6 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
 
     for KS in fort_range(dataset_start_index, dataset_end_index):  # .lbl18
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
-        J = KAS[KS,1]
-        I = KAS[KS,2]
-        I8 = KAS[KS,3]
 
         if not is_usable_datapoint(KS, data):
             data.invalid_datapoints[NS].append(KS)
@@ -822,6 +819,10 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
             gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
+
+        J = KAS[KS,1]
+        I = KAS[KS,2]
+        I8 = KAS[KS,3]
 
         KA[J,1] = KA[J,1] + 1
         KR = KA[J,1]
