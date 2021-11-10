@@ -673,6 +673,23 @@ def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
 
 
 
+def is_usable_datapoint(idx, data):
+
+    ID = get_dataset_id_from_idx(idx, data)
+    J = data.KAS[idx,1]
+    I = data.KAS[idx,2]
+    I8 = data.KAS[idx,3]
+    MT = data.IDEN[ID, 7]
+
+    if (J == 0 and MT != 6) or \
+       (I == 0 and MT in (3,4,5,7,8,9)) or \
+       (I8 == 0 and MT in (7,9)):
+           return False
+    else:
+        return True
+
+
+
 def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
     #
     #      FILL AA,AM,AND COV
