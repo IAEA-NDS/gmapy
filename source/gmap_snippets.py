@@ -85,3 +85,23 @@ def get_dataset_range(ID, data):
     end_index = start_index + num_points - 1
     return (start_index, end_index)
 
+
+
+def get_dataset_id_from_idx(idx, data):
+    if data.num_datasets == 0:
+        raise IndexError('no dataset in datablock present')
+
+    start_index = 1
+    found_idx = -1
+    for curID in fort_range(1, data.num_datasets):
+        num_points = data.IDEN[curID, 1]
+        start_index += num_points
+        if start_index > idx:
+            found_idx = curID
+            break
+
+    if found_idx == -1:
+        raise IndexError('provided index outside range of dataset indices')
+
+    return found_idx
+
