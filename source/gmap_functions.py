@@ -690,6 +690,16 @@ def is_usable_datapoint(idx, data):
 
 
 
+def count_usable_datapoints(data):
+    N = 0
+    if data.num_datapoints > 0:
+        for idx in fort_range(1, data.num_datapoints):
+            if is_usable_datapoint(idx, data):
+                N += 1
+    return N
+
+
+
 def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
     #
     #      FILL AA,AM,AND COV
