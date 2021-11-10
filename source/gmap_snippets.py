@@ -2,6 +2,30 @@ import numpy as np
 from fortran_utils import fort_range
 
 
+class TextfileReader:
+
+    def __init__(self, filename):
+        self.name = filename
+        self.fcont = open(filename, 'r').read().splitlines()
+        self.linecnt = 0
+
+
+    def readline(self):
+        self.linecnt += 1
+        if self.linecnt > len(self.fcont):
+            raise IndexError('Attempting to read beyond EOF')
+        return self.fcont[self.linecnt-1]
+
+
+    def seek(self, linenr):
+        self.linecnt = linenr
+
+
+    def get_line_nr(self):
+        return self.linecnt
+
+
+
 def should_downweight(ID, data):
     MOD2 = data.MOD2
     AMO3 = data.AMO3
