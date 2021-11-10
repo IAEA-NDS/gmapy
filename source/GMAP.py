@@ -28,6 +28,8 @@ from output_management import (output_Ecor_matrix,
 
 from data_management import init_gauss, init_prior, init_labels
 
+from gmap_snippets import TextfileReader
+
 
 #################################################
 #   START OF GMAP PROGRAM
@@ -57,7 +59,7 @@ def main():
     NELIM = np.zeros(40+1, dtype=int)
 
     basedir = '.'
-    file_IO3 = open('data.gma', 'r')
+    file_IO3 = TextfileReader('data.gma')
     file_IO4 = open('gma.res', 'w')
     file_IO5 = open('plot.dta', 'w')
 
@@ -202,7 +204,7 @@ def main():
                 gauss.NTOT=0
                 APR.NSHP=0
                 gauss = init_gauss()
-                file_IO3.seek(0,0)
+                file_IO3.seek(0)
 
                 format130 = "(A4)"
                 for L in fort_range(1,2000):  # .lbl69
