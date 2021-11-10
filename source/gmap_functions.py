@@ -994,7 +994,7 @@ def invert_Ecor(data):
     #      INVERT ECOR
     #
     MODC = data.MODC
-    N = data.num_datapoints_used
+    N = count_usable_datapoints(data)
 
     data.effECOR = data.ECOR.copy()
 
