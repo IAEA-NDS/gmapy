@@ -162,7 +162,7 @@ def main():
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
-            data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3)
+            data = prepare_for_datablock_input(gauss, MODC, MOD2, AMO3)
 
         # LABL.AKON[2] == 'DATA'
         elif ACON == LABL.AKON[2]:
@@ -213,7 +213,7 @@ def main():
                         break
 
                 if DUM == LABL.AKON[4]:
-                    data = prepare_for_datablock_input(data, gauss, MODC, MOD2, AMO3)
+                    data = prepare_for_datablock_input(gauss, MODC, MOD2, AMO3)
                     continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP, file_IO4)
