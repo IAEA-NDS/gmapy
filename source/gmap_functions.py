@@ -2,7 +2,7 @@ from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock, SIZE_LIMITS
 from gmap_snippets import (should_downweight, get_AX, get_prior_range,
-                           get_dataset_range)
+                           get_dataset_range, get_dataset_id_from_idx)
 from output_management import (write_dataset_info, write_prior_info,
                                write_datablock_header, write_KAS_check,
                                write_overflow_message, write_dataset_exclusion_info,
@@ -712,9 +712,8 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
         J = KAS[KS,1]
         I = KAS[KS,2]
         I8 = KAS[KS,3]
-        if (J == 0 and MT != 6) or \
-           (I == 0 and MT in (3,4,5,7,8,9)) or \
-           (I8 == 0 and MT in (7,9)):
+
+        if not is_usable_datapoint(KS, data):
             data.invalid_datapoints[NS].append(KS)
             continue
 
