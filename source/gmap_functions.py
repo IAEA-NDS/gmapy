@@ -177,7 +177,8 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
             determine_apriori_norm_shape(data, APR, MPPP, MODREP)
             data.problematic_L[ID] = L
 
-        fill_AA_AM_COV(data, fisdata, APR, gauss)
+        ID = data.num_datasets
+        fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
 
     return
 
@@ -672,12 +673,11 @@ def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
 
 
 
-def fill_AA_AM_COV(data, fisdata, APR, gauss):
+def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
     #
     #      FILL AA,AM,AND COV
     #
     IDEN = data.IDEN
-    ID = data.num_datasets
     MT =  IDEN[ID, 7]
     KAS = data.KAS
     KA = data.KA
