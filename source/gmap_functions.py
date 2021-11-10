@@ -74,6 +74,47 @@ def read_prior(MC1, MC2, APR, file_IO3):
 
 
 
+def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
+        IELIM, NELIM, MPPP, MODREP, LABL, file_IO3):
+
+    format100 = "(A4,1X,8I5)"
+    ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
+ 
+    # LABL.AKON[4] == 'BLCK'
+    if not ACON == LABL.AKON[4]:
+        raise ValueError('Expecting BLCK at beginning of datablock')
+
+    data = prepare_for_datablock_input(gauss, MODC, MOD2, AMO3)
+
+    while True:
+
+        ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
+
+        # LABL.AKON[2] == 'DATA'
+        if ACON == LABL.AKON[2]:
+            deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
+                    data, fisdata, gauss,
+                    APR, IELIM, NELIM,
+                    MPPP, MODREP, file_IO3)
+
+        # LABL.AKON[7] == 'EDBL'
+        elif ACON == LABL.AKON[7]:
+            break
+
+        else:
+            raise ValueError('Inadmissible keyword ' + str(ACON) + ' while reading datablock')
+
+    #
+    #    Data BLOCK complete
+    #
+    if data.num_datasets > 0:
+        complete_symmetric_Ecor(data)
+
+    return data
+
+
+
+
 def prepare_for_datablock_input(gauss, MODC, MOD2, AMO3):
     #
     #      BLOCK INPUT
