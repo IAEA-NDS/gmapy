@@ -714,8 +714,13 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
     NCT = data.NCT[ID]
     N = data.num_datapoints_used
     NS = IDEN[ID,6]
+    MTTP = data.IDEN[ID, 8]
 
-    NSHP_IDX = APR.NSHP
+    if MTTP == 2:
+        NSHP_IDX = np.where(APR.NSETN == NS)[0]
+        if len(NSHP_IDX) > 1:
+            raise IndexError('Dataset ' + str(NS) + ' appears multiple times')
+        NSHP_IDX = NSHP_IDX[0]
 
     data.invalid_datapoints[NS] = []
 
