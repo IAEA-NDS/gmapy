@@ -111,10 +111,6 @@ def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
         complete_symmetric_Ecor(data)
 
 
-    data.num_datapoints_used = 0
-    for ID in fort_range(1, data.num_datasets):
-        fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
-
     return data
 
 
