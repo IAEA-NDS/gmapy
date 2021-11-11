@@ -124,9 +124,6 @@ def prepare_for_datablock_input(gauss, MODC, MOD2, AMO3):
     #      ID    TOTAL NO OF DATA SETS IN BLOCK
     #
 
-    gauss.AM.fill(0.)
-    gauss.AA.fill(0.)
-
     data = init_datablock()
     data.MODC = MODC
     data.MOD2 = MOD2

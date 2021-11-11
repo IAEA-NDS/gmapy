@@ -175,6 +175,8 @@ def main():
             if not invertible:
                 continue
 
+            gauss.AM.fill(0.)
+            gauss.AA.fill(0.)
             data.num_datapoints_used = 0
             for ID in fort_range(1, data.num_datasets):
                 fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
