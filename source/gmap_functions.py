@@ -715,6 +715,8 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
     N = data.num_datapoints_used
     NS = IDEN[ID,6]
 
+    NSHP_IDX = APR.NSHP
+
     data.invalid_datapoints[NS] = []
 
     dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
@@ -809,7 +811,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
             #
             #   SHAPE OF SUM
             #
-            L = APR.NR + APR.NSHP
+            L = APR.NR + NSHP_IDX
             AP = APR.CS[L]
             CX = 0.
             for I in fort_range(1,NCT):  # .lbl253
@@ -853,7 +855,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
             #
             #      CROSS SECTION SHAPE    L is shape data norm. const. index
             #
-            L = APR.NR + APR.NSHP
+            L = APR.NR + NSHP_IDX
             AP = APR.CS[L]
             CX = APR.CS[J]*AP
             CXX = CX/DQQQ
@@ -883,7 +885,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
             #
             #      RATIO SHAPE
             #
-            L = APR.NR + APR.NSHP
+            L = APR.NR + NSHP_IDX
             AP = APR.CS[L]
             CX = APR.CS[J]*AP/APR.CS[I]
             CXX = CX/DQQQ
@@ -934,7 +936,7 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
             #
             #   SHAPE OF RATIO S1/(S2+S3)
             #
-            L = APR.NR + APR.NSHP
+            L = APR.NR + NSHP_IDX
             AP = APR.CS[L]
             CII8=APR.CS[I]+APR.CS[I8]
             CX=AP*APR.CS[J]/CII8
