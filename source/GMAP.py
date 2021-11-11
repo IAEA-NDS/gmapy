@@ -24,9 +24,10 @@ from output_management import (output_Ecor_matrix,
         write_KAS_check, write_overflow_message,
         write_dataset_table, write_fission_average,
         write_invalid_datapoints_info, write_added_points_info,
-        write_inv_attempt_info, write_datablock_info)
+        write_inv_attempt_info, write_datablock_info,
+        write_result_info)
 
-from data_management import init_gauss, init_prior, init_labels
+from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
 from gmap_snippets import TextfileReader, get_num_shapedatasets
 
@@ -199,6 +200,8 @@ def main():
                 write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
                 APR.NSHP = totNSHP
 
+
+            write_result_info(APR, gauss, IPP, file_IO4)
 
             get_result(gauss, APR, IPP, file_IO4)
             APR = output_result(gauss, fisdata, APR, MODAP,

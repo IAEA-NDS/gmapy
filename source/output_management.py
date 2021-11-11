@@ -288,3 +288,41 @@ def write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4):
 
     write_added_points_info(APR, data, MODREP, file_IO4)
 
+
+
+def write_result_info(APR, gauss, IPP, file_IO4):
+
+    LDB = SIZE_LIMITS.MAX_NUM_UNKNOWNS
+
+    NRS = APR.NR + APR.NSHP
+    NTOT = gauss.NTOT
+    SIGMA2 = gauss.SIGMA2
+
+    format6919 = "(' start getting the result ')"
+    fort_write(None, format6919, [])
+    SIGMAA=SIGMA2/float(NTOT-NRS)
+    format9679 = "(/' UNCERTENTY SCALING   ',E12.4/)"
+    fort_write(file_IO4, format9679, [SIGMAA])
+    NRST=NRS*(NRS+1)/2
+    if IPP[8] ==  0:
+        force_stop(file_IO4)
+    if IPP[4] != 0:
+        format116 = "(1H*//,'  MATRIX PRODUCT'//)"
+        fort_write(file_IO4, format116, [])
+        format152 = "(2X,10E10.4)"
+        fort_write(file_IO4, format152, gauss.B[1:(NRST+1)])
+
+    format2840 = "(80X,9HLDB,NRS= ,2I6,6H  NTOT,I8)"
+    fort_write(file_IO4, format2840, [LDB, NRS, NTOT])
+
+    format7103 = "(2E16.8)"
+    format6918 = "(' start on matrix inversion ')"
+    fort_write(None, format6918, [])
+
+    format9171 = "(' INVERT SOLUTION MATRIX')"
+    fort_write(file_IO4, format9171, [])
+    fort_write(None, format9171, [])
+
+    format6917 = "(' completed inversion of matrix')"
+    fort_write(None, format6917, [])
+
