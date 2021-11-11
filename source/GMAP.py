@@ -28,7 +28,7 @@ from output_management import (output_Ecor_matrix,
 
 from data_management import init_gauss, init_prior, init_labels
 
-from gmap_snippets import TextfileReader
+from gmap_snippets import TextfileReader, get_num_shapedatasets
 
 
 #################################################
@@ -66,6 +66,8 @@ def main():
     APR = init_prior()
     gauss = init_gauss()
     LABL = init_labels()
+
+    datablock_list = []
 
     #
     #      INITIALIZE PARAMETERS
@@ -168,25 +170,36 @@ def main():
             data = read_datablock(APR, MODC, MOD2, AMO3,
                            IELIM, NELIM, MPPP, MODREP, LABL, file_IO3)
 
-            if data.num_datasets == 0:
-                continue
-
-            invertible = invert_Ecor(data)
-            if not invertible:
-                continue
-
-            gauss.AM.fill(0.)
-            gauss.AA.fill(0.)
-            data.num_datapoints_used = 0
-            for ID in fort_range(1, data.num_datasets):
-                fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
-
-            get_matrix_products(gauss, data, APR)
-            write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
+            datablock_list.append(data)
 
 
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
+
+            curNSHP = 0
+            totNSHP = APR.NSHP
+            for data in datablock_list:
+                if data.num_datasets == 0:
+                    continue
+
+                invertible = invert_Ecor(data)
+                if not invertible:
+                    continue
+
+                gauss.AM.fill(0.)
+                gauss.AA.fill(0.)
+                data.num_datapoints_used = 0
+                for ID in fort_range(1, data.num_datasets):
+                    fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
+
+                get_matrix_products(gauss, data, APR)
+
+                curNSHP += get_num_shapedatasets(data)
+                APR.NSHP = curNSHP
+                write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
+                APR.NSHP = totNSHP
+
+
             get_result(gauss, APR, IPP, file_IO4)
             APR = output_result(gauss, fisdata, APR, MODAP,
                     file_IO4, file_IO5)
@@ -195,6 +208,7 @@ def main():
             #
             if not (MODAP == 0 or MODREP == MODAP):
 
+                datablock_list = []
                 MODREP=MODREP+1
                 gauss.NTOT=0
                 APR.NSHP=0
