@@ -15,7 +15,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         complete_symmetric_Ecor,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
-        deal_with_dataset, read_datablock)
+        deal_with_dataset, read_datablock, fill_AA_AM_COV)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -174,6 +174,10 @@ def main():
             invertible = invert_Ecor(data)
             if not invertible:
                 continue
+
+            data.num_datapoints_used = 0
+            for ID in fort_range(1, data.num_datasets):
+                fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
 
             get_matrix_products(gauss, data, APR)
             write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
