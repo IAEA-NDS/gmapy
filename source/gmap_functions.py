@@ -180,6 +180,8 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         ID = data.num_datasets
         fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
 
+        data.num_datapoints_used = count_usable_datapoints(data)
+
     return
 
 
