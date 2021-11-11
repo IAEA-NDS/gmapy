@@ -195,13 +195,14 @@ def main():
 
                 get_matrix_products(gauss, data, APR)
 
+            get_result(gauss, APR, IPP, file_IO4)
+
+
+            for data in datablock_list:
                 curNSHP += get_num_shapedatasets(data)
                 APR.NSHP = curNSHP
                 write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
                 APR.NSHP = totNSHP
-
-
-            get_result(gauss, APR, IPP, file_IO4)
 
             write_result_info(APR, gauss, IPP, file_IO4)
 
