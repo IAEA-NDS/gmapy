@@ -1135,27 +1135,6 @@ def get_result(gauss, APR, IPP, file_IO4):
     NTOT = gauss.NTOT
     SIGMA2 = gauss.SIGMA2
 
-    format6919 = "(' start getting the result ')"
-    fort_write(None, format6919, [])
-    SIGMAA=SIGMA2/float(NTOT-NRS)
-    format9679 = "(/' UNCERTENTY SCALING   ',E12.4/)"
-    fort_write(file_IO4, format9679, [SIGMAA])
-    NRST=NRS*(NRS+1)/2
-    if IPP[8] ==  0:
-        force_stop(file_IO4)
-    if IPP[4] != 0:
-        format116 = "(1H*//,'  MATRIX PRODUCT'//)"
-        fort_write(file_IO4, format116, [])
-        format152 = "(2X,10E10.4)"
-        fort_write(file_IO4, format152, gauss.B[1:(NRST+1)])
-
-    format2840 = "(80X,9HLDB,NRS= ,2I6,6H  NTOT,I8)"
-    fort_write(file_IO4, format2840, [LDB, NRS, NTOT])
-    format7103 = "(2E16.8)"
-    format6918 = "(' start on matrix inversion ')"
-    fort_write(None, format6918, [])
-
-
     # CALL DPPFA(B,NRS,INFO)
     NUMEL = NRS*(NRS+1)//2
     INFO = 0.
@@ -1179,10 +1158,6 @@ def get_result(gauss, APR, IPP, file_IO4):
         fort_write(file_IO4, format106)
         exit()
 
-    format9171 = "(' INVERT SOLUTION MATRIX')"
-    fort_write(file_IO4, format9171, [])
-    fort_write(None, format9171, [])
-
     JOB = 1
     # CALL DPPDI(gauss.B,NRS,DET,JOB)
     NUMEL = NRS*(NRS+1)//2
@@ -1199,10 +1174,6 @@ def get_result(gauss, APR, IPP, file_IO4):
     # tmp = np.matmul(tmp, tmp.T)
     # # pack the result again
     # gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
-
-
-    format6917 = "(' completed inversion of matrix')"
-    fort_write(None, format6917, [])
 
     for I in fort_range(1,NRS):  # .lbl13
         gauss.DE[I]=0.
