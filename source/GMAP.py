@@ -201,9 +201,10 @@ def main():
                 APR.NSHP = totNSHP
 
 
+            get_result(gauss, APR, IPP, file_IO4)
+
             write_result_info(APR, gauss, IPP, file_IO4)
 
-            get_result(gauss, APR, IPP, file_IO4)
             APR = output_result(gauss, fisdata, APR, MODAP,
                     file_IO4, file_IO5)
             #
