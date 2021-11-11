@@ -1127,7 +1127,7 @@ def get_matrix_products(gauss, data, APR):
 
 
 
-def get_result(gauss, APR, IPP, file_IO4):
+def get_result(gauss, APR):
     #
     #      GETTING THE RESULT
     #

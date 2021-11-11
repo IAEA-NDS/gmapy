@@ -195,7 +195,7 @@ def main():
 
                 get_matrix_products(gauss, data, APR)
 
-            get_result(gauss, APR, IPP, file_IO4)
+            get_result(gauss, APR)
 
 
             for data in datablock_list:
