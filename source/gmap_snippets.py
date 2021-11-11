@@ -105,3 +105,12 @@ def get_dataset_id_from_idx(idx, data):
 
     return found_idx
 
+
+
+def get_num_shapedatasets(data):
+    num = 0
+    for ID in fort_range(1, data.num_datasets):
+        if data.IDEN[ID,8] == 2:
+            num += 1
+    return num
+
