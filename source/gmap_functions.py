@@ -1155,7 +1155,8 @@ def get_result(gauss, APR, IPP, file_IO4):
     if INFO != 0:
         format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
         format106 = "( '  SOLUTION  CORREL. MATRIX NOT PD ' )"
-        fort_write(file_IO4, format106)
+        # fort_write(file_IO4, format106)
+        fort_write(None, format106)
         exit()
 
     JOB = 1
