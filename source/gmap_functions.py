@@ -74,7 +74,7 @@ def read_prior(MC1, MC2, APR, file_IO3):
 
 
 
-def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
+def read_datablock(APR, fisdata, MODC, MOD2, AMO3,
         IELIM, NELIM, MPPP, MODREP, LABL, file_IO3):
 
     format100 = "(A4,1X,8I5)"
@@ -84,7 +84,7 @@ def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
     if not ACON == LABL.AKON[4]:
         raise ValueError('Expecting BLCK at beginning of datablock')
 
-    data = prepare_for_datablock_input(gauss, MODC, MOD2, AMO3)
+    data = prepare_for_datablock_input(MODC, MOD2, AMO3)
 
     while True:
 
@@ -93,7 +93,7 @@ def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
         # LABL.AKON[2] == 'DATA'
         if ACON == LABL.AKON[2]:
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, fisdata, gauss,
+                    data, fisdata,
                     APR, IELIM, NELIM,
                     MPPP, MODREP, file_IO3)
 
@@ -116,7 +116,7 @@ def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
 
 
 
-def prepare_for_datablock_input(gauss, MODC, MOD2, AMO3):
+def prepare_for_datablock_input(MODC, MOD2, AMO3):
     #
     #      BLOCK INPUT
     #
@@ -133,7 +133,7 @@ def prepare_for_datablock_input(gauss, MODC, MOD2, AMO3):
 
 
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, fisdata, gauss,
+        data, fisdata,
         APR, IELIM, NELIM,
         MPPP, MODREP, file_IO3):
 
