@@ -165,7 +165,7 @@ def main():
 
             file_IO3.seek(file_IO3.get_line_nr()-1)
 
-            data = read_datablock(APR, fisdata, MODC, MOD2, AMO3,
+            data = read_datablock(APR, MODC, MOD2, AMO3,
                            IELIM, NELIM, MPPP, MODREP, LABL, file_IO3)
 
             if data.num_datasets == 0:
