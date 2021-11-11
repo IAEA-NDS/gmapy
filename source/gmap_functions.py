@@ -110,6 +110,11 @@ def read_datablock(APR, fisdata, gauss, MODC, MOD2, AMO3,
     if data.num_datasets > 0:
         complete_symmetric_Ecor(data)
 
+
+    data.num_datapoints_used = 0
+    for ID in fort_range(1, data.num_datasets):
+        fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
+
     return data
 
 
@@ -176,9 +181,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
             determine_apriori_norm_shape(data, APR, MPPP, MODREP)
             data.problematic_L[ID] = L
-
-        ID = data.num_datasets
-        fill_AA_AM_COV(ID, data, fisdata, APR, gauss)
 
         data.num_datapoints_used = count_usable_datapoints(data)
 
