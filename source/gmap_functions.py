@@ -1140,7 +1140,6 @@ def get_result(gauss, APR):
     INFO = 0.
     tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
     linpack_slim.dppfa(ap=tmp, n=NRS, info=INFO)
-    gauss.B[1:(NUMEL+1)] = tmp
 
     # ALTERNATIVE: numpy does not know about the packed storaged format
     #              of symmetric matrices used by DPPFA, so we need to
@@ -1159,30 +1158,12 @@ def get_result(gauss, APR):
         fort_write(None, format106)
         exit()
 
-    JOB = 1
-    # CALL DPPDI(gauss.B,NRS,DET,JOB)
-    # NUMEL = NRS*(NRS+1)//2
-    # tmp_det = np.array([0., 0.], dtype='float64', order='F')
-    # tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
-    # linpack_slim.dppdi(ap=tmp, n=NRS, det=tmp_det, job=JOB)
-    # gauss.B[1:(NUMEL+1)] = tmp
-
-    # ALTERNATIVE: using numpy/scipy functions instead of LINPACK functions
-    # invert the matrix, we do it a bit complicated to use the cholesky factor
-    # we invert the cholesky factor and then mutliply its inverse by its transposed inverse
     tmp = unpack_utriang_matrix(tmp)
     tmp = np.linalg.inv(tmp)
     tmp = np.matmul(tmp, tmp.T)
-    # pack the result again
-    gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
+    gauss.DE[1:(NRS+1)]=gauss.DE[1:(NRS+1)]+ np.matmul(tmp, gauss.BM[1:(NRS+1)])
 
-    for I in fort_range(1,NRS):  # .lbl13
-        gauss.DE[I]=0.
-        for K in fort_range(1,NRS):  # .lbl13
-            IK=K*(K-1)//2+I
-            if K < I:
-                IK = I*(I-1)//2 + K
-            gauss.DE[I]=gauss.DE[I]+gauss.B[IK]*gauss.BM[K]
+    gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
 
 
 def output_result(gauss, fisdata, APR, MODAP,
