@@ -628,19 +628,10 @@ def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
     ID = data.num_datasets
     NADD = data.num_datapoints + 1
     NALT = NADD - IDEN[ID, 1]
-    NS = IDEN[ID, 6]
-    MT = IDEN[ID, 7]
-    MTTP = IDEN[ID, 8]
-    NADD1 = NADD - 1
-    NR = APR.NR
-    KAS = data.KAS
-    NCT = data.NCT[ID]
-    NSHP = APR.NSHP
-    NSETN = APR.NSETN
 
     AP = 0.
     WWT = 0.
-    for K in fort_range(NALT, NADD1):  # .lbl29
+    for K in fort_range(NALT, NADD-1):  # .lbl29
         CSSK = data.CSS[K]
         DCSK = data.DCS[K]
         WXX = 1./(DCSK*DCSK)
@@ -658,9 +649,10 @@ def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
 
     AP=AP/WWT
 
+    MTTP = IDEN[ID, 8]
     if MTTP == 2:
         if MODREP == 0:
-            L = NR + NSHP
+            L = APR.NR + APR.NSHP
             AP = 1.0 / AP
             APR.CS[L] = AP
 
