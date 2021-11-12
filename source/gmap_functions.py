@@ -1073,9 +1073,7 @@ def get_matrix_products(gauss, data, APR):
     #
     #      GET MATRIX PRODUCTS
     #
-    NSHP = APR.NSHP
-    NR = APR.NR
-    NRS=NR+NSHP
+    NRS=APR.NR + APR.NSHP
     KA = data.KA
     N = data.num_datapoints_used
     gauss.NTOT += data.num_datapoints_used
