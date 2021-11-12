@@ -1132,33 +1132,16 @@ def get_result(gauss, APR):
     #      GETTING THE RESULT
     #
     NRS = APR.NR + APR.NSHP
-    NTOT = gauss.NTOT
-    SIGMA2 = gauss.SIGMA2
-
-    # CALL DPPFA(B,NRS,INFO)
     NUMEL = NRS*(NRS+1)//2
-    INFO = 0.
     tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
-    linpack_slim.dppfa(ap=tmp, n=NRS, info=INFO)
-
-    # ALTERNATIVE: numpy does not know about the packed storaged format
-    #              of symmetric matrices used by DPPFA, so we need to
-    #              unpack the matrix first
-
-    # INFO = 0
-    # try:
-    #     tmp[1:NRS+1,1:NRS+1] = cholesky(tmp[1:NRS+1,1:NRS+1]).T 
-    # except np.linalg.LinAlgError:
-    #     INFO = 1
-
-    if INFO != 0:
+    tmp = unpack_utriang_matrix(tmp)
+    try:
+        tmp = np.linalg.cholesky(tmp.T).T 
+    except np.linalg.LinAlgError:
         format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
         format106 = "( '  SOLUTION  CORREL. MATRIX NOT PD ' )"
-        # fort_write(file_IO4, format106)
         fort_write(None, format106)
         exit()
-
-    tmp = unpack_utriang_matrix(tmp)
     tmp = np.linalg.inv(tmp)
     tmp = np.matmul(tmp, tmp.T)
     gauss.DE[1:(NRS+1)]=gauss.DE[1:(NRS+1)]+ np.matmul(tmp, gauss.BM[1:(NRS+1)])
