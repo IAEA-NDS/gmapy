@@ -695,31 +695,36 @@ def count_usable_datapoints(data):
 
 
 
-def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
+def fill_AA_AM_COV(data, fisdata, APR, gauss):
     #
     #      FILL AA,AM,AND COV
     #
     IDEN = data.IDEN
-    MT =  IDEN[ID, 7]
     KAS = data.KAS
     KA = data.KA
-    NT = data.NT[ID,:]
-    NCT = data.NCT[ID]
-    N = data.num_datapoints_used
-    NS = IDEN[ID,6]
-    MTTP = data.IDEN[ID, 8]
+    N = 0
 
-    if MTTP == 2:
-        NSHP_IDX = np.where(APR.NSETN == NS)[0]
-        if len(NSHP_IDX) > 1:
-            raise IndexError('Dataset ' + str(NS) + ' appears multiple times')
-        NSHP_IDX = NSHP_IDX[0]
+    gauss.AM.fill(0.)
+    gauss.AA.fill(0.)
 
-    data.invalid_datapoints[NS] = []
+    for KS in fort_range(1, data.num_datapoints):  # .lbl18
 
-    dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
+        ID = get_dataset_id_from_idx(KS, data)
 
-    for KS in fort_range(dataset_start_index, dataset_end_index):  # .lbl18
+        MT =  IDEN[ID, 7]
+        NT = data.NT[ID,:]
+        NCT = data.NCT[ID]
+        NS = IDEN[ID,6]
+        MTTP = data.IDEN[ID, 8]
+
+        if MTTP == 2:
+            NSHP_IDX = np.where(APR.NSETN == NS)[0]
+            if len(NSHP_IDX) > 1:
+                raise IndexError('Dataset ' + str(NS) + ' appears multiple times')
+            NSHP_IDX = NSHP_IDX[0]
+
+        data.invalid_datapoints[NS] = []
+
         DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
 
         if not is_usable_datapoint(KS, data):
@@ -971,7 +976,6 @@ def fill_AA_AM_COV(ID, data, fisdata, APR, gauss):
                 gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
 
-    data.num_datapoints_used = N
     return
 
 
