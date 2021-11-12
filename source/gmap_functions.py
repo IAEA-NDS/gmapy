@@ -1161,20 +1161,20 @@ def get_result(gauss, APR):
 
     JOB = 1
     # CALL DPPDI(gauss.B,NRS,DET,JOB)
-    NUMEL = NRS*(NRS+1)//2
-    tmp_det = np.array([0., 0.], dtype='float64', order='F')
-    tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
-    linpack_slim.dppdi(ap=tmp, n=NRS, det=tmp_det, job=JOB)
-    gauss.B[1:(NUMEL+1)] = tmp
+    # NUMEL = NRS*(NRS+1)//2
+    # tmp_det = np.array([0., 0.], dtype='float64', order='F')
+    # tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
+    # linpack_slim.dppdi(ap=tmp, n=NRS, det=tmp_det, job=JOB)
+    # gauss.B[1:(NUMEL+1)] = tmp
 
     # ALTERNATIVE: using numpy/scipy functions instead of LINPACK functions
     # invert the matrix, we do it a bit complicated to use the cholesky factor
     # we invert the cholesky factor and then mutliply its inverse by its transposed inverse
-    # tmp = unpack_utriang_matrix(tmp)
-    # tmp = inv(tmp)
-    # tmp = np.matmul(tmp, tmp.T)
-    # # pack the result again
-    # gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
+    tmp = unpack_utriang_matrix(tmp)
+    tmp = np.linalg.inv(tmp)
+    tmp = np.matmul(tmp, tmp.T)
+    # pack the result again
+    gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
 
     for I in fort_range(1,NRS):  # .lbl13
         gauss.DE[I]=0.
