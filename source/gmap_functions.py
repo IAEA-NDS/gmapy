@@ -1008,16 +1008,16 @@ def invert_Ecor(data):
     while True:
         # cholesky decomposition
         #CALL DPOFA(ECOR,LDA,N,INFO)
-        INFO = np.array(0)
-        choleskymat = np.array(data.effECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
-        linpack_slim.dpofa(a=choleskymat, info=INFO)
+        # INFO = np.array(0)
+        # choleskymat = np.array(data.effECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
+        # linpack_slim.dpofa(a=choleskymat, info=INFO)
 
         # ALTERNATIVE USING NUMPY FUNCTION cholesky
-        # INFO = 0
-        # try:
-        #     data.ECOR[1:(N+1),1:(N+1)] = cholesky(data.ECOR[1:(N+1), 1:(N+1)]).T 
-        # except np.linalg.LinAlgError:
-        #     INFO = 1
+        INFO = 0
+        try:
+            choleskymat = np.linalg.cholesky(data.effECOR[1:(N+1), 1:(N+1)]).T
+        except np.linalg.LinAlgError:
+            INFO = 1
 
         if INFO == 0:
             break
