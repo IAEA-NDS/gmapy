@@ -338,7 +338,8 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         for L in fort_range(3,11):  # .lbl207
             RELU += data.CO[L, NADD]**2
 
-        data.effDCS[NADD] = np.sqrt(XNORU + RELU) 
+        data.DCS[NADD] = np.sqrt(XNORU + RELU)
+        data.effDCS[NADD] = np.sqrt(XNORU + RELU)
 
     return
 
