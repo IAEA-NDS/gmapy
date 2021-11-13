@@ -170,7 +170,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     # moved into write_overflow_message function
                     exit()
 
-            determine_apriori_norm_shape(data, APR, MPPP, MODREP)
+            determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
             data.problematic_L[ID] = L
 
         data.num_datapoints_used = count_usable_datapoints(data)
@@ -620,12 +620,10 @@ def construct_Ecor(data):
 
 
 
-def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
+def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
-    ID = data.num_datasets
-
     start_idx, end_idx = get_dataset_range(ID, data)
 
     AP = 0.
