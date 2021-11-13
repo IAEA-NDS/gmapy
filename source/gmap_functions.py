@@ -631,7 +631,7 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
     WWT = 0.
     for K in fort_range(start_idx, end_idx):  # .lbl29
         CSSK = data.CSS[K]
-        DCSK = data.effDCS[K]
+        DCSK = data.DCS[K]
         WXX = 1./(DCSK*DCSK)
         WWT = WWT + WXX
 
@@ -641,7 +641,6 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
         #VPBEG Assigning uncertainties as % error relative the prior
         if MPPP == 1:
             data.effDCS[K] = AZ*data.effDCS[K]
-            DCSK = data.effDCS[K]
 
         AP=AP+AZ*WXX
 
