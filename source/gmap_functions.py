@@ -624,7 +624,6 @@ def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
-    IDEN = data.IDEN
     ID = data.num_datasets
 
     start_idx, end_idx = get_dataset_range(ID, data)
@@ -649,7 +648,7 @@ def determine_apriori_norm_shape(data, APR, MPPP, MODREP):
 
     AP=AP/WWT
 
-    MTTP = IDEN[ID, 8]
+    MTTP = data.IDEN[ID, 8]
     if MTTP == 2:
         if MODREP == 0:
             L = APR.NR + APR.NSHP
