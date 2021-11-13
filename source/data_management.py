@@ -91,6 +91,7 @@ def init_prior():
 #      E       ENERGIES OF EXPERIMENTAL DATA SET
 #      CSS     MEASUREMENT VALUES OF EXPERIMENTAL DATA SET
 #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
+#      effDCS  Total uncertainties of experimental values as used in fit, i.e., after PPP correction
 #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
 #      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
 #      effECOR the ECOR as used in the fit, i.e., after a possible adjustment
@@ -186,6 +187,7 @@ def init_datablock():
         'E': np.zeros(MAXDP+1, dtype=float),
         'CSS': np.zeros(MAXDP+1, dtype=float),
         'DCS': np.zeros(MAXDP+1, dtype=float),
+        'effDCS': np.zeros(MAXDP+1, dtype=float),
         'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'effECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'invECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
