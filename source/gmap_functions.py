@@ -498,12 +498,12 @@ def construct_Ecor(data):
         else:
             NALT1 = NALT + 1
             for KS in fort_range(NALT1, NADD1):  # .lbl62
-                C1 = data.effDCS[KS]
+                C1 = data.DCS[KS]
                 KS1 = KS - 1
 
                 for KT in fort_range(NALT, KS1):  # .lbl162
                     Q1 = 0.
-                    C2 = data.effDCS[KT]
+                    C2 = data.DCS[KT]
                     for L in fort_range(3,11):  # .lbl215
                         if NETG[L, ID] == 9:
                             continue
@@ -571,8 +571,13 @@ def construct_Ecor(data):
                         NCST = IDEN[II, 2]
                         NCED = NCPP + NCST - 1
                         for K in fort_range(NALT, NADD1):  # .lbl278
-                            C1 = data.effDCS[K]
+                            C1 = data.DCS[K]
                             for KK in fort_range(NCST, NCED):  # .lbl279
+                                # TODO: The need to use effDCS to have consistency with the
+                                #       Fortran version is probably a bug. Either original
+                                #       or PPP corrected uncertainties should be used everywhere.
+                                #       Here we use a mix of uncorrected (C1) and corrected (C2)
+                                #       uncertainties.
                                 C2 = data.effDCS[KK]
                                 Q1 = 0.
                                 for KKK in fort_range(1,10):  # .lbl281
