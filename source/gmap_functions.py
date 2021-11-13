@@ -640,7 +640,7 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
 
         #VPBEG Assigning uncertainties as % error relative the prior
         if MPPP == 1:
-            data.effDCS[K] = AZ*data.effDCS[K]
+            data.effDCS[K] = AZ*data.DCS[K]
 
         AP=AP+AZ*WXX
 
