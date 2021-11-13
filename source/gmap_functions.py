@@ -338,7 +338,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         for L in fort_range(3,11):  # .lbl207
             RELU += data.CO[L, NADD]**2
 
-        data.DCS[NADD] = np.sqrt(XNORU + RELU) 
+        data.effDCS[NADD] = np.sqrt(XNORU + RELU) 
 
     return
 
@@ -497,12 +497,12 @@ def construct_Ecor(data):
         else:
             NALT1 = NALT + 1
             for KS in fort_range(NALT1, NADD1):  # .lbl62
-                C1 = data.DCS[KS]
+                C1 = data.effDCS[KS]
                 KS1 = KS - 1
 
                 for KT in fort_range(NALT, KS1):  # .lbl162
                     Q1 = 0.
-                    C2 = data.DCS[KT]
+                    C2 = data.effDCS[KT]
                     for L in fort_range(3,11):  # .lbl215
                         if NETG[L, ID] == 9:
                             continue
@@ -570,9 +570,9 @@ def construct_Ecor(data):
                         NCST = IDEN[II, 2]
                         NCED = NCPP + NCST - 1
                         for K in fort_range(NALT, NADD1):  # .lbl278
-                            C1 = data.DCS[K]
+                            C1 = data.effDCS[K]
                             for KK in fort_range(NCST, NCED):  # .lbl279
-                                C2 = data.DCS[KK]
+                                C2 = data.effDCS[KK]
                                 Q1 = 0.
                                 for KKK in fort_range(1,10):  # .lbl281
                                     NC1 = NEC[ID, 1, KKK, I]
@@ -630,7 +630,7 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
     WWT = 0.
     for K in fort_range(start_idx, end_idx):  # .lbl29
         CSSK = data.CSS[K]
-        DCSK = data.DCS[K]
+        DCSK = data.effDCS[K]
         WXX = 1./(DCSK*DCSK)
         WWT = WWT + WXX
 
@@ -639,8 +639,8 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
 
         #VPBEG Assigning uncertainties as % error relative the prior
         if MPPP == 1:
-            data.DCS[K] = AZ*data.DCS[K]
-            DCSK = data.DCS[K]
+            data.effDCS[K] = AZ*data.effDCS[K]
+            DCSK = data.effDCS[K]
 
         AP=AP+AZ*WXX
 
@@ -714,7 +714,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
 
         data.invalid_datapoints[NS] = []
 
-        DQQQ = data.DCS[KS]*data.CSS[KS]*0.01
+        DQQQ = data.effDCS[KS]*data.CSS[KS]*0.01
 
         if not is_usable_datapoint(KS, data):
             data.invalid_datapoints[NS].append(KS)

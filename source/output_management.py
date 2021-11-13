@@ -185,7 +185,7 @@ def write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4):
     WWT = 0.
     for K in fort_range(NALT, NADD1):
         CSSK = data.CSS[K]
-        DCSK = data.DCS[K]
+        DCSK = data.effDCS[K]
 
         AX = get_AX(ID, K, data, APR)
         AZ = AX / CSSK
@@ -227,7 +227,7 @@ def write_fission_average(ID, data, file_IO4):
         for KS in fort_range(dataset_start_index, dataset_end_index):
             format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
             fort_write(file_IO4, format156, [data.EAVR[KS], data.SFIS[KS], data.FL[KS],
-                data.CSS[KS], data.DCS[KS]])
+                data.CSS[KS], data.effDCS[KS]])
 
 
 
