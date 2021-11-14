@@ -154,7 +154,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #      continue for valid data
         #
 
-        L = \
         construct_Ecor(data)
 
         if data.IDEN[data.num_datasets, 7] != 6:
@@ -164,6 +163,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                 APR.NSHP += 1
                 APR.NSETN[APR.NSHP] = NS
                 L = APR.NR + APR.NSHP
+                data.problematic_L[ID] = L
                 if L > LDB:
                     # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
                     # fort_write(file_IO4, format701, [NS])
@@ -171,7 +171,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     exit()
 
             determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
-            data.problematic_L[ID] = L
 
         data.num_datapoints_used = count_usable_datapoints(data)
 
@@ -622,7 +621,8 @@ def construct_Ecor(data):
                                 data.ECOR[K,KK] = Q1/(C1*C2)
 
 
-    return L
+    data.problematic_L[ID] = L
+    return
 
 
 
