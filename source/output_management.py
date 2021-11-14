@@ -185,13 +185,10 @@ def write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4):
     WWT = 0.
     for K in fort_range(NALT, NADD1):
         CSSK = data.CSS[K]
-        DCSK = data.effDCS[K]
+        DCSK = data.DCS[K]
 
         AX = get_AX(ID, K, data, APR)
         AZ = AX / CSSK
-
-        if MPPP == 1:
-            DCSK /= AZ
 
         WXX = 1./(DCSK*DCSK)
         WWT = WWT + WXX
