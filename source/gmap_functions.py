@@ -100,11 +100,6 @@ def read_datablock(APR, MODC, MOD2, AMO3,
             determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
             construct_Ecor(ID, data)
 
-            if ID in data.problematic_L_dimexcess:
-                data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
-            else:
-                data.problematic_L[ID] = data.problematic_L_Ecor[ID]
-
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             break
@@ -115,6 +110,12 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #
     #    Data BLOCK complete
     #
+
+    for ID in fort_range(1, data.num_datasets):
+        if ID in data.problematic_L_dimexcess:
+            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
+        else:
+            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
 
     return data
 
