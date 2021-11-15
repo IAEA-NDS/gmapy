@@ -154,7 +154,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #      continue for valid data
         #
 
-        construct_Ecor(data)
+        construct_Ecor(ID, data)
 
         if data.IDEN[data.num_datasets, 7] != 6:
 
@@ -439,7 +439,7 @@ def should_exclude_dataset(data, IELIM, NELIM):
 
 
 
-def construct_Ecor(data):
+def construct_Ecor(ID, data):
     #
     #      CONSTRUCT ECOR
     #
@@ -448,7 +448,6 @@ def construct_Ecor(data):
     #               3   ALL CORRELATED ERRORS GIVEN
     #
     IDEN = data.IDEN
-    ID = data.num_datasets
     NETG = data.NETG
     NCCS = IDEN[ID, 5]
     MTTP = IDEN[ID, 8]
