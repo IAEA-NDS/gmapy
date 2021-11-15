@@ -166,7 +166,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                 APR.NSHP += 1
                 APR.NSETN[APR.NSHP] = NS
                 L = APR.NR + APR.NSHP
-                data.problematic_L[ID] = L
+                data.problematic_L_dimexcess[ID] = L
                 if L > LDB:
                     # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
                     # fort_write(file_IO4, format701, [NS])
@@ -174,6 +174,11 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     exit()
 
         data.num_datapoints_used = count_usable_datapoints(data)
+
+        if ID in data.problematic_L_dimexcess:
+            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
+        else:
+            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
 
     return
 
@@ -619,7 +624,7 @@ def construct_Ecor(ID, data):
                                 data.ECOR[K,KK] = Q1/(C1*C2)
 
 
-    data.problematic_L[ID] = L
+    data.problematic_L_Ecor[ID] = L
     return
 
 
