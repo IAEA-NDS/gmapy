@@ -115,9 +115,6 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #
     #    Data BLOCK complete
     #
-    if data.num_datasets > 0:
-        complete_symmetric_Ecor(data)
-
 
     return data
 
@@ -306,6 +303,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                 num_el_read += len(tmp)
 
             data.ECOR[KS,1:(KS+1)] = res
+            data.ECOR[1:(KS+1),KS] = data.ECOR[KS,1:(KS+1)]
 
     #  uncertainty transformations
     XNORU = 0.
@@ -535,6 +533,7 @@ def construct_Ecor(ID, data):
                     # limit accuracy of comparison to reflect
                     # Fortran behavior
                     data.ECOR[KS,KT] = CERR
+                    data.ECOR[KT,KS] = data.ECOR[KS,KT]
 
                 data.ECOR[KS, KS] = 1.
 
@@ -621,7 +620,7 @@ def construct_Ecor(ID, data):
                                     Q1 = Q1 + AMUFA*C11*C22
 
                                 data.ECOR[K,KK] = Q1/(C1*C2)
-
+                                data.ECOR[KK,K] = data.ECOR[K,KK]
 
     data.problematic_L_Ecor[ID] = L
     return
