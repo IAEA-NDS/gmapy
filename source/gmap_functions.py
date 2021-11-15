@@ -96,6 +96,9 @@ def read_datablock(APR, MODC, MOD2, AMO3,
                     data, APR, IELIM, NELIM,
                     MPPP, MODREP, file_IO3)
 
+            ID = data.num_datasets
+            determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
+
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             break
@@ -169,9 +172,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     # fort_write(file_IO4, format701, [NS])
                     # moved into write_overflow_message function
                     exit()
-
-
-        determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
 
         data.num_datapoints_used = count_usable_datapoints(data)
 
