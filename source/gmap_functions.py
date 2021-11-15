@@ -98,6 +98,7 @@ def read_datablock(APR, MODC, MOD2, AMO3,
 
             ID = data.num_datasets
             determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
+            construct_Ecor(ID, data)
 
             if ID in data.problematic_L_dimexcess:
                 data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
@@ -161,8 +162,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
         #
         #      continue for valid data
         #
-
-        construct_Ecor(ID, data)
 
         if data.IDEN[data.num_datasets, 7] != 6:
 
