@@ -449,13 +449,11 @@ def construct_Ecor(data):
     #
     IDEN = data.IDEN
     ID = data.num_datasets
-    NADD = data.num_datapoints + 1
-    NALT = NADD - IDEN[ID, 1]
     NETG = data.NETG
     NCCS = IDEN[ID, 5]
     MTTP = IDEN[ID, 8]
     NS = IDEN[ID, 6]
-    NADD1 = NADD - 1
+    NALT, NADD1 = get_dataset_range(ID, data)
     NP = IDEN[ID, 1]
     NCSST = data.NCSST
     NEC = data.NEC
