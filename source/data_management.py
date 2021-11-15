@@ -162,7 +162,9 @@ def init_prior():
 #      the place of execution contains a different quantity. For reproducibility,
 #      we store the value of L in the data structure for later printing
 #
-#      problematic_L     a dictionary with keys given by dataset ID and L as the value
+#      problematic_L             a dictionary with keys given by dataset ID and L as the value
+#      problematic_L_Ecor        a dictionary with keys given by dataset ID and L as the value
+#      problematic_L_dimexcess   a dictionary with keys given by dataset ID and L as the value
 #
 
 def init_datablock():
@@ -224,7 +226,9 @@ def init_datablock():
         'MOD2': 0,
         'AMO3': 0.,
 
-        'problematic_L': {}
+        'problematic_L': {},
+        'problematic_L_Ecor': {},
+        'problematic_L_dimexcess': {}
         })
 
     return data
