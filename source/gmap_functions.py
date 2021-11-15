@@ -627,6 +627,10 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
+
+    if data.IDEN[ID, 7] == 6:
+        return
+
     start_idx, end_idx = get_dataset_range(ID, data)
 
     AP = 0.
