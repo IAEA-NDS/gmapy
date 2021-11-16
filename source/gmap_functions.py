@@ -198,7 +198,6 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     #
     # label .lbl2
     ID = data.num_datasets
-    N = data.num_datapoints_used
     NS = MC1
     MT = MC2
     NCOX = MC3
@@ -223,7 +222,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     data.NCOX[ID] = NCOX
     data.NNCOX[ID] = NNCOX
     IDEN = data.IDEN
-    IDEN[ID,2] = N+1
+    IDEN[ID,2] = data.num_datapoints_used + 1
     IDEN[ID,6] = NS
     IDEN[ID,7] = MT
     #
