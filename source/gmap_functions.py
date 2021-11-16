@@ -211,7 +211,14 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     data.NCOX[ID] = NCOX
     data.NNCOX[ID] = NNCOX
     IDEN = data.IDEN
-    IDEN[ID,2] = data.num_datapoints_used + 1
+
+    if ID > 1:
+        start_idx, end_idx = get_dataset_range(ID-1, data)
+        num_datapoints_used = count_usable_datapoints(data, end_idx)
+    else:
+        num_datapoints_used = 0
+
+    IDEN[ID,2] = num_datapoints_used + 1
     IDEN[ID,6] = NS
     IDEN[ID,7] = MT
     #
