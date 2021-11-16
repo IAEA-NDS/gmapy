@@ -105,6 +105,10 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #
     #    Data BLOCK complete
     #
+    for ID in fort_range(1, data.num_datasets):
+        if ID > 0:
+            accounting(ID, data, APR)
+        data.num_datapoints_used = count_usable_datapoints(data)
 
     return data
 
@@ -160,11 +164,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     # fort_write(file_IO4, format701, [NS])
                     # moved into write_overflow_message function
                     exit()
-
-    ID = data.num_datasets
-    if ID > 0:
-        accounting(ID, data, APR)
-    data.num_datapoints_used = count_usable_datapoints(data)
 
     return
 
