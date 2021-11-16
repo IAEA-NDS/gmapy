@@ -95,15 +95,6 @@ def read_datablock(APR, MODC, MOD2, AMO3,
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, APR, IELIM, NELIM, file_IO3)
 
-            ID = data.num_datasets
-            if ID > 1:
-                start_idx, end_idx = get_dataset_range(ID-1, data)
-                num_datapoints_used = count_usable_datapoints(data, end_idx)
-            else:
-                num_datapoints_used = 0
-
-            data.IDEN[ID,2] = num_datapoints_used + 1
-
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             break
@@ -114,6 +105,14 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #
     #    Data BLOCK complete
     #
+    for ID in fort_range(1, data.num_datasets):
+        if ID > 1:
+            start_idx, end_idx = get_dataset_range(ID-1, data)
+            num_datapoints_used = count_usable_datapoints(data, end_idx)
+        else:
+            num_datapoints_used = 0
+
+        data.IDEN[ID,2] = num_datapoints_used + 1
 
     return data
 
