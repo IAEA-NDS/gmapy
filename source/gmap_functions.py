@@ -351,8 +351,7 @@ def accounting(data, APR):
     NT = data.NT[ID,:]
     NCT = data.NCT[ID]
 
-    NADD_MAX = data.num_datapoints
-    NADD_MIN = data.num_datapoints - IDEN[ID,1]  + 1
+    NADD_MIN, NADD_MAX = get_dataset_range(ID, data)
     for NADD in fort_range(NADD_MIN, NADD_MAX):  # .lbl21
 
         #
