@@ -139,7 +139,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     ID = data.num_datasets
     NS = data.IDEN[ID,6]
 
-    accounting(data, APR)
+    accounting(ID, data, APR)
 
     exclflag = \
     should_exclude_dataset(data, IELIM, NELIM)
@@ -335,7 +335,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 
-def accounting(data, APR):
+def accounting(ID, data, APR):
     #
     #      ACCOUNTING
     #
@@ -343,7 +343,6 @@ def accounting(data, APR):
     #      ID          NO OF EXPERIMENTAL DATA SETS
     #      NP          NO OF DATA POINTS IN THIS SET
     #
-    ID = data.num_datasets
     IDEN = data.IDEN
     NS = IDEN[ID, 6]
     MT = IDEN[ID, 7]
