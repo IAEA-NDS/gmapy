@@ -93,7 +93,8 @@ def init_prior():
 #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
 #      effDCS  Total uncertainties of experimental values as used in fit, i.e., after PPP correction
 #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS
-#      ECOR    CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
+#      userECOR Correlation matrix for datablock as provided by user
+#      ECOR    Constructed correlation matrix for datablock based on uncertainty components
 #      effECOR the ECOR as used in the fit, i.e., after a possible adjustment
 #                                                 to ensure it being positive-definite
 #      invECOR inverse CORRELATION MATRIX OF EXPERIMENTS IN DATA BLOCK
@@ -190,6 +191,7 @@ def init_datablock():
         'CSS': np.zeros(MAXDP+1, dtype=float),
         'DCS': np.zeros(MAXDP+1, dtype=float),
         'effDCS': np.zeros(MAXDP+1, dtype=float),
+        'userECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'effECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'invECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
