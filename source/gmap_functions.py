@@ -99,6 +99,8 @@ def read_datablock(APR, MODC, MOD2, AMO3,
             ID = data.num_datasets
             determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
             construct_Ecor(ID, data)
+            if data.NCOX[ID] != 0:
+                data.ECOR = data.userECOR.copy()
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
@@ -302,8 +304,8 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                 res += tmp
                 num_el_read += len(tmp)
 
-            data.ECOR[KS,1:(KS+1)] = res
-            data.ECOR[1:(KS+1),KS] = data.ECOR[KS,1:(KS+1)]
+            data.userECOR[KS,1:(KS+1)] = res
+            data.userECOR[1:(KS+1),KS] = data.userECOR[KS,1:(KS+1)]
 
     #  uncertainty transformations
     XNORU = 0.
