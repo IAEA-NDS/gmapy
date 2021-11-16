@@ -139,8 +139,6 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     ID = data.num_datasets
     NS = data.IDEN[ID,6]
 
-    accounting(ID, data, APR)
-
     exclflag = \
     should_exclude_dataset(data, IELIM, NELIM)
 
@@ -163,7 +161,10 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     # moved into write_overflow_message function
                     exit()
 
-        data.num_datapoints_used = count_usable_datapoints(data)
+    ID = data.num_datasets
+    if ID > 0:
+        accounting(ID, data, APR)
+    data.num_datapoints_used = count_usable_datapoints(data)
 
     return
 
