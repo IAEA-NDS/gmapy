@@ -16,7 +16,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
-        construct_Ecor, determine_apriori_norm_shape)
+        construct_Ecor, determine_apriori_norm_shape, count_usable_datapoints)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -30,7 +30,7 @@ from output_management import (output_Ecor_matrix,
 
 from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
-from gmap_snippets import TextfileReader, get_num_shapedatasets
+from gmap_snippets import TextfileReader, get_num_shapedatasets, get_dataset_range
 
 
 #################################################
@@ -183,6 +183,15 @@ def main():
             for data in datablock_list:
                 if data.num_datasets == 0:
                     continue
+
+                for ID in fort_range(1, data.num_datasets):
+                    if ID > 1:
+                        start_idx, end_idx = get_dataset_range(ID-1, data)
+                        num_datapoints_used = count_usable_datapoints(data, end_idx)
+                    else:
+                        num_datapoints_used = 0
+
+                    data.IDEN[ID,2] = num_datapoints_used + 1
 
                 for ID in fort_range(1, data.num_datasets):
                     construct_Ecor(ID, data)
