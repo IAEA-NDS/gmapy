@@ -96,9 +96,6 @@ def read_datablock(APR, MODC, MOD2, AMO3,
                     data, APR, IELIM, NELIM,
                     MPPP, MODREP, file_IO3)
 
-            ID = data.num_datasets
-            determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
-
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
             break
@@ -114,6 +111,8 @@ def read_datablock(APR, MODC, MOD2, AMO3,
         construct_Ecor(ID, data)
         if data.NCOX[ID] != 0:
             data.ECOR = data.userECOR.copy()
+
+        determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
 
         if ID in data.problematic_L_dimexcess:
             data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
