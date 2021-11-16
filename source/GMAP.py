@@ -16,7 +16,8 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
-        construct_Ecor, determine_apriori_norm_shape, count_usable_datapoints)
+        construct_Ecor, determine_apriori_norm_shape, count_usable_datapoints,
+        accounting)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -183,6 +184,11 @@ def main():
             for data in datablock_list:
                 if data.num_datasets == 0:
                     continue
+
+                for ID in fort_range(1, data.num_datasets):
+                    if ID > 0:
+                        accounting(ID, data, APR)
+                    data.num_datapoints_used = count_usable_datapoints(data)
 
                 for ID in fort_range(1, data.num_datasets):
                     if ID > 1:

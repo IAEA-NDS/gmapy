@@ -105,10 +105,6 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #
     #    Data BLOCK complete
     #
-    for ID in fort_range(1, data.num_datasets):
-        if ID > 0:
-            accounting(ID, data, APR)
-        data.num_datapoints_used = count_usable_datapoints(data)
 
     return data
 
