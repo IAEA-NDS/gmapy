@@ -662,7 +662,8 @@ def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
     MTTP = data.IDEN[ID, 8]
     if MTTP == 2:
         if MODREP == 0:
-            L = APR.NR + APR.NSHP
+            NS = data.IDEN[ID,6]
+            L = APR.NR + where(APR.NSETN == NS)[0][0]
             AP = 1.0 / AP
             APR.CS[L] = AP
 
