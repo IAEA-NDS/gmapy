@@ -107,18 +107,6 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #    Data BLOCK complete
     #
 
-    for ID in fort_range(1, data.num_datasets):
-        construct_Ecor(ID, data)
-        if data.NCOX[ID] != 0:
-            data.ECOR = data.userECOR.copy()
-
-        determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
-
-        if ID in data.problematic_L_dimexcess:
-            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
-        else:
-            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
-
     return data
 
 

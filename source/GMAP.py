@@ -15,7 +15,8 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         complete_symmetric_Ecor,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
-        deal_with_dataset, read_datablock, fill_AA_AM_COV)
+        deal_with_dataset, read_datablock, fill_AA_AM_COV,
+        construct_Ecor, determine_apriori_norm_shape)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -182,6 +183,18 @@ def main():
             for data in datablock_list:
                 if data.num_datasets == 0:
                     continue
+
+                for ID in fort_range(1, data.num_datasets):
+                    construct_Ecor(ID, data)
+                    if data.NCOX[ID] != 0:
+                        data.ECOR = data.userECOR.copy()
+
+                    determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
+
+                    if ID in data.problematic_L_dimexcess:
+                        data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
+                    else:
+                        data.problematic_L[ID] = data.problematic_L_Ecor[ID]
 
                 invertible = invert_Ecor(data)
                 if not invertible:
