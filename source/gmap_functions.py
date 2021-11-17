@@ -596,7 +596,7 @@ def apply_PPP_correction(ID, data, APR):
 
 
 
-def init_shape_prior(ID, data, APR, MPPP, MODREP):
+def init_shape_prior(ID, data, APR):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #

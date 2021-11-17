@@ -221,7 +221,7 @@ def main():
                     MT = data.IDEN[ID,7]
                     MTTP = data.IDEN[ID,8]
                     if MT != 6 and MTTP == 2 and MODREP == 0:
-                        init_shape_prior(ID, data, APR, MPPP, MODREP)
+                        init_shape_prior(ID, data, APR)
 
                     #VPBEG Assigning uncertainties as % error relative the prior
                     if MPPP == 1 and data.IDEN[ID,7] != 6:
