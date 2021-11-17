@@ -586,6 +586,16 @@ def construct_Ecor(ID, data):
 
 
 
+def apply_PPP_correction(ID, data, APR):
+
+    start_idx, end_idx = get_dataset_range(ID, data)
+    for idx in fort_range(start_idx, end_idx):
+        AX = get_AX(ID, idx, data, APR)
+        AZ = AX / data.CSS[idx]
+        data.effDCS[idx] = AZ*data.DCS[idx]
+
+
+
 def init_shape_prior(ID, data, APR, MPPP, MODREP):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
