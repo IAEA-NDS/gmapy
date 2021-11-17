@@ -218,7 +218,11 @@ def main():
                     if data.NCOX[ID] != 0:
                         data.ECOR = data.userECOR.copy()
 
-                    init_shape_prior(ID, data, APR, MPPP, MODREP)
+                    MT = data.IDEN[ID,7]
+                    MTTP = data.IDEN[ID,8]
+                    if MT != 6 and MTTP == 2 and MODREP == 0:
+                        init_shape_prior(ID, data, APR, MPPP, MODREP)
+
                     #VPBEG Assigning uncertainties as % error relative the prior
                     if MPPP == 1 and data.IDEN[ID,7] != 6:
                         apply_PPP_correction(ID, data, APR)
