@@ -214,6 +214,9 @@ def main():
                         data.problematic_L[ID] = data.problematic_L_Ecor[ID]
 
 
+            gauss.NTOT=0
+            gauss = init_gauss()
+
             for data in datablock_list:
                 invertible = invert_Ecor(data)
                 if not invertible:
@@ -248,8 +251,6 @@ def main():
 
                 datablock_list = []
                 MODREP=MODREP+1
-                gauss.NTOT=0
-                gauss = init_gauss()
                 file_IO3.seek(0)
 
                 format130 = "(A4)"
