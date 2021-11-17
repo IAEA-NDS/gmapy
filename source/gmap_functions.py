@@ -601,8 +601,10 @@ def init_shape_prior(ID, data, APR, MPPP, MODREP):
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #
 
-    if data.IDEN[ID, 7] == 6:
-        return
+    MT = data.IDEN[ID, 7]
+    MTTP = data.IDEN[ID,8]
+    if MT == 6 or MTTP != 2:
+        raise ValueError('init_shape_prior can only be used for shape data and MT != 6')
 
     start_idx, end_idx = get_dataset_range(ID, data)
 
@@ -619,15 +621,11 @@ def init_shape_prior(ID, data, APR, MPPP, MODREP):
 
         AP=AP+AZ*WXX
 
+    NS = data.IDEN[ID,6]
+    L = APR.NR + np.where(APR.NSETN == NS)[0][0]
     AP=AP/WWT
-
-    MTTP = data.IDEN[ID, 8]
-    if MTTP == 2:
-        if MODREP == 0:
-            NS = data.IDEN[ID,6]
-            L = APR.NR + np.where(APR.NSETN == NS)[0][0]
-            AP = 1.0 / AP
-            APR.CS[L] = AP
+    AP = 1.0 / AP
+    APR.CS[L] = AP
 
     return
 
