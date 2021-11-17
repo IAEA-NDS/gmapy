@@ -586,7 +586,7 @@ def construct_Ecor(ID, data):
 
 
 
-def determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP):
+def init_shape_prior(ID, data, APR, MPPP, MODREP):
     #
     #      DETERMINE APRIORI NORMALIZATION FOR SHAPE MEASUREMENTS
     #

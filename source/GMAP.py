@@ -16,7 +16,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         invert_Ecor, get_matrix_products, get_result, output_result,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
-        construct_Ecor, determine_apriori_norm_shape, count_usable_datapoints,
+        construct_Ecor, init_shape_prior, count_usable_datapoints,
         accounting)
 
 from output_management import (output_Ecor_matrix,
@@ -218,7 +218,7 @@ def main():
                     if data.NCOX[ID] != 0:
                         data.ECOR = data.userECOR.copy()
 
-                    determine_apriori_norm_shape(ID, data, APR, MPPP, MODREP)
+                    init_shape_prior(ID, data, APR, MPPP, MODREP)
 
                     if ID in data.problematic_L_dimexcess:
                         data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
