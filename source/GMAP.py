@@ -190,13 +190,9 @@ def main():
                         if MTTP == 2:
                             APR.NSHP += 1
                             APR.NSETN[APR.NSHP] = NS
-                            L = APR.NR + APR.NSHP
-                            data.problematic_L_dimexcess[ID] = L
-                            if L > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
-                                # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
-                                # fort_write(file_IO4, format701, [NS])
-                                # moved into write_overflow_message function
-                                exit()
+                            data.problematic_L_dimexcess[ID] = APR.NR + APR.NSHP
+                            if APR.NR + APR.NSHP > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
+                                raise IndexError('Too many shape datasets')
 
             curNSHP = 0
             totNSHP = APR.NSHP
