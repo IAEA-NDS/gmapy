@@ -1397,3 +1397,31 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
     data.NFIS = NFIS
     return data
 
+
+
+def link_prior_and_datablocks(APR, datablock_list, MODREP):
+    for data in datablock_list:
+        if data.num_datasets == 0:
+            continue
+
+        for ID in fort_range(1, data.num_datasets):
+            NS = data.IDEN[ID,6]
+            if data.IDEN[ID, 7] != 6:
+                MTTP = data.IDEN[ID, 8]
+                if MTTP == 2:
+                    APR.NSHP += 1
+                    APR.NSETN[APR.NSHP] = NS
+                    data.problematic_L_dimexcess[ID] = APR.NR + APR.NSHP
+                    if APR.NR + APR.NSHP > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
+                        raise IndexError('Too many shape datasets')
+
+        for ID in fort_range(1, data.num_datasets):
+            accounting(ID, data, APR)
+            data.num_datapoints_used = count_usable_datapoints(data)
+
+        for ID in fort_range(1, data.num_datasets):
+            MT = data.IDEN[ID,7]
+            MTTP = data.IDEN[ID,8]
+            if MT != 6 and MTTP == 2 and MODREP == 0:
+                init_shape_prior(ID, data, APR)
+

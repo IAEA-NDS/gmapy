@@ -17,7 +17,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
-        accounting, apply_PPP_correction)
+        accounting, apply_PPP_correction, link_prior_and_datablocks)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -179,34 +179,7 @@ def main():
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
 
-            def link_prior_and_datablocks(datablock_list):
-                for data in datablock_list:
-                    if data.num_datasets == 0:
-                        continue
-
-                    for ID in fort_range(1, data.num_datasets):
-                        NS = data.IDEN[ID,6]
-                        if data.IDEN[ID, 7] != 6:
-                            MTTP = data.IDEN[ID, 8]
-                            if MTTP == 2:
-                                APR.NSHP += 1
-                                APR.NSETN[APR.NSHP] = NS
-                                data.problematic_L_dimexcess[ID] = APR.NR + APR.NSHP
-                                if APR.NR + APR.NSHP > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
-                                    raise IndexError('Too many shape datasets')
-
-                    for ID in fort_range(1, data.num_datasets):
-                        accounting(ID, data, APR)
-                        data.num_datapoints_used = count_usable_datapoints(data)
-
-                    for ID in fort_range(1, data.num_datasets):
-                        MT = data.IDEN[ID,7]
-                        MTTP = data.IDEN[ID,8]
-                        if MT != 6 and MTTP == 2 and MODREP == 0:
-                            init_shape_prior(ID, data, APR)
-
-
-            link_prior_and_datablocks(datablock_list)
+            link_prior_and_datablocks(APR, datablock_list, MODREP)
 
             curNSHP = 0
             totNSHP = APR.NSHP
