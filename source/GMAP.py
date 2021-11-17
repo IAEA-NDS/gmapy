@@ -186,8 +186,7 @@ def main():
                     continue
 
                 for ID in fort_range(1, data.num_datasets):
-                    if ID > 0:
-                        accounting(ID, data, APR)
+                    accounting(ID, data, APR)
                     data.num_datapoints_used = count_usable_datapoints(data)
 
                 for ID in fort_range(1, data.num_datasets):
