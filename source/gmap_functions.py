@@ -629,10 +629,6 @@ def init_shape_prior(ID, data, APR, MPPP, MODREP):
             AP = 1.0 / AP
             APR.CS[L] = AP
 
-    #VPBEG Assigning uncertainties as % error relative the prior
-    if MPPP == 1 and data.IDEN[ID,7] != 6:
-        apply_PPP_correction(ID, data, APR)
-
     return
 
 

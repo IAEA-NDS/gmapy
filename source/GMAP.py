@@ -17,7 +17,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
-        accounting)
+        accounting, apply_PPP_correction)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -219,6 +219,10 @@ def main():
                         data.ECOR = data.userECOR.copy()
 
                     init_shape_prior(ID, data, APR, MPPP, MODREP)
+                    #VPBEG Assigning uncertainties as % error relative the prior
+                    if MPPP == 1 and data.IDEN[ID,7] != 6:
+                        apply_PPP_correction(ID, data, APR)
+
 
                     if ID in data.problematic_L_dimexcess:
                         data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
