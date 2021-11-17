@@ -369,12 +369,6 @@ def accounting(ID, data, APR):
                     exit()
 
                 KAS[NADD, L] = K
-                #
-                #      Exception for dummy data sets
-                #
-                if NS >= 900 and NS <= 909:
-                    data.CSS[NADD] = APR.CS[K]
-                # .lbl48
 
     return
 
@@ -1435,6 +1429,9 @@ def link_prior_and_datablocks(APR, datablock_list, MODREP):
         for ID in fort_range(1, data.num_datasets):
             accounting(ID, data, APR)
             data.num_datapoints_used = count_usable_datapoints(data)
+
+        for ID in fort_range(1, data.num_datasets):
+            update_dummy_dataset(ID, data, APR)
 
         for ID in fort_range(1, data.num_datasets):
             MT = data.IDEN[ID,7]
