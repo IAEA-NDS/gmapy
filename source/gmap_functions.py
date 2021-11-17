@@ -1126,6 +1126,25 @@ def get_result(gauss, APR):
     gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
 
 
+
+def update_prior_estimates(APR, gauss):
+    for L in fort_range(1, APR.NC):  # .lbl14
+        JA=APR.MCS[L,2]
+        JI=APR.MCS[L,3]
+        for K in fort_range(JA, JI):  # .lbl77
+            APR.CS[K] = APR.CS[K]*(1.+gauss.DE[K])
+
+
+def update_prior_shape_estimates(APR, gauss):
+    NR = APR.NR
+    NRS = NR + APR.NSHP
+    NR1=NR+1
+    if NSHP != 0:
+        for K in fort_range(NR1, NRS):  # .lbl82
+            APR.CS[K] = APR.CS[K]*(1.+gauss.DE[K])
+
+
+
 def output_result(gauss, fisdata, APR, MODAP,
         file_IO4, file_IO5):
     #
