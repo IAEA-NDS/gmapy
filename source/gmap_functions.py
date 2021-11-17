@@ -1157,6 +1157,8 @@ def output_result(gauss, fisdata, APR, MODAP,
     NFIS = fisdata.NFIS
     NSETN = APR.NSETN
 
+    new_APR_CS = APR.CS.copy()
+
     for L in fort_range(1,NC):  # .lbl14
         format117 = "(1H1,'   RESULT',5X,2A8//)" 
         fort_write(file_IO4, format117, [APR.CLAB[L,1:3]])
@@ -1170,9 +1172,9 @@ def output_result(gauss, fisdata, APR, MODAP,
 
         for K in fort_range(JA, JI):  # .lbl77
             KBK=K*(K-1)//2+K
-            DDX=APR.CS[K]*np.sqrt(gauss.B[KBK])
-            CXX=APR.CS[K]*(1.+gauss.DE[K])
-            CXXD=100.*(CXX-APR.CS[K])/CXX
+            DDX=new_APR_CS[K]*np.sqrt(gauss.B[KBK])
+            CXX=new_APR_CS[K]*(1.+gauss.DE[K])
+            CXXD=100.*(CXX-new_APR_CS[K])/CXX
 
             found = False
             for KK in fort_range(1,NFIS):  # .lbl705
@@ -1188,8 +1190,8 @@ def output_result(gauss, fisdata, APR, MODAP,
                     EL2=(APR.EN[K]+APR.EN[K+1])*0.5
                     DE1=(APR.EN[K]-EL1)*0.5
                     DE2=(EL2-APR.EN[K])*0.5
-                    SS1=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K-1])*APR.CS[K-1]))
-                    SS2=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K+1])*APR.CS[K+1]))
+                    SS1=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K-1])*new_APR_CS[K-1]))
+                    SS2=.5*(CXX+0.5*(CXX+(1.+gauss.DE[K+1])*new_APR_CS[K+1]))
                     CSSK=(SS1*DE1+SS2*DE2)/(DE1+DE2)
 
                 FLX=FLX+fisdata.FIS[KK]*CSSK
@@ -1200,7 +1202,7 @@ def output_result(gauss, fisdata, APR, MODAP,
             fort_write(file_IO4, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
             fort_write(file_IO5, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
             if not (MODAP == 0):
-                APR.CS[K]=CXX
+                new_APR_CS[K]=CXX
 
         # VP: 13 lines below are added by VP, 26 July, 2004
         format588 = "(6(1X,E10.5))"
@@ -1210,17 +1212,17 @@ def output_result(gauss, fisdata, APR, MODAP,
             (-APR.EN[JI-1]+3*APR.EN[JI])*500000.
         ])
 
-        tmp = np.vstack([APR.EN[JA:(JI+1)]*1000000., APR.CS[JA:(JI+1)]])
+        tmp = np.vstack([APR.EN[JA:(JI+1)]*1000000., new_APR_CS[JA:(JI+1)]])
         tmp = tmp.T.flatten()
         fort_write(file_IO4, format588, tmp)
         for K in fort_range(JA+1, JI-1):
-            DSMOOA = (APR.CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
-                    +APR.CS[K-1] * (APR.EN[K+1] - APR.EN[K]) \
-                    -APR.CS[K] * (APR.EN[K+1] - APR.EN[K-1])) \
+            DSMOOA = (new_APR_CS[K+1] * (APR.EN[K] - APR.EN[K-1]) \
+                    +new_APR_CS[K-1] * (APR.EN[K+1] - APR.EN[K]) \
+                    -new_APR_CS[K] * (APR.EN[K+1] - APR.EN[K-1])) \
                     /2./(APR.EN[K+1] - APR.EN[K-1])
-            DSMOOR = DSMOOA / APR.CS[K]*100.
-            SSMOO = APR.CS[K] + DSMOOA
-            fort_write(file_IO4, format153, [APR.EN[K], APR.CS[K], SSMOO, DSMOOR])
+            DSMOOR = DSMOOA / new_APR_CS[K]*100.
+            SSMOO = new_APR_CS[K] + DSMOOA
+            fort_write(file_IO4, format153, [APR.EN[K], new_APR_CS[K], SSMOO, DSMOOR])
         # VP above is writing CS in B-6 format and smoothing with CS conserving
 
         format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
