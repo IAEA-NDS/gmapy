@@ -213,6 +213,8 @@ def main():
                     else:
                         data.problematic_L[ID] = data.problematic_L_Ecor[ID]
 
+
+            for data in datablock_list:
                 invertible = invert_Ecor(data)
                 if not invertible:
                     continue
