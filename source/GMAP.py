@@ -240,7 +240,6 @@ def main():
                 datablock_list = []
                 MODREP=MODREP+1
                 gauss.NTOT=0
-                APR.NSHP=0
                 gauss = init_gauss()
                 file_IO3.seek(0)
 

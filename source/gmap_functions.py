@@ -1400,6 +1400,7 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
 
 
 def link_prior_and_datablocks(APR, datablock_list, MODREP):
+    APR.NSHP = 0
     for data in datablock_list:
         if data.num_datasets == 0:
             continue
