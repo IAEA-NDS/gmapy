@@ -307,6 +307,22 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     return
 
 
+def update_dummy_dataset(ID, data, APR):
+        NS = data.IDEN[ID, 6]
+        NCT = data.NCT[ID]
+        if NCT != 1 and (NS >= 900 and NS <= 909):
+            raise IndexError('dummy datasets must not be composite')
+
+        start_idx, end_idx = get_dataset_range(ID, data)
+        for idx in fort_range(start_idx, end_idx):
+            #
+            #      Exception for dummy data sets
+            #
+            if NS >= 900 and NS <= 909:
+                data.CSS[idx] = APR.CS[data.KAS[idx,1]]
+            # .lbl48
+
+
 
 def accounting(ID, data, APR):
     #
