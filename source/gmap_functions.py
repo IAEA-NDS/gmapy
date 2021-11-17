@@ -1146,7 +1146,7 @@ def update_prior_shape_estimates(APR, gauss):
 
 
 def output_result(gauss, fisdata, APR, MODAP,
-        file_IO4, file_IO5):
+        file_IO4, file_IO5, new_APR_CS = None):
     #
     #      output of the result
     #
@@ -1157,7 +1157,10 @@ def output_result(gauss, fisdata, APR, MODAP,
     NFIS = fisdata.NFIS
     NSETN = APR.NSETN
 
-    new_APR_CS = APR.CS.copy()
+    if new_APR_CS is None:
+        new_APR_CS = APR.CS.copy()
+    else:
+        new_APR_CS = new_APR_CS.copy()
 
     for L in fort_range(1,NC):  # .lbl14
         format117 = "(1H1,'   RESULT',5X,2A8//)" 
