@@ -170,7 +170,7 @@ def main():
 
             file_IO3.seek(file_IO3.get_line_nr()-1)
 
-            data = read_datablock(APR, MODC, MOD2, AMO3,
+            data = read_datablock(MODC, MOD2, AMO3,
                            IELIM, NELIM, LABL, file_IO3)
 
             datablock_list.append(data)

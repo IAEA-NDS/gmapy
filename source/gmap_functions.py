@@ -74,7 +74,7 @@ def read_prior(MC1, MC2, APR, file_IO3):
 
 
 
-def read_datablock(APR, MODC, MOD2, AMO3,
+def read_datablock(MODC, MOD2, AMO3,
         IELIM, NELIM, LABL, file_IO3):
 
     format100 = "(A4,1X,8I5)"
@@ -93,7 +93,7 @@ def read_datablock(APR, MODC, MOD2, AMO3,
         # LABL.AKON[2] == 'DATA'
         if ACON == LABL.AKON[2]:
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, APR, IELIM, NELIM, file_IO3)
+                    data, IELIM, NELIM, file_IO3)
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
@@ -128,7 +128,7 @@ def prepare_for_datablock_input(MODC, MOD2, AMO3):
 
 
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, APR, IELIM, NELIM, file_IO3):
+        data, IELIM, NELIM, file_IO3):
 
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
