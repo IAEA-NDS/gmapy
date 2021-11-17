@@ -92,24 +92,8 @@ def read_datablock(APR, MODC, MOD2, AMO3,
 
         # LABL.AKON[2] == 'DATA'
         if ACON == LABL.AKON[2]:
-            lastID = data.num_datasets
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
                     data, APR, IELIM, NELIM, file_IO3)
-            if data.num_datasets > lastID:
-                ID = data.num_datasets
-                NS = data.IDEN[ID,6]
-                if data.IDEN[data.num_datasets, 7] != 6:
-                    MTTP = data.IDEN[ID, 8]
-                    if MTTP == 2:
-                        APR.NSHP += 1
-                        APR.NSETN[APR.NSHP] = NS
-                        L = APR.NR + APR.NSHP
-                        data.problematic_L_dimexcess[ID] = L
-                        if L > LDB:
-                            # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
-                            # fort_write(file_IO4, format701, [NS])
-                            # moved into write_overflow_message function
-                            exit()
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
@@ -121,6 +105,20 @@ def read_datablock(APR, MODC, MOD2, AMO3,
     #
     #    Data BLOCK complete
     #
+    for ID in fort_range(1, data.num_datasets):
+        NS = data.IDEN[ID,6]
+        if data.IDEN[ID, 7] != 6:
+            MTTP = data.IDEN[ID, 8]
+            if MTTP == 2:
+                APR.NSHP += 1
+                APR.NSETN[APR.NSHP] = NS
+                L = APR.NR + APR.NSHP
+                data.problematic_L_dimexcess[ID] = L
+                if L > LDB:
+                    # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
+                    # fort_write(file_IO4, format701, [NS])
+                    # moved into write_overflow_message function
+                    exit()
 
     return data
 
