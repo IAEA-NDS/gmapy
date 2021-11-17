@@ -1139,7 +1139,7 @@ def update_prior_shape_estimates(APR, gauss):
     NR = APR.NR
     NRS = NR + APR.NSHP
     NR1=NR+1
-    if NSHP != 0:
+    if APR.NSHP != 0:
         for K in fort_range(NR1, NRS):  # .lbl82
             APR.CS[K] = APR.CS[K]*(1.+gauss.DE[K])
 
