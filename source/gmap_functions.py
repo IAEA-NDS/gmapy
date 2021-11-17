@@ -617,10 +617,6 @@ def init_shape_prior(ID, data, APR, MPPP, MODREP):
         AX = get_AX(ID, K, data, APR)
         AZ = AX / CSSK
 
-        #VPBEG Assigning uncertainties as % error relative the prior
-        if MPPP == 1:
-            data.effDCS[K] = AZ*data.DCS[K]
-
         AP=AP+AZ*WXX
 
     AP=AP/WWT
@@ -632,6 +628,10 @@ def init_shape_prior(ID, data, APR, MPPP, MODREP):
             L = APR.NR + np.where(APR.NSETN == NS)[0][0]
             AP = 1.0 / AP
             APR.CS[L] = AP
+
+    #VPBEG Assigning uncertainties as % error relative the prior
+    if MPPP == 1 and data.IDEN[ID,7] != 6:
+        apply_PPP_correction(ID, data, APR)
 
     return
 
