@@ -194,15 +194,16 @@ def main():
                             if APR.NR + APR.NSHP > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
                                 raise IndexError('Too many shape datasets')
 
+                for ID in fort_range(1, data.num_datasets):
+                    accounting(ID, data, APR)
+                    data.num_datapoints_used = count_usable_datapoints(data)
+
+
             curNSHP = 0
             totNSHP = APR.NSHP
             for data in datablock_list:
                 if data.num_datasets == 0:
                     continue
-
-                for ID in fort_range(1, data.num_datasets):
-                    accounting(ID, data, APR)
-                    data.num_datapoints_used = count_usable_datapoints(data)
 
                 for ID in fort_range(1, data.num_datasets):
                     if ID > 1:
