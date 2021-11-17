@@ -157,7 +157,6 @@ def main():
         elif ACON == LABL.AKON[1]:
             # INPUT OF CROSS SECTIONS TO BE EVALUATED,ENERGY GRID AND APRIORI CS
             read_prior(MC1, MC2, APR, file_IO3)
-            write_prior_info(APR, IPP, file_IO4)
 
 
         # LABL.AKON[8] == 'FIS*'
@@ -219,6 +218,9 @@ def main():
 
             get_result(gauss, APR)
 
+
+            if MODREP == 0:
+                write_prior_info(APR, IPP, file_IO4)
 
             curNSHP = 0
             totNSHP = APR.NSHP
