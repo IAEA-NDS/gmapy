@@ -179,6 +179,25 @@ def main():
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
 
+            for data in datablock_list:
+                if data.num_datasets == 0:
+                    continue
+
+                for ID in fort_range(1, data.num_datasets):
+                    NS = data.IDEN[ID,6]
+                    if data.IDEN[ID, 7] != 6:
+                        MTTP = data.IDEN[ID, 8]
+                        if MTTP == 2:
+                            APR.NSHP += 1
+                            APR.NSETN[APR.NSHP] = NS
+                            L = APR.NR + APR.NSHP
+                            data.problematic_L_dimexcess[ID] = L
+                            if L > SIZE_LIMITS.MAX_NUM_UNKNOWNS:
+                                # format701 = "( '   OVERFLOW OF UNKNOWN-VECTOR SPACE WITH SET  ',I3)"
+                                # fort_write(file_IO4, format701, [NS])
+                                # moved into write_overflow_message function
+                                exit()
+
             curNSHP = 0
             totNSHP = APR.NSHP
             for data in datablock_list:
