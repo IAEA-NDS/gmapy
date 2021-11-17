@@ -1180,8 +1180,7 @@ def output_result(gauss, fisdata, APR, MODAP,
             format153 = "(1X,E10.4,2F15.8,2X,F6.1,3X,F7.2,3X,F10.5)" 
             fort_write(file_IO4, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
             fort_write(file_IO5, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
-            if not (MODAP == 0) and \
-               not (MODAP == 2 and K <= APR.MCS[5,3]):
+            if not (MODAP == 0):
                 APR.CS[K]=CXX
 
         # VP: 13 lines below are added by VP, 26 July, 2004
