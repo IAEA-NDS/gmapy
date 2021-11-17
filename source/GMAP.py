@@ -18,7 +18,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
         accounting, apply_PPP_correction, link_prior_and_datablocks,
-        update_dummy_dataset, update_prior_estimates)
+        update_dummy_dataset, update_prior_estimates, update_prior_shape_estimates)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -247,6 +247,8 @@ def main():
 
             if MODAP != 0:
                 update_prior_estimates(APR, gauss)
+
+            update_prior_shape_estimates(APR, gauss)
 
             #
             #     reset for repeat of fit with replaced apriori from first fit

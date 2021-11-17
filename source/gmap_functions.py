@@ -1239,13 +1239,13 @@ def output_result(gauss, fisdata, APR, MODAP,
         for K in fort_range(NR1, NRS):  # .lbl82
             LLX=LLX+1
             KK=K*(K-1)//2+K
-            ZCS=APR.CS[K]
-            DDX=APR.CS[K]*np.sqrt(gauss.B[KK])
-            CXX=APR.CS[K]*(1.+gauss.DE[K])
+            ZCS=new_APR_CS[K]
+            DDX=new_APR_CS[K]*np.sqrt(gauss.B[KK])
+            CXX=new_APR_CS[K]*(1.+gauss.DE[K])
             DDXD=DDX*100./CXX
             format115 = "(2I6,4F10.4)"
             fort_write(file_IO4, format115, [K,NSETN[LLX],CXX,DDX,DDXD,ZCS])
-            APR.CS[K]=CXX
+            new_APR_CS[K]=CXX
 
     return APR
 
