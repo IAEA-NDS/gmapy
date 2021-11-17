@@ -181,8 +181,6 @@ def main():
 
             link_prior_and_datablocks(APR, datablock_list, MODREP)
 
-            curNSHP = 0
-            totNSHP = APR.NSHP
             for data in datablock_list:
                 if data.num_datasets == 0:
                     continue
@@ -222,6 +220,8 @@ def main():
             get_result(gauss, APR)
 
 
+            curNSHP = 0
+            totNSHP = APR.NSHP
             for data in datablock_list:
                 curNSHP += get_num_shapedatasets(data)
                 APR.NSHP = curNSHP
