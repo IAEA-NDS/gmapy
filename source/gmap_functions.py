@@ -1431,9 +1431,6 @@ def link_prior_and_datablocks(APR, datablock_list, MODREP):
             data.num_datapoints_used = count_usable_datapoints(data)
 
         for ID in fort_range(1, data.num_datasets):
-            update_dummy_dataset(ID, data, APR)
-
-        for ID in fort_range(1, data.num_datasets):
             MT = data.IDEN[ID,7]
             MTTP = data.IDEN[ID,8]
             if MT != 6 and MTTP == 2 and MODREP == 0:

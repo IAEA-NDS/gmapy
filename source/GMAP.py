@@ -17,7 +17,8 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
-        accounting, apply_PPP_correction, link_prior_and_datablocks)
+        accounting, apply_PPP_correction, link_prior_and_datablocks,
+        update_dummy_dataset)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -179,6 +180,10 @@ def main():
         elif ACON == LABL.AKON[3]:
 
             link_prior_and_datablocks(APR, datablock_list, MODREP)
+
+            for data in datablock_list:
+                for ID in fort_range(1, data.num_datasets):
+                    update_dummy_dataset(ID, data, APR)
 
             for data in datablock_list:
                 if data.num_datasets == 0:
