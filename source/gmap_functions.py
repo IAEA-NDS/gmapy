@@ -670,7 +670,7 @@ def count_usable_datapoints(data, end_idx=None):
 
 
 
-def fill_AA_AM_COV(data, fisdata, APR, gauss):
+def fill_AA_AM_COV(data, fisdata, APR):
     #
     #      FILL AA,AM,AND COV
     #

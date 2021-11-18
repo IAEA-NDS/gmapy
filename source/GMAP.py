@@ -195,7 +195,7 @@ def main():
                     if not invertible:
                         continue
 
-                    fill_AA_AM_COV(data, fisdata, APR, gauss)
+                    fill_AA_AM_COV(data, fisdata, APR)
 
                     get_matrix_products(gauss, data, APR)
 
