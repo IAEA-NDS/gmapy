@@ -681,7 +681,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
     KA.fill(0)
     N = 0
 
-    gauss.AM.fill(0.)
+    data.AM.fill(0.)
     data.AA.fill(0.)
 
     for KS in fort_range(1, data.num_datapoints):  # .lbl18
@@ -764,7 +764,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
 
                 data.AA[J,KR]=CSSJ*fisdata.FIS[K]/DQQQ
 
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
         elif MT == 5:
@@ -784,7 +784,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
                 KA[J,KR+1] = N
                 data.AA[J,KR] = APR.CS[J]/DQQQ
 
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
         elif MT == 8:
@@ -810,7 +810,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
             KR=KA[L,1]
             KA[L,KR+1]=N
             data.AA[L,KR]=CX/DQQQ
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
 
@@ -828,7 +828,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
             #
             CX = APR.CS[J]
             data.AA[J,KR] = CX / DQQQ
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
         elif MT == 2:
@@ -844,7 +844,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
             KR = KA[L,1]
             KA[L,KR+1] = N
             data.AA[L,KR] =  CXX
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
         elif MT == 3:
@@ -858,7 +858,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
             KR = KA[I,1]
             KA[I,KR+1] = N
             data.AA[I,KR] = -CCX
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
         elif MT == 4:
@@ -878,7 +878,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
             KR = KA[L,1]
             KA[L,KR+1] = N
             data.AA[L,KR] =  CXX
-            gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             continue
 
         elif MT == 7:
@@ -893,7 +893,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
                 KR=KA[I8,1]
                 KA[I8,KR+1]=N
                 data.AA[I8,KR]=-CBX
-                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
             else:
                 CBX=CX/DQQQ
@@ -909,7 +909,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
                 KA[I8,KR+1]=N
                 CCX=CBX2*APR.CS[I8]
                 data.AA[I8,KR]=-CCX
-                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
 
         elif MT == 9:
@@ -932,7 +932,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
                 KR=KA[L,1]
                 KA[L,KR+1]=N
                 data.AA[L,KR]=CBX
-                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
             else:
                 data.AA[J,KR]=CBX
@@ -950,7 +950,7 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
                 KR=KA[L,1]
                 KA[L,KR+1]=N
                 data.AA[L,KR]=CBX
-                gauss.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 continue
 
     return
@@ -1087,14 +1087,14 @@ def get_matrix_products(gauss, data, APR):
         for MI in fort_range(1,NI):  # .lbl86
             MIX=KA[I,MI+1]
             for MJ in fort_range(1,N):  #.lbl86
-                gauss.BM[I]=gauss.BM[I]+data.AA[I,MI]*data.invECOR[MIX,MJ]*gauss.AM[MJ]
+                gauss.BM[I]=gauss.BM[I]+data.AA[I,MI]*data.invECOR[MIX,MJ]*data.AM[MJ]
 
     for I in fort_range(1,N):  # .lbl26
         SUX=0.
         for J in fort_range(1,N):  # .lbl52
-            SUX=SUX+data.invECOR[I,J]*gauss.AM[J]
+            SUX=SUX+data.invECOR[I,J]*data.AM[J]
         
-        SIGMA2=SIGMA2+gauss.AM[I]*SUX
+        SIGMA2=SIGMA2+data.AM[I]*SUX
 
     data.NTOT = NTOT
     data.SIGL=SIGMA2/NTOT
