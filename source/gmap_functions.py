@@ -1388,6 +1388,11 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
 
         fill_AA_AM_COV(datablock, fisdata, APR)
 
+    invertible = invert_Ecor(data)
+    if not invertible:
+       raise ValueError('Correlation matrix of datablock is not invertible\n' + \
+                        '(starting with dataset ' + str(data.IDEN[1,6]) + ')')
+
 
 
 def gls_update(datablock_list, APR):
@@ -1395,11 +1400,6 @@ def gls_update(datablock_list, APR):
     gauss.NTOT=0
 
     for data in datablock_list:
-        invertible = invert_Ecor(data)
-        if not invertible:
-           raise ValueError('Correlation matrix of datablock is not invertible\n' + \
-                            '(starting with dataset ' + str(data.IDEN[1,6]) + ')')
-
         get_matrix_products(gauss, data, APR)
 
     get_result(gauss, APR)
