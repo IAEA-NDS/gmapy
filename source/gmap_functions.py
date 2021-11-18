@@ -1397,7 +1397,8 @@ def gls_update(datablock_list, APR):
     for data in datablock_list:
         invertible = invert_Ecor(data)
         if not invertible:
-            continue
+           raise ValueError('Correlation matrix of datablock is not invertible\n' + \
+                            '(starting with dataset ' + str(data.IDEN[1,6]) + ')')
 
         get_matrix_products(gauss, data, APR)
 
