@@ -1,6 +1,6 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
-from data_management import init_datablock, SIZE_LIMITS
+from data_management import init_datablock, init_gauss, SIZE_LIMITS
 from gmap_snippets import (should_downweight, get_AX, get_prior_range,
                            get_dataset_range, get_dataset_id_from_idx)
 from output_management import (write_dataset_info, write_prior_info,
@@ -1387,4 +1387,20 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
             apply_PPP_correction(ID, data, APR)
 
         fill_AA_AM_COV(datablock, fisdata, APR)
+
+
+
+def gls_update(datablock_list, APR):
+    gauss = init_gauss()
+    gauss.NTOT=0
+
+    for data in datablock_list:
+        invertible = invert_Ecor(data)
+        if not invertible:
+            continue
+
+        get_matrix_products(gauss, data, APR)
+
+    get_result(gauss, APR)
+    return gauss
 

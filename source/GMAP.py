@@ -19,7 +19,7 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
         accounting, apply_PPP_correction, link_prior_and_datablocks,
         update_dummy_dataset, update_prior_estimates, update_prior_shape_estimates,
-        add_compinfo_to_datablock)
+        add_compinfo_to_datablock, gls_update)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -187,18 +187,7 @@ def main():
                 for datablock in datablock_list:
                     add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
 
-                gauss.NTOT=0
-                gauss = init_gauss()
-
-                for data in datablock_list:
-                    invertible = invert_Ecor(data)
-                    if not invertible:
-                        continue
-
-                    get_matrix_products(gauss, data, APR)
-
-                get_result(gauss, APR)
-
+                gauss = gls_update(datablock_list, APR)
 
                 if MODREP == 0:
                     write_prior_info(APR, IPP, file_IO4)
