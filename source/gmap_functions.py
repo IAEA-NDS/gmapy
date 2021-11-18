@@ -980,6 +980,7 @@ def invert_Ecor(data):
     N = count_usable_datapoints(data)
 
     data.effECOR = data.ECOR.copy()
+    data.num_inv_tries = 0
 
     if MODC == 2 or N == 1:
         data.invECOR = data.ECOR.copy()
