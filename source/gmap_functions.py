@@ -1354,7 +1354,7 @@ def link_prior_and_datablocks(APR, datablock_list):
                 init_shape_prior(ID, data, APR)
 
 
-def add_compinfo_to_datablock(datablock, APR, MPPP):
+def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
 
     data = datablock
     if data.num_datasets == 0:
@@ -1386,6 +1386,7 @@ def add_compinfo_to_datablock(datablock, APR, MPPP):
         if MPPP == 1 and data.IDEN[ID,7] != 6:
             apply_PPP_correction(ID, data, APR)
 
+        fill_AA_AM_COV(datablock, fisdata, APR)
 
         if ID in data.problematic_L_dimexcess:
             data.problematic_L[ID] = data.problematic_L_dimexcess[ID]

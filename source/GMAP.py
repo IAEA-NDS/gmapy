@@ -185,9 +185,7 @@ def main():
             while True:
 
                 for datablock in datablock_list:
-                    add_compinfo_to_datablock(datablock, APR, MPPP)
-                    fill_AA_AM_COV(datablock, fisdata, APR)
-
+                    add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
 
                 gauss.NTOT=0
                 gauss = init_gauss()
