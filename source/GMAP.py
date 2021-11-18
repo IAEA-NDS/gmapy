@@ -180,7 +180,7 @@ def main():
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
 
-            link_prior_and_datablocks(APR, datablock_list, MODREP)
+            link_prior_and_datablocks(APR, datablock_list)
 
             while True:
 

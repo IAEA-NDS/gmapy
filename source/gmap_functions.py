@@ -1435,7 +1435,7 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
 
 
 
-def link_prior_and_datablocks(APR, datablock_list, MODREP):
+def link_prior_and_datablocks(APR, datablock_list):
     APR.NSHP = 0
     for data in datablock_list:
         if data.num_datasets == 0:
@@ -1459,7 +1459,7 @@ def link_prior_and_datablocks(APR, datablock_list, MODREP):
         for ID in fort_range(1, data.num_datasets):
             MT = data.IDEN[ID,7]
             MTTP = data.IDEN[ID,8]
-            if MT != 6 and MTTP == 2 and MODREP == 0:
+            if MT != 6 and MTTP == 2:
                 init_shape_prior(ID, data, APR)
 
 
