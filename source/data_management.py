@@ -243,8 +243,6 @@ def init_datablock():
 
 
 #
-# VP    ECOR    inverse of correlation matrix of measurement vector AM
-# VP            or relative weight matrix
 # VP    BM      vector accumulating (in data block cycle) sum of 
 # VP            AA(transpose)*ECOR*AM
 # VP    B       matrix accumulating (in data block cycle) sum of 
