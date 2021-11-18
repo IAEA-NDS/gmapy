@@ -182,6 +182,8 @@ def main():
             link_prior_and_datablocks(APR, datablock_list, MODREP)
 
             for data in datablock_list:
+                if data.num_datasets == 0:
+                    continue
                 for ID in fort_range(1, data.num_datasets):
                     update_dummy_dataset(ID, data, APR)
 
