@@ -200,6 +200,7 @@ def main():
 
                     data.IDEN[ID,2] = num_datapoints_used + 1
 
+                data.ECOR.fill(0)
                 for ID in fort_range(1, data.num_datasets):
                     construct_Ecor(ID, data)
                     if data.NCOX[ID] != 0:
