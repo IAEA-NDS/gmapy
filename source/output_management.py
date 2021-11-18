@@ -173,7 +173,13 @@ def write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4):
 
     NALT = NADD - IDEN[ID, 1]
     NADD1 = NADD - 1
-    L = data.problematic_L[ID]
+
+    if ID in data.problematic_L_dimexcess:
+        problematic_L = data.problematic_L_dimexcess[ID]
+    else:
+        problematic_L = data.problematic_L_Ecor[ID]
+
+    L = problematic_L
 
     #VP   PRIOR/EXP column is added
     format5173 = "(/'  ENERGY/MEV   VALUE    ABS. UNCERT. " + \

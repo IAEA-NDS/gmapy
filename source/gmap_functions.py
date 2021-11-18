@@ -1388,8 +1388,3 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
 
         fill_AA_AM_COV(datablock, fisdata, APR)
 
-        if ID in data.problematic_L_dimexcess:
-            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
-        else:
-            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
-
