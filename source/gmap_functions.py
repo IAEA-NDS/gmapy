@@ -1253,7 +1253,7 @@ def output_result(gauss, fisdata, APR, MODAP,
             fort_write(file_IO4, format115, [K,NSETN[LLX],CXX,DDX,DDXD,ZCS])
             new_APR_CS[K]=CXX
 
-    return APR
+    return
 
 
 

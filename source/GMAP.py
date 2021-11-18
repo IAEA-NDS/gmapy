@@ -215,8 +215,8 @@ def main():
 
                 write_result_info(APR, gauss, IPP, file_IO4)
 
-                APR = output_result(gauss, fisdata, APR, MODAP,
-                        file_IO4, file_IO5)
+                output_result(gauss, fisdata, APR, MODAP,
+                              file_IO4, file_IO5)
 
                 if MODAP != 0:
                     update_prior_estimates(APR, gauss)
