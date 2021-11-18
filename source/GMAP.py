@@ -181,100 +181,92 @@ def main():
 
             link_prior_and_datablocks(APR, datablock_list, MODREP)
 
-            for data in datablock_list:
-                if data.num_datasets == 0:
-                    continue
-                for ID in fort_range(1, data.num_datasets):
-                    update_dummy_dataset(ID, data, APR)
+            while True:
 
-            for data in datablock_list:
-                if data.num_datasets == 0:
-                    continue
+                for data in datablock_list:
+                    if data.num_datasets == 0:
+                        continue
+                    for ID in fort_range(1, data.num_datasets):
+                        update_dummy_dataset(ID, data, APR)
 
-                for ID in fort_range(1, data.num_datasets):
-                    if ID > 1:
-                        start_idx, end_idx = get_dataset_range(ID-1, data)
-                        num_datapoints_used = count_usable_datapoints(data, end_idx)
-                    else:
-                        num_datapoints_used = 0
+                for data in datablock_list:
+                    if data.num_datasets == 0:
+                        continue
 
-                    data.IDEN[ID,2] = num_datapoints_used + 1
+                    for ID in fort_range(1, data.num_datasets):
+                        if ID > 1:
+                            start_idx, end_idx = get_dataset_range(ID-1, data)
+                            num_datapoints_used = count_usable_datapoints(data, end_idx)
+                        else:
+                            num_datapoints_used = 0
 
-                data.ECOR.fill(0)
-                for ID in fort_range(1, data.num_datasets):
-                    construct_Ecor(ID, data)
-                    if data.NCOX[ID] != 0:
-                        if ID != data.num_datasets:
-                            raise IndexError('user correlation matrix must be given in last dataset of datablock')
-                        if data.NCOX[ID] != data.num_datapoints:
-                            raise IndexError('user correlation matrix dimension must match number of datapoints in datablock')
-                        data.ECOR = data.userECOR.copy()
+                        data.IDEN[ID,2] = num_datapoints_used + 1
 
-                    #VPBEG Assigning uncertainties as % error relative the prior
-                    if MPPP == 1 and data.IDEN[ID,7] != 6:
-                        apply_PPP_correction(ID, data, APR)
+                    data.ECOR.fill(0)
+                    for ID in fort_range(1, data.num_datasets):
+                        construct_Ecor(ID, data)
+                        if data.NCOX[ID] != 0:
+                            if ID != data.num_datasets:
+                                raise IndexError('user correlation matrix must be given in last dataset of datablock')
+                            if data.NCOX[ID] != data.num_datapoints:
+                                raise IndexError('user correlation matrix dimension must match number of datapoints in datablock')
+                            data.ECOR = data.userECOR.copy()
 
-
-                    if ID in data.problematic_L_dimexcess:
-                        data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
-                    else:
-                        data.problematic_L[ID] = data.problematic_L_Ecor[ID]
+                        #VPBEG Assigning uncertainties as % error relative the prior
+                        if MPPP == 1 and data.IDEN[ID,7] != 6:
+                            apply_PPP_correction(ID, data, APR)
 
 
-            gauss.NTOT=0
-            gauss = init_gauss()
-
-            for data in datablock_list:
-                invertible = invert_Ecor(data)
-                if not invertible:
-                    continue
-
-                fill_AA_AM_COV(data, fisdata, APR, gauss)
-
-                get_matrix_products(gauss, data, APR)
-
-            get_result(gauss, APR)
+                        if ID in data.problematic_L_dimexcess:
+                            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
+                        else:
+                            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
 
 
-            if MODREP == 0:
-                write_prior_info(APR, IPP, file_IO4)
+                gauss.NTOT=0
+                gauss = init_gauss()
 
-            curNSHP = 0
-            totNSHP = APR.NSHP
-            for data in datablock_list:
-                curNSHP += get_num_shapedatasets(data)
-                APR.NSHP = curNSHP
-                write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
-                APR.NSHP = totNSHP
+                for data in datablock_list:
+                    invertible = invert_Ecor(data)
+                    if not invertible:
+                        continue
 
-            write_result_info(APR, gauss, IPP, file_IO4)
+                    fill_AA_AM_COV(data, fisdata, APR, gauss)
 
-            APR = output_result(gauss, fisdata, APR, MODAP,
-                    file_IO4, file_IO5)
+                    get_matrix_products(gauss, data, APR)
 
-            if MODAP != 0:
-                update_prior_estimates(APR, gauss)
+                get_result(gauss, APR)
 
-            update_prior_shape_estimates(APR, gauss)
 
-            #
-            #     reset for repeat of fit with replaced apriori from first fit
-            #
-            if not (MODAP == 0 or MODREP == MODAP):
+                if MODREP == 0:
+                    write_prior_info(APR, IPP, file_IO4)
 
-                datablock_list = []
+                curNSHP = 0
+                totNSHP = APR.NSHP
+                for data in datablock_list:
+                    curNSHP += get_num_shapedatasets(data)
+                    APR.NSHP = curNSHP
+                    write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
+                    APR.NSHP = totNSHP
+
+                write_result_info(APR, gauss, IPP, file_IO4)
+
+                APR = output_result(gauss, fisdata, APR, MODAP,
+                        file_IO4, file_IO5)
+
+                if MODAP != 0:
+                    update_prior_estimates(APR, gauss)
+
+                update_prior_shape_estimates(APR, gauss)
+
+                #
+                #     reset for repeat of fit with replaced apriori from first fit
+                #
+                if (MODAP == 0 or MODREP == MODAP):
+                    break
+
                 MODREP=MODREP+1
-                file_IO3.seek(0)
 
-                format130 = "(A4)"
-                for L in fort_range(1,2000):  # .lbl69
-                    DUM = fort_read(file_IO3, format130)[0]
-                    if DUM == LABL.AKON[4]:
-                        break
-
-                if DUM == LABL.AKON[4]:
-                    file_IO3.seek(file_IO3.get_line_nr()-1)
-                    continue
 
             output_result_correlation_matrix(gauss, data, APR, IPP, file_IO4)
             exit()
