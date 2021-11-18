@@ -677,6 +677,8 @@ def fill_AA_AM_COV(data, fisdata, APR, gauss):
     IDEN = data.IDEN
     KAS = data.KAS
     KA = data.KA
+
+    KA.fill(0)
     N = 0
 
     gauss.AM.fill(0.)
