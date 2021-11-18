@@ -13,7 +13,7 @@ import numpy as np
 # refactoring
 from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         complete_symmetric_Ecor,
-        invert_Ecor, get_matrix_products, get_result, output_result,
+        invert_Ecor, get_matrix_products, get_result,
         output_result_correlation_matrix, input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
@@ -29,7 +29,7 @@ from output_management import (output_Ecor_matrix,
         write_dataset_table, write_fission_average,
         write_invalid_datapoints_info, write_added_points_info,
         write_inv_attempt_info, write_datablock_info,
-        write_result_info)
+        write_result_info, output_result)
 
 from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
