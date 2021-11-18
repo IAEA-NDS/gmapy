@@ -1462,3 +1462,42 @@ def link_prior_and_datablocks(APR, datablock_list, MODREP):
             if MT != 6 and MTTP == 2 and MODREP == 0:
                 init_shape_prior(ID, data, APR)
 
+
+def add_compinfo_to_datablock(datablock, APR, MPPP):
+
+    data = datablock
+    if data.num_datasets == 0:
+        return
+
+    for ID in fort_range(1, data.num_datasets):
+        update_dummy_dataset(ID, data, APR)
+
+    for ID in fort_range(1, data.num_datasets):
+        if ID > 1:
+            start_idx, end_idx = get_dataset_range(ID-1, data)
+            num_datapoints_used = count_usable_datapoints(data, end_idx)
+        else:
+            num_datapoints_used = 0
+
+        data.IDEN[ID,2] = num_datapoints_used + 1
+
+    data.ECOR.fill(0)
+    for ID in fort_range(1, data.num_datasets):
+        construct_Ecor(ID, data)
+        if data.NCOX[ID] != 0:
+            if ID != data.num_datasets:
+                raise IndexError('user correlation matrix must be given in last dataset of datablock')
+            if data.NCOX[ID] != data.num_datapoints:
+                raise IndexError('user correlation matrix dimension must match number of datapoints in datablock')
+            data.ECOR = data.userECOR.copy()
+
+        #VPBEG Assigning uncertainties as % error relative the prior
+        if MPPP == 1 and data.IDEN[ID,7] != 6:
+            apply_PPP_correction(ID, data, APR)
+
+
+        if ID in data.problematic_L_dimexcess:
+            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
+        else:
+            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
+

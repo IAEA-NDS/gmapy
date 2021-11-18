@@ -18,7 +18,8 @@ from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
         accounting, apply_PPP_correction, link_prior_and_datablocks,
-        update_dummy_dataset, update_prior_estimates, update_prior_shape_estimates)
+        update_dummy_dataset, update_prior_estimates, update_prior_shape_estimates,
+        add_compinfo_to_datablock)
 
 from output_management import (output_Ecor_matrix,
         write_prior_info,
@@ -183,45 +184,8 @@ def main():
 
             while True:
 
-                for data in datablock_list:
-                    if data.num_datasets == 0:
-                        continue
-                    for ID in fort_range(1, data.num_datasets):
-                        update_dummy_dataset(ID, data, APR)
-
-                for data in datablock_list:
-                    if data.num_datasets == 0:
-                        continue
-
-                    for ID in fort_range(1, data.num_datasets):
-                        if ID > 1:
-                            start_idx, end_idx = get_dataset_range(ID-1, data)
-                            num_datapoints_used = count_usable_datapoints(data, end_idx)
-                        else:
-                            num_datapoints_used = 0
-
-                        data.IDEN[ID,2] = num_datapoints_used + 1
-
-                    data.ECOR.fill(0)
-                    for ID in fort_range(1, data.num_datasets):
-                        construct_Ecor(ID, data)
-                        if data.NCOX[ID] != 0:
-                            if ID != data.num_datasets:
-                                raise IndexError('user correlation matrix must be given in last dataset of datablock')
-                            if data.NCOX[ID] != data.num_datapoints:
-                                raise IndexError('user correlation matrix dimension must match number of datapoints in datablock')
-                            data.ECOR = data.userECOR.copy()
-
-                        #VPBEG Assigning uncertainties as % error relative the prior
-                        if MPPP == 1 and data.IDEN[ID,7] != 6:
-                            apply_PPP_correction(ID, data, APR)
-
-
-                        if ID in data.problematic_L_dimexcess:
-                            data.problematic_L[ID] = data.problematic_L_dimexcess[ID]
-                        else:
-                            data.problematic_L[ID] = data.problematic_L_Ecor[ID]
-
+                for datablock in datablock_list:
+                    add_compinfo_to_datablock(datablock, APR, MPPP)
 
                 gauss.NTOT=0
                 gauss = init_gauss()
