@@ -186,6 +186,8 @@ def main():
 
                 for datablock in datablock_list:
                     add_compinfo_to_datablock(datablock, APR, MPPP)
+                    fill_AA_AM_COV(datablock, fisdata, APR)
+
 
                 gauss.NTOT=0
                 gauss = init_gauss()
@@ -194,8 +196,6 @@ def main():
                     invertible = invert_Ecor(data)
                     if not invertible:
                         continue
-
-                    fill_AA_AM_COV(data, fisdata, APR)
 
                     get_matrix_products(gauss, data, APR)
 
