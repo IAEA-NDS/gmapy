@@ -3,6 +3,7 @@ from gmap_snippets import (should_downweight, get_AX, get_dataset_range,
         get_num_shapedatasets)
 from data_management import SIZE_LIMITS
 import numpy as np
+import copy
 
 
 def write_overflow_message(ID, data, APR, file_IO4):
@@ -442,6 +443,14 @@ def output_result(gauss, fisdata, APR, MODAP,
 
 
 def write_iteration_info(APR, datablock_list, fisdata, gauss, MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
+    dc = copy.deepcopy
+    APR = dc(APR)
+    datablock_list = dc(datablock_list)
+    fisdata = dc(fisdata)
+    gauss = dc(gauss)
+    IPP = dc(IPP)
+    LABL = dc(LABL)
+
     curNSHP = 0
     totNSHP = APR.NSHP
     for data in datablock_list:
