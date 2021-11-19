@@ -1,5 +1,6 @@
 from fortran_utils import fort_range, fort_write
-from gmap_snippets import should_downweight, get_AX, get_dataset_range
+from gmap_snippets import (should_downweight, get_AX, get_dataset_range,
+        get_num_shapedatasets)
 from data_management import SIZE_LIMITS
 import numpy as np
 
@@ -437,4 +438,20 @@ def output_result(gauss, fisdata, APR, MODAP,
             new_APR_CS[K]=CXX
 
     return
+
+
+
+def write_iteration_info(APR, datablock_list, fisdata, gauss, MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
+    curNSHP = 0
+    totNSHP = APR.NSHP
+    for data in datablock_list:
+        curNSHP += get_num_shapedatasets(data)
+        APR.NSHP = curNSHP
+        write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
+        APR.NSHP = totNSHP
+
+    write_result_info(APR, gauss, IPP, file_IO4)
+
+    output_result(gauss, fisdata, APR, MODAP,
+                  file_IO4, file_IO5)
 

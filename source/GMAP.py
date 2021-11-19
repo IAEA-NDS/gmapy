@@ -29,7 +29,7 @@ from output_management import (output_Ecor_matrix,
         write_dataset_table, write_fission_average,
         write_invalid_datapoints_info, write_added_points_info,
         write_inv_attempt_info, write_datablock_info,
-        write_result_info, output_result)
+        write_result_info, output_result, write_iteration_info)
 
 from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
@@ -192,18 +192,8 @@ def main():
                 if MODREP == 0:
                     write_prior_info(APR, IPP, file_IO4)
 
-                curNSHP = 0
-                totNSHP = APR.NSHP
-                for data in datablock_list:
-                    curNSHP += get_num_shapedatasets(data)
-                    APR.NSHP = curNSHP
-                    write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
-                    APR.NSHP = totNSHP
-
-                write_result_info(APR, gauss, IPP, file_IO4)
-
-                output_result(gauss, fisdata, APR, MODAP,
-                              file_IO4, file_IO5)
+                write_iteration_info(APR, datablock_list, fisdata, gauss,
+                        MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
 
                 if MODAP != 0:
                     update_prior_estimates(APR, gauss)
