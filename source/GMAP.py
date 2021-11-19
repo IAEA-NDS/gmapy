@@ -182,15 +182,14 @@ def main():
 
             link_prior_and_datablocks(APR, datablock_list)
 
+            write_prior_info(APR, IPP, file_IO4)
+
             while True:
 
                 for datablock in datablock_list:
                     add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
 
                 gauss = gls_update(datablock_list, APR)
-
-                if MODREP == 0:
-                    write_prior_info(APR, IPP, file_IO4)
 
                 write_iteration_info(APR, datablock_list, fisdata, gauss,
                         MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
