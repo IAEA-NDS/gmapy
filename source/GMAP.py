@@ -29,7 +29,8 @@ from output_management import (output_Ecor_matrix,
         write_dataset_table, write_fission_average,
         write_invalid_datapoints_info, write_added_points_info,
         write_inv_attempt_info, write_datablock_info,
-        write_result_info, output_result, write_iteration_info)
+        write_result_info, output_result, write_iteration_info,
+        write_GMA_header)
 
 from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
@@ -90,10 +91,8 @@ def main():
     #      AKON     CONTROL WORD  A4
     #      MC1-8    PARAMETERS   8I5
     #
-    format110 = (r"1H1,' PROGRAM  GMA'//," +
-                 r"'    GAUSS-MARKOV-AITKEN LEAST SQUARES NUCLEAR DATA EVALUATION'//," +
-                 r"'    W.P.POENITZ,ANL'///")
-    fort_write(file_IO4, format110, [])
+
+    write_GMA_header(file_IO4)
 
     while True:
 

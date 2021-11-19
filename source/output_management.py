@@ -464,3 +464,11 @@ def write_iteration_info(APR, datablock_list, fisdata, gauss, MODREP, MODAP, MPP
     output_result(gauss, fisdata, APR, MODAP,
                   file_IO4, file_IO5)
 
+
+
+def write_GMA_header(file_IO4):
+    format110 = (r"1H1,' PROGRAM  GMA'//," +
+                 r"'    GAUSS-MARKOV-AITKEN LEAST SQUARES NUCLEAR DATA EVALUATION'//," +
+                 r"'    W.P.POENITZ,ANL'///")
+    fort_write(file_IO4, format110, [])
+
