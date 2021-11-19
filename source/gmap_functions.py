@@ -1245,7 +1245,7 @@ def output_result_correlation_matrix(gauss, data, APR, IPP,
 
 
 
-def input_fission_spectrum(MC1, file_IO3, file_IO4):
+def input_fission_spectrum(MC1, file_IO3):
     #
     #      INPUT OF FISSION SPECTRUM
     #

@@ -161,7 +161,7 @@ def main():
 
         # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
-            fisdata = input_fission_spectrum(MC1, file_IO3, file_IO4)
+            fisdata = input_fission_spectrum(MC1, file_IO3)
 
             write_fission_spectrum(fisdata, file_IO4)
 
