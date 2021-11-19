@@ -472,3 +472,13 @@ def write_GMA_header(file_IO4):
                  r"'    W.P.POENITZ,ANL'///")
     fort_write(file_IO4, format110, [])
 
+
+
+def write_fission_spectrum(fisdata, file_IO4):
+    format800 = "(/' FISSION SPECTRUM * BIN WIDTH'/)"
+    fort_write(file_IO4, format800, [])
+
+    format157 = "(2F10.6)"
+    for KQ in fort_range(1,fisdata.NFIS):  # .lbl694
+        fort_write(file_IO4, format157, [fisdata.ENFIS[KQ], fisdata.FIS[KQ]])
+

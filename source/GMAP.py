@@ -30,7 +30,7 @@ from output_management import (output_Ecor_matrix,
         write_invalid_datapoints_info, write_added_points_info,
         write_inv_attempt_info, write_datablock_info,
         write_result_info, output_result, write_iteration_info,
-        write_GMA_header)
+        write_GMA_header, write_fission_spectrum)
 
 from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
@@ -162,6 +162,8 @@ def main():
         # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
             fisdata = input_fission_spectrum(MC1, file_IO3, file_IO4)
+
+            write_fission_spectrum(fisdata, file_IO4)
 
 
         # LABL.AKON[4] == 'BLCK'
