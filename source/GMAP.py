@@ -80,7 +80,6 @@ def main():
     #
     #      DATA DE/1200*0.D0/,BM/1200*0.D0/,B/720600*0.D0/,NRED/160*0/
     #
-    MODREP = 0
     MODC = 3
     IELIM = 0
     LLL = 0
@@ -184,6 +183,7 @@ def main():
 
             write_prior_info(APR, IPP, file_IO4)
 
+            MODREP = 0
             while True:
 
                 for datablock in datablock_list:
