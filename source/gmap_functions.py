@@ -1305,8 +1305,6 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
 
         NFIS = K - 1
 
-    format800 = "(/' FISSION SPECTRUM * BIN WIDTH'/)"
-    fort_write(file_IO4, format800, [])
     if MC1 == 0:
         for K in fort_range(2, NFIS1):  # .lbl696
             E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
@@ -1317,11 +1315,19 @@ def input_fission_spectrum(MC1, file_IO3, file_IO4):
         data.FIS[NFIS]=data.FIS[NFIS]*DE14/FISUM
         data.FIS[1]=data.FIS[1]*DE13/FISUM
 
-    format157 = "(2F10.6)"
-    for KQ in fort_range(1,NFIS):  # .lbl694
-        fort_write(file_IO4, format157, [data.ENFIS[KQ], data.FIS[KQ]])
-
     data.NFIS = NFIS
+
+    def write_fission_spectrum(fisdata, file_IO4):
+        format800 = "(/' FISSION SPECTRUM * BIN WIDTH'/)"
+        fort_write(file_IO4, format800, [])
+
+        format157 = "(2F10.6)"
+        for KQ in fort_range(1,fisdata.NFIS):  # .lbl694
+            fort_write(file_IO4, format157, [fisdata.ENFIS[KQ], fisdata.FIS[KQ]])
+
+
+    write_fission_spectrum(data, file_IO4)
+
     return data
 
 
