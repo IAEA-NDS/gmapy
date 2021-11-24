@@ -18,8 +18,6 @@ from gmap_functions import (link_prior_and_datablocks,
 from output_management import ( write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix)
 
-from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
-
 from gmap_snippets import TextfileReader, get_num_shapedatasets, get_dataset_range
 
 from database_reading import read_gma_database
