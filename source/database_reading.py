@@ -1,9 +1,11 @@
 # helpful for fortran to python conversion
 from fortran_utils import fort_range, fort_read, fort_write
 import numpy as np
-from gmap_functions import force_stop, read_prior, input_fission_spectrum, read_datablock
+from gmap_functions import force_stop, input_fission_spectrum
 from data_management import init_gauss, init_prior, init_labels
 from gmap_snippets import TextfileReader
+
+from database_reading_utils import read_prior, read_datablock
 
 
 
