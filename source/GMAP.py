@@ -41,7 +41,7 @@ from gmap_snippets import TextfileReader, get_num_shapedatasets, get_dataset_ran
 #   START OF GMAP PROGRAM
 ##################################################
 
-def main():
+def read_gma_database(dbfile):
 
     # IMPLICIT definitions in original version
     # IMPLICIT REAL*8 (A-H,O-Z)
@@ -65,7 +65,7 @@ def main():
     NELIM = np.zeros(40+1, dtype=int)
 
     basedir = '.'
-    file_IO3 = TextfileReader('data.gma')
+    file_IO3 = TextfileReader(dbfile)
     file_IO4 = open('gma.res', 'w')
     file_IO5 = open('plot.dta', 'w')
 
@@ -232,4 +232,4 @@ def main():
             exit()
 
 
-main()
+read_gma_database('data.gma')
