@@ -3,19 +3,12 @@ from fortran_utils import fort_range, fort_read, fort_write
 from data_management import init_datablock, init_gauss, SIZE_LIMITS
 from gmap_snippets import (should_downweight, get_AX, get_prior_range,
                            get_dataset_range, get_dataset_id_from_idx)
-from output_management import (write_dataset_info, write_prior_info,
-                               write_datablock_header, write_KAS_check,
-                               write_overflow_message, write_dataset_exclusion_info,
-                               write_missing_dataset_info, write_invalid_datapoints_info,
-                               write_dataset_table, write_fission_average)
 
 import numpy as np
 
 import linpack_slim
 from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
                            unpack_utriang_matrix)
-
-from copy import deepcopy
 
 
 # constants for size limits
