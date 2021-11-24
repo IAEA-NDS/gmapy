@@ -65,8 +65,6 @@ def read_gma_database(dbfile):
 
     basedir = '.'
     file_IO3 = TextfileReader(dbfile)
-    file_IO4 = open('gma.res', 'w')
-    file_IO5 = open('plot.dta', 'w')
 
     APR = init_prior()
     gauss = init_gauss()
@@ -90,8 +88,6 @@ def read_gma_database(dbfile):
     #      AKON     CONTROL WORD  A4
     #      MC1-8    PARAMETERS   8I5
     #
-
-    write_GMA_header(file_IO4)
 
     while True:
 
@@ -162,8 +158,6 @@ def read_gma_database(dbfile):
         elif ACON == LABL.AKON[8]:
             fisdata = input_fission_spectrum(MC1, file_IO3)
 
-            write_fission_spectrum(fisdata, file_IO4)
-
 
         # LABL.AKON[4] == 'BLCK'
         elif ACON == LABL.AKON[4]:
@@ -179,37 +173,15 @@ def read_gma_database(dbfile):
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
 
-            link_prior_and_datablocks(APR, datablock_list)
-
-            write_prior_info(APR, IPP, file_IO4)
-
-            MODREP = 0
-            while True:
-
-                for datablock in datablock_list:
-                    add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
-
-                gauss = gls_update(datablock_list, APR)
-
-                write_iteration_info(APR, datablock_list, fisdata, gauss,
-                        MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
-
-                if MODAP != 0:
-                    update_prior_estimates(APR, gauss)
-
-                update_prior_shape_estimates(APR, gauss)
-
-                #
-                #     reset for repeat of fit with replaced apriori from first fit
-                #
-                if (MODAP == 0 or MODREP == MODAP):
-                    break
-
-                MODREP=MODREP+1
-
-
-            output_result_correlation_matrix(gauss, data, APR, IPP, file_IO4)
-            exit()
+            return({
+                'APR': APR,
+                'datablock_list': datablock_list,
+                'fisdata': fisdata,
+                'LABL': LABL,
+                'MPPP': MPPP,
+                'IPP': IPP,
+                'MODAP': MODAP
+                })
 
 
         # LABL.AKON[11] == 'ELIM'
@@ -231,4 +203,58 @@ def read_gma_database(dbfile):
             exit()
 
 
-read_gma_database('data.gma')
+
+def run_GMA_program():
+
+    file_IO4 = open('gma.res', 'w')
+    file_IO5 = open('plot.dta', 'w')
+
+    db_dic = read_gma_database('data.gma')
+
+    APR = db_dic['APR']
+    datablock_list = db_dic['datablock_list']
+    fisdata = db_dic['fisdata']
+    LABL = db_dic['LABL']
+    MPPP = db_dic['MPPP']
+    IPP = db_dic['IPP']
+    MODAP = db_dic['MODAP']
+
+    link_prior_and_datablocks(APR, datablock_list)
+
+    write_GMA_header(file_IO4)
+
+    write_fission_spectrum(fisdata, file_IO4)
+
+    write_prior_info(APR, IPP, file_IO4)
+
+    MODREP = 0
+    while True:
+
+        for datablock in datablock_list:
+            add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
+
+        gauss = gls_update(datablock_list, APR)
+
+        write_iteration_info(APR, datablock_list, fisdata, gauss,
+                MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
+
+        if MODAP != 0:
+            update_prior_estimates(APR, gauss)
+
+        update_prior_shape_estimates(APR, gauss)
+
+        #
+        #     reset for repeat of fit with replaced apriori from first fit
+        #
+        if (MODAP == 0 or MODREP == MODAP):
+            break
+
+        MODREP=MODREP+1
+
+
+    output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
+
+
+
+run_GMA_program()
+
