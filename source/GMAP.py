@@ -1,8 +1,3 @@
-# helpful for fortran to python conversion
-from generic_utils import Bunch, unflatten
-from fortran_utils import fort_range, fort_read, fort_write
-
-# refactoring
 from gmap_functions import (link_prior_and_datablocks,
         update_prior_estimates, update_prior_shape_estimates,
         add_compinfo_to_datablock, gls_update)
