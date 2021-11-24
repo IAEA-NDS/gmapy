@@ -2,14 +2,6 @@
 from generic_utils import Bunch, unflatten
 from fortran_utils import fort_range, fort_read, fort_write
 
-import linpack_slim
-from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
-                           unpack_utriang_matrix)
-
-# other python packages
-import os
-import numpy as np
-
 # refactoring
 from gmap_functions import (link_prior_and_datablocks,
         update_prior_estimates, update_prior_shape_estimates,
