@@ -14,15 +14,14 @@ import numpy as np
 from gmap_functions import (force_stop, read_prior, prepare_for_datablock_input,
         complete_symmetric_Ecor,
         invert_Ecor, get_matrix_products, get_result,
-        output_result_correlation_matrix, input_fission_spectrum,
+        input_fission_spectrum,
         deal_with_dataset, read_datablock, fill_AA_AM_COV,
         construct_Ecor, init_shape_prior, count_usable_datapoints,
         accounting, apply_PPP_correction, link_prior_and_datablocks,
         update_dummy_dataset, update_prior_estimates, update_prior_shape_estimates,
         add_compinfo_to_datablock, gls_update)
 
-from output_management import (output_Ecor_matrix,
-        write_prior_info,
+from output_management import (output_Ecor_matrix, write_prior_info,
         write_datablock_header, write_dataset_info,
         write_dataset_exclusion_info, write_missing_dataset_info,
         write_KAS_check, write_overflow_message,
@@ -30,7 +29,7 @@ from output_management import (output_Ecor_matrix,
         write_invalid_datapoints_info, write_added_points_info,
         write_inv_attempt_info, write_datablock_info,
         write_result_info, output_result, write_iteration_info,
-        write_GMA_header, write_fission_spectrum)
+        write_GMA_header, write_fission_spectrum, output_result_correlation_matrix)
 
 from data_management import init_gauss, init_prior, init_labels, SIZE_LIMITS
 
