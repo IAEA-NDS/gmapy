@@ -15,6 +15,8 @@ import linpack_slim
 from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
                            unpack_utriang_matrix)
 
+from copy import deepcopy
+
 
 # constants for size limits
 #      LDA   MAX NO IN DATA BLOCK
@@ -1153,6 +1155,9 @@ def output_result_correlation_matrix(gauss, data, APR, IPP,
     #
     #   OUTPUT OF CORRELATION MATRIX OF THE RESULT
     #
+    gauss = deepcopy(gauss)
+    data = deepcopy(data)
+
     NC = APR.NC
     JA = APR.MCS[NC, 2]
 
