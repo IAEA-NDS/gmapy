@@ -1,4 +1,3 @@
-import numpy as np
 from fortran_utils import fort_range
 
 
