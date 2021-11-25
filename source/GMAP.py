@@ -32,9 +32,7 @@ def run_GMA_program():
     link_prior_and_datablocks(APR, datablock_list)
 
     write_GMA_header(file_IO4)
-
     write_fission_spectrum(fisdata, file_IO4)
-
     write_prior_info(APR, IPP, file_IO4)
 
     MODREP = 0
@@ -53,14 +51,10 @@ def run_GMA_program():
 
         update_prior_shape_estimates(APR, gauss)
 
-        #
-        #     reset for repeat of fit with replaced apriori from first fit
-        #
         if (MODAP == 0 or MODREP == MODAP):
             break
 
         MODREP=MODREP+1
-
 
     output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
 
