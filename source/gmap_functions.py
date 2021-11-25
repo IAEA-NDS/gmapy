@@ -982,7 +982,6 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
 
 def gls_update(datablock_list, APR):
     gauss = init_gauss()
-    gauss.NTOT=0
 
     for data in datablock_list:
         get_matrix_products(gauss, data, APR)
