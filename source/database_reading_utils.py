@@ -10,6 +10,8 @@ import linpack_slim
 from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
                            unpack_utriang_matrix)
 
+import copy
+
 
 # constants for size limits
 #      LDA   MAX NO IN DATA BLOCK
@@ -221,8 +223,9 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NALT = NADD
     for KS in fort_range(1,LDA):
         format109 = "(2E10.4,12F5.1)"
-        data.E[NADD], data.CSS[NADD], data.CO[1:13, NADD] = \
+        data.E[NADD], data.CSS[NADD], data.userCO[1:13, NADD] = \
             unflatten(fort_read(file_IO3, format109), [2,[12]])
+        data.CO[1:13, NADD] = data.userCO[1:13, NADD]
         if data.E[NADD] == 0:
             break
         NADD += 1
