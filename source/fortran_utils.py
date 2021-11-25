@@ -30,7 +30,7 @@ def fort_read(fobj, formatstr, none_as=None, debug=False):
 
 
 @static_vars(frw_cache={})
-def fort_write(fobj, formatstr, values, debug=False):
+def fort_write(fobj, formatstr, values, retstr=False, debug=False):
     vals = list(flatten(values))
     vals = [v for v in vals if v is not None]
     if debug:
@@ -49,7 +49,10 @@ def fort_write(fobj, formatstr, values, debug=False):
 
     line = frw.write(vals)
     if fobj is None:
-        print(line)
+        if retstr:
+            return line
+        else:
+            print(line)
     else:
         fobj.write(line + '\n')
 
