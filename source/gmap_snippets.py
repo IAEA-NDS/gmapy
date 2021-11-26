@@ -116,3 +116,25 @@ def get_num_shapedatasets(data, end_idx=None):
             num += 1
     return num
 
+
+
+def MT_to_label(MT):
+    if MT == 1:
+        return 'xs'
+    elif MT == 2:
+        return 'xs_shape'
+    elif MT == 3:
+        return 'xs_ratio'
+    elif MT == 4:
+        return 'xs_ratio_shape'
+    elif MT == 5:
+        return 'totalxs'
+    elif MT == 6:
+        return 'fission_average'
+    elif MT == 7:
+        return 'abs_ratio_S1/(S2+S3)'
+    elif MT == 8:
+        return 'shape_of_sum'
+    elif MT == 9:
+        return 'shape_of_ratio_S1/(S2+S3)'
+
