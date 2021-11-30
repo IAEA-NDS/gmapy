@@ -82,6 +82,8 @@ def read_fission_spectrum(MC1, file_IO3):
         })
 
     if MC1 == 0:
+        raise ValueError('Reading of Maxwellian spectrum currently not supported ' +
+                'in the Python version of GMAP\n')
         #
         #       MAXWELLIAN SPECTRUM
         #
