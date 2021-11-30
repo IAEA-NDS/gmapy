@@ -64,6 +64,82 @@ def read_prior(MC1, MC2, APR, file_IO3):
 
 
 
+def input_fission_spectrum(MC1, file_IO3):
+    #
+    #      INPUT OF FISSION SPECTRUM
+    #
+    #
+
+    #   Fission Data block / data set
+    #
+    #      ENFIS   ENERGIES OF FISSION SPECTRUM
+    #      FIS     FISSION SPECTRUM*BINWIDTH
+    #
+    data = Bunch({
+        'FIS': np.zeros(250+1, dtype=float),
+        'ENFIS': np.zeros(250+1, dtype=float),
+        'NFIS': 0
+        })
+
+    if MC1 == 0:
+        #
+        #       MAXWELLIAN SPECTRUM
+        #
+        EAVR=MC2/1000.
+        NFIS=APR.MCS[MC3,1]
+        JA=APR.MCS[MC3, 2]
+        JE=APR.MCS[MC3, 3]
+        LL=0
+        for K in fort_range(JA, JE):  # .lbl693
+            LL=LL+1
+
+        data.ENFIS[LL] = APR.EN[K]
+        NFIS1=NFIS-1
+        FISUM=0.
+        for K in fort_range(1, NFIS1):  # .lbl695
+            E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
+            E2=(data.ENFIS[K+1]+data.ENFIS[K])/2.
+            DE12=E2-E1
+            F1=np.sqrt(E1)*np.exp(-1.5*E1/EAVR)
+            F2=np.sqrt(E2)*np.exp(-1.5*E2/EAVR)
+            E12=(E1+E2)/2.
+            F3=np.sqrt(E12)*np.exp(-1.5*E12/EAVR)
+            data.FIS[K]=((F1+F2)*.5+F3)*.5
+            FISUM=FISUM+DE12*data.FIS[K]
+
+        data.FIS[1]=np.sqrt(APR.EN[JA])*np.exp(-1.5*APR.EN[JA]/EAVR)
+        data.FIS[NFIS]=np.sqrt(APR.EN[JE])*np.exp(-1.5*APR.EN[JE]/EAVR)
+        DE12=(data.ENFIS[2]-data.ENFIS[1])/2.
+        DE13=data.ENFIS[1]+DE12
+        FISUM=FISUM+data.FIS[1]*DE13
+        DE14=(data.ENFIS(NFIS)-data.ENFIS[NFIS1])/2.
+        FISUM=FISUM+data.FIS[NFIS]*2.*DE14
+
+    else:
+        format119 = "(2E13.5)"
+        for K in fort_range(1,LDF):  # .lbl690
+            data.ENFIS[K], data.FIS[K] = fort_read(file_IO3, format119)
+            if data.ENFIS[K] == 0:
+                break
+
+        NFIS = K - 1
+
+    if MC1 == 0:
+        for K in fort_range(2, NFIS1):  # .lbl696
+            E1=(data.ENFIS[K-1]+data.ENFIS[K])/2.
+            E2=(data.ENFIS[K+1]+data.ENFIS[K])/2.
+            DE12=E2-E1
+
+        data.FIS[K]=data.FIS[K]*DE12/FISUM
+        data.FIS[NFIS]=data.FIS[NFIS]*DE14/FISUM
+        data.FIS[1]=data.FIS[1]*DE13/FISUM
+
+    data.NFIS = NFIS
+
+    return data
+
+
+
 def read_datablock(MODC, MOD2, AMO3,
         IELIM, NELIM, LABL, file_IO3):
 
