@@ -64,7 +64,7 @@ def read_prior(MC1, MC2, APR, file_IO3):
 
 
 
-def input_fission_spectrum(MC1, file_IO3):
+def read_fission_spectrum(MC1, file_IO3):
     #
     #      INPUT OF FISSION SPECTRUM
     #

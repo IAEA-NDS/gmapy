@@ -6,7 +6,7 @@ from data_management import init_gauss, init_prior, init_labels
 from gmap_snippets import TextfileReader
 
 from database_reading_utils import (read_prior, read_datablock,
-        input_fission_spectrum)
+        read_fission_spectrum)
 
 
 
@@ -126,7 +126,7 @@ def read_gma_database(dbfile):
 
         # LABL.AKON[8] == 'FIS*'
         elif ACON == LABL.AKON[8]:
-            fisdata = input_fission_spectrum(MC1, file_IO3)
+            fisdata = read_fission_spectrum(MC1, file_IO3)
 
 
         # LABL.AKON[4] == 'BLCK'
