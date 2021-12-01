@@ -806,8 +806,9 @@ def get_result(gauss, APR):
     except np.linalg.LinAlgError:
         format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
         format106 = "( '  SOLUTION  CORREL. MATRIX NOT PD ' )"
-        fort_write(None, format106)
-        exit()
+        errmsg = fort_write(None, format106, [], retstr=True)
+        raise ValueError(errmsg)
+
     tmp = np.linalg.inv(tmp)
     tmp = np.matmul(tmp, tmp.T)
     gauss.DE[1:(NRS+1)]=gauss.DE[1:(NRS+1)]+ np.matmul(tmp, gauss.BM[1:(NRS+1)])
