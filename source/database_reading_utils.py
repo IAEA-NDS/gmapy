@@ -143,7 +143,7 @@ def read_fission_spectrum(MC1, file_IO3):
 
 
 def read_datablock(MODC, MOD2, AMO3,
-        IELIM, NELIM, LABL, file_IO3):
+        IELIM, NELIM, LABL, file_IO3, format_dic={}):
 
     format100 = "(A4,1X,8I5)"
     ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
@@ -161,7 +161,7 @@ def read_datablock(MODC, MOD2, AMO3,
         # LABL.AKON[2] == 'DATA'
         if ACON == LABL.AKON[2]:
             deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-                    data, IELIM, NELIM, file_IO3)
+                    data, IELIM, NELIM, file_IO3, format_dic=format_dic)
 
         # LABL.AKON[7] == 'EDBL'
         elif ACON == LABL.AKON[7]:
@@ -196,13 +196,11 @@ def prepare_for_datablock_input(MODC, MOD2, AMO3):
 
 
 def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data, IELIM, NELIM, file_IO3):
+        data, IELIM, NELIM, file_IO3, format_dic={}):
 
     read_dataset_input(
             MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-            data,
-            file_IO3
-    )
+            data, file_IO3, format_dic=format_dic)
 
     exclflag = should_exclude_dataset(data, IELIM, NELIM)
 
@@ -211,8 +209,7 @@ def deal_with_dataset(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
 
 
 def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
-        data,
-        file_IO3):
+        data, file_IO3, format_dic={}):
     #
     #      DATA SET INPUT
     #
@@ -300,7 +297,7 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     NADD = data.num_datapoints + 1
     NALT = NADD
     for KS in fort_range(1,LDA):
-        format109 = "(2E10.4,12F5.1)"
+        format109 = format_dic.get('format109', "(2E10.4,12F5.1)")
         data.E[NADD], data.CSS[NADD], data.userCO[1:13, NADD] = \
             unflatten(fort_read(file_IO3, format109), [2,[12]])
         data.CO[1:13, NADD] = data.userCO[1:13, NADD]

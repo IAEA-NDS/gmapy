@@ -10,7 +10,7 @@ from database_reading_utils import (read_prior, read_datablock,
 
 
 
-def read_gma_database(dbfile):
+def read_gma_database(dbfile, format_dic={}):
 
     # IMPLICIT definitions in original version
     # IMPLICIT REAL*8 (A-H,O-Z)
@@ -135,7 +135,7 @@ def read_gma_database(dbfile):
             file_IO3.seek(file_IO3.get_line_nr()-1)
 
             data = read_datablock(MODC, MOD2, AMO3,
-                           IELIM, NELIM, LABL, file_IO3)
+                           IELIM, NELIM, LABL, file_IO3, format_dic=format_dic)
 
             datablock_list.append(data)
 

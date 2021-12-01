@@ -14,12 +14,13 @@ from database_reading import read_gma_database
 
 
 
-def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta'):
+def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
+        format_dic={}):
 
     file_IO4 = open(resfile, 'w')
     file_IO5 = open(plotfile, 'w')
 
-    db_dic = read_gma_database(dbfile)
+    db_dic = read_gma_database(dbfile, format_dic=format_dic)
 
     APR = db_dic['APR']
     datablock_list = db_dic['datablock_list']
