@@ -118,23 +118,28 @@ def get_num_shapedatasets(data, end_idx=None):
 
 
 
+mt_label_assoc = {
+        'xs': 1,
+        'xs_shape': 2,
+        'xs_ratio': 3,
+        'xs_ratio_shape': 4,
+        'totalxs': 5,
+        'fission_average': 6,
+        'abs_ratio_S1/(S2+S3)': 7,
+        'shape_of_sum': 8,
+        'shape_of_ratio_S1/(S2+S3)': 9
+        }
+
+
 def MT_to_label(MT):
-    if MT == 1:
-        return 'xs'
-    elif MT == 2:
-        return 'xs_shape'
-    elif MT == 3:
-        return 'xs_ratio'
-    elif MT == 4:
-        return 'xs_ratio_shape'
-    elif MT == 5:
-        return 'totalxs'
-    elif MT == 6:
-        return 'fission_average'
-    elif MT == 7:
-        return 'abs_ratio_S1/(S2+S3)'
-    elif MT == 8:
-        return 'shape_of_sum'
-    elif MT == 9:
-        return 'shape_of_ratio_S1/(S2+S3)'
+    for curkey in mt_label_assoc.keys():
+        if mt_label_assoc[curkey] == MT:
+            return curkey
+
+    raise ValueError('MT number ' + str(MT) + ' is not valid')
+
+
+
+def label_to_MT(label):
+    return mt_label_assoc[label]
 
