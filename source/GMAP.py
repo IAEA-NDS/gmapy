@@ -61,5 +61,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
 
 
-run_GMA_program()
+if __name__ == '__main__':
+    run_GMA_program()
 
