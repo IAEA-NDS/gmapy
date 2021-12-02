@@ -226,6 +226,9 @@ def write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4):
 
 
 def write_fission_average(ID, data, file_IO4):
+    if data is None:
+        return
+
     MT = data.IDEN[ID, 7]
     dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
     if MT == 6:
@@ -342,7 +345,6 @@ def output_result(gauss, fisdata, APR, MODAP,
     NC = APR.NC
     NSHP = APR.NSHP
     NRS = NR + NSHP
-    NFIS = fisdata.NFIS
     NSETN = APR.NSETN
 
     if new_APR_CS is None:
@@ -368,10 +370,12 @@ def output_result(gauss, fisdata, APR, MODAP,
             CXXD=100.*(CXX-new_APR_CS[K])/CXX
 
             found = False
-            for KK in fort_range(1,NFIS):  # .lbl705
-                if fisdata.ENFIS[KK] > .999*APR.EN[K] and fisdata.ENFIS[KK] < 1.001*APR.EN[K]:
-                    found = True
-                    break
+            if fisdata is not None:
+                NFIS = fisdata.NFIS
+                for KK in fort_range(1,NFIS):  # .lbl705
+                    if fisdata.ENFIS[KK] > .999*APR.EN[K] and fisdata.ENFIS[KK] < 1.001*APR.EN[K]:
+                        found = True
+                        break
 
             if found:
                 if K == JA or K == JI:
@@ -475,6 +479,9 @@ def write_GMA_header(file_IO4):
 
 
 def write_fission_spectrum(fisdata, file_IO4):
+    if fisdata is None:
+        return
+
     format800 = "(/' FISSION SPECTRUM * BIN WIDTH'/)"
     fort_write(file_IO4, format800, [])
 

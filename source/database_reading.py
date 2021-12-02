@@ -40,6 +40,9 @@ def read_gma_database(dbfile, format_dic={}):
     gauss = init_gauss()
     LABL = init_labels()
 
+    # fisdata is optional
+    fisdata = None
+
     datablock_list = []
 
     #
