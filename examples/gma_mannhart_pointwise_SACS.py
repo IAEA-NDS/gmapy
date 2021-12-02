@@ -48,7 +48,7 @@ for currow in range(len(prior_dt.index)):
     curreac = prior_dt.iloc[currow].reac
     prior_dt.at[currow,'xsid'] = tr[curreac]
 
-prior_dt.sort_values(by='xsid', inplace=True)
+prior_dt.sort_values(by=['xsid','energy'], inplace=True)
 prior_dt.reset_index(inplace=True, drop=True)
 
 # set up the experimental data
@@ -216,6 +216,18 @@ osj = os.path.join
 run_GMA_program(osj(outdir, 'data.gma'), osj(outdir, 'gma.res'), osj(outdir, 'plot.dta'))
 
 # FURTHER INVESTIGATION
+
+
+# plot the prior
+import matplotlib.pyplot as plt
+subdt = prior_dt.query('reac == "U8(n,f)"')
+subdt = subdt.sort_values(by='energy')
+plt.plot(subdt['energy'], subdt['xs'])
+plt.yscale('log')
+plt.xscale('log')
+plt.show()
+
+
 
 # do the GMAP calculation step-by-step
 # db_dic = read_gma_database(osj(outdir, 'data.gma'))
