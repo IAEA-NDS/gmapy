@@ -7,16 +7,6 @@ import numpy as np
 
 
 
-#
-#      test option:  forced stop for testing purpose
-#
-def force_stop(file_IO4):
-    format107 = "( '  REQUESTED STOP ' )"
-    fort_write(file_IO4, format107)
-    exit()
-
-
-
 def construct_Ecor(ID, data):
     #
     #      CONSTRUCT ECOR

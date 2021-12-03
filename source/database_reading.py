@@ -1,7 +1,6 @@
 # helpful for fortran to python conversion
 from fortran_utils import fort_range, fort_read, fort_write
 import numpy as np
-from gmap_functions import force_stop
 from data_management import init_gauss, init_prior, init_labels
 from gmap_snippets import TextfileReader
 
@@ -167,7 +166,12 @@ def read_gma_database(dbfile, format_dic={}):
 
         # LABL.AKON[10] == 'STOP'
         elif ACON == LABL.AKON[10]:
-            force_stop(file_IO4)
+            #
+            #      test option:  forced stop for testing purpose
+            #
+            format107 = "( '  REQUESTED STOP ' )"
+            fort_write(file_IO4, format107)
+            exit()
 
 
         elif ACON == LABL.AKON[6]:
