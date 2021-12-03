@@ -118,6 +118,35 @@ def get_num_shapedatasets(data, end_idx=None):
 
 
 
+def is_usable_datapoint(idx, data):
+
+    ID = get_dataset_id_from_idx(idx, data)
+    J = data.KAS[idx,1]
+    I = data.KAS[idx,2]
+    I8 = data.KAS[idx,3]
+    MT = data.IDEN[ID, 7]
+
+    if (J == 0 and MT != 6) or \
+       (I == 0 and MT in (3,4,5,7,8,9)) or \
+       (I8 == 0 and MT in (7,9)):
+           return False
+    else:
+        return True
+
+
+
+def count_usable_datapoints(data, end_idx=None):
+    end_idx = data.num_datapoints if end_idx is None else end_idx
+
+    N = 0
+    if data.num_datapoints > 0:
+        for idx in fort_range(1, end_idx):
+            if is_usable_datapoint(idx, data):
+                N += 1
+    return N
+
+
+
 mt_label_assoc = {
         'xs': 1,
         'xs_shape': 2,

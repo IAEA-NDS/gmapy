@@ -1,6 +1,5 @@
-from gmap_functions import (link_prior_and_datablocks,
-        update_prior_estimates, update_prior_shape_estimates,
-        add_compinfo_to_datablock, gls_update)
+from inference import (link_prior_and_datablocks, update_prior_estimates,
+        update_prior_shape_estimates, add_compinfo_to_datablock, gls_update) 
 
 from output_management import ( write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix)
