@@ -33,6 +33,12 @@ def construct_Ecor(ID, data):
         MODAL = MODC
         MODC = 1
 
+        if ID != data.num_datasets:
+            raise IndexError('user correlation matrix must be given in last dataset of datablock')
+        if data.NCOX[ID] != data.num_datapoints:
+            raise IndexError('user correlation matrix dimension must match number of datapoints in datablock')
+        data.ECOR = data.userECOR.copy()
+
     if MODC == 1:
         # related to INPUT OF ECOR
         L = NCOX+1   # to match the value of L after READ (label 61 in Fortran code)
