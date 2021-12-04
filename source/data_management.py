@@ -91,6 +91,7 @@ def init_prior():
 #      E       ENERGIES OF EXPERIMENTAL DATA SET
 #      CSS     MEASUREMENT VALUES OF EXPERIMENTAL DATA SET
 #      DCS     TOTAL UNCERTAINTIES OF EXPERIMENTAL VALUES
+#      predCSS Predicted values based on apriori cross sections that can be compared with measurements
 #      effDCS  Total uncertainties of experimental values as used in fit, i.e., after PPP correction
 #      userCO  ENERGY DEPENDENT UNCERTAINTY COMPONENTS
 #      CO      ENERGY DEPENDENT UNCERTAINTY COMPONENTS as used in fit (after Axton's special /10)
@@ -194,6 +195,7 @@ def init_datablock():
         'E': np.zeros(MAXDP+1, dtype=float),
         'CSS': np.zeros(MAXDP+1, dtype=float),
         'DCS': np.zeros(MAXDP+1, dtype=float),
+        'predCSS': np.zeros(MAXDP+1, dtype=float),
         'effDCS': np.zeros(MAXDP+1, dtype=float),
         'userECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
         'ECOR': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
