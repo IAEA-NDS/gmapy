@@ -261,24 +261,6 @@ def get_matrix_products(gauss, data, APR):
     NTOT = gauss.NTOT
     SIGMA2 = gauss.SIGMA2
 
-    for I in fort_range(1,NRS):  # .lbl90
-        NI=KA[I,1]
-        if NI == 0:
-            continue
-
-        for J in fort_range(I, NRS):  # .lbl83
-            NJ=KA[J,1]
-            if NJ == 0:
-                continue
-            IJ=J*(J-1)//2+I
-
-            for MI in fort_range(1,NI):  # .lbl85
-                MIX=KA[I,MI+1]
-                for MJ in fort_range(1,NJ):  # .lbl85
-                    MJX=KA[J,MJ+1]
-                    gauss.B[IJ]=gauss.B[IJ]+data.AA[I,MI]*data.AA[J,MJ]*data.invECOR[MIX,MJX]
-
-
     for I in fort_range(1,N):  # .lbl26
         SUX=0.
         for J in fort_range(1,N):  # .lbl52
