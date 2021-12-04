@@ -295,7 +295,6 @@ def get_matrix_products(gauss, data, APR):
         
         SIGMA2=SIGMA2+data.AM[I]*SUX
 
-    data.NTOT = NTOT
     data.SIGL=SIGMA2/NTOT
     if N > LDA:
         exit()

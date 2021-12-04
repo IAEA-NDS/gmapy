@@ -145,6 +145,11 @@ def read_gma_database(dbfile, format_dic={}):
         # LABL.AKON[3] == 'END*'
         elif ACON == LABL.AKON[3]:
 
+            NTOT = 0
+            for datablock in datablock_list:
+                NTOT += datablock.num_datapoints
+                datablock.NTOT = NTOT
+
             return({
                 'APR': APR,
                 'datablock_list': datablock_list,
