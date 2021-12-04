@@ -261,19 +261,13 @@ def get_matrix_products(gauss, data, APR):
     NTOT = gauss.NTOT
     SIGMA2 = gauss.SIGMA2
 
-    for I in fort_range(1,N):  # .lbl26
-        SUX=0.
-        for J in fort_range(1,N):  # .lbl52
-            SUX=SUX+data.invECOR[I,J]*data.AM[J]
-        
-        SIGMA2=SIGMA2+data.AM[I]*SUX
+    invEcor = data.invECOR[1:(N+1), 1:(N+1)]
+    am = data.AM[1:(N+1)]
 
-    data.SIGL=SIGMA2/NTOT
-    if N > LDA:
-        exit()
-    if NRS > LDB:
-        exit()
+    t = invEcor @ am
+    SIGMA2 += np.sum(t*am)
 
+    data.SIGL = SIGMA2/NTOT
     gauss.SIGMA2 = SIGMA2
 
 
