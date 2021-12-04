@@ -330,7 +330,7 @@ def get_result(gauss, APR):
 
     tmp = np.linalg.inv(tmp)
     tmp = np.matmul(tmp, tmp.T)
-    gauss.DE[1:(NRS+1)]=gauss.DE[1:(NRS+1)]+ np.matmul(tmp, gauss.BM[1:(NRS+1)])
+    gauss.DE[1:(NRS+1)] = np.matmul(tmp, gauss.BM[1:(NRS+1)])
 
     gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
 
