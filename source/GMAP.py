@@ -1,12 +1,15 @@
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock, gls_update) 
 
-from inference_new import new_gls_update
+from inference_new import new_gls_update, extract_effDCS_values, extract_measurements
 
 from output_management import ( write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix)
 
 from database_reading import read_gma_database
+
+from linpack_utils import pack_symmetric_matrix
+import numpy as np
 
 
 #################################################
@@ -52,7 +55,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         upd_covmat = upd_res['upd_covmat']
 
         num_priorvals = APR.NR + APR.NSHP
-        gauss.DE[1:(num_priorvals+1)] = upd_vals / APR.CS[1:(num_priorvals+1)] - 1
+        num_els = num_priorvals * (num_priorvals+1) // 2
+        scalevec = 1 / APR.CS[1:(num_priorvals+1)]
+        gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
+        gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
 
         write_iteration_info(APR, datablock_list, fisdata, gauss,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)

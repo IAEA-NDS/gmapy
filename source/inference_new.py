@@ -44,6 +44,21 @@ def extract_measurements(datablock_list):
 
 
 
+def extract_effDCS_values(datablock_list):
+    effDCS_values = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        num_points = datablock.num_datapoints
+        next_start_idx = cur_start_idx + datablock.num_datapoints
+        effDCS_values[cur_start_idx:next_start_idx] = \
+                datablock.effDCS[1:(num_points+1)]
+        cur_start_idx = next_start_idx
+
+    effDCS_values = effDCS_values[:next_start_idx].copy()
+    return effDCS_values
+
+
+
 def extract_sensitivity_matrix(datablock_list, APR):
     max_elnum = SIZE_LIMITS.MAX_NUM_MEASUREMENTS*10
     row_idx = np.full(max_elnum, -1)
