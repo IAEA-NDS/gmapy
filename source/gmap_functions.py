@@ -333,6 +333,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
                 data.AA[J,KR]=CSSJ*fisdata.FIS[K]/DQQQ
 
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
         elif MT == 5:
@@ -353,6 +354,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
                 data.AA[J,KR] = APR.CS[J]/DQQQ
 
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
         elif MT == 8:
@@ -379,6 +381,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
             KA[L,KR+1]=N
             data.AA[L,KR]=CX/DQQQ
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
 
@@ -397,6 +400,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
             CX = APR.CS[J]
             data.AA[J,KR] = CX / DQQQ
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
         elif MT == 2:
@@ -413,6 +417,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
             KA[L,KR+1] = N
             data.AA[L,KR] =  CXX
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
         elif MT == 3:
@@ -427,6 +432,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
             KA[I,KR+1] = N
             data.AA[I,KR] = -CCX
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
         elif MT == 4:
@@ -447,6 +453,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
             KA[L,KR+1] = N
             data.AA[L,KR] =  CXX
             data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            data.predCSS[N] = CX
             continue
 
         elif MT == 7:
@@ -462,6 +469,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
                 KA[I8,KR+1]=N
                 data.AA[I8,KR]=-CBX
                 data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.predCSS[N] = CX
                 continue
             else:
                 CBX=CX/DQQQ
@@ -478,6 +486,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
                 CCX=CBX2*APR.CS[I8]
                 data.AA[I8,KR]=-CCX
                 data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.predCSS[N] = CX
                 continue
 
         elif MT == 9:
@@ -501,6 +510,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
                 KA[L,KR+1]=N
                 data.AA[L,KR]=CBX
                 data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.predCSS[N] = CX
                 continue
             else:
                 data.AA[J,KR]=CBX
@@ -519,6 +529,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
                 KA[L,KR+1]=N
                 data.AA[L,KR]=CBX
                 data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                data.predCSS[N] = CX
                 continue
 
     return
