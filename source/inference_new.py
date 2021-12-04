@@ -2,6 +2,7 @@ import numpy as np
 from scipy.sparse import csr_matrix, block_diag
 from scipy.sparse.linalg import spsolve
 from scipy import sparse
+from scipy.linalg.lapack import dpotri, dpotrf
 
 from data_management import SIZE_LIMITS
 
@@ -133,7 +134,13 @@ def new_gls_update(datablock_list, APR, retcov=False):
 
     post_covmat = None
     if retcov is True:
-        post_covmat = np.linalg.inv(inv_post_cov.toarray())
+        # following is equivalent to:
+        # post_covmat = np.linalg.inv(inv_post_cov.toarray())
+        cholfact, _ = dpotrf(inv_post_cov.toarray(), False, False)
+        invres , info = dpotri(cholfact)
+        if info != 0:
+            raise ValueError('Experimental covariance matrix not positive definite')
+        post_covmat = np.triu(invres) + np.triu(invres, k=1).T
 
     return {'upd_vals': upd_priorvals, 'upd_covmat': post_covmat}
 
