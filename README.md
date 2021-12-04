@@ -71,6 +71,10 @@ immediately followed by DATA keyword). Since commit 88fc22c the Python version d
 not reproduce the results of the Fortran version anymore in the case of an incomplete
 datablock.
 
+- If it is unknown to the Fortran GMAP version how to link specific measurement
+points to the prior, it proceeds but ignores those measurement points.
+The Python version does not accept unusable datapoints anymore since commit 07da8f1.
+
 [goto-statement]: https://pypi.org/project/goto-statement/
 [fortranformat]: https://pypi.org/project/fortranformat/ 
 
