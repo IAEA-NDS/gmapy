@@ -305,36 +305,11 @@ def get_matrix_products(gauss, data, APR):
 
 
 
-def get_result(gauss, APR):
-    #
-    #      GETTING THE RESULT
-    #
-    NRS = APR.NR + APR.NSHP
-    NUMEL = NRS*(NRS+1)//2
-    tmp = np.array(gauss.B[1:(NUMEL+1)], dtype='float64', order='F')
-    tmp = unpack_utriang_matrix(tmp)
-    try:
-        tmp = np.linalg.cholesky(tmp.T).T 
-    except np.linalg.LinAlgError:
-        format105 = "(/' EXP BLOCK CORREL. MATRIX NOT PD',20X,'***** WARNING *')" 
-        format106 = "( '  SOLUTION  CORREL. MATRIX NOT PD ' )"
-        errmsg = fort_write(None, format106, [], retstr=True)
-        raise ValueError(errmsg)
-
-    tmp = np.linalg.inv(tmp)
-    tmp = np.matmul(tmp, tmp.T)
-    gauss.DE[1:(NRS+1)] = np.matmul(tmp, gauss.BM[1:(NRS+1)])
-
-    gauss.B[1:(NUMEL+1)] = pack_symmetric_matrix(tmp)
-
-
-
 def gls_update(datablock_list, APR):
     gauss = init_gauss()
 
     for data in datablock_list:
         get_matrix_products(gauss, data, APR)
 
-    get_result(gauss, APR)
     return gauss
 
