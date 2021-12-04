@@ -1,6 +1,8 @@
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock, gls_update) 
 
+from inference_new import new_gls_update
+
 from output_management import ( write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix)
 
@@ -42,6 +44,15 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
             add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
 
         gauss = gls_update(datablock_list, APR)
+
+        # we do the update the new way and gradually
+        # inject more and more info into the old data structures
+        upd_res = new_gls_update(datablock_list, APR, retcov=True)
+        upd_vals = upd_res['upd_vals']
+        upd_covmat = upd_res['upd_covmat']
+
+        num_priorvals = APR.NR + APR.NSHP
+        gauss.DE[1:(num_priorvals+1)] = upd_vals / APR.CS[1:(num_priorvals+1)] - 1
 
         write_iteration_info(APR, datablock_list, fisdata, gauss,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
