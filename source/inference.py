@@ -278,15 +278,6 @@ def get_matrix_products(gauss, data, APR):
                     MJX=KA[J,MJ+1]
                     gauss.B[IJ]=gauss.B[IJ]+data.AA[I,MI]*data.AA[J,MJ]*data.invECOR[MIX,MJX]
 
-    for I in fort_range(1,NRS):  # .lbl91
-        NI=KA[I,1]
-        if NI == 0:
-            continue
-
-        for MI in fort_range(1,NI):  # .lbl86
-            MIX=KA[I,MI+1]
-            for MJ in fort_range(1,N):  #.lbl86
-                gauss.BM[I]=gauss.BM[I]+data.AA[I,MI]*data.invECOR[MIX,MJ]*data.AM[MJ]
 
     for I in fort_range(1,N):  # .lbl26
         SUX=0.
