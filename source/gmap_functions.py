@@ -274,7 +274,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
 
         if not is_usable_datapoint(KS, data):
             data.invalid_datapoints[NS].append(KS)
-            continue
+            raise ValueError('Unusable datapoints as present in dataset ' + str(NS) + ' are not permitted')
 
         N = N + 1
 
