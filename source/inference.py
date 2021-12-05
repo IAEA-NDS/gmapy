@@ -58,13 +58,9 @@ def invert_Ecor(data):
             #
             data.num_inv_tries += 1
             IREP=IREP+1
-            N1=N-1
-            for K in fort_range(1,N1):  # .lbl2211
-                K1=K+1
-                for L in fort_range(K1, N):  # .lbl2211
-                    if MODC == 2:
-                        data.effECOR[L,K] = 0.
-                    data.effECOR[K,L] = data.effECOR[L,K]
+
+            if MODC == 2:
+                data.effCOR[1:(N+1),1:(N+1)] = np.identity(N)
 
             for K in fort_range(1,N):  # .lbl2212
                 data.effECOR[K,K] = 1.
