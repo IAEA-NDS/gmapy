@@ -1,5 +1,5 @@
 from inference import (link_prior_and_datablocks, update_prior_estimates,
-        update_prior_shape_estimates, add_compinfo_to_datablock, gls_update) 
+        update_prior_shape_estimates, add_compinfo_to_datablock)
 
 from inference_new import new_gls_update, extract_effDCS_values, extract_measurements
 
@@ -7,6 +7,7 @@ from output_management import ( write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix)
 
 from database_reading import read_gma_database
+from data_management import init_gauss
 
 from linpack_utils import pack_symmetric_matrix
 import numpy as np
@@ -15,6 +16,23 @@ import numpy as np
 #################################################
 #   START OF GMAP PROGRAM
 ##################################################
+
+
+def get_matrix_products(gauss, data):
+    #
+    #      GET MATRIX PRODUCTS
+    #
+    N = data.num_datapoints_used
+    SIGMA2 = gauss.SIGMA2
+
+    effEcor = data.effECOR[1:(N+1), 1:(N+1)]
+    am = data.AM[1:(N+1)]
+
+    t = np.linalg.solve(effEcor, am)
+    SIGMA2 += np.sum(t*am)
+
+    data.SIGL = SIGMA2/ data.NTOT
+    gauss.SIGMA2 = SIGMA2
 
 
 
@@ -46,10 +64,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         for datablock in datablock_list:
             add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
 
-        gauss = gls_update(datablock_list, APR)
-
-        # we do the update the new way and gradually
-        # inject more and more info into the old data structures
         upd_res = new_gls_update(datablock_list, APR, retcov=True)
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
@@ -57,6 +71,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         num_priorvals = APR.NR + APR.NSHP
         num_els = num_priorvals * (num_priorvals+1) // 2
         scalevec = 1 / APR.CS[1:(num_priorvals+1)]
+
+        gauss = init_gauss()
+        for data in datablock_list:
+            get_matrix_products(gauss, data)
         gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
         gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
         gauss.NTOT = len(extract_measurements(datablock_list))

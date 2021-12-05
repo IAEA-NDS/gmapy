@@ -248,31 +248,3 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
        raise ValueError('Correlation matrix of datablock is not invertible\n' + \
                         '(starting with dataset ' + str(data.IDEN[1,6]) + ')')
 
-
-
-def get_matrix_products(gauss, data):
-    #
-    #      GET MATRIX PRODUCTS
-    #
-    N = data.num_datapoints_used
-    SIGMA2 = gauss.SIGMA2
-
-    effEcor = data.effECOR[1:(N+1), 1:(N+1)]
-    am = data.AM[1:(N+1)]
-
-    t = np.linalg.solve(effEcor, am)
-    SIGMA2 += np.sum(t*am)
-
-    data.SIGL = SIGMA2/ data.NTOT
-    gauss.SIGMA2 = SIGMA2
-
-
-
-def gls_update(datablock_list, APR):
-    gauss = init_gauss()
-
-    for data in datablock_list:
-        get_matrix_products(gauss, data)
-
-    return gauss
-
