@@ -135,18 +135,6 @@ def is_usable_datapoint(idx, data):
 
 
 
-def count_usable_datapoints(data, end_idx=None):
-    end_idx = data.num_datapoints if end_idx is None else end_idx
-
-    N = 0
-    if data.num_datapoints > 0:
-        for idx in fort_range(1, end_idx):
-            if is_usable_datapoint(idx, data):
-                N += 1
-    return N
-
-
-
 mt_label_assoc = {
         'xs': 1,
         'xs_shape': 2,
