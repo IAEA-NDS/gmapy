@@ -59,11 +59,11 @@ def invert_Ecor(data):
             data.num_inv_tries += 1
             IREP=IREP+1
 
+            if np.any(data.effECOR.diagonal()[1:(N+1)] != 1):
+                raise ValueError('All diagonal elements of correlation matrix must be one')
+
             if MODC == 2:
                 data.effCOR[1:(N+1),1:(N+1)] = np.identity(N)
-
-            for K in fort_range(1,N):  # .lbl2212
-                data.effECOR[K,K] = 1.
 
             CXZ=0.10
             for K in fort_range(1,N):  # .lbl37
