@@ -21,7 +21,7 @@ LDF = 200
 
 
 
-def invert_Ecor(data):
+def construct_effECOR(data):
     #
     #      INVERT ECOR
     #
@@ -185,8 +185,8 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
 
         fill_AA_AM_COV(datablock, fisdata, APR)
 
-    invertible = invert_Ecor(data)
-    if not invertible:
+    success = construct_effECOR(data)
+    if not success:
        raise ValueError('Correlation matrix of datablock is not invertible\n' + \
                         '(starting with dataset ' + str(data.IDEN[1,6]) + ')')
 
