@@ -18,6 +18,18 @@ import numpy as np
 ##################################################
 
 
+def create_gauss_structure(APR, datablock_list, upd_vals, upd_covmat):
+    num_priorvals = APR.NR + APR.NSHP
+    num_els = num_priorvals * (num_priorvals+1) // 2
+    scalevec = 1 / APR.CS[1:(num_priorvals+1)]
+
+    gauss = init_gauss()
+    gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
+    gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
+    gauss.NTOT = len(extract_measurements(datablock_list))
+    return gauss
+
+
 def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         format_dic={}):
 
@@ -50,14 +62,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
 
-        num_priorvals = APR.NR + APR.NSHP
-        num_els = num_priorvals * (num_priorvals+1) // 2
-        scalevec = 1 / APR.CS[1:(num_priorvals+1)]
-
-        gauss = init_gauss()
-        gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
-        gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
-        gauss.NTOT = len(extract_measurements(datablock_list))
+        gauss = create_gauss_structure(APR, datablock_list, upd_vals, upd_covmat)
 
         write_iteration_info(APR, datablock_list, fisdata, gauss,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
