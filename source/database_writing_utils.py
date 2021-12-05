@@ -213,8 +213,10 @@ def extract_dataset_from_datablock(ID, datablock):
 
 def extract_experiment_datatable(datablock_list, priordf=None):
     res = None
+    numpts1 = 0
+    numpts2 = 0
     for datablock in datablock_list:
-        for i in range(1,datablock.num_datasets):
+        for i in range(1,datablock.num_datasets+1):
             ds = extract_dataset_from_datablock(i, datablock)
             NT = len(ds['reacids'])
             curfrm = pd.DataFrame.from_dict({
@@ -231,10 +233,17 @@ def extract_experiment_datatable(datablock_list, priordf=None):
                 #'xsid3': ds['reacids'][2] if len(ds['reacids']) >= 3 else 0
                 'reac3': priordf.loc[priordf['xsid']==ds['reacids'][2]].iloc[0]['reac'] if NT > 2 else '',
                 })
+            numpts2 += curfrm.shape[0]
             if res is None:
                 res = curfrm
             else:
                 res = pd.concat([res, curfrm])
+
+        numpts1 += datablock.num_datapoints
+        if numpts1 != numpts2:
+            raise IndexError('There is some strange mismatch of read elements')
+
+    res.reset_index(inplace=True, drop=True)
     return res
 
 
@@ -255,6 +264,7 @@ def extract_prior_datatable(APR):
             resfrm = curfrm
         else:
             resfrm = pd.concat([resfrm, curfrm])
+    resfrm.reset_index(inplace=True, drop=True)
     return resfrm
 
 
