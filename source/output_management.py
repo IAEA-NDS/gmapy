@@ -1,7 +1,9 @@
 from fortran_utils import fort_range, fort_write
 from gmap_snippets import (should_downweight, get_AX, get_dataset_range,
         get_num_shapedatasets)
-from data_management import SIZE_LIMITS
+from data_management import SIZE_LIMITS, init_gauss
+from linpack_utils import pack_symmetric_matrix
+from inference_new import extract_measurements
 import numpy as np
 import copy
 
@@ -443,6 +445,19 @@ def output_result(gauss, fisdata, APR, MODAP,
             new_APR_CS[K]=CXX
 
     return
+
+
+
+def create_gauss_structure(APR, datablock_list, upd_vals, upd_covmat):
+    num_priorvals = APR.NR + APR.NSHP
+    num_els = num_priorvals * (num_priorvals+1) // 2
+    scalevec = 1 / APR.CS[1:(num_priorvals+1)]
+
+    gauss = init_gauss()
+    gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
+    gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
+    gauss.NTOT = len(extract_measurements(datablock_list))
+    return gauss
 
 
 
