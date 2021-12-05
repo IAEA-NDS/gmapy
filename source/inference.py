@@ -122,13 +122,10 @@ def update_prior_estimates(APR, updated_values):
 
 
 
-def update_prior_shape_estimates(APR, gauss):
+def update_prior_shape_estimates(APR, updated_values):
     NR = APR.NR
     NRS = NR + APR.NSHP
-    NR1=NR+1
-    if APR.NSHP != 0:
-        for K in fort_range(NR1, NRS):  # .lbl82
-            APR.CS[K] = APR.CS[K]*(1.+gauss.DE[K])
+    APR.CS[(NR+1):(NRS+1)] = updated_values[NR:]
 
 
 
