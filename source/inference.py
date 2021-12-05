@@ -257,10 +257,10 @@ def get_matrix_products(gauss, data, APR):
     N = data.num_datapoints_used
     SIGMA2 = gauss.SIGMA2
 
-    invEcor = data.invECOR[1:(N+1), 1:(N+1)]
+    effEcor = data.effECOR[1:(N+1), 1:(N+1)]
     am = data.AM[1:(N+1)]
 
-    t = invEcor @ am
+    t = np.linalg.solve(effEcor, am)
     SIGMA2 += np.sum(t*am)
 
     data.SIGL = SIGMA2/ data.NTOT
