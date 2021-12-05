@@ -250,7 +250,7 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
 
 
 
-def get_matrix_products(gauss, data, APR):
+def get_matrix_products(gauss, data):
     #
     #      GET MATRIX PRODUCTS
     #
@@ -272,7 +272,7 @@ def gls_update(datablock_list, APR):
     gauss = init_gauss()
 
     for data in datablock_list:
-        get_matrix_products(gauss, data, APR)
+        get_matrix_products(gauss, data)
 
     return gauss
 
