@@ -131,7 +131,7 @@ def output_Ecor_matrix(data, file_IO4):
     #
     #      output of correlation matrix of data block
     #
-    N = data.num_datapoints_used
+    N = data.num_datapoints
 
     format101 = "(1H*//,'   CORRELATION MATRIX OF DATA BLOCK'/)"
     fort_write(file_IO4, format101, [])
@@ -242,7 +242,7 @@ def write_fission_average(ID, data, file_IO4):
 
 
 def write_added_points_info(APR, data, MODREP, file_IO4):
-    N = data.num_datapoints_used
+    N = data.num_datapoints
     NTOT = data.NTOT
     NSHP = APR.NSHP
     NR = APR.NR
@@ -286,9 +286,9 @@ def write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4):
         write_invalid_datapoints_info(NS, data, file_IO4)
 
     format2830 = "(80X,4HN = ,I5)"
-    fort_write(file_IO4, format2830, [data.num_datapoints_used])
+    fort_write(file_IO4, format2830, [data.num_datapoints])
 
-    N = data.num_datapoints_used
+    N = data.num_datapoints
     MODC = data.MODC
 
     if not (IPP[3] == 0 or N == 1 or MODC == 2):
@@ -465,7 +465,7 @@ def get_matrix_products(gauss, data):
     #
     #      GET MATRIX PRODUCTS
     #
-    N = data.num_datapoints_used
+    N = data.num_datapoints
     SIGMA2 = gauss.SIGMA2
 
     effEcor = data.effECOR[1:(N+1), 1:(N+1)]
