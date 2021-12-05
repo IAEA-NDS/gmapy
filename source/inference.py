@@ -257,8 +257,7 @@ def get_matrix_products(gauss, data, APR):
     NRS=APR.NR + APR.NSHP
     KA = data.KA
     N = data.num_datapoints_used
-    gauss.NTOT += data.num_datapoints_used
-    NTOT = gauss.NTOT
+    NTOT = data.NTOT
     SIGMA2 = gauss.SIGMA2
 
     invEcor = data.invECOR[1:(N+1), 1:(N+1)]

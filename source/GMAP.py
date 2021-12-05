@@ -59,6 +59,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         scalevec = 1 / APR.CS[1:(num_priorvals+1)]
         gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
         gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
+        gauss.NTOT = len(extract_measurements(datablock_list))
 
         write_iteration_info(APR, datablock_list, fisdata, gauss,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
