@@ -4,10 +4,6 @@ from data_management import SIZE_LIMITS, init_gauss
 from gmap_functions import (init_shape_prior, construct_Ecor, apply_PPP_correction,
         fill_AA_AM_COV)
 
-import linpack_slim
-from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
-                           unpack_utriang_matrix)
-
 import numpy as np
 
 
