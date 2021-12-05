@@ -446,6 +446,24 @@ def output_result(gauss, fisdata, APR, MODAP,
 
 
 
+def get_matrix_products(gauss, data):
+    #
+    #      GET MATRIX PRODUCTS
+    #
+    N = data.num_datapoints_used
+    SIGMA2 = gauss.SIGMA2
+
+    effEcor = data.effECOR[1:(N+1), 1:(N+1)]
+    am = data.AM[1:(N+1)]
+
+    t = np.linalg.solve(effEcor, am)
+    SIGMA2 += np.sum(t*am)
+
+    data.SIGL = SIGMA2/ data.NTOT
+    gauss.SIGMA2 = SIGMA2
+
+
+
 def write_iteration_info(APR, datablock_list, fisdata, gauss, MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
     dc = copy.deepcopy
     APR = dc(APR)
@@ -458,6 +476,7 @@ def write_iteration_info(APR, datablock_list, fisdata, gauss, MODREP, MODAP, MPP
     curNSHP = 0
     totNSHP = APR.NSHP
     for data in datablock_list:
+        get_matrix_products(gauss, data)
         curNSHP += get_num_shapedatasets(data)
         APR.NSHP = curNSHP
         write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)

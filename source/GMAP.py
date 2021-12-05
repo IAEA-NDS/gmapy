@@ -18,24 +18,6 @@ import numpy as np
 ##################################################
 
 
-def get_matrix_products(gauss, data):
-    #
-    #      GET MATRIX PRODUCTS
-    #
-    N = data.num_datapoints_used
-    SIGMA2 = gauss.SIGMA2
-
-    effEcor = data.effECOR[1:(N+1), 1:(N+1)]
-    am = data.AM[1:(N+1)]
-
-    t = np.linalg.solve(effEcor, am)
-    SIGMA2 += np.sum(t*am)
-
-    data.SIGL = SIGMA2/ data.NTOT
-    gauss.SIGMA2 = SIGMA2
-
-
-
 def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         format_dic={}):
 
@@ -73,8 +55,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         scalevec = 1 / APR.CS[1:(num_priorvals+1)]
 
         gauss = init_gauss()
-        for data in datablock_list:
-            get_matrix_products(gauss, data)
         gauss.DE[1:(num_priorvals+1)] = upd_vals * scalevec - 1
         gauss.B[1:(num_els+1)] = pack_symmetric_matrix(upd_covmat * np.outer(scalevec,scalevec))
         gauss.NTOT = len(extract_measurements(datablock_list))
