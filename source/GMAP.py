@@ -63,7 +63,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
 
         if MODAP != 0:
-            update_prior_estimates(APR, gauss)
+            update_prior_estimates(APR, upd_vals)
 
         update_prior_shape_estimates(APR, gauss)
 

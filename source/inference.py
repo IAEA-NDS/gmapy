@@ -117,12 +117,8 @@ def update_dummy_dataset(ID, data, APR):
 
 
 
-def update_prior_estimates(APR, gauss):
-    for L in fort_range(1, APR.NC):  # .lbl14
-        JA=APR.MCS[L,2]
-        JI=APR.MCS[L,3]
-        for K in fort_range(JA, JI):  # .lbl77
-            APR.CS[K] = APR.CS[K]*(1.+gauss.DE[K])
+def update_prior_estimates(APR, updated_values):
+    APR.CS[1:(APR.NR+1)] = updated_values[:APR.NR]
 
 
 
