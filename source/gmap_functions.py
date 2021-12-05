@@ -540,18 +540,3 @@ def fill_AA_AM_COV(data, fisdata, APR):
 
     return
 
-
-
-def complete_symmetric_Ecor(data):
-    #
-    #      FILL IN SYMMETRIC TERM
-    #
-    MODC = data.MODC
-    N = data.num_datapoints
-    for K in fort_range(1,N-1):  # .lbl25
-        for L in fort_range(K+1, N):  # .lbl25
-            if MODC == 2:
-                data.ECOR[L, K] = 0.
-            data.ECOR[K, L] = data.ECOR[L, K]
-            # label .lbl25
-
