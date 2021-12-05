@@ -179,7 +179,7 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
         if MPPP == 1 and data.IDEN[ID,7] != 6:
             apply_PPP_correction(ID, data, APR)
 
-        fill_AA_AM_COV(datablock, fisdata, APR)
+    fill_AA_AM_COV(datablock, fisdata, APR)
 
     success = construct_effECOR(data)
     if not success:
