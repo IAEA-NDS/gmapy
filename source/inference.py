@@ -64,13 +64,11 @@ def invert_Ecor(data):
 
             if MODC == 2:
                 data.effCOR[1:(N+1),1:(N+1)] = np.identity(N)
-
-            CXZ=0.10
-            for K in fort_range(1,N):  # .lbl37
-                for L in fort_range(1,N):
-                    data.effECOR[K,L]=data.effECOR[K,L]/(1.+CXZ)
-                    if K == L:
-                        data.effECOR[K,L] = 1.
+            else:
+                CXZ=0.10
+                mask = np.ones(data.effECOR.shape, dtype=bool)
+                np.fill_diagonal(mask, 0)
+                data.effECOR[mask] /= (1.+CXZ)
 
             if IREP >= 15:
                 return False
