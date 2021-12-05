@@ -144,7 +144,6 @@ def init_prior():
 #
 #      num_datasets          number of datasets in datablock
 #      num_datapoints        number of datapoints in datablocks over all datasets
-#      num_datapoints_used   number of datapoints really used in Bayesian inference
 #
 #      excluded_datasets     identification numbers of excluded datasets
 #      missing_datasets      id numbers of cross-correlated datasets that are missing
@@ -188,7 +187,6 @@ def init_datablock():
 
         'num_datasets': 0,
         'num_datapoints': 0,
-        'num_datapoints_used': 0,
 
         'excluded_datasets': set(),
         'missing_datasets': OrderedDict(),
