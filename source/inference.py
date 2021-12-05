@@ -216,10 +216,6 @@ def add_compinfo_to_datablock(datablock, fisdata, APR, MPPP):
     for ID in fort_range(1, data.num_datasets):
         update_dummy_dataset(ID, data, APR)
 
-    for ID in fort_range(1, data.num_datasets):
-        start_idx, end_idx = get_dataset_range(ID-1, data)
-        data.IDEN[ID,2] = end_idx + 1
-
     data.ECOR.fill(0)
     for ID in fort_range(1, data.num_datasets):
         construct_Ecor(ID, data)

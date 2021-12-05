@@ -249,6 +249,12 @@ def read_dataset_input(MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8,
     data.NNCOX[ID] = NNCOX
     IDEN = data.IDEN
 
+    start_idx = 1
+    if ID > 1:
+        start_idx = get_dataset_range(ID-1, data)[1] + 1
+
+    data.IDEN[ID,2] = start_idx
+
     IDEN[ID,6] = NS
     IDEN[ID,7] = MT
     #
