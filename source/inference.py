@@ -73,23 +73,6 @@ def invert_Ecor(data):
             if IREP >= 15:
                 return False
 
-    JOB=1
-    # CALL DPODI(ECOR,LDA,N,DET,JOB)
-    tmp = np.array(choleskymat, dtype='float64', order='F')
-    tmp_det = np.array([0., 0.], dtype='float64', order='F') 
-    linpack_slim.dpodi(tmp, det=tmp_det, job=JOB)
-    data.invECOR[1:(N+1),1:(N+1)] = tmp
-
-    # ALTERNATIVE USING NUMPY inv function
-    # tmp = inv(data.ECOR[1:(N+1),1:(N+1)])
-    # data.ECOR[1:(N+1),1:(N+1)] = np.matmul(tmp.T, tmp)
-
-    for K in fort_range(2,N):  # .lbl17
-        L1=K-1
-        for L in fort_range(1,L1):
-            data.invECOR[K,L] = data.invECOR[L,K]
-        L = L + 1  # to match L value of fortran after loop
-
     return True
 
 
