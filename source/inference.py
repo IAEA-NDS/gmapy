@@ -84,6 +84,12 @@ def update_prior_shape_estimates(APR, updated_values):
 
 
 
+def update_all_estimates(APR, updated_values):
+    update_prior_estimates(APR, updated_values)
+    update_prior_shape_estimates(APR, updated_values)
+
+
+
 def accounting(ID, data, APR):
     #
     #      ACCOUNTING
