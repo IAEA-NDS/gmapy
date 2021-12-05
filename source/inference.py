@@ -26,7 +26,7 @@ def invert_Ecor(data):
     #      INVERT ECOR
     #
     MODC = data.MODC
-    N = count_usable_datapoints(data)
+    N = data.num_datapoints
 
     data.effECOR = data.ECOR.copy()
     data.num_inv_tries = 0
@@ -198,7 +198,6 @@ def link_prior_and_datablocks(APR, datablock_list):
 
         for ID in fort_range(1, data.num_datasets):
             accounting(ID, data, APR)
-            data.num_datapoints_used = count_usable_datapoints(data)
 
         for ID in fort_range(1, data.num_datasets):
             MT = data.IDEN[ID,7]
