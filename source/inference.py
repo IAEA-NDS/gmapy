@@ -27,53 +27,35 @@ def invert_Ecor(data):
     #
     MODC = data.MODC
     N = data.num_datapoints
-
-    data.effECOR = data.ECOR.copy()
-    data.num_inv_tries = 0
-
-    if MODC == 2 or N == 1:
-        data.invECOR = data.ECOR.copy()
-        return True
+    curmat = data.ECOR[1:(N+1), 1:(N+1)].copy()
+    if np.any(curmat.diagonal() != 1):
+        raise ValueError('All diagonal elements of correlation matrix must be one')
 
     IREP = 0
-    while True:
-        # cholesky decomposition
-        #CALL DPOFA(ECOR,LDA,N,INFO)
-        # INFO = np.array(0)
-        # choleskymat = np.array(data.effECOR[1:(N+1),1:(N+1)], dtype='float64', order='F')
-        # linpack_slim.dpofa(a=choleskymat, info=INFO)
-
-        # ALTERNATIVE USING NUMPY FUNCTION cholesky
-        INFO = 0
+    failed = True
+    data.num_inv_tries = 0
+    while failed and IREP < 15:
+        failed = False
         try:
-            choleskymat = np.linalg.cholesky(data.effECOR[1:(N+1), 1:(N+1)]).T
+            np.linalg.cholesky(curmat)
         except np.linalg.LinAlgError:
-            INFO = 1
-
-        if INFO == 0:
-            break
-        else:
             #
             #      ATTEMPT TO MAKE CORR. MATRIX POSITIVE DEFINITE
             #
             data.num_inv_tries += 1
+            failed = True
             IREP=IREP+1
 
-            if np.any(data.effECOR.diagonal()[1:(N+1)] != 1):
-                raise ValueError('All diagonal elements of correlation matrix must be one')
-
             if MODC == 2:
-                data.effCOR[1:(N+1),1:(N+1)] = np.identity(N)
+                curmat = np.identity(N)
             else:
                 CXZ=0.10
-                mask = np.ones(data.effECOR.shape, dtype=bool)
+                mask = np.ones(curmat.shape, dtype=bool)
                 np.fill_diagonal(mask, 0)
-                data.effECOR[mask] /= (1.+CXZ)
+                curmat[mask] /= (1.+CXZ)
 
-            if IREP >= 15:
-                return False
-
-    return True
+    data.effECOR[1:(N+1), 1:(N+1)] = curmat
+    return not failed
 
 
 
