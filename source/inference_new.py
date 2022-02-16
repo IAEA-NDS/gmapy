@@ -69,6 +69,21 @@ def extract_predictions(datablock_list):
 
 
 
+def extract_experimental_energies(datablock_list):
+    energies = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        num_points = datablock.num_datapoints
+        next_start_idx = cur_start_idx + datablock.num_datapoints
+        energies[cur_start_idx:next_start_idx] = \
+                datablock.E[1:(num_points+1)]
+        cur_start_idx = next_start_idx
+
+    energies = energies[:next_start_idx].copy()
+    return energies
+
+
+
 def extract_measurements(datablock_list):
     measurements = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
     cur_start_idx = 0
