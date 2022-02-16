@@ -35,8 +35,8 @@ def read_prior(MC1, MC2, APR, file_IO3):
     NE1 = NE+1
     NR = 0
     for K in fort_range(1,NC):  # .lbl33
-        format120 = r"(2A8)"
-        APR.CLAB[K, 1:3] = fort_read(file_IO3, format120)
+        format120 = r"(A16)"
+        APR.CLAB[K, 1:2] = fort_read(file_IO3, format120)
 
         APR.MCS[K,1] = 0
         for L in fort_range(1,NE1):  # .lbl34

@@ -60,12 +60,12 @@ def write_dataset_info(ID, data, APR, LABL, file_IO4):
         NU = 4
     NCT2 = NCT - NU
     NU1 = NU + 1
-    format139 = "(2X,8HDATA SET,I5,2X,A16,4(2X,2A8))"
-    tmp = [[APR.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(1,NU)]
+    format139 = "(2X,8HDATA SET,I5,2X,A16,4(2X,A16))"
+    tmp = [[APR.CLAB[NT[K],L] for L in fort_range(1,1)] for K in fort_range(1,NU)]
     fort_write(file_IO4, format139, [NS, LABL.TYPE[MT],tmp])
     if NCT2 > 0:
-        format149 = "(2X,6(2X,2A8))"
-        tmp = [[APR.CLAB[NT[K],L] for L in fort_range(1,2)] for K in fort_range(NU1,NCT2)]
+        format149 = "(2X,6(2X,A16))"
+        tmp = [[APR.CLAB[NT[K],L] for L in fort_range(1,1)] for K in fort_range(NU1,NCT2)]
         fort_write(file_IO4, format149, tmp)
 
     #
@@ -89,16 +89,16 @@ def write_prior_info(APR, IPP, file_IO4):
     # label .lbl30
     format134 = r"(//2X,36HCROSS SECTIONS OF PRESENT EVALUATION//)"
     fort_write(file_IO4, format134, [])
-    format135 = "(10X,I3,5X,2A8)"
+    format135 = "(10X,I3,5X,A16)"
     for K in fort_range(1,NC):
-        fort_write(file_IO4, format135, [K, APR.CLAB[K, 1:3]])
+        fort_write(file_IO4, format135, [K, APR.CLAB[K, 1:2]])
     # label .lbl22
     if IPP[1] != 0:
         format136 = "(1H1//,2X,35HENERGIES AND APRIORI CROSS SECTIONS//)" 
         fort_write(file_IO4, format136, [])
-        format137 = "(/ '     INDEX     E/MEV   ',7X,2A8 /)"
+        format137 = "(/ '     INDEX     E/MEV   ',7X,A16 /)"
         for  K in fort_range(1,NC):  # .lbl24
-            fort_write(file_IO4, format137, APR.CLAB[K,1:3])
+            fort_write(file_IO4, format137, APR.CLAB[K,1:2])
             JC1 = APR.MCS[K, 2]
             JC2 = APR.MCS[K, 3]
             LQ = 0
@@ -355,9 +355,9 @@ def output_result(gauss, fisdata, APR, MODAP,
         new_APR_CS = new_APR_CS.copy()
 
     for L in fort_range(1,NC):  # .lbl14
-        format117 = "(1H1,'   RESULT',5X,2A8//)" 
-        fort_write(file_IO4, format117, [APR.CLAB[L,1:3]])
-        fort_write(file_IO5, format117, [APR.CLAB[L,1:3]])
+        format117 = "(1H1,'   RESULT',5X,A16//)" 
+        fort_write(file_IO4, format117, [APR.CLAB[L,1:2]])
+        fort_write(file_IO5, format117, [APR.CLAB[L,1:2]])
         format112 = "( '   E/MEV         CS/B            DCS/B       DCS/%" + \
                     "     DIF/%    CS*SQRT(E)'/)"
         fort_write(file_IO4, format112, [])
@@ -549,8 +549,8 @@ def output_result_correlation_matrix(gauss, data, APR, IPP,
             # CVP
 
             for L in fort_range(1,K):  # .lbl80
-                format122 = "(1H1, '  CORRELATION MATRIX OF THE RESULT   ',2A8,2A8///)"
-                fort_write(file_IO4, format122, [APR.CLAB[K,1:3], APR.CLAB[L,1:3]])
+                format122 = "(1H1, '  CORRELATION MATRIX OF THE RESULT   ',A16,A16///)"
+                fort_write(file_IO4, format122, [APR.CLAB[K,1:2], APR.CLAB[L,1:2]])
                 J3=APR.MCS[L,2]
                 J4=APR.MCS[L,3]
 
