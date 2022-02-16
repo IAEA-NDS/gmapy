@@ -28,17 +28,11 @@ then `conda activate gmap`).
   pip install numpy
   pip install fortranformat
 ```
-
-2. Compile the `LINPACK` module to be accessible by Python
-```
- cd source
- f2py -c linpack_slim.pyf linpack_slim.f
-```
-3. Point the `PYTHONPATH` to the directory of `GMAP.py`
+2. Point the `PYTHONPATH` to the directory of `GMAP.py`
 ```
  PYTHONPATH="<path-to-GMAP.py>"
 ```
-4. Create a directory, create an input file inside named `data.gma`
+3. Create a directory, create an input file inside named `data.gma`
 (e.g., take it from `tests/test_001/input`), change into that directory
 and launch GMAP:
 ```
@@ -57,14 +51,6 @@ and consequently the dependence on the [goto-statement] module has been removed.
 
 - The [fortranformat] module is used to read and write files using the
 same Fortran format descriptors as present in the original Fortran code.
-
-- The Fortran version relies on `LINPACK` routines for Cholesky decomposition and
-inversion whereas the `scipy` module in Python employs `LAPACK`---the successor
-of `LINPACK`. At the moment, the Python version does not use `scipy` 
-but instead uses the `LINPACK` functions in file `linpack_slim.f`. The reason
-being that some values in the input file (`data.gma`) are only given with four
-digits after the comma and in combination with different algorithmic
-implementations could lead to small numerical differences in the result.
 
 - The Fortran version processed incomplete datablocks (i.e., end of block indicator EDBL
 immediately followed by DATA keyword). Since commit 88fc22c the Python version does
