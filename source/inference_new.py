@@ -1,10 +1,25 @@
 import numpy as np
+import pandas as pd
 from scipy.sparse import csr_matrix, block_diag
 from scipy.sparse.linalg import spsolve
 from scipy import sparse
 from scipy.linalg.lapack import dpotri, dpotrf
 
 from data_management import SIZE_LIMITS
+from gmap_snippets import get_prior_range
+
+
+
+def extract_prior_energies(APR):
+    energylist = []
+    for K in range(1, APR.NR+1):
+        curval = APR.EN[K]
+        energylist.append(curval)
+    for K in range(APR.NSHP):
+        # normalization factors do not have
+        # an associated energy
+        energylist.append(0)
+    return energylist
 
 
 
@@ -12,6 +27,30 @@ def extract_prior_values(APR):
     num_prior_vars = APR.NR + APR.NSHP
     ret = APR.CS[1:(num_prior_vars+1)].copy()
     return ret
+
+
+
+def extract_prior_ids(APR):
+    idlist = []
+    for xsid in range(1, APR.NC+1):
+        start, end = get_prior_range(xsid, APR)
+        for idx in range(start, end+1):
+            cur_id = 'xsid_' + str(xsid)
+            idlist.append(cur_id)
+    for i in range(1, APR.NSHP+1):
+        cur_id = 'norm_' + str(APR.NSETN[i])
+        idlist.append(cur_id)
+    return idlist
+
+
+
+def extract_prior_table(APR):
+    dt = pd.DataFrame.from_dict({
+        'NODE': extract_prior_ids(APR),
+        'PRIOR': extract_prior_values(APR),
+        'ENERGY': extract_prior_energies(APR)
+        })
+    return dt
 
 
 
