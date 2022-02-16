@@ -6,7 +6,6 @@ from gmap_snippets import (should_downweight, get_AX, get_prior_range,
 
 import numpy as np
 
-import linpack_slim
 from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
                            unpack_utriang_matrix)
 
