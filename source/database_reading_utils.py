@@ -5,10 +5,6 @@ from gmap_snippets import (should_downweight, get_AX, get_prior_range,
                            get_dataset_range, get_dataset_id_from_idx)
 
 import numpy as np
-
-from linpack_utils import (pack_symmetric_matrix, unpack_symmetric_matrix,
-                           unpack_utriang_matrix)
-
 import copy
 
 
