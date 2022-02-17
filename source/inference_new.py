@@ -9,6 +9,21 @@ from data_management import SIZE_LIMITS
 from gmap_snippets import get_prior_range
 
 
+def extract_prior_reacs(APR):
+    reaclist = []
+    energylist = []
+    for xsid in range(1, APR.NC+1):
+        start, end = get_prior_range(xsid, APR)
+        for idx in range(start, end+1):
+            curreac = 'MT:' + str(1) + '-R1:' + str(xsid)
+            reaclist.append(curreac)
+    for K in range(APR.NSHP):
+        # normalization factors do not have
+        # an associated energy
+        reaclist.append('NA')
+    return reaclist
+
+
 
 def extract_prior_energies(APR):
     energylist = []
