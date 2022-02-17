@@ -101,21 +101,6 @@ def extract_experimental_reacs(datablock_list):
 
 
 
-def extract_predictions(datablock_list):
-    predictions = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
-    cur_start_idx = 0
-    for datablock in datablock_list:
-        num_points = datablock.num_datapoints
-        next_start_idx = cur_start_idx + datablock.num_datapoints
-        predictions[cur_start_idx:next_start_idx] = \
-                datablock.predCSS[1:(num_points+1)]
-        cur_start_idx = next_start_idx
-
-    predictions = predictions[:next_start_idx].copy()
-    return predictions
-
-
-
 def extract_experimental_energies(datablock_list):
     energies = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
     cur_start_idx = 0
@@ -158,6 +143,21 @@ def extract_effDCS_values(datablock_list):
 
     effDCS_values = effDCS_values[:next_start_idx].copy()
     return effDCS_values
+
+
+
+def extract_predictions(datablock_list):
+    predictions = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        num_points = datablock.num_datapoints
+        next_start_idx = cur_start_idx + datablock.num_datapoints
+        predictions[cur_start_idx:next_start_idx] = \
+                datablock.predCSS[1:(num_points+1)]
+        cur_start_idx = next_start_idx
+
+    predictions = predictions[:next_start_idx].copy()
+    return predictions
 
 
 
