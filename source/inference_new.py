@@ -6,7 +6,7 @@ from scipy import sparse
 from scipy.linalg.lapack import dpotri, dpotrf
 
 from data_management import SIZE_LIMITS
-from gmap_snippets import get_prior_range
+from gmap_snippets import get_prior_range, get_dataset_range
 
 
 def extract_prior_reacs(APR):
@@ -67,6 +67,23 @@ def extract_prior_table(APR):
         'ENERGY': extract_prior_energies(APR)
         })
     return dt
+
+
+
+def extract_experimental_reacs(datablock_list):
+    reaclist = []
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        for dsidx in range(1, datablock.num_datasets+1):
+            MT = datablock.IDEN[dsidx,7]
+            NCT = datablock.NCT[dsidx]
+            NT = datablock.NT[dsidx, 1:(NCT+2)]
+            NTstr = ['R' + str(i+1) + ':' + str(NT[i]) for i in range(NCT)]
+            sidx, fidx = get_dataset_range(dsidx, datablock)
+            for k in range(sidx, fidx+1):
+                curreac = 'MT:' + str(MT) + '-' + '-'.join(NTstr)
+                reaclist.append(curreac)
+    return reaclist
 
 
 
