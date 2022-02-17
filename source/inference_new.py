@@ -131,6 +131,17 @@ def extract_measurements(datablock_list):
 
 
 
+def extract_experimental_table(datablock_list):
+    dt = pd.DataFrame.from_dict({
+        'NODE': extract_experimental_ids(datablock_list),
+        'REAC': extract_experimental_reacs(datablock_list),
+        'DATA': extract_measurements(datablock_list),
+        'ENERGY': extract_experimental_energies(datablock_list)
+        })
+    return dt
+
+
+
 def extract_effDCS_values(datablock_list):
     effDCS_values = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
     cur_start_idx = 0
