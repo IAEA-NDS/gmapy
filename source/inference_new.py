@@ -62,6 +62,7 @@ def extract_prior_ids(APR):
 def extract_prior_table(APR):
     dt = pd.DataFrame.from_dict({
         'NODE': extract_prior_ids(APR),
+        'REAC': extract_prior_reacs(APR),
         'PRIOR': extract_prior_values(APR),
         'ENERGY': extract_prior_energies(APR)
         })
