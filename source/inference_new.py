@@ -70,6 +70,20 @@ def extract_prior_table(APR):
 
 
 
+def extract_experimental_ids(datablock_list):
+    idlist = []
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        for dsidx in range(1, datablock.num_datasets+1):
+            dataset_id = datablock.IDEN[dsidx,6]
+            sidx, fidx = get_dataset_range(dsidx, datablock)
+            for k in range(sidx, fidx+1):
+                curid = 'exp_' + str(dataset_id)
+                idlist.append(curid)
+    return idlist
+
+
+
 def extract_experimental_reacs(datablock_list):
     reaclist = []
     cur_start_idx = 0
