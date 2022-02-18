@@ -8,6 +8,8 @@ from data_extraction_functions import (extract_prior_values,
         extract_sensitivity_matrix, extract_covariance_matrix,
         extract_prior_table, extract_experimental_table)
 
+from basic_maps import get_sensmat_exact, propagate_exact
+
 
 
 def new_get_sensitivity_matrix(priortable, exptable):
@@ -22,39 +24,20 @@ def new_get_sensitivity_matrix(priortable, exptable):
         for curreac in reacs:
             priortable_red = priortable[priortable['REAC'] == curreac]
             exptable_red = exptable[exptable['REAC'] == curreac]
-
-            def get_sens_mat(ens1, ens2):
-                ens1 = np.array(ens1)
-                ens2 = np.array(ens2)
-                ord = np.argsort(ens1)
-                ens1 = ens1[ord]
-                ridcs = np.searchsorted(ens1, ens2, side='left')
-                if not np.all(ens1[ridcs] == ens2):
-                    raise ValueError('mismatching energies encountered' +
-                            str(ens1[ridcs]) + ' vs ' + str(ens2))
-
-                idcs1 = np.arange(len(ens2))
-                idcs2 = ord[ridcs]
-                coeff = np.ones(len(ens2))
-                return {'i': idcs1, 'j': idcs2, 'x': coeff}
-
-            def propagate(ens1, vals1, ens2):
-                Sraw = get_sens_mat(ens1, ens2)
-                S = csr_matrix((Sraw['x'], (Sraw['i'], Sraw['j'])),
-                          shape = (len(ens2), len(ens1)))
-                return S @ vals1
-
-
+            # abbreviate some variables
             ens1 = priortable_red['ENERGY']
             vals1 = priortable_red['PRIOR']
             idcs1red = priortable_red.index
             ens2 = exptable_red['ENERGY']
             idcs2red = exptable_red.index
-
-            Sdic = get_sens_mat(ens1, ens2)
+            # calculate the sensitivity matrix
+            Sdic = get_sensmat_exact(ens1, ens2)
+            # obtain the indices associated with
+            # the full prior and experimental table
             idcs1 = idcs2red[Sdic['i']]
             idcs2 = idcs1red[Sdic['j']]
             coeff = Sdic['x']
+            # construct the sparse matrix
             S = csr_matrix((coeff, (idcs1, idcs2)),
                     shape=(len(exptable.index),
                            len(priortable.index)))
