@@ -28,7 +28,7 @@ def propagate_exact(ens1, vals1, ens2):
     energy mesh ens1 to the mesh given
     by ens2. It is assumed that ens2 is
     a subset of ens1."""
-    Sraw = get_sens_mat(ens1, ens2)
+    Sraw = get_sensmat_exact(ens1, ens2)
     S = csr_matrix((Sraw['x'], (Sraw['i'], Sraw['j'])),
               shape = (len(ens2), len(ens1)))
     return S @ vals1

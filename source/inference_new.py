@@ -17,6 +17,13 @@ def new_get_sensitivity_matrix(priortable, exptable):
     # loop over the various R1 subsets
         # locate the reaction in priortable
             # perform the interpolation (at the moment just lookup)
+
+    idcs1 = np.empty(0, dtype=int)
+    idcs2 = np.empty(0, dtype=int)
+    coeff = np.empty(0, dtype=float)
+    concat = np.concatenate
+
+    # deal with 'cross section' type (MT:1)
     expmask = exptable['REAC'].str.match('MT:1')
     if expmask.any():
         priormask = priortable['REAC'].str.match('MT:1')
@@ -34,14 +41,66 @@ def new_get_sensitivity_matrix(priortable, exptable):
             Sdic = get_sensmat_exact(ens1, ens2)
             # obtain the indices associated with
             # the full prior and experimental table
-            idcs1 = idcs2red[Sdic['i']]
-            idcs2 = idcs1red[Sdic['j']]
-            coeff = Sdic['x']
-            # construct the sparse matrix
-            S = csr_matrix((coeff, (idcs1, idcs2)),
-                    shape=(len(exptable.index),
-                           len(priortable.index)))
-            return S
+            curidcs1 = idcs2red[Sdic['i']]
+            curidcs2 = idcs1red[Sdic['j']]
+            curcoeff = Sdic['x']
+            # add to global arrays
+            idcs1 = concat([idcs1, curidcs1])
+            idcs2 = concat([idcs2, curidcs2])
+            coeff = concat([coeff, curcoeff])
+
+    # deal with 'cross section shape' type (MT:2)
+    expmask = exptable['REAC'].str.match('MT:2')
+    if expmask.any():
+        priormask = priortable['REAC'].str.match('MT:2')
+        reacs = exptable[expmask]['REAC'].unique()
+        for curreac in reacs:
+            priortable_red = priortable[priortable['REAC'] == \
+                    curreac.replace('MT:2','MT:1')]
+            exptable_red = exptable[exptable['REAC'] == curreac]
+            ens1 = priortable_red['ENERGY']
+            vals1 = priortable_red['PRIOR']
+            idcs1red = priortable_red.index
+            # loop over the datasets
+            dataset_ids = exptable_red['NODE'].unique()
+            for dataset_id in dataset_ids:
+                exptable_ds = exptable_red[exptable_red['NODE'] == dataset_id]
+                # get the respective normalization factor from prior
+                mask = priortable['NODE'] == dataset_id.replace('exp_', 'norm_')
+                norm_index = priortable[mask].index
+                norm_fact = np.asscalar(priortable.loc[norm_index, 'PRIOR'])
+                if (len(norm_index) != 1):
+                    raise IndexError('More than one normalization in prior for dataset ' + str(dataset_id))
+                # abbreviate some variables
+                ens2 = exptable_ds['ENERGY']
+                idcs2red = exptable_ds.index
+                # calculate the sensitivity matrix
+                Sdic = get_sensmat_exact(ens1, ens2)
+                # obtain the indices associated with
+                # the full prior and experimental table
+                curidcs1 = idcs2red[Sdic['i']]
+                curidcs2 = idcs1red[Sdic['j']]
+                curcoeff = np.array(Sdic['x']) * norm_fact
+                # add the sensitivity to normalization factor in prior
+                numel = len(curidcs1)
+                propvals = propagate_exact(ens1, vals1, ens2)
+                curidcs1 = concat([curidcs1, curidcs1])
+                curidcs2 = concat([curidcs2, np.full(numel, norm_index)])
+                curcoeff = concat([curcoeff, propvals])
+                if len(curidcs1) != len(curidcs2):
+                    raise ValueError
+                if len(curidcs1) != len(curcoeff):
+                    raise ValueError
+                # add to global arrays
+                idcs1 = concat([idcs1, curidcs1])
+                idcs2 = concat([idcs2, curidcs2])
+                coeff = concat([coeff, curcoeff])
+
+        # construct the sparse matrix
+        S = csr_matrix((coeff, (idcs1, idcs2)),
+                shape=(len(exptable.index),
+                       len(priortable.index)))
+        return S
 
 
 
