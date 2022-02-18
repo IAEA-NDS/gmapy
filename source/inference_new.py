@@ -38,16 +38,11 @@ def new_get_sensitivity_matrix(priortable, exptable):
             ens2 = exptable_red['ENERGY']
             idcs2red = exptable_red.index
             # calculate the sensitivity matrix
-            Sdic = get_sensmat_exact(ens1, ens2)
-            # obtain the indices associated with
-            # the full prior and experimental table
-            curidcs1 = idcs2red[Sdic['i']]
-            curidcs2 = idcs1red[Sdic['j']]
-            curcoeff = Sdic['x']
+            Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
             # add to global arrays
-            idcs1 = concat([idcs1, curidcs1])
-            idcs2 = concat([idcs2, curidcs2])
-            coeff = concat([coeff, curcoeff])
+            idcs1 = concat([idcs1, Sdic['idcs1']])
+            idcs2 = concat([idcs2, Sdic['idcs2']])
+            coeff = concat([coeff, Sdic['x']])
 
     # deal with 'cross section shape' type (MT:2)
     expmask = exptable['REAC'].str.match('MT:2')
@@ -75,17 +70,13 @@ def new_get_sensitivity_matrix(priortable, exptable):
                 ens2 = exptable_ds['ENERGY']
                 idcs2red = exptable_ds.index
                 # calculate the sensitivity matrix
-                Sdic = get_sensmat_exact(ens1, ens2)
-                # obtain the indices associated with
-                # the full prior and experimental table
-                curidcs1 = idcs2red[Sdic['i']]
-                curidcs2 = idcs1red[Sdic['j']]
+                Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
                 curcoeff = np.array(Sdic['x']) * norm_fact
                 # add the sensitivity to normalization factor in prior
-                numel = len(curidcs1)
+                numel = len(Sdic['idcs2'])
                 propvals = propagate_exact(ens1, vals1, ens2)
-                curidcs1 = concat([curidcs1, curidcs1])
-                curidcs2 = concat([curidcs2, np.full(numel, norm_index)])
+                curidcs1 = concat([Sdic['idcs1'], np.full(numel, norm_index)])
+                curidcs2 = concat([Sdic['idcs2'], Sdic['idcs2']])
                 curcoeff = concat([curcoeff, propvals])
                 if len(curidcs1) != len(curidcs2):
                     raise ValueError
@@ -97,7 +88,7 @@ def new_get_sensitivity_matrix(priortable, exptable):
                 coeff = concat([coeff, curcoeff])
 
         # construct the sparse matrix
-        S = csr_matrix((coeff, (idcs1, idcs2)),
+        S = csr_matrix((coeff, (idcs2, idcs1)),
                 shape=(len(exptable.index),
                        len(priortable.index)))
         return S

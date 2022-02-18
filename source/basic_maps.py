@@ -17,14 +17,14 @@ def get_sensmat_exact(ens1, ens2, idcs1=None, idcs2=None):
         raise ValueError('mismatching energies encountered' +
                 str(ens1[ridcs]) + ' vs ' + str(ens2))
 
-    curidcs1 = np.arange(len(ens2))
-    curidcs2 = ord[ridcs]
+    curidcs2 = np.arange(len(ens2))
+    curidcs1 = ord[ridcs]
     coeff = np.ones(len(ens2))
     if idcs1 is not None:
         curidcs1 = idcs1[curidcs1]
     if idcs2 is not None:
         curidcs2 = idcs2[curidcs2]
-    return {'i': curidcs1, 'j': curidcs2, 'x': coeff}
+    return {'idcs1': curidcs1, 'idcs2': curidcs2, 'x': coeff}
 
 
 def propagate_exact(ens1, vals1, ens2):
@@ -33,7 +33,7 @@ def propagate_exact(ens1, vals1, ens2):
     by ens2. It is assumed that ens2 is
     a subset of ens1."""
     Sraw = get_sensmat_exact(ens1, ens2)
-    S = csr_matrix((Sraw['x'], (Sraw['i'], Sraw['j'])),
+    S = csr_matrix((Sraw['x'], (Sraw['idcs2'], Sraw['idcs1'])),
               shape = (len(ens2), len(ens1)))
     return S @ vals1
 
