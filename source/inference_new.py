@@ -9,6 +9,7 @@ from data_extraction_functions import (extract_prior_values,
         extract_prior_table, extract_experimental_table)
 
 from mappings.basic_maps import get_sensmat_exact, propagate_exact
+from mappings.cross_section_map import CrossSectionMap
 
 
 
@@ -24,25 +25,15 @@ def new_get_sensitivity_matrix(priortable, exptable):
     concat = np.concatenate
 
     # deal with 'cross section' type (MT:1)
-    expmask = exptable['REAC'].str.match('MT:1')
-    if expmask.any():
-        priormask = priortable['REAC'].str.match('MT:1')
-        reacs = exptable[expmask]['REAC'].unique()
-        for curreac in reacs:
-            priortable_red = priortable[priortable['REAC'] == curreac]
-            exptable_red = exptable[exptable['REAC'] == curreac]
-            # abbreviate some variables
-            ens1 = priortable_red['ENERGY']
-            vals1 = priortable_red['PRIOR']
-            idcs1red = priortable_red.index
-            ens2 = exptable_red['ENERGY']
-            idcs2red = exptable_red.index
-            # calculate the sensitivity matrix
-            Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
-            # add to global arrays
-            idcs1 = concat([idcs1, Sdic['idcs1']])
-            idcs2 = concat([idcs2, Sdic['idcs2']])
-            coeff = concat([coeff, Sdic['x']])
+    xs_map = CrossSectionMap()
+    resp = xs_map.is_responsible(exptable)
+    if np.any(resp):
+        exptable_red = exptable[resp]
+        Sdic = xs_map.jacobian(priortable, exptable_red)
+        # add to global arrays
+        idcs1 = concat([idcs1, Sdic['idcs1']])
+        idcs2 = concat([idcs2, Sdic['idcs2']])
+        coeff = concat([coeff, Sdic['x']])
 
     # deal with 'cross section shape' type (MT:2)
     expmask = exptable['REAC'].str.match('MT:2')
