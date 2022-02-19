@@ -8,7 +8,7 @@ from data_extraction_functions import (extract_prior_values,
         extract_sensitivity_matrix, extract_covariance_matrix,
         extract_prior_table, extract_experimental_table)
 
-from basic_maps import get_sensmat_exact, propagate_exact
+from mappings.basic_maps import get_sensmat_exact, propagate_exact
 
 
 
