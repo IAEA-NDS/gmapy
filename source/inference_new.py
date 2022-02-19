@@ -10,6 +10,7 @@ from data_extraction_functions import (extract_prior_values,
 
 from mappings.basic_maps import get_sensmat_exact, propagate_exact
 from mappings.cross_section_map import CrossSectionMap
+from mappings.cross_section_shape_map import CrossSectionShapeMap
 
 
 
@@ -36,53 +37,21 @@ def new_get_sensitivity_matrix(priortable, exptable):
         coeff = concat([coeff, Sdic['x']])
 
     # deal with 'cross section shape' type (MT:2)
-    expmask = exptable['REAC'].str.match('MT:2')
-    if expmask.any():
-        priormask = priortable['REAC'].str.match('MT:2')
-        reacs = exptable[expmask]['REAC'].unique()
-        for curreac in reacs:
-            priortable_red = priortable[priortable['REAC'] == \
-                    curreac.replace('MT:2','MT:1')]
-            exptable_red = exptable[exptable['REAC'] == curreac]
-            ens1 = priortable_red['ENERGY']
-            vals1 = priortable_red['PRIOR']
-            idcs1red = priortable_red.index
-            # loop over the datasets
-            dataset_ids = exptable_red['NODE'].unique()
-            for dataset_id in dataset_ids:
-                exptable_ds = exptable_red[exptable_red['NODE'] == dataset_id]
-                # get the respective normalization factor from prior
-                mask = priortable['NODE'] == dataset_id.replace('exp_', 'norm_')
-                norm_index = priortable[mask].index
-                norm_fact = np.asscalar(priortable.loc[norm_index, 'PRIOR'])
-                if (len(norm_index) != 1):
-                    raise IndexError('More than one normalization in prior for dataset ' + str(dataset_id))
-                # abbreviate some variables
-                ens2 = exptable_ds['ENERGY']
-                idcs2red = exptable_ds.index
-                # calculate the sensitivity matrix
-                Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
-                curcoeff = np.array(Sdic['x']) * norm_fact
-                # add the sensitivity to normalization factor in prior
-                numel = len(Sdic['idcs2'])
-                propvals = propagate_exact(ens1, vals1, ens2)
-                curidcs1 = concat([Sdic['idcs1'], np.full(numel, norm_index)])
-                curidcs2 = concat([Sdic['idcs2'], Sdic['idcs2']])
-                curcoeff = concat([curcoeff, propvals])
-                if len(curidcs1) != len(curidcs2):
-                    raise ValueError
-                if len(curidcs1) != len(curcoeff):
-                    raise ValueError
-                # add to global arrays
-                idcs1 = concat([idcs1, curidcs1])
-                idcs2 = concat([idcs2, curidcs2])
-                coeff = concat([coeff, curcoeff])
+    xsratio_map = CrossSectionShapeMap()
+    resp = xsratio_map.is_responsible(exptable)
+    if np.any(resp):
+        exptable_red = exptable[resp]
+        Sdic = xsratio_map.jacobian(priortable, exptable_red)
+        # add to global arrays
+        idcs1 = concat([idcs1, Sdic['idcs1']])
+        idcs2 = concat([idcs2, Sdic['idcs2']])
+        coeff = concat([coeff, Sdic['x']])
 
-        # construct the sparse matrix
-        S = csr_matrix((coeff, (idcs2, idcs1)),
-                shape=(len(exptable.index),
-                       len(priortable.index)))
-        return S
+    # construct the sparse matrix
+    S = csr_matrix((coeff, (idcs2, idcs1)),
+            shape=(len(exptable.index),
+                   len(priortable.index)))
+    return S
 
 
 
