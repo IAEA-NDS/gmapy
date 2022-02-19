@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from .basic_maps import return_matrix
 from .cross_section_map import CrossSectionMap
 from .cross_section_shape_map import CrossSectionShapeMap
 
@@ -26,7 +27,7 @@ class CompoundMap:
         pass
 
 
-    def jacobian(self, priortable, exptable):
+    def jacobian(self, priortable, exptable, ret_mat=False):
         # TODO: When all maps are fully implemented,
         #       let this function fail if it cannot
         #       handle exptable in its entirety
@@ -38,15 +39,17 @@ class CompoundMap:
             curresp = curmap.is_responsible(exptable)
             curexptable = exptable[curresp]
             curSdic = curmap.jacobian(priortable, curexptable) 
+
             if len(curSdic['idcs1']) != len(curSdic['idcs2']):
                 raise ValueError('Lengths of idcs1 and idcs2 not equal')
             if len(curSdic['idcs1']) != len(curSdic['x']):
                 raise ValueError('Lengths of idcs1 and x not equal')
-            Sdic['idcs1'] = concat([Sdic['idcs1'],
-                                   curSdic['idcs1']])
-            Sdic['idcs2'] = concat([Sdic['idcs2'],
-                                   curSdic['idcs2']])
+
+            Sdic['idcs1'] = concat([Sdic['idcs1'], curSdic['idcs1']])
+            Sdic['idcs2'] = concat([Sdic['idcs2'], curSdic['idcs2']])
             Sdic['x'] = concat([Sdic['x'], curSdic['x']])
 
-        return Sdic
+        return return_matrix(Sdic['idcs1'], Sdic['idcs2'], Sdic['x'],
+                dims = (exptable.shape[0], priortable.shape[0]),
+                how = 'csr' if ret_mat else 'dic')
 

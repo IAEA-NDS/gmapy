@@ -1,5 +1,5 @@
 import numpy as np
-from .basic_maps import get_sensmat_exact, propagate_exact
+from .basic_maps import get_sensmat_exact, propagate_exact, return_matrix
 
 
 
@@ -11,19 +11,28 @@ class CrossSectionShapeMap:
 
 
     def propagate(self, priortable, exptable):
-        pass
+        vals = self.__compute(priortable, exptable, 'propagate')
+        return vals
 
 
-    def jacobian(self, priortable, exptable):
+    def jacobian(self, priortable, exptable, ret_mat=False):
+        jac = self.__compute(priortable, exptable, 'jacobian')
+        ret = return_matrix(jac['idcs1'], jac['idcs2'], jac['x'],
+                dims = (len(exptable.index), len(priortable.index)),
+                how = 'csr' if ret_mat else 'dic')
+        return ret
+
+
+    def __compute(self, priortable, exptable, what):
         if not np.all(self.is_responsible(exptable)):
-            raise TypeError('This handler can only map cross section ratios (MT=2)') 
+            raise TypeError('This handler can only map cross section shapes (MT=2)')
 
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
         coeff = np.empty(0, dtype=float)
+        vals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = priortable['REAC'].str.match('MT:2-R1:')
         reacs = exptable['REAC'].unique()
         for curreac in reacs:
             priortable_red = priortable[priortable['REAC'] == \
@@ -39,31 +48,51 @@ class CrossSectionShapeMap:
                 # get the respective normalization factor from prior
                 mask = priortable['NODE'] == dataset_id.replace('exp_', 'norm_')
                 norm_index = priortable[mask].index
-                norm_fact = np.asscalar(priortable.loc[norm_index, 'PRIOR'])
                 if (len(norm_index) != 1):
                     raise IndexError('More than one normalization in prior for dataset ' + str(dataset_id))
+                norm_fact = np.asscalar(priortable.loc[norm_index, 'PRIOR'])
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']
                 idcs2red = exptable_ds.index
                 # calculate the sensitivity matrix
-                Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
-                curcoeff = np.array(Sdic['x']) * norm_fact
-                # add the sensitivity to normalization factor in prior
-                numel = len(Sdic['idcs2'])
-                propvals = propagate_exact(ens1, vals1, ens2)
-                curidcs1 = concat([Sdic['idcs1'], np.full(numel, norm_index)])
-                curidcs2 = concat([Sdic['idcs2'], Sdic['idcs2']])
-                curcoeff = concat([curcoeff, propvals])
-                if len(curidcs1) != len(curidcs2):
-                    raise ValueError
-                if len(curidcs1) != len(curcoeff):
-                    raise ValueError
+                if what == 'jacobian':
+                    Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
+                    curcoeff = np.array(Sdic['x']) * norm_fact
+                    # add the sensitivity to normalization factor in prior
+                    numel = len(Sdic['idcs2'])
+                    propvals = propagate_exact(ens1, vals1, ens2)
+                    curidcs1 = concat([Sdic['idcs1'], np.full(numel, norm_index)])
+                    curidcs2 = concat([Sdic['idcs2'], Sdic['idcs2']])
+                    if len(curidcs1) != len(curidcs2):
+                        raise ValueError
+                    curcoeff = concat([curcoeff, propvals])
+                    idcs1 = concat([idcs1, curidcs1])
+                    idcs2 = concat([idcs2, curidcs2])
+                    coeff = concat([coeff, curcoeff])
+                elif what == 'propagate':
+                    idcs2 = concat([idcs1, idcs2red])
+                    propvals = propagate_exact(ens1, vals1, ens2)
+                    vals = concat([vals, propvals * norm_fact])
+                else:
+                    raise ValueError('argument what must be "propagate" or "jacobian"')
 
-                idcs1 = concat([idcs1, curidcs1])
-                idcs2 = concat([idcs2, curidcs2])
-                coeff = concat([coeff, curcoeff])
 
-            return {'idcs1': np.array(idcs1, dtype=int),
-                    'idcs2': np.array(idcs2, dtype=int),
-                    'x': np.array(coeff, dtype=float)}
+        if what == 'jacobian':
+            Sdic =  {'idcs1': np.array(idcs1, dtype=int),
+                     'idcs2': np.array(idcs2, dtype=int),
+                     'x': np.array(coeff, dtype=float)}
+            return Sdic
+
+        elif what == 'propagate':
+            # bring the elements into order
+            idcs2 = np.array(idcs2)
+            vals = np.array(vals)
+            perm = np.argsort(idcs2)
+            idcs2 = np.sort(idcs2)
+            vals = vals[perm]
+            return {'idcs2': np.array(idcs2, dtype=int),
+                    'x': np.array(vals)}
+
+        else:
+            raise ValueError('what must be either "propagate" or "jacobian"')
 
