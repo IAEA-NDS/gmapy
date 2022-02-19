@@ -38,6 +38,10 @@ class CompoundMap:
             curresp = curmap.is_responsible(exptable)
             curexptable = exptable[curresp]
             curSdic = curmap.jacobian(priortable, curexptable) 
+            if len(curSdic['idcs1']) != len(curSdic['idcs2']):
+                raise ValueError('Lengths of idcs1 and idcs2 not equal')
+            if len(curSdic['idcs1']) != len(curSdic['x']):
+                raise ValueError('Lengths of idcs1 and x not equal')
             Sdic['idcs1'] = concat([Sdic['idcs1'],
                                    curSdic['idcs1']])
             Sdic['idcs2'] = concat([Sdic['idcs2'],
