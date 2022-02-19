@@ -63,5 +63,7 @@ class CrossSectionShapeMap:
                 idcs2 = concat([idcs2, curidcs2])
                 coeff = concat([coeff, curcoeff])
 
-            return {'idcs1': idcs1, 'idcs2': idcs2, 'x': coeff} 
+            return {'idcs1': np.array(idcs1, dtype=int),
+                    'idcs2': np.array(idcs2, dtype=int),
+                    'x': np.array(coeff, dtype=float)}
 

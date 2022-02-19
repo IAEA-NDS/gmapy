@@ -24,7 +24,9 @@ def get_sensmat_exact(ens1, ens2, idcs1=None, idcs2=None):
         curidcs1 = idcs1[curidcs1]
     if idcs2 is not None:
         curidcs2 = idcs2[curidcs2]
-    return {'idcs1': curidcs1, 'idcs2': curidcs2, 'x': coeff}
+    return {'idcs1': np.array(curidcs1, dtype=int),
+            'idcs2': np.array(curidcs2, dtype=int),
+            'x': np.array(coeff, dtype=float)}
 
 
 def propagate_exact(ens1, vals1, ens2):

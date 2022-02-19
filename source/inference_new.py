@@ -8,9 +8,7 @@ from data_extraction_functions import (extract_prior_values,
         extract_sensitivity_matrix, extract_covariance_matrix,
         extract_prior_table, extract_experimental_table)
 
-from mappings.basic_maps import get_sensmat_exact, propagate_exact
-from mappings.cross_section_map import CrossSectionMap
-from mappings.cross_section_shape_map import CrossSectionShapeMap
+from mappings.compound_map import CompoundMap
 
 
 
@@ -20,37 +18,13 @@ def new_get_sensitivity_matrix(priortable, exptable):
         # locate the reaction in priortable
             # perform the interpolation (at the moment just lookup)
 
-    idcs1 = np.empty(0, dtype=int)
-    idcs2 = np.empty(0, dtype=int)
-    coeff = np.empty(0, dtype=float)
-    concat = np.concatenate
-
     # deal with 'cross section' type (MT:1)
-    xs_map = CrossSectionMap()
-    resp = xs_map.is_responsible(exptable)
-    if np.any(resp):
-        exptable_red = exptable[resp]
-        Sdic = xs_map.jacobian(priortable, exptable_red)
-        # add to global arrays
-        idcs1 = concat([idcs1, Sdic['idcs1']])
-        idcs2 = concat([idcs2, Sdic['idcs2']])
-        coeff = concat([coeff, Sdic['x']])
-
-    # deal with 'cross section shape' type (MT:2)
-    xsratio_map = CrossSectionShapeMap()
-    resp = xsratio_map.is_responsible(exptable)
-    if np.any(resp):
-        exptable_red = exptable[resp]
-        Sdic = xsratio_map.jacobian(priortable, exptable_red)
-        # add to global arrays
-        idcs1 = concat([idcs1, Sdic['idcs1']])
-        idcs2 = concat([idcs2, Sdic['idcs2']])
-        coeff = concat([coeff, Sdic['x']])
+    comp_map = CompoundMap()
+    Sdic = comp_map.jacobian(priortable, exptable)
 
     # construct the sparse matrix
-    S = csr_matrix((coeff, (idcs2, idcs1)),
-            shape=(len(exptable.index),
-                   len(priortable.index)))
+    S = csr_matrix((Sdic['x'], (Sdic['idcs2'], Sdic['idcs1'])),
+                   shape=(len(exptable.index), len(priortable.index)))
     return S
 
 
