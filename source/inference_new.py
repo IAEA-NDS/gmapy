@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 from data_extraction_functions import (extract_prior_values,
@@ -9,19 +8,6 @@ from data_extraction_functions import (extract_prior_values,
         extract_prior_table, extract_experimental_table)
 
 from mappings.compound_map import CompoundMap
-
-
-
-def new_get_sensitivity_matrix(priortable, exptable):
-    # locate all datasets with MT:1 in exptable
-    # loop over the various R1 subsets
-        # locate the reaction in priortable
-            # perform the interpolation (at the moment just lookup)
-
-    # deal with 'cross section' type (MT:1)
-    comp_map = CompoundMap()
-    S = comp_map.jacobian(priortable, exptable, ret_mat=True)
-    return S
 
 
 
@@ -46,8 +32,10 @@ def new_gls_update(datablock_list, APR, retcov=False):
     # provisionary code during transition
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
+
+    comp_map = CompoundMap()
     Sold = extract_sensitivity_matrix(datablock_list, APR)
-    Snew = new_get_sensitivity_matrix(priortable, exptable)
+    Snew = comp_map.jacobian(priortable, exptable, ret_mat=True)
     S = replace_submatrix(Sold, Snew)
     if not np.all(np.isclose(Sold.todense(), S.todense(), atol=0, rtol=1e-12)):
         raise ValueError('New sensitivity elements do not match GMAP ones')
