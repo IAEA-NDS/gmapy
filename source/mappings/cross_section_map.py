@@ -18,9 +18,6 @@ class CrossSectionMap:
 
 
     def jacobian(self, priortable, exptable, ret_mat=False):
-        if not np.all(self.is_responsible(exptable)):
-            raise TypeError('This handler can only map cross sections (MT=1)')
-
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
         coeff = np.empty(0, dtype=float)

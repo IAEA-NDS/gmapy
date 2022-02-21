@@ -25,9 +25,6 @@ class CrossSectionShapeMap:
 
 
     def __compute(self, priortable, exptable, what):
-        if not np.all(self.is_responsible(exptable)):
-            raise TypeError('This handler can only map cross section shapes (MT=2)')
-
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
         coeff = np.empty(0, dtype=float)
