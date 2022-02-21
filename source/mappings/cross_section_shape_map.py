@@ -1,5 +1,6 @@
 import numpy as np
-from .basic_maps import get_sensmat_exact, propagate_exact, return_matrix
+from .basic_maps import get_sensmat_exact, propagate_exact
+from .helperfuns import return_matrix
 
 
 

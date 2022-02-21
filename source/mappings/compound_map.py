@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from .basic_maps import return_matrix
+from .helperfuns import return_matrix
 from .cross_section_map import CrossSectionMap
 from .cross_section_shape_map import CrossSectionShapeMap
 
