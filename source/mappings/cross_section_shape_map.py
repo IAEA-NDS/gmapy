@@ -31,7 +31,8 @@ class CrossSectionShapeMap:
         vals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        reacs = exptable['REAC'].unique()
+        isresp = self.is_responsible(exptable)
+        reacs = exptable.loc[isresp, 'REAC'].unique()
         for curreac in reacs:
             priortable_red = priortable[priortable['REAC'] == \
                     curreac.replace('MT:2','MT:1')]
@@ -47,7 +48,8 @@ class CrossSectionShapeMap:
                 mask = priortable['NODE'] == dataset_id.replace('exp_', 'norm_')
                 norm_index = priortable[mask].index
                 if (len(norm_index) != 1):
-                    raise IndexError('More than one normalization in prior for dataset ' + str(dataset_id))
+                    raise IndexError('There are ' + str(len(norm_index)) +
+                        ' normalization factors in prior for dataset ' + str(dataset_id))
                 norm_fact = np.asscalar(priortable.loc[norm_index, 'PRIOR'])
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']

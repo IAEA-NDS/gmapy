@@ -25,7 +25,10 @@ class CrossSectionMap:
 
         priormask = priortable['REAC'].str.match('MT:1-R1:')
         priortable = priortable[priormask]
+        expmask = self.is_responsible(exptable)
+        exptable = exptable[expmask]
         reacs = exptable['REAC'].unique()
+
         for curreac in reacs:
             priortable_red = priortable[priortable['REAC'] == curreac]
             exptable_red = exptable[exptable['REAC'] == curreac]

@@ -51,9 +51,7 @@ class CompoundMap:
                 'idcs2': np.empty(0, dtype=int),
                 'x': np.empty(0, dtype=float)}
         for curmap in self.maplist:
-            curresp = curmap.is_responsible(exptable)
-            curexptable = exptable[curresp]
-            curSdic = curmap.jacobian(priortable, curexptable) 
+            curSdic = curmap.jacobian(priortable, exptable)
 
             if len(curSdic['idcs1']) != len(curSdic['idcs2']):
                 raise ValueError('Lengths of idcs1 and idcs2 not equal')
