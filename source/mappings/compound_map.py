@@ -4,13 +4,15 @@ import pandas as pd
 from .helperfuns import return_matrix
 from .cross_section_map import CrossSectionMap
 from .cross_section_shape_map import CrossSectionShapeMap
+from .cross_section_ratio_map import CrossSectionRatioMap
 
 
 
 class CompoundMap:
 
     maplist = [CrossSectionMap(),
-               CrossSectionShapeMap()]
+               CrossSectionShapeMap(),
+               CrossSectionRatioMap()]
 
 
     def is_responsible(self, exptable):
