@@ -11,20 +11,20 @@ class CrossSectionShapeMap:
         return np.array(expmask, dtype=bool)
 
 
-    def propagate(self, priortable, exptable):
-        vals = self.__compute(priortable, exptable, 'propagate')
+    def propagate(self, priortable, exptable, refvals):
+        vals = self.__compute(priortable, exptable, refvals, 'propagate')
         return vals
 
 
-    def jacobian(self, priortable, exptable, ret_mat=False):
-        jac = self.__compute(priortable, exptable, 'jacobian')
+    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
+        jac = self.__compute(priortable, exptable, refvals, 'jacobian')
         ret = return_matrix(jac['idcs1'], jac['idcs2'], jac['x'],
                 dims = (len(exptable.index), len(priortable.index)),
                 how = 'csr' if ret_mat else 'dic')
         return ret
 
 
-    def __compute(self, priortable, exptable, what):
+    def __compute(self, priortable, exptable, refvals, what):
         num_prior_points = priortable.shape[0]
         num_exp_points = exptable.shape[0]
 
@@ -37,11 +37,11 @@ class CrossSectionShapeMap:
         isresp = self.is_responsible(exptable)
         reacs = exptable.loc[isresp, 'REAC'].unique()
         for curreac in reacs:
-            priortable_red = priortable[priortable['REAC'] == \
-                    curreac.replace('MT:2','MT:1')]
+            priormask = priortable['REAC'] == curreac.replace('MT:2','MT:1')
+            priortable_red = priortable[priormask]
             exptable_red = exptable[exptable['REAC'] == curreac]
             ens1 = priortable_red['ENERGY']
-            vals1 = priortable_red['PRIOR']
+            vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
             # loop over the datasets
             dataset_ids = exptable_red['NODE'].unique()
@@ -53,7 +53,7 @@ class CrossSectionShapeMap:
                 if (len(norm_index) != 1):
                     raise IndexError('There are ' + str(len(norm_index)) +
                         ' normalization factors in prior for dataset ' + str(dataset_id))
-                norm_fact = np.asscalar(priortable.loc[norm_index, 'PRIOR'])
+                norm_fact = refvals[norm_index]
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']
                 idcs2red = exptable_ds.index

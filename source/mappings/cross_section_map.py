@@ -11,13 +11,12 @@ class CrossSectionMap:
         return np.array(expmask, dtype=bool)
 
 
-    def propagate(self, priortable, exptable):
-        vals = priortable['PRIOR']
-        S = self.jacobian(priortable, exptable, ret_mat=True)
-        return np.array(S @ vals)
+    def propagate(self, priortable, exptable, refvals):
+        S = self.jacobian(priortable, exptable, refvals, ret_mat=True)
+        return np.array(S @ refvals)
 
 
-    def jacobian(self, priortable, exptable, ret_mat=False):
+    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
         num_exp_points = exptable.shape[0]
         num_prior_points = priortable.shape[0]
 
@@ -37,7 +36,7 @@ class CrossSectionMap:
             exptable_red = exptable[exptable['REAC'] == curreac]
             # abbreviate some variables
             ens1 = priortable_red['ENERGY']
-            vals1 = priortable_red['PRIOR']
+            vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
             ens2 = exptable_red['ENERGY']
             idcs2red = exptable_red.index

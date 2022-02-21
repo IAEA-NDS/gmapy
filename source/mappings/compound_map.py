@@ -23,7 +23,7 @@ class CompoundMap:
         return resp
 
 
-    def propagate(self, priortable, exptable):
+    def propagate(self, priortable, exptable, refvals):
         # TODO: When all maps are fully implemented,
         #       let this function fail if it cannot
         #       handle exptable in its entirety
@@ -36,7 +36,7 @@ class CompoundMap:
             if np.any(np.logical_and(treated, curresp)):
                 raise ValueError('Several maps claim responsibility for the same rows')
             treated[curresp] = True
-            curvals = curmap.propagate(priortable, exptable)
+            curvals = curmap.propagate(priortable, exptable, refvals)
             if np.any(np.logical_and(propvals!=0., curvals!=0.)):
                 raise ValueError('Several maps contribute to same experimental datapoint')
             propvals += curvals
@@ -44,7 +44,7 @@ class CompoundMap:
         return propvals
 
 
-    def jacobian(self, priortable, exptable, ret_mat=False):
+    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
         # TODO: When all maps are fully implemented,
         #       let this function fail if it cannot
         #       handle exptable in its entirety
@@ -53,7 +53,7 @@ class CompoundMap:
                 'idcs2': np.empty(0, dtype=int),
                 'x': np.empty(0, dtype=float)}
         for curmap in self.maplist:
-            curSdic = curmap.jacobian(priortable, exptable)
+            curSdic = curmap.jacobian(priortable, exptable, refvals)
 
             if len(curSdic['idcs1']) != len(curSdic['idcs2']):
                 raise ValueError('Lengths of idcs1 and idcs2 not equal')

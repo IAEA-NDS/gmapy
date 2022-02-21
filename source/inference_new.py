@@ -33,13 +33,14 @@ def new_gls_update(datablock_list, APR, retcov=False):
     exptable = extract_experimental_table(datablock_list)
 
     comp_map = CompoundMap()
+    refvals = priorvals
 
     preds = extract_predictions(datablock_list)
     isresp = comp_map.is_responsible(exptable)
-    preds[isresp] = comp_map.propagate(priortable, exptable)[isresp]
+    preds[isresp] = comp_map.propagate(priortable, exptable, refvals)[isresp]
 
     Sold = extract_sensitivity_matrix(datablock_list, APR)
-    Snew = comp_map.jacobian(priortable, exptable, ret_mat=True)
+    Snew = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
     S = replace_submatrix(Sold, Snew)
     if not np.all(np.isclose(Sold.todense(), S.todense(), atol=0, rtol=1e-12)):
         raise ValueError('New sensitivity elements do not match GMAP ones')
