@@ -20,11 +20,7 @@ def new_get_sensitivity_matrix(priortable, exptable):
 
     # deal with 'cross section' type (MT:1)
     comp_map = CompoundMap()
-    Sdic = comp_map.jacobian(priortable, exptable)
-
-    # construct the sparse matrix
-    S = csr_matrix((Sdic['x'], (Sdic['idcs2'], Sdic['idcs1'])),
-                   shape=(len(exptable.index), len(priortable.index)))
+    S = comp_map.jacobian(priortable, exptable, ret_mat=True)
     return S
 
 
