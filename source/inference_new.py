@@ -26,7 +26,6 @@ def replace_submatrix(M, R):
 
 def new_gls_update(datablock_list, APR, retcov=False): 
     priorvals = extract_prior_values(APR)
-    preds = extract_predictions(datablock_list)
     meas = extract_measurements(datablock_list)
     covmat = extract_covariance_matrix(datablock_list)
     # provisionary code during transition
@@ -34,6 +33,11 @@ def new_gls_update(datablock_list, APR, retcov=False):
     exptable = extract_experimental_table(datablock_list)
 
     comp_map = CompoundMap()
+
+    preds = extract_predictions(datablock_list)
+    isresp = comp_map.is_responsible(exptable)
+    # preds[isresp] = comp_map.propagate(priortable, exptable)[isresp]
+
     Sold = extract_sensitivity_matrix(datablock_list, APR)
     Snew = comp_map.jacobian(priortable, exptable, ret_mat=True)
     S = replace_submatrix(Sold, Snew)

@@ -14,9 +14,9 @@ class CompoundMap:
 
 
     def is_responsible(self, exptable):
-        resp = np.full(len(exptable.index), True, dtype=bool) 
+        resp = np.full(len(exptable.index), False, dtype=bool)
         for curmap in self.maplist:
-            curresp = map.is_responsible(exptable)
+            curresp = curmap.is_responsible(exptable)
             if np.any(np.logical_and(resp, curresp)):
                 raise ValueError('Several maps claim responsibility')
             resp = np.logical_or(resp, curresp)
@@ -24,7 +24,22 @@ class CompoundMap:
 
 
     def propagate(self, priortable, exptable):
-        pass
+        # TODO: When all maps are fully implemented,
+        #       let this function fail if it cannot
+        #       handle exptable in its entirety
+        treated = np.full(exptable.shape[0], False)
+        propvals = np.full(exptable.shape[0], 0.)
+
+        exptable = exptable.sort_index()
+        for curmap in self.maplist:
+            curresp = curmap.is_responsible(exptable)
+            if np.any(np.logical_and(treated, curresp)):
+                raise ValueError('Several maps claim responsibility for the same rows')
+            exptable_red = exptable[curresp]
+            propvals[curresp] = curmap.propagate(priortable, exptable_red)
+            treat[curresp] = True
+
+        return propvals
 
 
     def jacobian(self, priortable, exptable, ret_mat=False):
