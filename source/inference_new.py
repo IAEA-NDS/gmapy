@@ -32,14 +32,21 @@ def new_gls_update(datablock_list, APR, retcov=False):
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
 
-    comp_map = CompoundMap()
+    # create random permutations as a test
     refvals = priorvals
-
+    Sold = extract_sensitivity_matrix(datablock_list, APR)
     preds = extract_predictions(datablock_list)
+
+    comp_map = CompoundMap()
     isresp = comp_map.is_responsible(exptable)
+
+    perm1 = np.random.permutation(priortable.shape[0])
+    perm2 = np.random.permutation(exptable.shape[0])
+    priortable = priortable.iloc[perm1].copy()
+    exptable = exptable.iloc[perm2].copy()
+
     preds[isresp] = comp_map.propagate(priortable, exptable, refvals)[isresp]
 
-    Sold = extract_sensitivity_matrix(datablock_list, APR)
     Snew = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
     S = replace_submatrix(Sold, Snew)
     if not np.all(np.isclose(Sold.todense(), S.todense(), atol=0, rtol=1e-12)):
