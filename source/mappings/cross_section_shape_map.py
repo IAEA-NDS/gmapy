@@ -86,13 +86,10 @@ class CrossSectionShapeMap:
 
         elif what == 'propagate':
             # bring the elements into order
-            idcs2 = np.array(idcs2)
             vals = np.array(vals)
             perm = np.argsort(idcs2)
-            idcs2 = np.sort(idcs2)
             vals = vals[perm]
-            return {'idcs2': np.array(idcs2, dtype=int),
-                    'x': np.array(vals)}
+            return vals
 
         else:
             raise ValueError('what must be either "propagate" or "jacobian"')
