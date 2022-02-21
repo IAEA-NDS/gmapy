@@ -14,6 +14,9 @@ def get_sensmat_exact(ens1, ens2, idcs1=None, idcs2=None):
     ord = np.argsort(ens1)
     ens1 = ens1[ord]
     ridcs = np.searchsorted(ens1, ens2, side='left')
+    if np.any(ridcs >= len(ens1)):
+        raise ValueError('too large index')
+
     if not np.all(ens1[ridcs] == ens2):
         raise ValueError('mismatching energies encountered' +
                 str(ens1[ridcs]) + ' vs ' + str(ens2))

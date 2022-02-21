@@ -5,6 +5,7 @@ from .helperfuns import return_matrix
 from .cross_section_map import CrossSectionMap
 from .cross_section_shape_map import CrossSectionShapeMap
 from .cross_section_ratio_map import CrossSectionRatioMap
+from .cross_section_ratio_shape_map import CrossSectionRatioShapeMap
 
 
 
@@ -12,7 +13,8 @@ class CompoundMap:
 
     maplist = [CrossSectionMap(),
                CrossSectionShapeMap(),
-               CrossSectionRatioMap()]
+               CrossSectionRatioMap(),
+               CrossSectionRatioShapeMap()]
 
 
     def is_responsible(self, exptable):
