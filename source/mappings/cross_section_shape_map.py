@@ -25,6 +25,9 @@ class CrossSectionShapeMap:
 
 
     def __compute(self, priortable, exptable, what):
+        num_prior_points = priortable.shape[0]
+        num_exp_points = exptable.shape[0]
+
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
         coeff = np.empty(0, dtype=float)
@@ -70,7 +73,7 @@ class CrossSectionShapeMap:
                     idcs2 = concat([idcs2, curidcs2])
                     coeff = concat([coeff, curcoeff])
                 elif what == 'propagate':
-                    idcs2 = concat([idcs1, idcs2red])
+                    idcs2 = concat([idcs2, idcs2red])
                     propvals = propagate_exact(ens1, vals1, ens2)
                     vals = concat([vals, propvals * norm_fact])
                 else:
@@ -85,10 +88,9 @@ class CrossSectionShapeMap:
 
         elif what == 'propagate':
             # bring the elements into order
-            vals = np.array(vals)
-            perm = np.argsort(idcs2)
-            vals = vals[perm]
-            return vals
+            allvals = np.full(num_exp_points, 0.)
+            allvals[idcs2] = vals
+            return allvals
 
         else:
             raise ValueError('what must be either "propagate" or "jacobian"')

@@ -35,9 +35,11 @@ class CompoundMap:
             curresp = curmap.is_responsible(exptable)
             if np.any(np.logical_and(treated, curresp)):
                 raise ValueError('Several maps claim responsibility for the same rows')
-            exptable_red = exptable[curresp]
-            propvals[curresp] = curmap.propagate(priortable, exptable_red)
-            treat[curresp] = True
+            treated[curresp] = True
+            curvals = curmap.propagate(priortable, exptable)
+            if np.any(np.logical_and(propvals!=0., curvals!=0.)):
+                raise ValueError('Several maps contribute to same experimental datapoint')
+            propvals += curvals
 
         return propvals
 

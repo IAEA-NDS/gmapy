@@ -36,7 +36,7 @@ def new_gls_update(datablock_list, APR, retcov=False):
 
     preds = extract_predictions(datablock_list)
     isresp = comp_map.is_responsible(exptable)
-    # preds[isresp] = comp_map.propagate(priortable, exptable)[isresp]
+    preds[isresp] = comp_map.propagate(priortable, exptable)[isresp]
 
     Sold = extract_sensitivity_matrix(datablock_list, APR)
     Snew = comp_map.jacobian(priortable, exptable, ret_mat=True)

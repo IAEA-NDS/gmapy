@@ -18,6 +18,9 @@ class CrossSectionMap:
 
 
     def jacobian(self, priortable, exptable, ret_mat=False):
+        num_exp_points = exptable.shape[0]
+        num_prior_points = priortable.shape[0]
+
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
         coeff = np.empty(0, dtype=float)
@@ -45,6 +48,6 @@ class CrossSectionMap:
             coeff = concat([coeff, Sdic['x']])
 
         return return_matrix(idcs1, idcs2, coeff,
-                  dims = (len(exptable.index), len(priortable.index)),
+                  dims = (num_exp_points, num_prior_points),
                   how = 'csr' if ret_mat else 'dic')
 
