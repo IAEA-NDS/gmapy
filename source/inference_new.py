@@ -45,7 +45,10 @@ def new_gls_update(datablock_list, APR, retcov=False):
     priortable = priortable.iloc[perm1].copy()
     exptable = exptable.iloc[perm2].copy()
 
+    oldpreds = preds.copy()
     preds[isresp] = comp_map.propagate(priortable, exptable, refvals)[isresp]
+    if not np.all(np.isclose(oldpreds, preds, atol=0, rtol=1e-12)):
+        raise ValueError('New predictions do not match GMAP ones')
 
     Snew = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
     S = replace_submatrix(Sold, Snew)
