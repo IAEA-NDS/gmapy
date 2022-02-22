@@ -8,6 +8,7 @@ from .cross_section_ratio_map import CrossSectionRatioMap
 from .cross_section_ratio_shape_map import CrossSectionRatioShapeMap
 from .cross_section_absolute_ratio_map import CrossSectionAbsoluteRatioMap
 from .cross_section_shape_of_ratio_map import CrossSectionShapeOfRatioMap
+from .cross_section_total_map import CrossSectionTotalMap
 
 
 
@@ -18,7 +19,8 @@ class CompoundMap:
                CrossSectionRatioMap(),
                CrossSectionRatioShapeMap(),
                CrossSectionAbsoluteRatioMap(),
-               CrossSectionShapeOfRatioMap()]
+               CrossSectionShapeOfRatioMap(),
+               CrossSectionTotalMap()]
 
 
     def is_responsible(self, exptable):
