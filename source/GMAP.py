@@ -26,7 +26,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     APR = db_dic['APR']
     datablock_list = db_dic['datablock_list']
-    fisdata = db_dic['fisdata']
     LABL = db_dic['LABL']
     MPPP = db_dic['MPPP']
     IPP = db_dic['IPP']
@@ -35,14 +34,14 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     link_prior_and_datablocks(APR, datablock_list)
 
     write_GMA_header(file_IO4)
-    write_fission_spectrum(fisdata, file_IO4)
+    write_fission_spectrum(APR.fisdata, file_IO4)
     write_prior_info(APR, IPP, file_IO4)
 
     MODREP = 0
     while True:
 
         for datablock in datablock_list:
-            add_compinfo_to_datablock(datablock, fisdata, APR, MPPP)
+            add_compinfo_to_datablock(datablock, APR, MPPP)
 
         upd_res = new_gls_update(datablock_list, APR, retcov=True)
         upd_vals = upd_res['upd_vals']
@@ -50,7 +49,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         gauss = create_gauss_structure(APR, datablock_list, upd_vals, upd_covmat)
 
-        write_iteration_info(APR, datablock_list, fisdata, gauss,
+        write_iteration_info(APR, datablock_list, gauss,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
 
         if MODAP != 0:

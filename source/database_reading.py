@@ -150,10 +150,13 @@ def read_gma_database(dbfile, format_dic={}):
                 NTOT += datablock.num_datapoints
                 datablock.NTOT = NTOT
 
+            # add fisdata to APR because it has to be
+            # seen as a priori knowledge
+            APR.fisdata = fisdata
+
             return({
                 'APR': APR,
                 'datablock_list': datablock_list,
-                'fisdata': fisdata,
                 'LABL': LABL,
                 'MPPP': MPPP,
                 'IPP': IPP,

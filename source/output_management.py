@@ -479,11 +479,11 @@ def get_matrix_products(gauss, data):
 
 
 
-def write_iteration_info(APR, datablock_list, fisdata, gauss, MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
+def write_iteration_info(APR, datablock_list, gauss, MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
     dc = copy.deepcopy
     APR = dc(APR)
     datablock_list = dc(datablock_list)
-    fisdata = dc(fisdata)
+    fisdata = dc(APR.fisdata)
     gauss = dc(gauss)
     IPP = dc(IPP)
     LABL = dc(LABL)

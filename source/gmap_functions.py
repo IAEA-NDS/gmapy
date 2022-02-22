@@ -244,7 +244,7 @@ def init_shape_prior(ID, data, APR):
 
 
 
-def fill_AA_AM_COV(data, fisdata, APR):
+def fill_AA_AM_COV(data, APR):
     #
     #      FILL AA,AM,AND COV
     #
@@ -288,6 +288,7 @@ def fill_AA_AM_COV(data, fisdata, APR):
             #
             #      FISSION AVERAGE
             #
+            fisdata = APR.fisdata
             K = 0
             if NT[1] == 9:
                 K = 1

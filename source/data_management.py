@@ -81,7 +81,8 @@ def init_prior():
         'NR': 0,
         'NC': 0,
         'NSHP': 0,
-        'NSETN': np.zeros(200+1, dtype=int)
+        'NSETN': np.zeros(200+1, dtype=int),
+        'fisdata': {}
         })
     return APR
 
