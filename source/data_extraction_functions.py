@@ -15,6 +15,9 @@ def extract_prior_reacs(APR):
         for idx in range(start, end+1):
             curreac = 'MT:' + str(1) + '-R1:' + str(xsid)
             reaclist.append(curreac)
+    if APR.fisdata is not None:
+        for K in range(APR.fisdata.NFIS):
+            reaclist.append('NA')
     for K in range(APR.NSHP):
         # normalization factors do not have
         # an associated energy
@@ -28,6 +31,9 @@ def extract_prior_energies(APR):
     for K in range(1, APR.NR+1):
         curval = APR.EN[K]
         energylist.append(curval)
+    if APR.fisdata is not None:
+        for K in range(1, APR.fisdata.NFIS+1):
+            energylist.append(APR.fisdata.ENFIS[K])
     for K in range(APR.NSHP):
         # normalization factors do not have
         # an associated energy
@@ -38,7 +44,11 @@ def extract_prior_energies(APR):
 
 def extract_prior_values(APR):
     num_prior_vars = APR.NR + APR.NSHP
-    ret = APR.CS[1:(num_prior_vars+1)].copy()
+    ret = np.concatenate([
+        APR.CS[1:(APR.NR+1)],
+        APR.fisdata.FIS[1:(APR.fisdata.NFIS+1)],
+        APR.CS[(APR.NR+1):(num_prior_vars+1)]
+    ])
     return ret
 
 
@@ -50,6 +60,9 @@ def extract_prior_ids(APR):
         for idx in range(start, end+1):
             cur_id = 'xsid_' + str(xsid)
             idlist.append(cur_id)
+    if APR.fisdata is not None:
+        for K in range(1, APR.fisdata.NFIS+1):
+            idlist.append('fis')
     for i in range(1, APR.NSHP+1):
         cur_id = 'norm_' + str(APR.NSETN[i])
         idlist.append(cur_id)

@@ -40,6 +40,9 @@ def new_gls_update(datablock_list, APR, retcov=False):
     comp_map = CompoundMap()
     isresp = comp_map.is_responsible(exptable)
 
+    isfis = priortable['NODE'] == 'fis'
+    not_isfis = np.logical_not(isfis)
+
     perm1 = np.random.permutation(priortable.shape[0])
     perm2 = np.random.permutation(exptable.shape[0])
     priortable = priortable.iloc[perm1].copy()
@@ -51,6 +54,10 @@ def new_gls_update(datablock_list, APR, retcov=False):
         raise ValueError('New predictions do not match GMAP ones')
 
     Snew = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
+    # for the time being mask out the fisdata block
+    Snew = Snew[:,not_isfis].copy()
+    priorvals = priorvals[not_isfis]
+
     S = replace_submatrix(Sold, Snew)
     if not np.all(np.isclose(Sold.todense(), S.todense(), atol=0, rtol=1e-12)):
         raise ValueError('New sensitivity elements do not match GMAP ones')
