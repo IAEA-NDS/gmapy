@@ -10,6 +10,7 @@ from .cross_section_absolute_ratio_map import CrossSectionAbsoluteRatioMap
 from .cross_section_shape_of_ratio_map import CrossSectionShapeOfRatioMap
 from .cross_section_total_map import CrossSectionTotalMap
 from .cross_section_shape_of_sum_map import CrossSectionShapeOfSumMap
+from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 
 
 
@@ -22,7 +23,8 @@ class CompoundMap:
                CrossSectionAbsoluteRatioMap(),
                CrossSectionShapeOfRatioMap(),
                CrossSectionTotalMap(),
-               CrossSectionShapeOfSumMap()]
+               CrossSectionShapeOfSumMap(),
+               CrossSectionFissionAverageMap()]
 
 
     def is_responsible(self, exptable):
