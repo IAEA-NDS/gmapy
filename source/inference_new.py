@@ -26,11 +26,12 @@ def replace_submatrix(M, R):
 
 def new_gls_update(datablock_list, APR, retcov=False): 
     priorvals = extract_prior_values(APR)
-    meas = extract_measurements(datablock_list)
-    covmat = extract_covariance_matrix(datablock_list)
     # provisionary code during transition
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
+
+    meas = exptable['DATA'].to_numpy()
+    covmat = extract_covariance_matrix(datablock_list)
 
     refvals = priorvals
 
