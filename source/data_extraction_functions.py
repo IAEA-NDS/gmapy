@@ -168,21 +168,6 @@ def extract_effDCS_values(datablock_list):
 
 
 
-def extract_predictions(datablock_list):
-    predictions = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
-    cur_start_idx = 0
-    for datablock in datablock_list:
-        num_points = datablock.num_datapoints
-        next_start_idx = cur_start_idx + datablock.num_datapoints
-        predictions[cur_start_idx:next_start_idx] = \
-                datablock.predCSS[1:(num_points+1)]
-        cur_start_idx = next_start_idx
-
-    predictions = predictions[:next_start_idx].copy()
-    return predictions
-
-
-
 def extract_covariance_matrix(datablock_list):
     max_elnum = SIZE_LIMITS.MAX_NUM_CORELEMS
     row_idx = np.full(max_elnum, -1)
