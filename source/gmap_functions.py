@@ -255,7 +255,7 @@ def fill_AA_AM_COV(data, APR):
     KA.fill(0)
     N = 0
 
-    data.AM.fill(0.)
+    # data.AM.fill(0.)
     data.AA.fill(0.)
 
     for KS in fort_range(1, data.num_datapoints):  # .lbl18
@@ -339,7 +339,7 @@ def fill_AA_AM_COV(data, APR):
 
                 data.AA[J,KR]=CSSJ*fisdata.FIS[K]/DQQQ
 
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -360,7 +360,7 @@ def fill_AA_AM_COV(data, APR):
                 KA[J,KR+1] = N
                 data.AA[J,KR] = APR.CS[J]/DQQQ
 
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -387,7 +387,7 @@ def fill_AA_AM_COV(data, APR):
             KR=KA[L,1]
             KA[L,KR+1]=N
             data.AA[L,KR]=CX/DQQQ
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -406,7 +406,7 @@ def fill_AA_AM_COV(data, APR):
             #
             CX = APR.CS[J]
             data.AA[J,KR] = CX / DQQQ
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -423,7 +423,7 @@ def fill_AA_AM_COV(data, APR):
             KR = KA[L,1]
             KA[L,KR+1] = N
             data.AA[L,KR] =  CXX
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -438,7 +438,7 @@ def fill_AA_AM_COV(data, APR):
             KR = KA[I,1]
             KA[I,KR+1] = N
             data.AA[I,KR] = -CCX
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -459,7 +459,7 @@ def fill_AA_AM_COV(data, APR):
             KR = KA[L,1]
             KA[L,KR+1] = N
             data.AA[L,KR] =  CXX
-            data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+            # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
             # data.predCSS[N] = CX
             continue
 
@@ -475,7 +475,7 @@ def fill_AA_AM_COV(data, APR):
                 KR=KA[I8,1]
                 KA[I8,KR+1]=N
                 data.AA[I8,KR]=-CBX
-                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 # data.predCSS[N] = CX
                 continue
             else:
@@ -492,7 +492,7 @@ def fill_AA_AM_COV(data, APR):
                 KA[I8,KR+1]=N
                 CCX=CBX2*APR.CS[I8]
                 data.AA[I8,KR]=-CCX
-                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 # data.predCSS[N] = CX
                 continue
 
@@ -516,7 +516,7 @@ def fill_AA_AM_COV(data, APR):
                 KR=KA[L,1]
                 KA[L,KR+1]=N
                 data.AA[L,KR]=CBX
-                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 # data.predCSS[N] = CX
                 continue
             else:
@@ -535,7 +535,7 @@ def fill_AA_AM_COV(data, APR):
                 KR=KA[L,1]
                 KA[L,KR+1]=N
                 data.AA[L,KR]=CBX
-                data.AM[N]=(data.CSS[KS]-CX)/DQQQ
+                # data.AM[N]=(data.CSS[KS]-CX)/DQQQ
                 # data.predCSS[N] = CX
                 continue
 
