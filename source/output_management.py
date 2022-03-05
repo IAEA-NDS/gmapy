@@ -244,9 +244,11 @@ def write_fission_average(ID, data, propvals, fisvals, file_IO4):
         if MTR == 9:
             FL -= fisvals[1]
 
+        EAVR = 0.
+
         for KS in fort_range(dataset_start_index, dataset_end_index):
             format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
-            fort_write(file_IO4, format156, [data.EAVR[KS], propvals[KS-1], FL,
+            fort_write(file_IO4, format156, [EAVR, propvals[KS-1], FL,
                 data.CSS[KS], data.effDCS[KS]])
 
 
