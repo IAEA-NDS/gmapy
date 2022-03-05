@@ -33,8 +33,6 @@ def new_gls_update(datablock_list, APR, retcov=False):
     exptable = extract_experimental_table(datablock_list)
 
     refvals = priorvals
-    Sold = extract_sensitivity_matrix(datablock_list, APR)
-    preds = extract_predictions(datablock_list)
 
     comp_map = CompoundMap()
     isresp = comp_map.is_responsible(exptable)
@@ -42,19 +40,12 @@ def new_gls_update(datablock_list, APR, retcov=False):
     isfis = priortable['NODE'] == 'fis'
     not_isfis = np.logical_not(isfis)
 
-    oldpreds = preds.copy()
-    preds[isresp] = comp_map.propagate(priortable, exptable, refvals)[isresp]
-    if not np.all(np.isclose(oldpreds, preds, atol=0, rtol=1e-12)):
-        raise ValueError('New predictions do not match GMAP ones')
+    preds = comp_map.propagate(priortable, exptable, refvals)
 
-    Snew = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
+    S = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
     # for the time being mask out the fisdata block
-    Snew = Snew[:,not_isfis].copy()
+    S = S[:,not_isfis].copy()
     priorvals = priorvals[not_isfis]
-
-    S = replace_submatrix(Sold, Snew)
-    if not np.all(np.isclose(Sold.todense(), S.todense(), atol=0, rtol=1e-12)):
-        raise ValueError('New sensitivity elements do not match GMAP ones')
 
     inv_post_cov = S.T @ spsolve(covmat, S)
     upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(covmat, meas-preds)))
