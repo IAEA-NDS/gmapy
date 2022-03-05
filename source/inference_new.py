@@ -32,7 +32,6 @@ def new_gls_update(datablock_list, APR, retcov=False):
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
 
-    # create random permutations as a test
     refvals = priorvals
     Sold = extract_sensitivity_matrix(datablock_list, APR)
     preds = extract_predictions(datablock_list)
@@ -42,11 +41,6 @@ def new_gls_update(datablock_list, APR, retcov=False):
 
     isfis = priortable['NODE'] == 'fis'
     not_isfis = np.logical_not(isfis)
-
-    perm1 = np.random.permutation(priortable.shape[0])
-    perm2 = np.random.permutation(exptable.shape[0])
-    priortable = priortable.iloc[perm1].copy()
-    exptable = exptable.iloc[perm2].copy()
 
     oldpreds = preds.copy()
     preds[isresp] = comp_map.propagate(priortable, exptable, refvals)[isresp]
