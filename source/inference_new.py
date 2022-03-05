@@ -25,29 +25,28 @@ def replace_submatrix(M, R):
 
 
 def new_gls_update(datablock_list, APR, retcov=False): 
-    # provisionary code during transition
+    """Calculate updated values and covariance matrix."""
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
+
+    # prepare quantities required for update
+    priorvals = priortable['PRIOR'].to_numpy()
+    refvals = priorvals
 
     meas = exptable['DATA'].to_numpy()
     covmat = extract_covariance_matrix(datablock_list)
 
-    priorvals = priortable['PRIOR'].to_numpy()
-    refvals = priorvals
-
     comp_map = CompoundMap()
-    isresp = comp_map.is_responsible(exptable)
+    preds = comp_map.propagate(priortable, exptable, refvals)
+    S = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
 
+    # for the time being mask out the fisdata block
     isfis = priortable['NODE'] == 'fis'
     not_isfis = np.logical_not(isfis)
-
-    preds = comp_map.propagate(priortable, exptable, refvals)
-
-    S = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
-    # for the time being mask out the fisdata block
-    S = S[:,not_isfis].copy()
     priorvals = priorvals[not_isfis]
+    S = S[:,not_isfis].copy()
 
+    # perform the update
     inv_post_cov = S.T @ spsolve(covmat, S)
     upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(covmat, meas-preds)))
 
