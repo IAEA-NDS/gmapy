@@ -123,8 +123,6 @@ def init_prior():
 #      NNCOX      array of flags: if element not zero, divide uncertainties by 10 for respective dataset
 #      MTTP       array of shape-flag; element is 2 if dataset contains shape data else 1
 #
-#      AM         MEASUREMENT VECTOR
-#
 #      MODC       mode of uncertainty specification: 1 - Ecor matrix provided
 #                                                    2 - uncorrelated uncertainties
 #                                                    3 - all correleated errors given
@@ -219,8 +217,6 @@ def init_datablock():
         'NCOX': np.zeros(MAXDS+1, dtype=int),
         'NNCOX': np.zeros(MAXDS+1, dtype=int),
         'MTTP': np.zeros(MAXDS+1, dtype=int),
-
-        'AM': np.zeros(MAXDP+1, dtype=float),
 
         'SIGL': 0.,
         'NTOT': 0,
