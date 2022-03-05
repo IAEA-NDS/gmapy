@@ -1,8 +1,7 @@
 from fortran_utils import fort_range
 from gmap_snippets import get_dataset_range
 from data_management import SIZE_LIMITS, init_gauss
-from gmap_functions import (init_shape_prior, construct_Ecor, apply_PPP_correction,
-        fill_AA_AM_COV)
+from gmap_functions import init_shape_prior, construct_Ecor, apply_PPP_correction
 
 import numpy as np
 
@@ -184,8 +183,6 @@ def add_compinfo_to_datablock(datablock, APR, MPPP):
         #VPBEG Assigning uncertainties as % error relative the prior
         if MPPP == 1 and data.IDEN[ID,7] != 6:
             apply_PPP_correction(ID, data, APR)
-
-    fill_AA_AM_COV(datablock, APR)
 
     success = construct_effECOR(data)
     if not success:
