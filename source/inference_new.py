@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
-from data_extraction_functions import (extract_prior_values,
-        extract_measurements, extract_covariance_matrix,
+from data_extraction_functions import (extract_covariance_matrix,
         extract_prior_table, extract_experimental_table)
 
 from mappings.compound_map import CompoundMap
