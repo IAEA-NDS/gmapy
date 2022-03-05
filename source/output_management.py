@@ -503,6 +503,9 @@ def write_iteration_info(APR, datablock_list, gauss,
     DQQQ = effDCS * expvals * 0.01
     AMvec = (expvals - propvals)/DQQQ
 
+    # get fission spectrum from prior
+    fisvals = priorvals[priortable['NODE'] == 'fis']
+
     curNSHP = 0
     totNSHP = APR.NSHP
     ptcounter = 0
