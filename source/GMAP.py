@@ -56,6 +56,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         gauss = create_gauss_structure(APR, datablock_list, upd_vals, upd_covmat)
 
         write_iteration_info(APR, datablock_list, gauss,
+                priortable, exptable,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
 
         if MODAP != 0:

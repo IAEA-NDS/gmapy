@@ -3,9 +3,11 @@ from gmap_snippets import (should_downweight, get_AX, get_dataset_range,
         get_num_shapedatasets)
 from data_management import SIZE_LIMITS, init_gauss
 from linpack_utils import pack_symmetric_matrix
-from data_extraction_functions import extract_measurements
+from data_extraction_functions import (extract_measurements,
+        extract_effDCS_values)
 import numpy as np
 import copy
+from mappings.compound_map import CompoundMap
 
 
 def write_overflow_message(ID, data, APR, file_IO4):
@@ -479,7 +481,9 @@ def get_matrix_products(gauss, data):
 
 
 
-def write_iteration_info(APR, datablock_list, gauss, MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
+def write_iteration_info(APR, datablock_list, gauss,
+        priortable, exptable,
+        MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
     dc = copy.deepcopy
     APR = dc(APR)
     datablock_list = dc(datablock_list)
@@ -487,6 +491,16 @@ def write_iteration_info(APR, datablock_list, gauss, MODREP, MODAP, MPPP, IPP, L
     gauss = dc(gauss)
     IPP = dc(IPP)
     LABL = dc(LABL)
+
+    # compute on the fly the old AM quantity
+    # not used in the Python code anymore
+    priorvals = priortable['PRIOR'].to_numpy()
+    expvals = exptable['DATA'].to_numpy()
+    effDCS = extract_effDCS_values(datablock_list)
+    compmap = CompoundMap()
+    propvals = compmap.propagate(priortable, exptable, priorvals)
+    DQQQ = effDCS * expvals * 0.01
+    amvec = (expvals - propvals)/DQQQ
 
     curNSHP = 0
     totNSHP = APR.NSHP
