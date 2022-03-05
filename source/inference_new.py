@@ -11,19 +11,6 @@ from mappings.compound_map import CompoundMap
 
 
 
-def replace_submatrix(M, R):
-    """Replace rows of M by non-zero rows of R."""
-    if M.shape != R.shape:
-        raise IndexError('M and R must have same shape')
-    M = M.copy()
-    h = np.split(R.indices, R.indptr)[1:-1]
-    rows = np.array([pos for pos, el in enumerate(h) if len(el) > 0])
-    cols = np.array(np.sort(np.unique(R.indices)))
-    M[rows,:] = R[rows,:]
-    return M
-
-
-
 def new_gls_update(datablock_list, APR, retcov=False): 
     """Calculate updated values and covariance matrix."""
     priortable = extract_prior_table(APR)
