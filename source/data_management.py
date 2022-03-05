@@ -156,7 +156,6 @@ def init_prior():
 #      printing from the calculations in fill_AA_AM_COV
 #
 #      EAVR       TODO
-#      SFIS       TODO
 #      FL         TODO
 #
 #      Following variables is calculated in get_matrix_products
@@ -229,7 +228,6 @@ def init_datablock():
         'AM': np.zeros(MAXDP+1, dtype=float),
 
         'EAVR': np.zeros(MAXDP+1, dtype=float),
-        'SFIS': np.zeros(MAXDP+1, dtype=float),
         'FL': np.zeros(MAXDP+1, dtype=float),
 
         'SIGL': 0.,
