@@ -38,9 +38,9 @@ class CompoundMap:
 
 
     def propagate(self, priortable, exptable, refvals):
-        # TODO: When all maps are fully implemented,
-        #       let this function fail if it cannot
-        #       handle exptable in its entirety
+        if not np.all(self.is_responsible(exptable)):
+            raise TypeError('No known link from prior to some experimental data points')
+
         treated = np.full(exptable.shape[0], False)
         propvals = np.full(exptable.shape[0], 0.)
 
@@ -59,9 +59,9 @@ class CompoundMap:
 
 
     def jacobian(self, priortable, exptable, refvals, ret_mat=False):
-        # TODO: When all maps are fully implemented,
-        #       let this function fail if it cannot
-        #       handle exptable in its entirety
+        if not np.all(self.is_responsible(exptable)):
+            raise TypeError('No known link from prior to some experimental data points')
+
         concat = np.concatenate
         Sdic = {'idcs1': np.empty(0, dtype=int),
                 'idcs2': np.empty(0, dtype=int),
