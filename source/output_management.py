@@ -463,7 +463,7 @@ def create_gauss_structure(APR, datablock_list, upd_vals, upd_covmat):
 
 
 
-def get_matrix_products(gauss, data):
+def get_matrix_products(gauss, data, curAM):
     #
     #      GET MATRIX PRODUCTS
     #
@@ -471,7 +471,8 @@ def get_matrix_products(gauss, data):
     SIGMA2 = gauss.SIGMA2
 
     effEcor = data.effECOR[1:(N+1), 1:(N+1)]
-    am = data.AM[1:(N+1)]
+    # am = data.AM[1:(N+1)]
+    am = curAM
 
     t = np.linalg.solve(effEcor, am)
     SIGMA2 += np.sum(t*am)
@@ -500,16 +501,19 @@ def write_iteration_info(APR, datablock_list, gauss,
     compmap = CompoundMap()
     propvals = compmap.propagate(priortable, exptable, priorvals)
     DQQQ = effDCS * expvals * 0.01
-    amvec = (expvals - propvals)/DQQQ
+    AMvec = (expvals - propvals)/DQQQ
 
     curNSHP = 0
     totNSHP = APR.NSHP
+    ptcounter = 0
     for data in datablock_list:
-        get_matrix_products(gauss, data)
+        curAM = AMvec[ptcounter:(ptcounter+data.num_datapoints)]
+        get_matrix_products(gauss, data, curAM)
         curNSHP += get_num_shapedatasets(data)
         APR.NSHP = curNSHP
         write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
         APR.NSHP = totNSHP
+        ptcounter += data.num_datapoints
 
     write_result_info(APR, gauss, IPP, file_IO4)
 
