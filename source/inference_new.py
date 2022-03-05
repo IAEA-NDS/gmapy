@@ -2,24 +2,18 @@ import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
-from data_extraction_functions import (extract_covariance_matrix,
-        extract_prior_table, extract_experimental_table)
 
 from mappings.compound_map import CompoundMap
 
 
 
-def new_gls_update(datablock_list, APR, retcov=False): 
+def new_gls_update(priortable, exptable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
-    priortable = extract_prior_table(APR)
-    exptable = extract_experimental_table(datablock_list)
-
     # prepare quantities required for update
     priorvals = priortable['PRIOR'].to_numpy()
     refvals = priorvals
 
     meas = exptable['DATA'].to_numpy()
-    covmat = extract_covariance_matrix(datablock_list)
 
     comp_map = CompoundMap()
     preds = comp_map.propagate(priortable, exptable, refvals)
@@ -32,8 +26,8 @@ def new_gls_update(datablock_list, APR, retcov=False):
     S = S[:,not_isfis].copy()
 
     # perform the update
-    inv_post_cov = S.T @ spsolve(covmat, S)
-    upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(covmat, meas-preds)))
+    inv_post_cov = S.T @ spsolve(expcovmat, S)
+    upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(expcovmat, meas-preds)))
 
     post_covmat = None
     if retcov is True:

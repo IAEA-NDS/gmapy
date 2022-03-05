@@ -9,6 +9,8 @@ from output_management import ( write_prior_info, write_iteration_info,
 
 from database_reading import read_gma_database
 from data_management import init_gauss
+from data_extraction_functions import (extract_covariance_matrix,
+        extract_prior_table, extract_experimental_table)
 
 
 #################################################
@@ -43,7 +45,11 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         for datablock in datablock_list:
             add_compinfo_to_datablock(datablock, APR, MPPP)
 
-        upd_res = new_gls_update(datablock_list, APR, retcov=True)
+        priortable = extract_prior_table(APR)
+        exptable = extract_experimental_table(datablock_list)
+        expcovmat = extract_covariance_matrix(datablock_list)
+
+        upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
 
