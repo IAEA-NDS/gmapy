@@ -109,7 +109,6 @@ def init_prior():
 #      FCFC    CROSS CORRELATION FACTORS
 #
 #      KAS        indexes of experimental cross sections
-#      KA         indexes
 #      IDEN       data set info (see below)
 #      NENF       tags of norm. uncertainty components
 #      NETG       tags of energy dependent uncertainty components
@@ -204,7 +203,6 @@ def init_datablock():
         'AAA': np.zeros((MAXDP+1, MAXDP+1), dtype=float),
 
         'KAS': np.zeros((MAXDP+1, 5+1), dtype=int),
-        'KA': np.zeros((1200+1, MAXDP+1), dtype=int),
         'IDEN': np.zeros((MAXDS+1, 8+1), dtype=int),
         'NENF': np.zeros((MAXDS+1, 10+1), dtype=int),
         'NETG': np.zeros((11+1,MAXDS+1), dtype=int),
