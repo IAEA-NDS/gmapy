@@ -270,7 +270,8 @@ def write_inv_attempt_info(data, IPP, file_IO4):
 
 
 
-def write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4):
+def write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL,
+        propvals, fisvals, file_IO4):
     if MODREP == 0:
         write_datablock_header(file_IO4)
 
@@ -511,10 +512,12 @@ def write_iteration_info(APR, datablock_list, gauss,
     ptcounter = 0
     for data in datablock_list:
         curAM = AMvec[ptcounter:(ptcounter+data.num_datapoints)]
+        curpropvals = propvals[ptcounter:(ptcounter+data.num_datapoints)]
         get_matrix_products(gauss, data, curAM)
         curNSHP += get_num_shapedatasets(data)
         APR.NSHP = curNSHP
-        write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL, file_IO4)
+        write_datablock_info(APR, data, MODREP, MPPP, IPP, LABL,
+                curpropvals, fisvals, file_IO4)
         APR.NSHP = totNSHP
         ptcounter += data.num_datapoints
 
