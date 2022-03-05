@@ -183,46 +183,6 @@ def extract_predictions(datablock_list):
 
 
 
-def extract_sensitivity_matrix(datablock_list, APR):
-    max_elnum = SIZE_LIMITS.MAX_NUM_MEASUREMENTS*10
-    row_idx = np.full(max_elnum, -1)
-    col_idx = np.full(max_elnum, -1)
-    vals = np.zeros(max_elnum)
-
-    num_els = 0
-    num_prior_vars = APR.NR + APR.NSHP 
-    num_pred_vars = 0
-    cur_start_idx = 0
-    for datablock in datablock_list:
-        num_points = datablock.num_datapoints
-        num_pred_vars += num_points
-        KA = datablock.KA
-        AA = datablock.AA
-        effDCS = datablock.effDCS
-        CSS = datablock.CSS
-        predCSS = datablock.predCSS
-        for i in range(num_prior_vars): 
-            for j in range(KA[i+1, 1]):
-                col_idx[num_els] = i
-                cur_row_idx = KA[i+1, j+2] - 1
-                row_idx[num_els] = cur_start_idx + cur_row_idx
-                vals[num_els] = AA[i+1, j+1]  
-                # values in sensitivity matrix should be for the original prior variables x,
-                # which are linked to transformed ones x' by x' = (x-xref)/xref
-                vals[num_els] /= APR.CS[i+1]
-                # and we also want the sensitivity matrix with respect to the original
-                # measurements, not the transformed ones
-                vals[num_els] *= (effDCS[cur_row_idx+1]*0.01)*CSS[cur_row_idx+1]
-                num_els += 1
-        cur_start_idx += num_points
-
-    sens_mat = csr_matrix((vals[:num_els], (row_idx[:num_els], col_idx[:num_els])),
-            shape = (num_pred_vars, num_prior_vars))  
-
-    return sens_mat
-
-
-
 def extract_covariance_matrix(datablock_list):
     max_elnum = SIZE_LIMITS.MAX_NUM_CORELEMS
     row_idx = np.full(max_elnum, -1)
