@@ -155,8 +155,6 @@ def init_prior():
 #      Following variables are added to help in the separation of the
 #      printing from the calculations in fill_AA_AM_COV
 #
-#      EAVR       TODO
-#
 #      Following variables is calculated in get_matrix_products
 #      and saved in the datablock structure for later printing
 #
@@ -225,8 +223,6 @@ def init_datablock():
 
         'AA': np.zeros((1200+1, MAXDP+1), dtype=float),
         'AM': np.zeros(MAXDP+1, dtype=float),
-
-        'EAVR': np.zeros(MAXDP+1, dtype=float),
 
         'SIGL': 0.,
         'NTOT': 0,
