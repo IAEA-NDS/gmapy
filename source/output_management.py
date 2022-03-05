@@ -236,9 +236,17 @@ def write_fission_average(ID, data, propvals, fisvals, file_IO4):
     MT = data.IDEN[ID, 7]
     dataset_start_index, dataset_end_index = get_dataset_range(ID, data)
     if MT == 6:
+        MTR = data.NT[ID,1]
+        # calculate fission spectrum normalization
+        # the check MTR == 9 is there because
+        # U5(n,f) and Pu9(n,f) have different meshes
+        FL = np.sum(fisvals)
+        if MTR == 9:
+            FL -= fisvals[1]
+
         for KS in fort_range(dataset_start_index, dataset_end_index):
             format156 = "( 'AP FISSION AVERAGE ',3F10.4,'  EXP. VAL. ',2F10.4)"
-            fort_write(file_IO4, format156, [data.EAVR[KS], data.SFIS[KS], data.FL[KS],
+            fort_write(file_IO4, format156, [data.EAVR[KS], data.SFIS[KS], FL,
                 data.CSS[KS], data.effDCS[KS]])
 
 
