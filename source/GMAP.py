@@ -1,3 +1,5 @@
+import numpy as np
+
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
@@ -34,6 +36,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     MODAP = db_dic['MODAP']
 
     link_prior_and_datablocks(APR, datablock_list)
+    priortable = extract_prior_table(APR)
 
     write_GMA_header(file_IO4)
     write_fission_spectrum(APR.fisdata, file_IO4)
@@ -45,7 +48,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         for datablock in datablock_list:
             add_compinfo_to_datablock(datablock, APR, MPPP)
 
-        priortable = extract_prior_table(APR)
         exptable = extract_experimental_table(datablock_list)
         expcovmat = extract_covariance_matrix(datablock_list)
 
@@ -58,6 +60,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         write_iteration_info(APR, datablock_list, gauss,
                 priortable, exptable,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
+
+        fismask = priortable['NODE'] == 'fis'
+        invfismask = np.logical_not(fismask)
+        priortable.at[invfismask, 'PRIOR'] = upd_vals
 
         if MODAP != 0:
             update_prior_estimates(APR, upd_vals)
