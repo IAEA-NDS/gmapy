@@ -153,6 +153,21 @@ def extract_experimental_table(datablock_list):
 
 
 
+def extract_DCS_values(datablock_list):
+    DCS_values = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        num_points = datablock.num_datapoints
+        next_start_idx = cur_start_idx + datablock.num_datapoints
+        DCS_values[cur_start_idx:next_start_idx] = \
+                datablock.DCS[1:(num_points+1)]
+        cur_start_idx = next_start_idx
+
+    DCS_values = DCS_values[:next_start_idx].copy()
+    return DCS_values
+
+
+
 def extract_effDCS_values(datablock_list):
     effDCS_values = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
     cur_start_idx = 0
