@@ -71,7 +71,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         fismask = priortable['NODE'] == 'fis'
         invfismask = np.logical_not(fismask)
-        priortable.at[invfismask, 'PRIOR'] = upd_vals
+        priortable.loc[invfismask, 'PRIOR'] = upd_vals
 
         if MODAP != 0:
             update_prior_estimates(APR, upd_vals)
