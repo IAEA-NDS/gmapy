@@ -50,3 +50,10 @@ def attach_shape_prior(priortable, exptable, refvals=None, uncs=None):
 
     return ext_priortable
 
+
+
+def update_dummy_datapoints(exptable, refvals):
+    """Replace values of dummy datapoints by those in refvals."""
+    sel = exptable['NODE'].str.fullmatch('exp_90[0-9]')
+    exptable.loc[sel, 'DATA'] = refvals[exptable.loc[sel].index]
+
