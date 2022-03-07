@@ -12,7 +12,9 @@ from output_management import ( write_prior_info, write_iteration_info,
 from database_reading import read_gma_database
 from data_management import init_gauss
 from data_extraction_functions import (extract_covariance_matrix,
-        extract_prior_table, extract_experimental_table)
+        extract_prior_table, extract_experimental_table, extract_DCS_values)
+
+from mappings.priortools import attach_shape_prior
 
 
 #################################################
@@ -35,8 +37,14 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     IPP = db_dic['IPP']
     MODAP = db_dic['MODAP']
 
-    link_prior_and_datablocks(APR, datablock_list)
     priortable = extract_prior_table(APR)
+    exptable = extract_experimental_table(datablock_list)
+
+    refvals = priortable['PRIOR'].to_numpy()
+    uncvals = extract_DCS_values(datablock_list)
+    priortable = attach_shape_prior(priortable, exptable, refvals, uncvals)
+
+    link_prior_and_datablocks(APR, datablock_list)
 
     write_GMA_header(file_IO4)
     write_fission_spectrum(APR.fisdata, file_IO4)
