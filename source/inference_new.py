@@ -11,7 +11,7 @@ def new_gls_update(priortable, exptable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
     priorvals = priortable['PRIOR'].to_numpy()
-    refvals = priorvals
+    refvals = priorvals.copy()
 
     meas = exptable['DATA'].to_numpy()
 
@@ -29,6 +29,10 @@ def new_gls_update(priortable, exptable, expcovmat, retcov=False):
     inv_post_cov = S.T @ spsolve(expcovmat, S)
     upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(expcovmat, meas-preds)))
 
+    # introduce the unmodified fission spectrum in the posterior
+    ext_upd_priorvals = refvals.copy()
+    ext_upd_priorvals[not_isfis] = upd_priorvals
+
     post_covmat = None
     if retcov is True:
         # following is equivalent to:
@@ -43,5 +47,5 @@ def new_gls_update(priortable, exptable, expcovmat, retcov=False):
         post_covmat = np.triu(invres) + np.triu(invres, k=1).T
         ext_post_covmat[np.ix_(not_isfis, not_isfis)] = post_covmat
 
-    return {'upd_vals': upd_priorvals, 'upd_covmat': ext_post_covmat}
+    return {'upd_vals': ext_upd_priorvals, 'upd_covmat': ext_post_covmat}
 

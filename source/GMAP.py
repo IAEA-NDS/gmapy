@@ -72,20 +72,21 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         fismask = priortable['NODE'] == 'fis'
         invfismask = np.logical_not(fismask)
         red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
+        red_upd_vals = upd_vals[invfismask]
 
         gauss = create_gauss_structure(APR, datablock_list,
-                upd_vals, red_upd_covmat)
+                red_upd_vals, red_upd_covmat)
 
         write_iteration_info(APR, datablock_list, gauss,
                 priortable, exptable,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
 
-        priortable.loc[invfismask, 'PRIOR'] = upd_vals
+        priortable['PRIOR'] = upd_vals
 
         if MODAP != 0:
-            update_prior_estimates(APR, upd_vals)
+            update_prior_estimates(APR, red_upd_vals)
 
-        update_prior_shape_estimates(APR, upd_vals)
+        update_prior_shape_estimates(APR, red_upd_vals)
 
         if (MODAP == 0 or MODREP == MODAP):
             break
