@@ -71,9 +71,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         fismask = priortable['NODE'] == 'fis'
         invfismask = np.logical_not(fismask)
+        red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
 
         gauss = create_gauss_structure(APR, datablock_list,
-                upd_vals, upd_covmat[np.ix_(invfismask, invfismask)])
+                upd_vals, red_upd_covmat)
 
         write_iteration_info(APR, datablock_list, gauss,
                 priortable, exptable,
