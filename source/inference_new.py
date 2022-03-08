@@ -37,7 +37,11 @@ def new_gls_update(priortable, exptable, expcovmat, retcov=False):
         invres , info = dpotri(cholfact)
         if info != 0:
             raise ValueError('Experimental covariance matrix not positive definite')
-        post_covmat = np.triu(invres) + np.triu(invres, k=1).T
 
-    return {'upd_vals': upd_priorvals, 'upd_covmat': post_covmat}
+        # extend posterior covariance matrix with fission block
+        ext_post_covmat = np.full((len(priortable), len(priortable)), 0., dtype=float)
+        post_covmat = np.triu(invres) + np.triu(invres, k=1).T
+        ext_post_covmat[np.ix_(not_isfis, not_isfis)] = post_covmat
+
+    return {'upd_vals': upd_priorvals, 'upd_covmat': ext_post_covmat}
 
