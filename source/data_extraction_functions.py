@@ -183,6 +183,18 @@ def extract_effDCS_values(datablock_list):
 
 
 
+def update_effDCS_values(datablock_list, effDCS_values):
+    effDCS_values = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
+    cur_start_idx = 0
+    for datablock in datablock_list:
+        num_points = datablock.num_datapoints
+        next_start_idx = cur_start_idx + datablock.num_datapoints
+        datablock.effDCS[1:(num_points+1)] = \
+            effDCS_values[cur_start_idx:next_start_idx]
+        cur_start_idx = next_start_idx
+
+
+
 def extract_covariance_matrix(datablock_list):
     max_elnum = SIZE_LIMITS.MAX_NUM_CORELEMS
     row_idx = np.full(max_elnum, -1)
