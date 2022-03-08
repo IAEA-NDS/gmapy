@@ -14,7 +14,8 @@ from data_management import init_gauss
 from data_extraction_functions import (extract_covariance_matrix,
         extract_prior_table, extract_experimental_table, extract_DCS_values)
 
-from mappings.priortools import attach_shape_prior
+from mappings.priortools import attach_shape_prior, update_dummy_datapoints
+from mappings.compound_map import CompoundMap
 
 
 #################################################
@@ -37,6 +38,8 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     IPP = db_dic['IPP']
     MODAP = db_dic['MODAP']
 
+    compmap = CompoundMap()
+
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
 
@@ -56,7 +59,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         for datablock in datablock_list:
             add_compinfo_to_datablock(datablock, APR, MPPP)
 
-        exptable = extract_experimental_table(datablock_list)
+        refvals = priortable['PRIOR'].to_numpy()
+        propvals = compmap.propagate(priortable, exptable, refvals)
+        update_dummy_datapoints(exptable, propvals)
+
         expcovmat = extract_covariance_matrix(datablock_list)
 
         upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
