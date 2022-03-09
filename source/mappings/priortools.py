@@ -57,3 +57,22 @@ def update_dummy_datapoints(exptable, refvals):
     sel = exptable['NODE'].str.fullmatch('exp_90[0-9]')
     exptable.loc[sel, 'DATA'] = refvals[exptable.loc[sel].index]
 
+
+
+def calculate_PPP_correction(priortable, exptable, refvals, uncs):
+    """Calculate the PPP corrected uncertainties."""
+    compmap = CompoundMap()
+    refvals = refvals.copy()
+    # set temporarily normalization factors to 1.
+    # in order to reproduce PPP correction philosophy of Fortran GMAP
+    selidx = priortable[priortable['NODE'].str.match('norm_')].index
+    refvals[selidx] = 1.
+    # calculate PPP correction
+    propvals = compmap.propagate(priortable, exptable, refvals)
+    effuncs = uncs * propvals / exptable['DATA'].to_numpy()
+    # but no PPP correction for fission averages
+    is_sacs = exptable['REAC'].str.match('MT:6-')
+    sacs_idx = exptable[is_sacs].index
+    effuncs[sacs_idx] = uncs[sacs_idx]
+    return effuncs
+
