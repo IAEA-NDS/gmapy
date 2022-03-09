@@ -12,9 +12,11 @@ from output_management import ( write_prior_info, write_iteration_info,
 from database_reading import read_gma_database
 from data_management import init_gauss
 from data_extraction_functions import (extract_covariance_matrix,
-        extract_prior_table, extract_experimental_table, extract_DCS_values)
+        extract_prior_table, extract_experimental_table, extract_DCS_values,
+        update_effDCS_values)
 
-from mappings.priortools import attach_shape_prior, update_dummy_datapoints
+from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
+        calculate_PPP_correction)
 from mappings.compound_map import CompoundMap
 
 
@@ -62,6 +64,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         refvals = priortable['PRIOR'].to_numpy()
         propvals = compmap.propagate(priortable, exptable, refvals)
         update_dummy_datapoints(exptable, propvals)
+
+        uncs = extract_DCS_values(datablock_list)
+        effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
+        update_effDCS_values(datablock_list, effuncs)
 
         expcovmat = extract_covariance_matrix(datablock_list)
 
