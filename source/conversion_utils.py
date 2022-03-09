@@ -228,3 +228,35 @@ def augment_datablocks_with_NTOT(datablock_list):
         NTOT += datablock.num_datapoints
         datablock.NTOT = NTOT
 
+
+
+def compare_legacy_datablock_lists(list1, list2):
+    """Compare two datablock lists for equivalence."""
+    for dbidx in range(len(list1)):
+        dbblock1 = list1[dbidx]
+        dbblock2 = list2[dbidx]
+
+        for key in dbblock1.__dict__:
+            val1 = dbblock1.__dict__[key]
+            val2 = dbblock2.__dict__[key]
+
+            is_equal = False
+            if isinstance(val1, np.ndarray):
+                if len(val1) != len(val2):
+                    raise IndexError('Length mismatch')
+                elif val1.dtype.type in (np.string_, np.object_):
+                    is_equal = np.all(val1 == val2)
+                else:
+                    if key in ('CO', 'userCO'):
+                        redvals1 = val1[:,1:(dbblock1.num_datapoints+1)]
+                        redvals2 = val2[:,1:(dbblock2.num_datapoints+1)]
+                        is_equal = np.all(np.isclose(redvals1, redvals2))
+                    else:
+                        is_equal = np.all(np.isclose(val1, val2))
+            else:
+                is_equal = val1 == val2
+
+            if not is_equal:
+                print(key + ' differs')
+                import pdb; pdb.set_trace()
+
