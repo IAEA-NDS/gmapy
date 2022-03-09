@@ -184,7 +184,6 @@ def extract_effDCS_values(datablock_list):
 
 
 def update_effDCS_values(datablock_list, effDCS_values):
-    effDCS_values = np.zeros(SIZE_LIMITS.MAX_NUM_MEASUREMENTS)
     cur_start_idx = 0
     for datablock in datablock_list:
         num_points = datablock.num_datapoints
