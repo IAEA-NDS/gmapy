@@ -19,6 +19,10 @@ from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         calculate_PPP_correction)
 from mappings.compound_map import CompoundMap
 
+from conversion_utils import (sanitize_datablock, desanitize_datablock,
+        augment_datablocks_with_NTOT)
+
+
 
 #################################################
 #   START OF GMAP PROGRAM
@@ -41,6 +45,13 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     MODAP = db_dic['MODAP']
 
     compmap = CompoundMap()
+
+    # Check to see if new JSON style datablock are really one-to-one
+    # mappings to the Fortran GMAP datablock by converting from Fortran
+    # datablock to Python datablock format and back
+    datablock_list = [sanitize_datablock(b) for b in datablock_list]
+    datablock_list = [desanitize_datablock(b) for b in datablock_list]
+    augment_datablocks_with_NTOT(datablock_list)
 
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
