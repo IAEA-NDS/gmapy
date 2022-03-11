@@ -2,7 +2,7 @@ import json
 from collections import OrderedDict
 import numpy as np
 from gmap_snippets import get_dataset_range
-from data_management import init_datablock
+from data_management import init_datablock, init_fisdata
 
 
 
@@ -231,14 +231,15 @@ def sanitize_fission_spectrum_block(fisblock):
 
 
 
-def desanitize_fission_spectrum_bock(fisblock):
-    if len(fisblock['ENFIS']) != len(fisblock['EN']):
+def desanitize_fission_spectrum_block(fisblock):
+    if len(fisblock['ENFIS']) != len(fisblock['FIS']):
         raise IndexError('FIS and ENFIS in fisblock must be of same length')
-
-
-
-
-
+    fisdata = init_fisdata()
+    NFIS = len(fisblock['ENFIS'])
+    fisdata.NFIS = NFIS
+    fisdata.ENFIS[1:(NFIS+1)] = fisblock['ENFIS']
+    fisdata.FIS[1:(NFIS+1)] = fisblock['FIS']
+    return fisdata
 
 
 
