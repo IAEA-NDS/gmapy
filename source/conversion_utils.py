@@ -247,6 +247,74 @@ def desanitize_fission_spectrum_block(fisblock):
 
 
 
+def sanitize_prior(APR):
+    """Convert legacy APR structure to new one."""
+    blocklist = []
+    for curid in range(1, APR.NC+1):
+        sidx, fidx = get_prior_range(curid, APR)
+        curblock = OrderedDict()
+        curblock['type'] = 'legacy-prior-cross-section'
+        curblock['ID'] = curid
+        curblock['CLAB'] = APR.CLAB[curid, 1]
+        curblock['EN'] = APR.EN[sidx:(fidx+1)]
+        curblock['CS'] = APR.CS[sidx:(fidx+1)]
+        blocklist.append(curblock)
+    if APR.fisdata is not None:
+        fisblock = sanitize_fission_spectrum_block(APR.fisdata)
+        blocklist.append(fisblock)
+    return blocklist
+
+
+
+def desanitize_prior(priorlist):
+    # create ID-datablock mapping
+    id_dic = {}
+    has_fisdata = False
+    num_priorblocks = 0
+    for curblock in priorlist:
+        if curblock['type'] == 'legacy-fission-spectrum':
+            if has_fisdata:
+                raise IndexError('Only one legacy fission spectrum allowed')
+            else:
+                has_fisdata = True
+                id_dic['fis'] = curblock
+        elif curblock['type'] == 'legacy-prior-cross-section':
+            ID = curblock['ID']
+            if ID in id_dic:
+                raise IndexError('ID %d exists multiple times in prior'%(curblock['ID'],))
+            else:
+                id_dic[ID] = curblock
+                num_priorblocks += 1
+    # read the prior cross sections
+    APR = init_prior()
+    totnumpts = 0
+    cur_start_idx = 1
+    for curid in range(1, num_priorblocks+1):
+        if curid not in id_dic:
+            raise IndexError('ID %d does not exist in prior but should')
+        curblock = id_dic[curid]
+        if len(curblock['EN']) != len(curblock['CS']):
+            raise IndexError('In prior block with ID %d, ' +
+                             'the lengths of EN and CS do not match')
+        curnumpts = len(curblock['EN'])
+        totnumpts += curnumpts
+        cur_end_idx = cur_start_idx + curnumpts - 1
+        APR.CLAB[curid, 1] = curblock['CLAB']
+        APR.MCS[curid, 1] = curnumpts
+        APR.MCS[curid, 2] = cur_start_idx
+        APR.MCS[curid, 3] = cur_end_idx
+        APR.EN[cur_start_idx:(cur_end_idx+1)] = curblock['EN']
+        APR.CS[cur_start_idx:(cur_end_idx+1)] = curblock['CS']
+        cur_start_idx += curnumpts
+
+    APR.NR = totnumpts
+    APR.NC = num_priorblocks
+    if has_fisdata:
+        APR.fisdata = desanitize_fission_spectrum_block(id_dic['fis'])
+    return APR
+
+
+
 def augment_datablocks_with_NTOT(datablock_list):
     NTOT = 0
     for datablock in datablock_list:
