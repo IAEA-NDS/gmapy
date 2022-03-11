@@ -250,9 +250,11 @@ def compare_legacy_datablock_lists(list1, list2):
                     if key in ('CO', 'userCO'):
                         redvals1 = val1[:,1:(dbblock1.num_datapoints+1)]
                         redvals2 = val2[:,1:(dbblock2.num_datapoints+1)]
-                        is_equal = np.all(np.isclose(redvals1, redvals2))
+                        is_equal = np.all(np.isclose(redvals1, redvals2,
+                            atol=0, rtol=1e-14))
                     else:
-                        is_equal = np.all(np.isclose(val1, val2))
+                        is_equal = np.all(np.isclose(val1, val2,
+                            atol=0, rtol=1e-14))
             else:
                 is_equal = val1 == val2
 
