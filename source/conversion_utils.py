@@ -226,6 +226,7 @@ def sanitize_fission_spectrum_block(fisblock):
     """Create a beautiful fission spectrum block from legacy one."""
     NFIS = fisblock.NFIS
     new_fisblock = OrderedDict()
+    new_fisblock['type'] = 'legacy-fission-spectrum'
     new_fisblock['ENFIS'] = fisblock.ENFIS[1:(NFIS+1)] 
     new_fisblock['FIS'] = fisblock.FIS[1:(NFIS+1)]
     return new_fisblock
