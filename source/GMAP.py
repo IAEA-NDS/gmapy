@@ -10,7 +10,7 @@ from output_management import ( write_prior_info, write_iteration_info,
         create_gauss_structure)
 
 from database_reading import read_gma_database
-from data_management import init_gauss
+from data_management import init_gauss, init_labels
 from data_extraction_functions import (extract_covariance_matrix,
         extract_prior_table, extract_experimental_table, extract_DCS_values,
         update_effDCS_values)
@@ -40,10 +40,11 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     APR = db_dic['APR']
     datablock_list = db_dic['datablock_list']
-    LABL = db_dic['LABL']
     MPPP = db_dic['MPPP']
     IPP = db_dic['IPP']
     MODAP = db_dic['MODAP']
+
+    LABL = init_labels()
 
     compmap = CompoundMap()
 

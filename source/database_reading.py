@@ -157,7 +157,6 @@ def read_gma_database(dbfile, format_dic={}):
             return({
                 'APR': APR,
                 'datablock_list': datablock_list,
-                'LABL': LABL,
                 'MPPP': MPPP,
                 'IPP': IPP,
                 'MODAP': MODAP
