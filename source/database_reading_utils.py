@@ -1,6 +1,7 @@
 from generic_utils import unflatten, Bunch
 from fortran_utils import fort_range, fort_read, fort_write
-from data_management import init_datablock, init_gauss, SIZE_LIMITS
+from data_management import (init_datablock, init_gauss, init_fisdata,
+        SIZE_LIMITS)
 from gmap_snippets import (should_downweight, get_AX, get_prior_range,
                            get_dataset_range, get_dataset_id_from_idx)
 
@@ -65,16 +66,7 @@ def read_fission_spectrum(MC1, file_IO3):
     #
     #
 
-    #   Fission Data block / data set
-    #
-    #      ENFIS   ENERGIES OF FISSION SPECTRUM
-    #      FIS     FISSION SPECTRUM*BINWIDTH
-    #
-    data = Bunch({
-        'FIS': np.zeros(250+1, dtype=float),
-        'ENFIS': np.zeros(250+1, dtype=float),
-        'NFIS': 0
-        })
+    data = init_fisdata()
 
     if MC1 == 0:
         raise ValueError('Reading of Maxwellian spectrum currently not supported ' +

@@ -222,6 +222,26 @@ def desanitize_datablock(datablock):
 
 
 
+def sanitize_fission_spectrum_block(fisblock):
+    NFIS = fisblock.NFIS
+    new_fisblock = OrderedDict()
+    new_fisblock['ENFIS'] = fisblock.ENFIS[1:(NFIS+1)] 
+    new_fisblock['FIS'] = fisblock.FIS[1:(NFIS+1)]
+    return new_fisblock
+
+
+
+def desanitize_fission_spectrum_bock(fisblock):
+    if len(fisblock['ENFIS']) != len(fisblock['EN']):
+        raise IndexError('FIS and ENFIS in fisblock must be of same length')
+
+
+
+
+
+
+
+
 def augment_datablocks_with_NTOT(datablock_list):
     NTOT = 0
     for datablock in datablock_list:

@@ -61,6 +61,22 @@ def init_labels():
     return LABL
 
 
+#   Fission Data block
+#
+#      ENFIS   ENERGIES OF FISSION SPECTRUM
+#      FIS     FISSION SPECTRUM*BINWIDTH
+#      NFIS    NUMBER OF POINTS IN FISSION SPECTRUM
+#
+
+def init_fisdata():
+    fisdata = Bunch({
+        'FIS': np.zeros(250+1, dtype=float),
+        'ENFIS': np.zeros(250+1, dtype=float),
+        'NFIS': 0
+        })
+    return(fisdata)
+
+
 #   Parameters/apriori
 #
 #      EN    ENERGY GRID
@@ -82,7 +98,7 @@ def init_prior():
         'NC': 0,
         'NSHP': 0,
         'NSETN': np.zeros(200+1, dtype=int),
-        'fisdata': {}
+        'fisdata': init_fisdata()
         })
     return APR
 
