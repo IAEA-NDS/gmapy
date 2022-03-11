@@ -5,12 +5,12 @@ from inference import (link_prior_and_datablocks, update_prior_estimates,
 
 from inference_new import new_gls_update
 
-from output_management import ( write_prior_info, write_iteration_info,
+from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
         create_gauss_structure)
 
 from database_reading import read_gma_database
-from data_management import init_gauss, init_labels
+from data_management import init_labels
 from data_extraction_functions import (extract_covariance_matrix,
         extract_prior_table, extract_experimental_table, extract_DCS_values,
         update_effDCS_values)
