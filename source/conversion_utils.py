@@ -223,6 +223,7 @@ def desanitize_datablock(datablock):
 
 
 def sanitize_fission_spectrum_block(fisblock):
+    """Create a beautiful fission spectrum block from legacy one."""
     NFIS = fisblock.NFIS
     new_fisblock = OrderedDict()
     new_fisblock['ENFIS'] = fisblock.ENFIS[1:(NFIS+1)] 
@@ -232,6 +233,7 @@ def sanitize_fission_spectrum_block(fisblock):
 
 
 def desanitize_fission_spectrum_block(fisblock):
+    """Create legacy fission spectrum data from new block structure."""
     if len(fisblock['ENFIS']) != len(fisblock['FIS']):
         raise IndexError('FIS and ENFIS in fisblock must be of same length')
     fisdata = init_fisdata()
