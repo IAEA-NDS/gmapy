@@ -1,8 +1,9 @@
 import json
 from collections import OrderedDict
 import numpy as np
-from gmap_snippets import get_dataset_range
-from data_management import init_datablock, init_fisdata
+from gmap_snippets import get_dataset_range, get_prior_range
+from data_management import init_datablock, init_fisdata, init_prior
+from generic_utils import Bunch
 
 
 
@@ -265,7 +266,13 @@ def compare_legacy_datablock_lists(list1, list2):
             val2 = dbblock2.__dict__[key]
 
             is_equal = False
-            if isinstance(val1, np.ndarray):
+            if type(val1) == Bunch:
+                if not type(val1) == type(val2):
+                    raise ValueError('Value mismatch for ' + str(key) +
+                            '(%s vs %s)'%(type(val1),type(val2)))
+                is_equal = compare_legacy_datablock_lists([val1], [val2])
+
+            elif isinstance(val1, np.ndarray):
                 if len(val1) != len(val2):
                     raise IndexError('Length mismatch')
                 elif val1.dtype.type in (np.string_, np.object_):
@@ -285,4 +292,7 @@ def compare_legacy_datablock_lists(list1, list2):
             if not is_equal:
                 print(key + ' differs')
                 import pdb; pdb.set_trace()
+                break
+
+    return is_equal
 
