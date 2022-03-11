@@ -21,7 +21,7 @@ from mappings.compound_map import CompoundMap
 
 from conversion_utils import (sanitize_datablock, desanitize_datablock,
         augment_datablocks_with_NTOT, sanitize_fission_spectrum_block,
-        desanitize_fission_spectrum_block)
+        desanitize_fission_spectrum_block, sanitize_prior, desanitize_prior)
 
 
 
@@ -58,6 +58,11 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     # one-to-one mapping of the Fortran GMAP fission spectrum block
     # by converting from Fortran to Python block style and back
     APR.fisdata = desanitize_fission_spectrum_block(sanitize_fission_spectrum_block(APR.fisdata))
+
+    # Check to see if new JSON style prior is really
+    # one-to-one mapping of the Fortran GMAP prior
+    # by converting from Fortran to Python prior style and back
+    APR = desanitize_prior(sanitize_prior(APR))
 
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
