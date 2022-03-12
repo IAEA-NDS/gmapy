@@ -1,4 +1,5 @@
 import numpy as np
+import argparse
 
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
@@ -132,5 +133,11 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
 
 if __name__ == '__main__':
-    run_GMA_program()
+    parser = argparse.ArgumentParser(description='Perform generalized least squares analysis')
+    parser.add_argument('--dbfile', help='name of the GMA database file', required=False, default='data.gma')
+    parser.add_argument('--jsondb', help='name of the json database file', required=False, default='')
+    args = parser.parse_args()
+    dbtype = 'json' if args.jsondb != '' else 'legacy'
+    dbfile = args.jsondb if dbtype == 'json' else args.dbfile
+    run_GMA_program(dbfile=dbfile, dbtype=dbtype)
 
