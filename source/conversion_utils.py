@@ -45,15 +45,11 @@ def sanitize_datablock(datablock):
         NNCOX = data.NNCOX[dsidx]
         NCOX = data.NCOX[dsidx]
         ofs = data.IDEN[dsidx, 2]
-        CLABL = data.CLABL[dsidx, 1:5]
-        BREF = data.BREF[dsidx, 1:5]
+        CLABL = ''.join(data.CLABL[dsidx, 1:5])
+        BREF = ''.join(data.BREF[dsidx, 1:5])
 
         YEAR = data.IDEN[dsidx, 3]
         TAG = data.IDEN[dsidx, 4]
-
-        # beautification of CLABL and BREF
-        # CLABL = ''.join(CLABL).strip()
-        # BREF = ''.join(BREF).strip()
 
         # energy dependent uncertainty parameters
         EPAF = data.EPAF[1:4, 1:12, dsidx]
@@ -172,8 +168,10 @@ def desanitize_datablock(datablock):
 
         data.MTTP[ID] = 2 if ds['MT'] in (2,4,8,9) else 1
         data.IDEN[ID,8] = data.MTTP[ID]
-        data.CLABL[ID,1:5] = ds['CLABL']
-        data.BREF[ID,1:5] = ds['BREF']
+        z = ds['CLABL']
+        data.CLABL[ID,1:5] = [z[:8], z[8:16], z[16:24], z[24:32]]
+        z = ds['BREF']
+        data.BREF[ID,1:5] = [z[:8], z[8:16], z[16:24], z[24:32]]
 
         NCCS = 0
         if 'NCSST' in ds:
