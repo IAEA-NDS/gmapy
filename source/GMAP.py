@@ -1,5 +1,6 @@
 import numpy as np
 import argparse
+import json
 
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
@@ -50,26 +51,25 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         MODAP = db_dic['MODAP']
 
     elif dbtype == 'json':
-        raise ValueError('dbtype "json" not yet implemented"')
+        # Hard-coded variables that would be
+        # read from the legacy database format.
+        # As they will not be part of the new database
+        # because they merely represent output options
+        # and parameters for the fitting, they are
+        # hardcoded here.
+        IPP = [None, 1, 1, 1, 0, 0, 1, 0, 1]  # output options
+        MPPP = 1  # activate re-computation of absolute uncertainties (PPP correction)
+        MODAP = 3  # number of iterations of GLS
+        with open(dbfile, 'r') as f:
+            db_dic = json.load(f)
+
+        blocks = db_dic['datablocks']
+        datablock_list = [desanitize_datablock(b) for b in blocks]
+        augment_datablocks_with_NTOT(datablock_list)
+        APR = desanitize_prior(db_dic['prior'])
+
     else:
         raise ValueError('dbtype must be "legacy" or "json"')
-
-    # Check to see if new JSON style datablock are really one-to-one
-    # mappings to the Fortran GMAP datablock by converting from Fortran
-    # datablock to Python datablock format and back
-    datablock_list = [sanitize_datablock(b) for b in datablock_list]
-    datablock_list = [desanitize_datablock(b) for b in datablock_list]
-    augment_datablocks_with_NTOT(datablock_list)
-
-    # Check to see if new JSON style fission spectrum block is really
-    # one-to-one mapping of the Fortran GMAP fission spectrum block
-    # by converting from Fortran to Python block style and back
-    APR.fisdata = desanitize_fission_spectrum_block(sanitize_fission_spectrum_block(APR.fisdata))
-
-    # Check to see if new JSON style prior is really
-    # one-to-one mapping of the Fortran GMAP prior
-    # by converting from Fortran to Python prior style and back
-    APR = desanitize_prior(sanitize_prior(APR))
 
     priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)

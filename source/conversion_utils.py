@@ -214,7 +214,7 @@ def desanitize_datablock(datablock):
         fidx = start_idx + numpts
         data.E[start_idx:fidx] = ds['E']
         data.CSS[start_idx:fidx] = ds['CSS']
-        data.userCO[1:13, start_idx:fidx] = ds['CO'].T
+        data.userCO[1:13, start_idx:fidx] = np.array(ds['CO']).T
         # data.userCO is CO as provided by user
         # and data.CO may be changed due to 
         # Axton special below
