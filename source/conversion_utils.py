@@ -1,9 +1,11 @@
 import json
+import os
 from collections import OrderedDict
 import numpy as np
 from gmap_snippets import get_dataset_range, get_prior_range
 from data_management import init_datablock, init_fisdata, init_prior
 from generic_utils import Bunch
+from database_reading import read_gma_database
 
 
 
@@ -20,6 +22,24 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, (np.ndarray,)):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
+
+
+def convert_GMA_database_to_JSON(dbfile, jsonfile):
+    if not os.path.exists(dbfile):
+        raise FileNotFoundError('The GMA database file %s does not exist'%dbfile)
+    if os.path.exists(jsonfile):
+        raise OSError('The file %s already exists. Aborting'%jsonfile)
+    db_dic = read_gma_database(dbfile)
+    APR = db_dic['APR']
+    datablock_list = db_dic['datablock_list']
+    jsondic = OrderedDict()
+    jsondic['prior'] = sanitize_prior(APR)
+    jsondic['datablocks'] = [sanitize_datablock(b) for b in datablock_list]
+    jsonstr = json.dumps(jsondic, cls=NumpyEncoder, indent=4, allow_nan=False)
+    with open(jsonfile, 'w') as f:
+        f.write(jsonstr)
+    return
 
 
 
