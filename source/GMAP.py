@@ -31,22 +31,27 @@ from conversion_utils import (sanitize_datablock, desanitize_datablock,
 
 
 def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
-        format_dic={}):
+        dbtype='legacy', format_dic={}):
 
     file_IO4 = open(resfile, 'w')
     file_IO5 = open(plotfile, 'w')
 
-    db_dic = read_gma_database(dbfile, format_dic=format_dic)
-
-    APR = db_dic['APR']
-    datablock_list = db_dic['datablock_list']
-    MPPP = db_dic['MPPP']
-    IPP = db_dic['IPP']
-    MODAP = db_dic['MODAP']
-
     LABL = init_labels()
-
     compmap = CompoundMap()
+
+    if dbtype == 'legacy':
+        db_dic = read_gma_database(dbfile, format_dic=format_dic)
+
+        APR = db_dic['APR']
+        datablock_list = db_dic['datablock_list']
+        MPPP = db_dic['MPPP']
+        IPP = db_dic['IPP']
+        MODAP = db_dic['MODAP']
+
+    elif dbtype == 'json':
+        raise ValueError('dbtype "json" not yet implemented"')
+    else:
+        raise ValueError('dbtype must be "legacy" or "json"')
 
     # Check to see if new JSON style datablock are really one-to-one
     # mappings to the Fortran GMAP datablock by converting from Fortran
