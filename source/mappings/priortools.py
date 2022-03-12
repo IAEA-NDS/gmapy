@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import re
 from .compound_map import CompoundMap
+from .helperfuns import SHAPE_MT_IDS
 
 
 
@@ -13,8 +14,10 @@ def attach_shape_prior(priortable, exptable, refvals=None, uncs=None):
         raise ValueError('Please provide uncertainties for weighting')
 
     # obtain all experimental points that are affected by unknown normalization
-    shape_mt_ids = (2,4,8,9)
-    is_shape = exptable['REAC'].str.match('MT:[2489]-')
+    mtnums = exptable['REAC'].str.extract('^ *MT:([0-9]+)-', expand=False)
+    mtnums = mtnums.astype('int')
+    is_shape = mtnums.map(lambda x: True if x in SHAPE_MT_IDS else False).to_numpy()
+
     shape_exp_df = exptable[is_shape]
     exp_groups = shape_exp_df.groupby('NODE', sort=False)
     # augment the prior with the experimental normalization factors
