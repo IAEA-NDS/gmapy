@@ -30,6 +30,9 @@ def sanitize_datablock(datablock):
     num_datapoints = data.num_datapoints
 
     dataset_list = []
+    new_datablock = OrderedDict()
+    new_datablock['type'] = 'legacy-experiment-datablock'
+    new_datablock['datasets'] = dataset_list
 
     for dsidx in range(1, num_datasets+1):
         sidx, fidx = get_dataset_range(dsidx, data)
@@ -87,6 +90,7 @@ def sanitize_datablock(datablock):
         # construct the output object
         dataset = OrderedDict()
         computed = OrderedDict()
+        dataset['type'] = 'legacy-experiment-dataset'
         dataset['NS'] = NS
         dataset['MT'] = MT
         dataset['YEAR'] = YEAR
@@ -126,14 +130,16 @@ def sanitize_datablock(datablock):
 
         dataset_list.append(dataset)
 
-    return dataset_list
+    return new_datablock
 
 
 
 def desanitize_datablock(datablock):
     """Convert sanitized datablock to raw one."""
+    if datablock['type'] != 'legacy-experiment-datablock':
+        raise TypeError('Type must be legacy-experiment-datablock')
+
     data = init_datablock()
-    data.num_datasets = len(datablock)
     data.num_datapoints = 0
     start_idx = 1
     # NOTE: Fortran GMAP allows several choices of MODC
@@ -141,7 +147,9 @@ def desanitize_datablock(datablock):
     # it is hardcoded here
     data.MODC = 3
 
-    for tid, dataset in enumerate(datablock):
+    dataset_list = datablock['datasets']
+    data.num_datasets = len(dataset_list)
+    for tid, dataset in enumerate(dataset_list):
         ID = tid+1
         ds = dataset
         numpts = len(ds['CSS'])
