@@ -5,7 +5,7 @@ import json
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
-from inference_new import new_gls_update
+from inference_new import new_gls_update, create_priortable
 
 from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
@@ -49,6 +49,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         MPPP = db_dic['MPPP']
         IPP = db_dic['IPP']
         MODAP = db_dic['MODAP']
+        priortable = extract_prior_table(APR)
 
     elif dbtype == 'json':
         # Hard-coded variables that would be
@@ -63,15 +64,17 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         with open(dbfile, 'r') as f:
             db_dic = json.load(f)
 
-        blocks = db_dic['datablocks']
-        datablock_list = [desanitize_datablock(b) for b in blocks]
+        new_prior_list = db_dic['prior']
+        new_datablock_list = db_dic['datablocks']
+        priortable = create_priortable(new_prior_list)
+        # convert to legacy quantities
+        datablock_list = [desanitize_datablock(b) for b in new_datablock_list]
         augment_datablocks_with_NTOT(datablock_list)
-        APR = desanitize_prior(db_dic['prior'])
+        APR = desanitize_prior(new_prior_list)
 
     else:
         raise ValueError('dbtype must be "legacy" or "json"')
 
-    priortable = extract_prior_table(APR)
     exptable = extract_experimental_table(datablock_list)
 
     refvals = priortable['PRIOR'].to_numpy()
