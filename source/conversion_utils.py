@@ -6,6 +6,7 @@ from gmap_snippets import get_dataset_range, get_prior_range
 from data_management import init_datablock, init_fisdata, init_prior
 from generic_utils import Bunch
 from database_reading import read_gma_database
+from mappings.helperfuns import SHAPE_MT_IDS
 
 
 
@@ -186,7 +187,7 @@ def desanitize_datablock(datablock):
         data.IDEN[ID,6] = ds['NS']
         data.IDEN[ID,7] = ds['MT']
 
-        data.MTTP[ID] = 2 if ds['MT'] in (2,4,8,9) else 1
+        data.MTTP[ID] = 2 if ds['MT'] in SHAPE_MT_IDS else 1
         data.IDEN[ID,8] = data.MTTP[ID]
         z = ds['CLABL']
         data.CLABL[ID,1:5] = [z[:8], z[8:16], z[16:24], z[24:32]]
