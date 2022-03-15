@@ -5,7 +5,7 @@ import json
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
-from inference_new import new_gls_update, create_priortable
+from inference_new import new_gls_update, create_priortable, compute_DCS_vector
 
 from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
@@ -98,7 +98,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         update_dummy_datapoints(exptable, propvals)
 
         uncs = extract_DCS_values(datablock_list)
-        effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
+        newuncs = compute_DCS_vector(new_datablock_list)
+        if not np.all(np.isclose(uncs, newuncs, atol=0, rtol=1e-14)):
+            raise ValueError('new calculation of DCS differs from Fortran one')
+        effuncs = calculate_PPP_correction(priortable, exptable, refvals, newuncs)
         update_effDCS_values(datablock_list, effuncs)
 
         expcovmat = extract_covariance_matrix(datablock_list)
