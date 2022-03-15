@@ -4,6 +4,7 @@ from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 
 from mappings.compound_map import CompoundMap
+from mappings.helperfuns import SHAPE_MT_IDS
 from collections import OrderedDict
 
 
@@ -58,6 +59,32 @@ def create_priortable(prior_list):
 
     df = pd.concat(df)
     return df
+
+
+
+def compute_DCS_vector(datablock_list):
+    DCS_list = []
+    for datablock in datablock_list:
+        dataset_list = datablock['datasets']
+        for dataset in dataset_list:
+            XNORU = 0.
+            if dataset['MT'] not in SHAPE_MT_IDS:
+                # calculate total normalization uncertainty squared
+                XNORU = np.sum(np.square(dataset['ENFF']))
+
+            effCO = np.array(dataset['CO'])
+            # Axton special: downweight if NNCOX flag set
+            if dataset['NNCOX'] != 0:
+                effCO /= 10
+
+            # calculate total uncertainty
+            # NOTE: The last element of effCO is ignored!
+            RELU = np.sum(np.square(effCO[:,2:11]), axis=1)
+            curDCS = np.sqrt(XNORU + RELU)
+            DCS_list.append(curDCS)
+
+    DCS = np.concatenate(DCS_list)
+    return DCS
 
 
 
