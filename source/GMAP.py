@@ -49,7 +49,10 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         MPPP = db_dic['MPPP']
         IPP = db_dic['IPP']
         MODAP = db_dic['MODAP']
+        # calculate new structures
+        new_datablock_list = [sanitize_datablock(b) for b in datablock_list]
         priortable = extract_prior_table(APR)
+        exptable = extract_experimental_table(datablock_list)
 
     elif dbtype == 'json':
         # Hard-coded variables that would be
