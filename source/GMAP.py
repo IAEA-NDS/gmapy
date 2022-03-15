@@ -97,11 +97,8 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         propvals = compmap.propagate(priortable, exptable, refvals)
         update_dummy_datapoints(exptable, propvals)
 
-        uncs = extract_DCS_values(datablock_list)
-        newuncs = compute_DCS_vector(new_datablock_list)
-        if not np.all(np.isclose(uncs, newuncs, atol=0, rtol=1e-14)):
-            raise ValueError('new calculation of DCS differs from Fortran one')
-        effuncs = calculate_PPP_correction(priortable, exptable, refvals, newuncs)
+        uncs = compute_DCS_vector(new_datablock_list)
+        effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
         update_effDCS_values(datablock_list, effuncs)
 
         expcovmat = extract_covariance_matrix(datablock_list)
