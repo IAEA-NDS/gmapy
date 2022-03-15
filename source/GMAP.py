@@ -5,7 +5,8 @@ import json
 from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
-from inference_new import new_gls_update, create_priortable, compute_DCS_vector
+from inference_new import (new_gls_update, create_priortable,
+        compute_DCS_vector, create_experiment_table)
 
 from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
@@ -70,6 +71,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         new_prior_list = db_dic['prior']
         new_datablock_list = db_dic['datablocks']
         priortable = create_priortable(new_prior_list)
+        exptable = create_experiment_table(new_datablock_list)
         # convert to legacy quantities
         datablock_list = [desanitize_datablock(b) for b in new_datablock_list]
         augment_datablocks_with_NTOT(datablock_list)
@@ -77,8 +79,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     else:
         raise ValueError('dbtype must be "legacy" or "json"')
-
-    exptable = extract_experimental_table(datablock_list)
 
     refvals = priortable['PRIOR'].to_numpy()
     uncvals = extract_DCS_values(datablock_list)
