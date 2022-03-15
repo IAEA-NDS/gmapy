@@ -62,6 +62,31 @@ def create_priortable(prior_list):
 
 
 
+def create_experiment_table(datablock_list):
+    """Extract experiment dataframe from datablock list."""
+    df_list = []
+    for dbidx, db in enumerate(datablock_list):
+        if db['type'] != 'legacy-experiment-datablock':
+            raise ValueError('Datablock must be of type "legacy-experiment-datablock"')
+        for dsidx, ds in enumerate(db['datasets']):
+            curdf = pd.DataFrame.from_dict({
+                'NODE': 'exp_' + str(ds['NS']),
+                'REAC': 'MT:' + str(ds['MT']) +
+                        ''.join(['-R%d:%d'%(i+1,r) for i,r in enumerate(ds['NT'])]),
+                'ENERGY': ds['E'],
+                'DATA': ds['CSS'],
+                'DB_IDX': dbidx,
+                'DS_IDX': dsidx
+            })
+            df_list.append(curdf)
+
+    expdf = pd.concat(df_list, ignore_index=True)
+    cols = ['NODE', 'REAC', 'ENERGY', 'DATA', 'DB_IDX', 'DS_IDX']
+    expdf = expdf.reindex(columns = cols)
+    return expdf
+
+
+
 def compute_DCS_vector(datablock_list):
     DCS_list = []
     for datablock in datablock_list:
