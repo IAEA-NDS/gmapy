@@ -59,10 +59,10 @@ fi
 
 # generate Python result
 mkdir -p result/python
-cp input/data.gma result/python/
+cp input/gmadata.json result/python/
 cd result/python/
 PYTHONPATH="$GMAP_python_dir"
-python $GMAP_python_exe
+python $GMAP_python_exe --jsondb gmadata.json
 
 # compare the results
 cd "$basedir"
