@@ -53,7 +53,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # calculate new structures
         new_datablock_list = [sanitize_datablock(b) for b in datablock_list]
         priortable = extract_prior_table(APR)
-        exptable = extract_experimental_table(datablock_list)
+        exptable = create_experiment_table(new_datablock_list)
 
     elif dbtype == 'json':
         # Hard-coded variables that would be
@@ -109,6 +109,8 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # covariance matrix calculation
         for db_idx in exptable['DS_IDX'].unique():
             ds_idcs = exptable[exptable['DB_IDX']==db_idx]['DS_IDX'].unique()
+            if 'ECOR' in new_datablock_list[db_idx]:
+                continue
             for ds_idx in ds_idcs:
                 sel = np.logical_and(exptable['DB_IDX'] == db_idx, exptable['DS_IDX'] == ds_idx)
                 varvec = effuncs.copy()
@@ -119,11 +121,9 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
                 refcov = expcovmat[np.ix_(sel,sel)]
                 testcov = testcor * sclmat
                 if not np.all(np.isclose(refcov.todense(), testcov, atol=0, rtol=1e-14)):
-                    if ds['NCOX'] == 0:
                         print(ds['NS'])
                         raise ValueError('mismatch of covmat for dataset %d' % ds['NS'])
-                if ds['NCOX'] == 0:
-                    expcovmat[np.ix_(sel,sel)] = testcov
+                expcovmat[np.ix_(sel,sel)] = testcov
 
         upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']

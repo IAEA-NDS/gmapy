@@ -98,6 +98,11 @@ def sanitize_datablock(datablock):
         CO = data.userCO[1:13, sidx:(fidx+1)]
 
         if NCOX != 0:
+            if dsidx != num_datasets:
+                raise ValueError('NCOX must be zero except for the last dataset')
+            if NCOX != num_datapoints:
+                raise IndexError('dimension of correlation matrix does not ' +
+                        'match number of datapoints')
             # correlation matrix 
             ECOR = data.userECOR[1:(NCOX+1), 1:(NCOX+1)]
 
@@ -114,7 +119,6 @@ def sanitize_datablock(datablock):
         dataset['TAG'] = TAG
         computed['NCT'] = NCT
         dataset['NT'] = NT
-        dataset['NCOX'] = NCOX
         dataset['NNCOX'] = NNCOX
         computed['ofs'] = ofs
         dataset['CLABL'] = CLABL
@@ -139,7 +143,7 @@ def sanitize_datablock(datablock):
         dataset['CO'] = CO.T
 
         if NCOX != 0:
-            dataset['ECOR'] = ECOR
+            new_datablock['ECOR'] = ECOR
 
         computed['DCS'] = DCS
 
@@ -164,6 +168,13 @@ def desanitize_datablock(datablock):
     # it is hardcoded here
     data.MODC = 3
 
+    gNCOX = 0
+    if 'ECOR' in datablock:
+        Ecor = np.array(datablock['ECOR'])
+        if Ecor.shape[0] != Ecor.shape[1]:
+            raise IndexError('Ecor is not square matrix')
+        gNCOX = Ecor.shape[0]
+
     dataset_list = datablock['datasets']
     data.num_datasets = len(dataset_list)
     for tid, dataset in enumerate(dataset_list):
@@ -177,7 +188,7 @@ def desanitize_datablock(datablock):
 
         data.NCT[ID] = len(ds['NT'])
         data.NT[ID,1:(data.NCT[ID]+1)] = ds['NT']
-        NCOX = ds['NCOX']
+        NCOX = gNCOX if tid == data.num_datasets-1 else 0
         data.NCOX[ID] = NCOX
         data.NNCOX[ID] = ds['NNCOX']
         data.IDEN[ID,2] = start_idx
@@ -224,7 +235,7 @@ def desanitize_datablock(datablock):
         data.IDEN[ID,1] = numpts
 
         if NCOX != 0:
-            data.userECOR[1:(NCOX+1),1:(NCOX+1)] = ds['ECOR']
+            data.userECOR[1:(NCOX+1),1:(NCOX+1)] = Ecor
 
         XNORU = 0.
         if data.MTTP[ID] != 2:
