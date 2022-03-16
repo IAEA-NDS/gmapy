@@ -6,7 +6,7 @@ from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
 from inference_new import (new_gls_update, create_priortable,
-        compute_DCS_vector, create_experiment_table)
+        compute_DCS_vector, create_experiment_table, create_dataset_cormat)
 
 from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
@@ -105,6 +105,25 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         update_effDCS_values(datablock_list, effuncs)
 
         expcovmat = extract_covariance_matrix(datablock_list)
+
+        # covariance matrix calculation
+        for db_idx in exptable['DS_IDX'].unique():
+            ds_idcs = exptable[exptable['DB_IDX']==db_idx]['DS_IDX'].unique()
+            for ds_idx in ds_idcs:
+                sel = np.logical_and(exptable['DB_IDX'] == db_idx, exptable['DS_IDX'] == ds_idx)
+                varvec = effuncs.copy()
+                varvec = varvec * 0.01 * exptable['DATA'].to_numpy()
+                ds = new_datablock_list[db_idx]['datasets'][ds_idx]
+                testcor = create_dataset_cormat(ds, uncs[sel])
+                sclmat = np.outer(varvec[sel], varvec[sel])
+                refcov = expcovmat[np.ix_(sel,sel)]
+                testcov = testcor * sclmat
+                if not np.all(np.isclose(refcov.todense(), testcov, atol=0, rtol=1e-14)):
+                    if ds['NCOX'] == 0:
+                        print(ds['NS'])
+                        raise ValueError('mismatch of covmat for dataset %d' % ds['NS'])
+                if ds['NCOX'] == 0:
+                    expcovmat[np.ix_(sel,sel)] = testcov
 
         upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
