@@ -113,6 +113,52 @@ def compute_DCS_vector(datablock_list):
 
 
 
+def create_dataset_cormat(dataset, uncs):
+    """Create correlation matrix of dataset."""
+    numpts = len(dataset['CSS'])
+    if len(uncs) != numpts:
+        raise IndexError('length of uncs must equal length of datapoints')
+    # some abbreviations
+    MT = dataset['MT']
+    EPAF = np.array(dataset['EPAF'])
+    E = np.array(dataset['E'])
+    CO = np.array(dataset['CO'])
+    ENFF = np.array(dataset['ENFF']) if 'ENFF' in dataset else None
+    NNCOX = dataset['NNCOX']
+    # ad-hoc downscaling of CO if NNCOX flat set
+    if NNCOX != 0:
+        CO /= 10
+    # construct correlation matrix for dataset
+    cormat = np.zeros((numpts, numpts), dtype=float)
+    for KS in range(numpts):
+        C1 = uncs[KS]
+        for KT in range(KS):
+            Q1 = 0.
+            C2 = uncs[KT]
+            for L in range(2,11):
+                if dataset['NETG'][L] not in (0,9):
+                    FKS = EPAF[0,L] + EPAF[1,L]
+                    XYY = EPAF[1,L] - (E[KS]-E[KT])/(EPAF[2,L]*E[KS])
+                    XYY = max(XYY, 0.)
+                    FKT = EPAF[0,L] + XYY
+                    Q1 += CO[KS,L]*CO[KT,L]*FKS*FKT
+
+            XNORU = 0.
+            if MT not in SHAPE_MT_IDS:
+                XNORU = np.sum(np.square(ENFF))
+
+            CERR = (Q1 + XNORU) / (C1*C2)
+            CERR = min(CERR, 0.99)
+
+            cormat[KS, KT] = CERR
+            cormat[KT, KS] = CERR
+
+        cormat[KS, KS] = 1.
+
+    return cormat
+
+
+
 def new_gls_update(priortable, exptable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
