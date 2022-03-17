@@ -107,7 +107,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         expcovmat = extract_covariance_matrix(datablock_list)
 
         # covariance matrix calculation
-        for db_idx in exptable['DS_IDX'].unique():
+        for db_idx in exptable['DB_IDX'].unique():
             ds_idcs = exptable[exptable['DB_IDX']==db_idx]['DS_IDX'].unique()
             if 'ECOR' in new_datablock_list[db_idx]:
                 continue
