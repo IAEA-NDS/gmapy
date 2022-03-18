@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
+from scipy.sparse import block_diag, csr_matrix
 
 from mappings.compound_map import CompoundMap
 from mappings.helperfuns import SHAPE_MT_IDS
@@ -358,6 +359,34 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
     if shouldfix:
         cormat = fix_cormat(cormat)
     return cormat
+
+
+
+def create_experimental_covmat(datablock_list, css, uncs, effuncs=None):
+    """Calculate experimental covariance matrix."""
+    if effuncs is None:
+        effuncs = uncs.copy()
+    absuncvec = effuncs.copy()
+    absuncvec *= 0.01 * css
+    covmat_list = []
+    start_idx = 0
+    for db in datablock_list:
+        numpts = 0
+        for ds in db['datasets']:
+            numpts += len(ds['CSS'])
+        next_idx = start_idx + numpts
+        curuncs = uncs[start_idx:next_idx]
+        cureffuncs = effuncs[start_idx:next_idx]
+        curabsuncs = absuncvec[start_idx:next_idx]
+        sclmat = np.outer(curabsuncs, curabsuncs)
+        curcormat = create_datablock_cormat(db,
+                uncs[start_idx:next_idx], effuncs[start_idx:next_idx])
+        curcovmat = curcormat * sclmat
+        covmat_list.append(csr_matrix(curcovmat))
+        start_idx = next_idx
+
+    covmat = block_diag(covmat_list, format='csr')
+    return covmat
 
 
 
