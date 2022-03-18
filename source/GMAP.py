@@ -105,47 +105,8 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
         update_effDCS_values(datablock_list, effuncs)
 
-        expcovmat = extract_covariance_matrix(datablock_list)
-
-        # covariance matrix calculation
-        for db_idx in exptable['DB_IDX'].unique():
-            ds_idcs = exptable[exptable['DB_IDX']==db_idx]['DS_IDX'].unique()
-            if 'ECOR' in new_datablock_list[db_idx]:
-                continue
-            for ds_idx in ds_idcs:
-                sel = np.logical_and(exptable['DB_IDX'] == db_idx, exptable['DS_IDX'] == ds_idx)
-                varvec = effuncs.copy()
-                varvec = varvec * 0.01 * exptable['DATA'].to_numpy()
-                ds = new_datablock_list[db_idx]['datasets'][ds_idx]
-                testcor = create_dataset_cormat(ds, uncs[sel])
-                sclmat = np.outer(varvec[sel], varvec[sel])
-                refcov = expcovmat[np.ix_(sel,sel)]
-                testcov = testcor * sclmat
-                if not np.all(np.isclose(refcov.todense(), testcov, atol=0, rtol=1e-14)):
-                        print(ds['NS'])
-                        raise ValueError('mismatch of covmat for dataset %d' % ds['NS'])
-                expcovmat[np.ix_(sel,sel)] = testcov
-
-        # check the function to calculate the datablock correlation matrix
-        for db_idx in exptable['DB_IDX'].unique():
-            curdb = new_datablock_list[db_idx]
-            sel = exptable['DB_IDX'] == db_idx
-            varvec = effuncs.copy()
-            varvec = varvec * 0.01 * exptable['DATA'].to_numpy()
-            refcov = expcovmat[np.ix_(sel, sel)]
-            testcor = create_datablock_cormat(curdb, uncs[sel], effuncs[sel])
-            sclmat = np.outer(varvec[sel], varvec[sel])
-            testcov = testcor * sclmat
-            if not np.all(np.isclose(refcov.todense(), testcov, atol=0, rtol=1e-14)):
-                raise ValueError('mismatch of covmat for datablock %d' % db_idx)
-
-        # start using the new function to compute
-        # the full experimental covariance matrix
         expdata = exptable['DATA'].to_numpy()
-        newexpcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
-        if not np.all(np.isclose(expcovmat.todense(), newexpcovmat.todense())):
-            raise ValueError('mismatch of covmat calculated new and old style')
-        expcovmat = newexpcovmat
+        expcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
 
         upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
