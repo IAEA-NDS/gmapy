@@ -23,7 +23,7 @@ from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
 from mappings.compound_map import CompoundMap
 
 from conversion_utils import (sanitize_datablock, desanitize_datablock,
-        augment_datablocks_with_NTOT, desanitize_prior)
+        augment_datablocks_with_NTOT, sanitize_prior, desanitize_prior)
 
 
 
@@ -50,8 +50,9 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         IPP = db_dic['IPP']
         MODAP = db_dic['MODAP']
         # calculate new structures
+        new_prior_list = sanitize_prior(APR)
         new_datablock_list = [sanitize_datablock(b) for b in datablock_list]
-        priortable = extract_prior_table(APR)
+        priortable = create_priortable(new_prior_list)
         exptable = create_experiment_table(new_datablock_list)
 
     elif dbtype == 'json':
