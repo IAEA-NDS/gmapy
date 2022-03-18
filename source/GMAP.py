@@ -6,7 +6,8 @@ from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
 from inference_new import (new_gls_update, create_priortable,
-        compute_DCS_vector, create_experiment_table, create_dataset_cormat)
+        compute_DCS_vector, create_experiment_table, create_dataset_cormat,
+        create_datablock_cormat, create_experimental_covmat)
 
 from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
@@ -124,6 +125,27 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
                         print(ds['NS'])
                         raise ValueError('mismatch of covmat for dataset %d' % ds['NS'])
                 expcovmat[np.ix_(sel,sel)] = testcov
+
+        # check the function to calculate the datablock correlation matrix
+        for db_idx in exptable['DB_IDX'].unique():
+            curdb = new_datablock_list[db_idx]
+            sel = exptable['DB_IDX'] == db_idx
+            varvec = effuncs.copy()
+            varvec = varvec * 0.01 * exptable['DATA'].to_numpy()
+            refcov = expcovmat[np.ix_(sel, sel)]
+            testcor = create_datablock_cormat(curdb, uncs[sel], effuncs[sel])
+            sclmat = np.outer(varvec[sel], varvec[sel])
+            testcov = testcor * sclmat
+            if not np.all(np.isclose(refcov.todense(), testcov, atol=0, rtol=1e-14)):
+                raise ValueError('mismatch of covmat for datablock %d' % db_idx)
+
+        # start using the new function to compute
+        # the full experimental covariance matrix
+        expdata = exptable['DATA'].to_numpy()
+        newexpcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
+        if not np.all(np.isclose(expcovmat.todense(), newexpcovmat.todense())):
+            raise ValueError('mismatch of covmat calculated new and old style')
+        expcovmat = newexpcovmat
 
         upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
