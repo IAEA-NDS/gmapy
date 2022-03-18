@@ -113,6 +113,28 @@ def compute_DCS_vector(datablock_list):
 
 
 
+def fix_cormat(cormat):
+    """Fix non positive-definite correlation matrix."""
+    if np.any(cormat.diagonal() != 1):
+        raise ValueError('All diagonal elements of correlation matrix must be one')
+    tries = 0
+    cormat = cormat.copy()
+    while tries < 15:
+        success = True
+        try:
+            np.linalg.cholesky(cormat)
+        except np.linalg.LinAlgError:
+            tries += 1
+            success = False
+            # select all off-diagonal elements
+            sel = np.logical_not(np.eye(cormat.shape[0]))
+            cormat[sel] /= 1.1
+        if success:
+            break
+    return cormat
+
+
+
 def create_dataset_cormat(dataset, uncs):
     """Create correlation matrix of dataset."""
     numpts = len(dataset['CSS'])
