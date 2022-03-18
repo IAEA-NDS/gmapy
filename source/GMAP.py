@@ -83,17 +83,27 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     uncs = compute_DCS_vector(new_datablock_list)
     priortable = attach_shape_prior(priortable, exptable, refvals, uncs)
 
-    link_prior_and_datablocks(APR, datablock_list)
+    # NOTE: The code enclosed by LEGACY is just there
+    #       to create the output as produced by
+    #       Fortran GMAP for the sake of comparison
+    #       with the legacy code. All calculations
+    #       are performed using new routines, which
+    #       do neither rely on legacy data structures
+    #       (e.g., APR) nor legacy functions operating
+    #       on those structures. The results of the
+    #       new routines is introduced appropriately
+    #       in the legacy data structures before
+    #       printing to the file.
 
+    # BEGIN LEGACY
+    link_prior_and_datablocks(APR, datablock_list)
     write_GMA_header(file_IO4)
     write_fission_spectrum(APR.fisdata, file_IO4)
     write_prior_info(APR, IPP, file_IO4)
+    # END LEGACY
 
     MODREP = 0
     while True:
-
-        for datablock in datablock_list:
-            add_compinfo_to_datablock(datablock, APR, MPPP)
 
         refvals = priortable['PRIOR'].to_numpy()
         propvals = compmap.propagate(priortable, exptable, refvals)
@@ -101,8 +111,6 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         uncs = compute_DCS_vector(new_datablock_list)
         effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
-        update_effDCS_values(datablock_list, effuncs)
-
         expdata = exptable['DATA'].to_numpy()
         expcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
 
@@ -115,6 +123,11 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
         red_upd_vals = upd_vals[invfismask]
 
+        # BEGIN LEGACY
+        for datablock in datablock_list:
+            add_compinfo_to_datablock(datablock, APR, MPPP)
+
+        update_effDCS_values(datablock_list, effuncs)
         gauss = create_gauss_structure(APR, datablock_list,
                 red_upd_vals, red_upd_covmat)
 
@@ -122,19 +135,22 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
                 priortable, exptable,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
 
-        priortable['PRIOR'] = upd_vals
-
         if MODAP != 0:
             update_prior_estimates(APR, red_upd_vals)
 
         update_prior_shape_estimates(APR, red_upd_vals)
+        # END LEGACY
+
+        priortable['PRIOR'] = upd_vals
 
         if (MODAP == 0 or MODREP == MODAP):
             break
 
         MODREP=MODREP+1
 
+    # BEGIN LEGACY
     output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
+    # END LEGACY
 
 
 
