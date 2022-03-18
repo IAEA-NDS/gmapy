@@ -6,8 +6,8 @@ from inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
 
 from inference_new import (new_gls_update, create_priortable,
-        compute_DCS_vector, create_experiment_table, create_dataset_cormat,
-        create_datablock_cormat, create_experimental_covmat)
+        compute_DCS_vector, create_experiment_table,
+        create_experimental_covmat)
 
 from output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
@@ -15,8 +15,7 @@ from output_management import (write_prior_info, write_iteration_info,
 
 from database_reading import read_gma_database
 from data_management import init_labels
-from data_extraction_functions import (extract_covariance_matrix,
-        extract_prior_table, extract_experimental_table, extract_DCS_values,
+from data_extraction_functions import (extract_prior_table, extract_DCS_values,
         update_effDCS_values)
 
 from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
@@ -24,8 +23,7 @@ from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
 from mappings.compound_map import CompoundMap
 
 from conversion_utils import (sanitize_datablock, desanitize_datablock,
-        augment_datablocks_with_NTOT, sanitize_fission_spectrum_block,
-        desanitize_fission_spectrum_block, sanitize_prior, desanitize_prior)
+        augment_datablocks_with_NTOT, desanitize_prior)
 
 
 
