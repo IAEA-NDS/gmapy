@@ -31,10 +31,11 @@ from gmapi.mappings.compound_map import CompoundMap
 def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         dbtype='legacy', format_dic={}):
 
+    # BEGIN LEGACY
     file_IO4 = open(resfile, 'w')
     file_IO5 = open(plotfile, 'w')
+    # END LEGACY
 
-    LABL = init_labels()
     compmap = CompoundMap()
 
     if dbtype == 'legacy':
@@ -115,12 +116,13 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
 
+
+        # BEGIN LEGACY
         fismask = priortable['NODE'] == 'fis'
         invfismask = np.logical_not(fismask)
         red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
         red_upd_vals = upd_vals[invfismask]
 
-        # BEGIN LEGACY
         for datablock in datablock_list:
             add_compinfo_to_datablock(datablock, APR, MPPP)
 
@@ -128,6 +130,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         gauss = create_gauss_structure(APR, datablock_list,
                 red_upd_vals, red_upd_covmat)
 
+        LABL = init_labels()
         write_iteration_info(APR, datablock_list, gauss,
                 priortable, exptable,
                 MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
