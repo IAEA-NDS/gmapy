@@ -16,9 +16,8 @@ from gmapi.legacy.data_extraction_functions import update_effDCS_values
 # END LEGACY
 
 from gmapi.inference import new_gls_update
-from gmapi.data_management import (create_prior_table,
-        compute_DCS_vector, create_experiment_table,
-        create_experimental_covmat)
+from gmapi.data_management.tablefuns import (create_prior_table, create_experiment_table)
+from gmapi.data_management.uncfuns import (compute_DCS_vector, create_experimental_covmat)
 from gmapi.mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         calculate_PPP_correction)
 from gmapi.mappings.compound_map import CompoundMap
