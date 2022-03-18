@@ -15,7 +15,7 @@ from gmapi.legacy.data_management import init_labels
 from gmapi.legacy.data_extraction_functions import update_effDCS_values
 # END LEGACY
 
-from gmapi.inference_new import (new_gls_update, create_priortable,
+from gmapi.inference_new import (new_gls_update, create_prior_table,
         compute_DCS_vector, create_experiment_table,
         create_experimental_covmat)
 from gmapi.mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
@@ -48,7 +48,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # calculate new structures
         new_prior_list = sanitize_prior(APR)
         new_datablock_list = [sanitize_datablock(b) for b in datablock_list]
-        priortable = create_priortable(new_prior_list)
+        priortable = create_prior_table(new_prior_list)
         exptable = create_experiment_table(new_datablock_list)
 
     elif dbtype == 'json':
@@ -66,7 +66,7 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         new_prior_list = db_dic['prior']
         new_datablock_list = db_dic['datablocks']
-        priortable = create_priortable(new_prior_list)
+        priortable = create_prior_table(new_prior_list)
         exptable = create_experiment_table(new_datablock_list)
         # convert to legacy quantities
         datablock_list = [desanitize_datablock(b) for b in new_datablock_list]

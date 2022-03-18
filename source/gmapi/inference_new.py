@@ -10,7 +10,7 @@ from .mappings.helperfuns import SHAPE_MT_IDS
 
 
 
-def create_priortable(prior_list):
+def create_prior_table(prior_list):
     curid = 0
     df = []
     for item in prior_list:
