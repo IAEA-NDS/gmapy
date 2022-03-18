@@ -15,7 +15,8 @@ from gmapi.legacy.data_management import init_labels
 from gmapi.legacy.data_extraction_functions import update_effDCS_values
 # END LEGACY
 
-from gmapi.inference_new import (new_gls_update, create_prior_table,
+from gmapi.inference import new_gls_update
+from gmapi.data_management import (create_prior_table,
         compute_DCS_vector, create_experiment_table,
         create_experimental_covmat)
 from gmapi.mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
