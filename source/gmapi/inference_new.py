@@ -3,10 +3,10 @@ import pandas as pd
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 from scipy.sparse import block_diag, csr_matrix
-
-from mappings.compound_map import CompoundMap
-from mappings.helperfuns import SHAPE_MT_IDS
 from collections import OrderedDict
+
+from .mappings.compound_map import CompoundMap
+from .mappings.helperfuns import SHAPE_MT_IDS
 
 
 

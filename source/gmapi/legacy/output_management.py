@@ -1,13 +1,15 @@
-from fortran_utils import fort_range, fort_write
-from gmap_snippets import (should_downweight, get_AX, get_dataset_range,
-        get_num_shapedatasets)
-from data_management import SIZE_LIMITS, init_gauss
-from linpack_utils import pack_symmetric_matrix
-from data_extraction_functions import (extract_measurements,
-        extract_effDCS_values)
 import numpy as np
 import copy
-from mappings.compound_map import CompoundMap
+
+from ..mappings.compound_map import CompoundMap
+
+from .fortran_utils import fort_range, fort_write
+from .gmap_snippets import (should_downweight, get_AX, get_dataset_range,
+        get_num_shapedatasets)
+from .data_management import SIZE_LIMITS, init_gauss
+from .linpack_utils import pack_symmetric_matrix
+from .data_extraction_functions import (extract_measurements,
+        extract_effDCS_values)
 
 
 def write_overflow_message(ID, data, APR, file_IO4):

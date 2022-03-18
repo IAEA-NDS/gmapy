@@ -1,12 +1,12 @@
-from generic_utils import unflatten, Bunch
-from fortran_utils import fort_range, fort_read, fort_write
-from data_management import (init_datablock, init_gauss, init_fisdata,
-        SIZE_LIMITS)
-from gmap_snippets import (should_downweight, get_AX, get_prior_range,
-                           get_dataset_range, get_dataset_id_from_idx)
-
 import numpy as np
 import copy
+
+from .generic_utils import unflatten, Bunch
+from .fortran_utils import fort_range, fort_read, fort_write
+from .data_management import (init_datablock, init_gauss, init_fisdata,
+        SIZE_LIMITS)
+from .gmap_snippets import (should_downweight, get_AX, get_prior_range,
+                           get_dataset_range, get_dataset_id_from_idx)
 
 
 # constants for size limits

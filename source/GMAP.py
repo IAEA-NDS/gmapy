@@ -2,28 +2,25 @@ import numpy as np
 import argparse
 import json
 
-from inference import (link_prior_and_datablocks, update_prior_estimates,
+# BEGIN LEGACY
+from gmapi.legacy.inference import (link_prior_and_datablocks, update_prior_estimates,
         update_prior_shape_estimates, add_compinfo_to_datablock)
-
-from inference_new import (new_gls_update, create_priortable,
-        compute_DCS_vector, create_experiment_table,
-        create_experimental_covmat)
-
-from output_management import (write_prior_info, write_iteration_info,
+from gmapi.legacy.output_management import (write_prior_info, write_iteration_info,
         write_GMA_header, write_fission_spectrum, output_result_correlation_matrix,
         create_gauss_structure)
-
-from database_reading import read_gma_database
-from data_management import init_labels
-from data_extraction_functions import update_effDCS_values
-
-from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
-        calculate_PPP_correction)
-from mappings.compound_map import CompoundMap
-
-from conversion_utils import (sanitize_datablock, desanitize_datablock,
+from gmapi.legacy.conversion_utils import (sanitize_datablock, desanitize_datablock,
         augment_datablocks_with_NTOT, sanitize_prior, desanitize_prior)
+from gmapi.legacy.database_reading import read_gma_database
+from gmapi.legacy.data_management import init_labels
+from gmapi.legacy.data_extraction_functions import update_effDCS_values
+# END LEGACY
 
+from gmapi.inference_new import (new_gls_update, create_priortable,
+        compute_DCS_vector, create_experiment_table,
+        create_experimental_covmat)
+from gmapi.mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
+        calculate_PPP_correction)
+from gmapi.mappings.compound_map import CompoundMap
 
 
 #################################################

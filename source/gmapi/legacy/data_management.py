@@ -1,6 +1,8 @@
-from generic_utils import Bunch
 import numpy as np
 from collections import OrderedDict
+
+from .generic_utils import Bunch
+
 
 
 SIZE_LIMITS = Bunch({

@@ -3,8 +3,8 @@ import pandas as pd
 from scipy.sparse import csr_matrix, block_diag
 from scipy import sparse
 
-from data_management import SIZE_LIMITS
-from gmap_snippets import get_prior_range, get_dataset_range
+from .data_management import SIZE_LIMITS
+from .gmap_snippets import get_prior_range, get_dataset_range
 
 
 def extract_prior_reacs(APR):

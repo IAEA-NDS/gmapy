@@ -1,9 +1,9 @@
-from fortran_utils import fort_range
-from gmap_snippets import get_dataset_range
-from data_management import SIZE_LIMITS, init_gauss
-from gmap_functions import init_shape_prior, construct_Ecor, apply_PPP_correction
-
 import numpy as np
+
+from .fortran_utils import fort_range
+from .gmap_snippets import get_dataset_range
+from .data_management import SIZE_LIMITS, init_gauss
+from .gmap_functions import init_shape_prior, construct_Ecor, apply_PPP_correction
 
 
 

@@ -1,9 +1,9 @@
-from fortran_utils import fort_range, fort_write
-from gmap_snippets import (get_AX, get_prior_range,
+import numpy as np
+
+from .fortran_utils import fort_range, fort_write
+from .gmap_snippets import (get_AX, get_prior_range,
                            get_dataset_range, get_dataset_id_from_idx,
                            is_usable_datapoint)
-
-import numpy as np
 
 
 

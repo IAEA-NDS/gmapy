@@ -2,11 +2,12 @@ import json
 import os
 from collections import OrderedDict
 import numpy as np
-from gmap_snippets import get_dataset_range, get_prior_range
-from data_management import init_datablock, init_fisdata, init_prior
-from generic_utils import Bunch
-from database_reading import read_gma_database
-from mappings.helperfuns import SHAPE_MT_IDS
+
+from .gmap_snippets import get_dataset_range, get_prior_range
+from .data_management import init_datablock, init_fisdata, init_prior
+from .generic_utils import Bunch
+from .database_reading import read_gma_database
+from ..mappings.helperfuns import SHAPE_MT_IDS
 
 
 

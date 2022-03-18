@@ -1,4 +1,4 @@
-from fortran_utils import fort_range
+from .fortran_utils import fort_range
 
 
 class TextfileReader:

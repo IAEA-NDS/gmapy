@@ -1,4 +1,4 @@
-from generic_utils import flatten, static_vars
+from .generic_utils import flatten, static_vars
 from fortranformat import FortranRecordReader, FortranRecordWriter
 
 
