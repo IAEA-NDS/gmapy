@@ -15,8 +15,7 @@ from output_management import (write_prior_info, write_iteration_info,
 
 from database_reading import read_gma_database
 from data_management import init_labels
-from data_extraction_functions import (extract_prior_table, extract_DCS_values,
-        update_effDCS_values)
+from data_extraction_functions import update_effDCS_values
 
 from mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         calculate_PPP_correction)
@@ -81,8 +80,8 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         raise ValueError('dbtype must be "legacy" or "json"')
 
     refvals = priortable['PRIOR'].to_numpy()
-    uncvals = extract_DCS_values(datablock_list)
-    priortable = attach_shape_prior(priortable, exptable, refvals, uncvals)
+    uncs = compute_DCS_vector(new_datablock_list)
+    priortable = attach_shape_prior(priortable, exptable, refvals, uncs)
 
     link_prior_and_datablocks(APR, datablock_list)
 
