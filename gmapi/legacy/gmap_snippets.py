@@ -5,7 +5,9 @@ class TextfileReader:
 
     def __init__(self, filename):
         self.name = filename
-        self.fcont = open(filename, 'r').read().splitlines()
+        fhnd = open(filename, 'r')
+        self.fcont = fhnd.read().splitlines()
+        fhnd.close()
         self.linecnt = 0
 
 
