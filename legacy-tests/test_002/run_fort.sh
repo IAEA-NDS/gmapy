@@ -7,8 +7,8 @@
 basedir=`pwd`
 GMAP_fortran_url="https://github.com/IAEA-NDS/GMAP-Fortran.git"
 GMAP_fortran_commit_id="1dce067fdeb6a0c5d11b799269df011ae136edbd"
-GMAP_python_dir="$basedir/../../source"
-GMAP_python_exe="$GMAP_python_dir/GMAP.py"
+GMAP_python_dir="$basedir/../../"
+GMAP_python_exe="$GMAP_python_dir/examples/example-001-run-gmap.py"
 
 if [ ! -d "GMAP-Fortran" ]; then
     git clone $GMAP_fortran_url
