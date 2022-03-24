@@ -398,7 +398,6 @@ def compare_legacy_datablock_lists(list1, list2):
 
             if not is_equal:
                 print(key + ' differs')
-                import pdb; pdb.set_trace()
                 break
 
     return is_equal
