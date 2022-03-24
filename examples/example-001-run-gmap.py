@@ -9,7 +9,8 @@
 # program from the command line. It can read the
 # experimental data either from a JSON file or
 # a file of the legacy structure used by the
-# Fortran GMAP code.
+# Fortran GMAP code. This script is only a
+# command line interface to the gmapi package.
 #
 # Usage:
 #     python example-001-run-gmap.py --dbfile <DBFILE>
