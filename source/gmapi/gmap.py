@@ -28,7 +28,7 @@ from .mappings.compound_map import CompoundMap
 ##################################################
 
 
-def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
+def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         dbtype='legacy', format_dic={}):
 
     # BEGIN LEGACY
@@ -151,15 +151,4 @@ def run_GMA_program(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     # BEGIN LEGACY
     output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
     # END LEGACY
-
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Perform generalized least squares analysis')
-    parser.add_argument('--dbfile', help='name of the GMA database file', required=False, default='data.gma')
-    parser.add_argument('--jsondb', help='name of the json database file', required=False, default='')
-    args = parser.parse_args()
-    dbtype = 'json' if args.jsondb != '' else 'legacy'
-    dbfile = args.jsondb if dbtype == 'json' else args.dbfile
-    run_GMA_program(dbfile=dbfile, dbtype=dbtype)
 
