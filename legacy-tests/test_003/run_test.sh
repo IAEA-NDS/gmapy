@@ -65,7 +65,10 @@ mkdir -p result/python
 cp input/gmadata.json result/python/
 cd result/python/
 PYTHONPATH="$GMAP_python_dir"
-python $GMAP_python_exe --jsondb gmadata.json
+python -c '
+from gmapi.gmap import run_gmap;
+run_gmap(dbfile="gmadata.json", dbtype="json")
+'
 
 # ignore insignificant small change in python result
 sed -i -e '69344,69344s/0\.7790E-02/0.7789E-02/' gma.res

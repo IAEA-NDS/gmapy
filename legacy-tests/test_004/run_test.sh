@@ -65,7 +65,10 @@ mkdir -p result/python
 cp input/data.gma result/python/
 cd result/python/
 PYTHONPATH="$GMAP_python_dir"
-python $GMAP_python_exe
+python -c '
+from gmapi.gmap import run_gmap;
+run_gmap(dbfile="data.gma", dbtype="legacy")
+'
 
 # ignore insignificant small change in python result
 sed -i -e '69344,69344s/0\.7790E-02/0.7789E-02/' gma.res
