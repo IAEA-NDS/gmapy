@@ -267,7 +267,7 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
                                 FKS = EPAF2[0, pNC2] + XYY
                             C22 = FKS * CO2[KK, pNC2]
                         else:
-                            C22 = ENFF2[pNC2] if ENFF is not None else 0
+                            C22 = ENFF2[pNC2] if ENFF2 is not None else 0
 
                         Q1 += AMUFA*C11*C22
 
