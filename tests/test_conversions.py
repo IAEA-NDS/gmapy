@@ -4,7 +4,8 @@ import pathlib
 from gmapi.legacy.database_reading import read_gma_database
 from gmapi.legacy.conversion_utils import (sanitize_datablock,
         desanitize_datablock, compare_legacy_datablock_lists,
-        augment_datablocks_with_NTOT)
+        augment_datablocks_with_NTOT, sanitize_prior,
+        desanitize_prior)
 
 
 class TestConversions(unittest.TestCase):
@@ -26,6 +27,14 @@ class TestConversions(unittest.TestCase):
         old_blocklist = [desanitize_datablock(b) for b in new_blocklist]
         augment_datablocks_with_NTOT(old_blocklist)
         cmpval = compare_legacy_datablock_lists(blocklist, old_blocklist)
+        self.assertTrue(cmpval)
+
+    def test_prior_conversion(self):
+        dbdic = self._dbdic
+        prior = dbdic['APR']
+        priorlist = sanitize_prior(prior)
+        oldprior = desanitize_prior(priorlist)
+        cmpval = compare_legacy_datablock_lists([oldprior], [prior])
         self.assertTrue(cmpval)
 
 
