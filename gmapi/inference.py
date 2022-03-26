@@ -10,17 +10,20 @@ from .mappings.compound_map import CompoundMap
 def new_gls_update(priortable, exptable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
-    priorvals = priortable['PRIOR'].to_numpy()
+    priorvals = np.full(len(priortable), 0.)
+    priorvals[priortable.index] = priortable['PRIOR']
     refvals = priorvals.copy()
 
-    meas = exptable['DATA'].to_numpy()
+    meas = np.full(len(exptable), 0.)
+    meas[exptable.index] = exptable['DATA']
 
     comp_map = CompoundMap()
     preds = comp_map.propagate(priortable, exptable, refvals)
     S = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
 
     # for the time being mask out the fisdata block
-    isfis = priortable['NODE'] == 'fis'
+    isfis = np.full(len(priortable), False)
+    isfis[priortable.index] = priortable['NODE'] == 'fis'
     not_isfis = np.logical_not(isfis)
     priorvals = priorvals[not_isfis]
     S = S[:,not_isfis].copy()
