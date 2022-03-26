@@ -15,7 +15,7 @@ from .legacy.data_management import init_labels
 from .legacy.data_extraction_functions import update_effDCS_values
 # END LEGACY
 
-from .inference import new_gls_update
+from .inference import gls_update
 from .data_management.tablefuns import (create_prior_table, create_experiment_table)
 from .data_management.uncfuns import (compute_DCS_vector, create_experimental_covmat)
 from .mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
@@ -112,7 +112,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         expdata = exptable['DATA'].to_numpy()
         expcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
 
-        upd_res = new_gls_update(priortable, exptable, expcovmat, retcov=True)
+        upd_res = gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
 

@@ -7,7 +7,7 @@ from .mappings.compound_map import CompoundMap
 
 
 
-def new_gls_update(priortable, exptable, expcovmat, retcov=False):
+def gls_update(priortable, exptable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
     priorvals = np.full(len(priortable), 0.)
