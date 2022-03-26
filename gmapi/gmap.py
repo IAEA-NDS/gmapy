@@ -17,7 +17,7 @@ from .legacy.data_extraction_functions import update_effDCS_values
 
 from .inference import gls_update
 from .data_management.tablefuns import (create_prior_table, create_experiment_table)
-from .data_management.uncfuns import (compute_DCS_vector, create_experimental_covmat)
+from .data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
 from .mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         calculate_PPP_correction)
 from .mappings.compound_map import CompoundMap
@@ -78,7 +78,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         raise ValueError('dbtype must be "legacy" or "json"')
 
     refvals = priortable['PRIOR'].to_numpy()
-    uncs = compute_DCS_vector(new_datablock_list)
+    uncs = create_relunc_vector(new_datablock_list)
     priortable = attach_shape_prior(priortable, exptable, refvals, uncs)
 
     # NOTE: The code enclosed by LEGACY is just there
@@ -107,7 +107,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         propvals = compmap.propagate(priortable, exptable, refvals)
         update_dummy_datapoints(exptable, propvals)
 
-        uncs = compute_DCS_vector(new_datablock_list)
+        uncs = create_relunc_vector(new_datablock_list)
         effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
         expdata = exptable['DATA'].to_numpy()
         expcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)

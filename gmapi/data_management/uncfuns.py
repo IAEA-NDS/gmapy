@@ -6,7 +6,7 @@ from ..mappings.helperfuns import SHAPE_MT_IDS
 
 
 
-def compute_DCS_vector(datablock_list):
+def create_relunc_vector(datablock_list):
     DCS_list = []
     for datablock in datablock_list:
         dataset_list = datablock['datasets']
