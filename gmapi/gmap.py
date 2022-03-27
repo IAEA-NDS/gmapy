@@ -29,11 +29,12 @@ from .mappings.compound_map import CompoundMap
 
 
 def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
-        dbtype='legacy', num_iter=3, correct_ppp=True, format_dic={}):
+        dbtype='legacy', num_iter=3, correct_ppp=True, legacy_output=True, format_dic={}):
 
     # BEGIN LEGACY
-    file_IO4 = open(resfile, 'w')
-    file_IO5 = open(plotfile, 'w')
+    if legacy_output:
+        file_IO4 = open(resfile, 'w')
+        file_IO5 = open(plotfile, 'w')
     # END LEGACY
 
     compmap = CompoundMap()
@@ -96,10 +97,11 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     #       printing to the file.
 
     # BEGIN LEGACY
-    link_prior_and_datablocks(APR, datablock_list)
-    write_GMA_header(file_IO4)
-    write_fission_spectrum(APR.fisdata, file_IO4)
-    write_prior_info(APR, IPP, file_IO4)
+    if legacy_output:
+        link_prior_and_datablocks(APR, datablock_list)
+        write_GMA_header(file_IO4)
+        write_fission_spectrum(APR.fisdata, file_IO4)
+        write_prior_info(APR, IPP, file_IO4)
     # END LEGACY
 
     MODREP = 0
@@ -121,28 +123,29 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         upd_covmat = upd_res['upd_covmat']
 
         # BEGIN LEGACY
-        fismask = priortable['NODE'] == 'fis'
-        invfismask = np.logical_not(fismask)
-        red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
-        red_upd_vals = upd_vals[invfismask]
-        MPPP = 1 if correct_ppp else 0
+        if legacy_output:
+            fismask = priortable['NODE'] == 'fis'
+            invfismask = np.logical_not(fismask)
+            red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
+            red_upd_vals = upd_vals[invfismask]
+            MPPP = 1 if correct_ppp else 0
 
-        for datablock in datablock_list:
-            add_compinfo_to_datablock(datablock, APR, MPPP)
+            for datablock in datablock_list:
+                add_compinfo_to_datablock(datablock, APR, MPPP)
 
-        update_effDCS_values(datablock_list, effuncs)
-        gauss = create_gauss_structure(APR, datablock_list,
-                red_upd_vals, red_upd_covmat)
+            update_effDCS_values(datablock_list, effuncs)
+            gauss = create_gauss_structure(APR, datablock_list,
+                    red_upd_vals, red_upd_covmat)
 
-        LABL = init_labels()
-        write_iteration_info(APR, datablock_list, gauss,
-                priortable, exptable,
-                MODREP, num_iter, MPPP, IPP, LABL, file_IO4, file_IO5)
+            LABL = init_labels()
+            write_iteration_info(APR, datablock_list, gauss,
+                    priortable, exptable,
+                    MODREP, num_iter, MPPP, IPP, LABL, file_IO4, file_IO5)
 
-        if num_iter != 0:
-            update_prior_estimates(APR, red_upd_vals)
+            if num_iter != 0:
+                update_prior_estimates(APR, red_upd_vals)
 
-        update_prior_shape_estimates(APR, red_upd_vals)
+            update_prior_shape_estimates(APR, red_upd_vals)
         # END LEGACY
 
         priortable['PRIOR'] = upd_vals
@@ -153,6 +156,9 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         MODREP=MODREP+1
 
     # BEGIN LEGACY
-    output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
+    if legacy_output:
+        output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
     # END LEGACY
+
+    return upd_res
 
