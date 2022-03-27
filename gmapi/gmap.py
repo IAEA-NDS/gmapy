@@ -29,7 +29,7 @@ from .mappings.compound_map import CompoundMap
 
 
 def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
-        dbtype='legacy', num_iter=3, format_dic={}):
+        dbtype='legacy', num_iter=3, correct_ppp=True, format_dic={}):
 
     # BEGIN LEGACY
     file_IO4 = open(resfile, 'w')
@@ -43,7 +43,9 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         APR = db_dic['APR']
         datablock_list = db_dic['datablock_list']
-        MPPP = db_dic['MPPP']
+        # MPPP flag no longer read from file but
+        # provided as parameter correct_ppp
+        # MPPP = db_dic['MPPP']
         IPP = db_dic['IPP']
         # MODAP no longer read from file but
         # provided as parameter num_iter
@@ -62,7 +64,6 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # and parameters for the fitting, they are
         # hardcoded here.
         IPP = [None, 1, 1, 1, 0, 0, 1, 0, 1]  # output options
-        MPPP = 1  # activate re-computation of absolute uncertainties (PPP correction)
         with open(dbfile, 'r') as f:
             db_dic = json.load(f)
 
@@ -107,9 +108,11 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         refvals = priortable['PRIOR'].to_numpy()
         propvals = compmap.propagate(priortable, exptable, refvals)
         update_dummy_datapoints(exptable, propvals)
-
         uncs = create_relunc_vector(new_datablock_list)
-        effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
+        if correct_ppp:
+            effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
+        else:
+            effuncs = uncs.copy()
         expdata = exptable['DATA'].to_numpy()
         expcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
 
@@ -123,6 +126,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         invfismask = np.logical_not(fismask)
         red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
         red_upd_vals = upd_vals[invfismask]
+        MPPP = 1 if correct_ppp else 0
 
         for datablock in datablock_list:
             add_compinfo_to_datablock(datablock, APR, MPPP)
