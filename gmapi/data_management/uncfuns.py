@@ -280,7 +280,8 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
 
 
 
-def create_experimental_covmat(datablock_list, css, uncs, effuncs=None):
+def create_experimental_covmat(datablock_list, css, uncs,
+        effuncs=None, fix_ppp_bug=True):
     """Calculate experimental covariance matrix."""
     if effuncs is None:
         effuncs = uncs.copy()
@@ -298,7 +299,8 @@ def create_experimental_covmat(datablock_list, css, uncs, effuncs=None):
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
         curcormat = create_datablock_cormat(db,
-                uncs[start_idx:next_idx], effuncs[start_idx:next_idx])
+                uncs = uncs[start_idx:next_idx],
+                effuncs = effuncs[start_idx:next_idx] if not fix_ppp_bug else None)
         curcovmat = curcormat * sclmat
         covmat_list.append(csr_matrix(curcovmat))
         start_idx = next_idx

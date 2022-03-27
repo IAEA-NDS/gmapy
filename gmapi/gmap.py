@@ -28,7 +28,8 @@ from .mappings.compound_map import CompoundMap
 
 
 def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
-        dbtype='legacy', num_iter=3, correct_ppp=True, legacy_output=True, format_dic={}):
+        dbtype='legacy', num_iter=3, correct_ppp=True, legacy_output=True,
+        fix_ppp_bug=True, format_dic={}):
 
     # BEGIN LEGACY
     if legacy_output:
@@ -116,7 +117,8 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         else:
             effuncs = uncs.copy()
         expdata = exptable['DATA'].to_numpy()
-        expcovmat = create_experimental_covmat(new_datablock_list, expdata, uncs, effuncs)
+        expcovmat = create_experimental_covmat(new_datablock_list, expdata,
+                uncs, effuncs, fix_ppp_bug=fix_ppp_bug)
 
         upd_res = gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
