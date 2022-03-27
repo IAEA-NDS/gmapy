@@ -106,6 +106,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     MODREP = 0
     uncs = create_relunc_vector(new_datablock_list)
+    orig_priorvals = priortable['PRIOR'].to_numpy()
     while True:
 
         refvals = priortable['PRIOR'].to_numpy()
@@ -160,5 +161,9 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
     # END LEGACY
 
-    return upd_res
+    priortable['PRIOR'] = orig_priorvals
+    priortable['POST'] = upd_vals
+    priortable['POSTUNC'] = np.sqrt(np.diag(upd_covmat))
+    priortable['RELPOSTUNC'] = priortable['POSTUNC'].to_numpy() / priortable['POST'].to_numpy()
+    return {'table': priortable, 'covmat': upd_covmat}
 
