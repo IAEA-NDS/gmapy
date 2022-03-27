@@ -29,7 +29,7 @@ from .mappings.compound_map import CompoundMap
 
 
 def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
-        dbtype='legacy', format_dic={}):
+        dbtype='legacy', num_iter=3, format_dic={}):
 
     # BEGIN LEGACY
     file_IO4 = open(resfile, 'w')
@@ -45,7 +45,9 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         datablock_list = db_dic['datablock_list']
         MPPP = db_dic['MPPP']
         IPP = db_dic['IPP']
-        MODAP = db_dic['MODAP']
+        # MODAP no longer read from file but
+        # provided as parameter num_iter
+        # MODAP = db_dic['MODAP']
         # calculate new structures
         new_prior_list = sanitize_prior(APR)
         new_datablock_list = [sanitize_datablock(b) for b in datablock_list]
@@ -61,7 +63,6 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # hardcoded here.
         IPP = [None, 1, 1, 1, 0, 0, 1, 0, 1]  # output options
         MPPP = 1  # activate re-computation of absolute uncertainties (PPP correction)
-        MODAP = 3  # number of iterations of GLS
         with open(dbfile, 'r') as f:
             db_dic = json.load(f)
 
@@ -133,9 +134,9 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         LABL = init_labels()
         write_iteration_info(APR, datablock_list, gauss,
                 priortable, exptable,
-                MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5)
+                MODREP, num_iter, MPPP, IPP, LABL, file_IO4, file_IO5)
 
-        if MODAP != 0:
+        if num_iter != 0:
             update_prior_estimates(APR, red_upd_vals)
 
         update_prior_shape_estimates(APR, red_upd_vals)
@@ -143,7 +144,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         priortable['PRIOR'] = upd_vals
 
-        if (MODAP == 0 or MODREP == MODAP):
+        if (num_iter == 0 or MODREP == num_iter):
             break
 
         MODREP=MODREP+1
