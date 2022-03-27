@@ -103,12 +103,12 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     # END LEGACY
 
     MODREP = 0
+    uncs = create_relunc_vector(new_datablock_list)
     while True:
 
         refvals = priortable['PRIOR'].to_numpy()
         propvals = compmap.propagate(priortable, exptable, refvals)
         update_dummy_datapoints(exptable, propvals)
-        uncs = create_relunc_vector(new_datablock_list)
         if correct_ppp:
             effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
         else:
@@ -119,7 +119,6 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         upd_res = gls_update(priortable, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
-
 
         # BEGIN LEGACY
         fismask = priortable['NODE'] == 'fis'
