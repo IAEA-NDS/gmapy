@@ -66,8 +66,10 @@ cp input/data.gma result/python/
 cd result/python/
 PYTHONPATH="$GMAP_python_dir"
 python -c '
+import pandas as pd
 from gmapi.gmap import run_gmap;
-run_gmap(dbfile="data.gma", dbtype="legacy")
+res = run_gmap(dbfile="data.gma", dbtype="legacy")
+res["table"].to_csv("restable.csv", sep=";")
 '
 
 # ignore insignificant small change in python result
