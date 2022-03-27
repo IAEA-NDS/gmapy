@@ -36,7 +36,7 @@ def gls_update(priortable, exptable, expcovmat, retcov=False):
     ext_upd_priorvals = refvals.copy()
     ext_upd_priorvals[not_isfis] = upd_priorvals
 
-    post_covmat = None
+    ext_post_covmat = None
     if retcov is True:
         # following is equivalent to:
         # post_covmat = np.linalg.inv(inv_post_cov.toarray())
