@@ -68,7 +68,8 @@ PYTHONPATH="$GMAP_python_dir"
 python -c '
 import pandas as pd
 from gmapi.gmap import run_gmap;
-res = run_gmap(dbfile="data.gma", dbtype="legacy", fix_ppp_bug=False)
+res = run_gmap(dbfile="data.gma", dbtype="legacy",
+               fix_ppp_bug=False, fix_sacs_jacobian=False)
 res["table"].to_csv("restable.csv", sep=";")
 '
 

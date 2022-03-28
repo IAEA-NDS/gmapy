@@ -71,7 +71,8 @@ class TestLegacyDivergence(unittest.TestCase):
         dbpath = self._dbpath_noppp
         reftable = self._reftable_noppp
         upd_res = run_gmap(dbpath, num_iter=3,
-                correct_ppp=False, legacy_output=False)
+                correct_ppp=False, legacy_output=False,
+                fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
@@ -82,7 +83,8 @@ class TestLegacyDivergence(unittest.TestCase):
         dbpath = self._dbpath
         reftable = self._reftable
         upd_res = run_gmap(dbpath, num_iter=3,
-                correct_ppp=True, legacy_output=False, fix_ppp_bug=False)
+                correct_ppp=True, legacy_output=False,
+                fix_ppp_bug=False, fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
@@ -93,7 +95,8 @@ class TestLegacyDivergence(unittest.TestCase):
         dbpath = self._dbpath
         reftable = self._reftable
         upd_res = run_gmap(dbpath, num_iter=3,
-                correct_ppp=True, legacy_output=False, fix_ppp_bug=True)
+                correct_ppp=True, legacy_output=False,
+                fix_ppp_bug=True, fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
         # just select the cross sections and
@@ -115,7 +118,8 @@ class TestLegacyDivergence(unittest.TestCase):
         dbpath = self._dbpath
         reftable = self._reftable
         upd_res = run_gmap(dbpath, num_iter=3,
-                correct_ppp=False, legacy_output=False, fix_ppp_bug=True)
+                correct_ppp=False, legacy_output=False,
+                fix_ppp_bug=True, fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
         # just select the cross sections and
