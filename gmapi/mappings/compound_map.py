@@ -16,16 +16,18 @@ from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 
 class CompoundMap:
 
-    maplist = [CrossSectionMap(),
-               CrossSectionShapeMap(),
-               CrossSectionRatioMap(),
-               CrossSectionRatioShapeMap(),
-               CrossSectionAbsoluteRatioMap(),
-               CrossSectionShapeOfRatioMap(),
-               CrossSectionTotalMap(),
-               CrossSectionShapeOfSumMap(),
-               CrossSectionFissionAverageMap()]
-
+    def __init__(self, fix_sacs_jacobian=False):
+        self.maplist = [
+                CrossSectionMap(),
+                CrossSectionShapeMap(),
+                CrossSectionRatioMap(),
+                CrossSectionRatioShapeMap(),
+                CrossSectionAbsoluteRatioMap(),
+                CrossSectionShapeOfRatioMap(),
+                CrossSectionTotalMap(),
+                CrossSectionShapeOfSumMap(),
+                CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian)
+            ]
 
     def is_responsible(self, exptable):
         resp = np.full(len(exptable.index), False, dtype=bool)
