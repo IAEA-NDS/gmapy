@@ -1,5 +1,6 @@
 import unittest
 import pathlib
+import os
 import numpy as np
 import pandas as pd
 
@@ -28,6 +29,10 @@ class TestLegacyDivergence(unittest.TestCase):
                 'refoutput-2017-07-26-disabled-ppp-option.csv').resolve().as_posix()
         reftable_noppp = pd.read_csv(reftablepath_noppp, sep=';')
         reftable = pd.read_csv(reftablepath, sep=';')
+        try:
+            os.mkdir('testoutput')
+        except FileExistsError:
+            pass
         cls._dbpath = dbpath
         cls._reftable = reftable
         cls._dbpath_noppp = dbpath_noppp
@@ -40,7 +45,7 @@ class TestLegacyDivergence(unittest.TestCase):
         del(cls._dbpath_noppp)
         del(cls._reftable_noppp)
 
-    def print_comparison_info(self, msg, reftable, res2, relerr):
+    def print_comparison_info(self, msg, reftable, res2, relerr, fprefix=None):
         print(msg)
         probvals = [0.75, 0.9, 0.95, 0.99, 0.995, 0.999]
         qvals = [np.quantile(relerr, p) for p in probvals]
@@ -51,6 +56,14 @@ class TestLegacyDivergence(unittest.TestCase):
         relerr2 = cmptable['RELERR'] / cmptable['RELPOSTUNC']
         cmptable['RELERR2'] = relerr2
         perm = np.argsort(relerr2)[::-1]
+        if fprefix is not None:
+            fname = fprefix + '.xlsx'
+            fpath = os.path.join('testoutput', fname)
+            fname_sorted = fprefix + '_sorted.xlsx'
+            fpath_sorted = os.path.join('testoutput', fname_sorted)
+            cmptable.to_excel(fpath)
+            sorted_cmptable = cmptable.sort_values(by='RELERR2', ignore_index=True, ascending=False)
+            sorted_cmptable.to_excel(fpath_sorted)
         print(cmptable.iloc[perm[:50]])
         extramsg = '\n'.join([f'p-val: {x[0]} - q-val: {x[1]}' for x in pq])
         print(extramsg)
@@ -107,7 +120,8 @@ class TestLegacyDivergence(unittest.TestCase):
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
         maxrelerr = np.max(relerr)
         titlemsg = '### with ppp correction and ppp bug fixed  ###'
-        self.print_comparison_info(titlemsg, reftable[sel], res2, relerr)
+        self.print_comparison_info(titlemsg, reftable[sel], res2, relerr,
+                fprefix = 'testoutput-comparison-results-ppp-bug-fixed')
         # We expect deviations due to fixing the PPP bug
         # to lead to differences of more than 0.5% but
         # not more than 0.7%
@@ -130,7 +144,8 @@ class TestLegacyDivergence(unittest.TestCase):
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
         maxrelerr = np.max(relerr)
         titlemsg = '### no ppp correction ###'
-        self.print_comparison_info(titlemsg, reftable[sel], res2, relerr)
+        self.print_comparison_info(titlemsg, reftable[sel], res2, relerr,
+                fprefix = 'testoutput-comparison-results-ppp-vs-noppp-correction')
         # We expect deviations to a calculaton with and
         # without PPP treatment to differ by more than
         # 3% but nowhere more than 5%
