@@ -9,7 +9,6 @@ from gmapi.data_management.uncfuns import (create_relunc_vector,
         create_experimental_covmat)
 from gmapi.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapi.mappings.priortools import attach_shape_prior
 from gmapi.gmap import run_gmap
 
 
