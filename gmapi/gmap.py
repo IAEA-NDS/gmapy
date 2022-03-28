@@ -160,6 +160,8 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     # BEGIN LEGACY
     if legacy_output:
         output_result_correlation_matrix(gauss, datablock_list[-1], APR, IPP, file_IO4)
+        file_IO4.close()
+        file_IO5.close()
     # END LEGACY
 
     priortable['PRIOR'] = orig_priorvals
