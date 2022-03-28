@@ -1,10 +1,15 @@
 import numpy as np
-from .basic_maps import propagate_fisavg, get_sensmat_fisavg
+from .basic_maps import (propagate_fisavg, get_sensmat_fisavg,
+        get_sensmat_fisavg_corrected)
 from .helperfuns import return_matrix
 
 
 
 class CrossSectionFissionAverageMap:
+
+    def __init__(self, fix_jacobian=True):
+        self._fix_jacobian = fix_jacobian
+
 
     def is_responsible(self, exptable):
         expmask = exptable['REAC'].str.match('MT:6-R1:')
@@ -66,7 +71,10 @@ class CrossSectionFissionAverageMap:
                 idcs2 = concat([idcs2, idcs2red])
                 propvals = concat([propvals, [curval]])
             elif what == 'jacobian':
-                sensvec = get_sensmat_fisavg(ens1, vals1, ensfis, valsfis)
+                if self._fix_jacobian:
+                    sensvec = get_sensmat_fisavg_corrected(ens1, vals1, ensfis, valsfis)
+                else:
+                    sensvec = get_sensmat_fisavg(ens1, vals1, ensfis, valsfis)
                 idcs1 = concat([idcs1, idcs1red])
                 idcs2 = concat([idcs2, np.full(len(idcs1red), idcs2red, dtype=int)])
                 coeff = concat([coeff, sensvec])
