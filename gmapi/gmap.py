@@ -141,7 +141,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
             LABL = init_labels()
             write_iteration_info(APR, datablock_list, gauss,
-                    priortable, exptable,
+                    priortable, compmap, exptable,
                     MODREP, num_iter, MPPP, IPP, LABL, file_IO4, file_IO5)
 
             if num_iter != 0:

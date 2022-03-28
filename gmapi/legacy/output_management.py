@@ -1,8 +1,6 @@
 import numpy as np
 import copy
 
-from ..mappings.compound_map import CompoundMap
-
 from .fortran_utils import fort_range, fort_write
 from .gmap_snippets import (should_downweight, get_AX, get_dataset_range,
         get_num_shapedatasets)
@@ -496,7 +494,7 @@ def get_matrix_products(gauss, data, curAM):
 
 
 def write_iteration_info(APR, datablock_list, gauss,
-        priortable, exptable,
+        priortable, mapping, exptable,
         MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
     dc = copy.deepcopy
     APR = dc(APR)
@@ -511,8 +509,7 @@ def write_iteration_info(APR, datablock_list, gauss,
     priorvals = priortable['PRIOR'].to_numpy()
     expvals = exptable['DATA'].to_numpy()
     effDCS = extract_effDCS_values(datablock_list)
-    compmap = CompoundMap()
-    propvals = compmap.propagate(priortable, exptable, priorvals)
+    propvals = mapping.propagate(priortable, exptable, priorvals)
     DQQQ = effDCS * expvals * 0.01
     AMvec = (expvals - propvals)/DQQQ
 
