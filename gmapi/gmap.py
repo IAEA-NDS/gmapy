@@ -168,5 +168,6 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     priortable['POST'] = upd_vals
     priortable['POSTUNC'] = np.sqrt(np.diag(upd_covmat))
     priortable['RELPOSTUNC'] = priortable['POSTUNC'].to_numpy() / priortable['POST'].to_numpy()
-    return {'table': priortable, 'covmat': upd_covmat}
+    return {'table': priortable, 'postcov': upd_covmat,
+            'exptable': exptable, 'expcov': expcovmat}
 
