@@ -116,7 +116,7 @@ class TestMappingJacobians(unittest.TestCase):
         res2 = res2[:, :numel]
         relerr = self.get_error(res1, res2)
         msg = f'Maximum relative error in SACS Jacobian is {relerr}'
-        self.assertLess(relerr, 1e-8, msg)
+        self.assertLess(relerr, 1e-7, msg)
 
     def test_cross_section_map(self):
         curmap = CrossSectionMap()
