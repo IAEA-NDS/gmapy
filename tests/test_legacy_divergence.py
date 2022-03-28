@@ -137,6 +137,20 @@ class TestLegacyDivergence(unittest.TestCase):
         self.assertGreater(maxrelerr, 0.03)
         self.assertLess(maxrelerr, 0.05)
 
+    def test_deviation_if_correct_sacs_jacobian(self):
+        dbpath = self._dbpath
+        reftable = self._reftable
+        upd_res = run_gmap(dbpath, num_iter=3,
+                correct_ppp=True, legacy_output=False,
+                fix_ppp_bug=False, fix_sacs_jacobian=True)
+        res1 = reftable['POST'].to_numpy()
+        res2 = upd_res['table']['POST'].to_numpy()
+        relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
+        maxrelerr = np.max(relerr)
+        #self.print_comparison_info(titlemsg, reftable[sel], res2, relerr)
+        self.assertGreater(maxrelerr, 1e-5)
+        self.assertLess(maxrelerr, 1e-4)
+
 
 if __name__ == '__main__':
     unittest.main()
