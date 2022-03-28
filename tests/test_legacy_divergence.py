@@ -23,13 +23,24 @@ class TestLegacyDivergence(unittest.TestCase):
         reftablepath = (pathlib.Path(__file__).parent / 'testdata' /
                 'refoutput-2017-07-26.csv').resolve().as_posix()
         reftable = pd.read_csv(reftablepath, sep=';')
+
+        dbpath_noppp = (pathlib.Path(__file__).parent / 'testdata' /
+                'data-2017-07-26-disabled-ppp-option.gma').resolve().as_posix()
+        reftablepath_noppp = (pathlib.Path(__file__).parent / 'testdata' /
+                'refoutput-2017-07-26-disabled-ppp-option.csv').resolve().as_posix()
+        reftable_noppp = pd.read_csv(reftablepath_noppp, sep=';')
+        reftable = pd.read_csv(reftablepath, sep=';')
         cls._dbpath = dbpath
         cls._reftable = reftable
+        cls._dbpath_noppp = dbpath_noppp
+        cls._reftable_noppp = reftable_noppp
 
     @classmethod
     def tearDownClass(cls):
         del(cls._dbpath)
         del(cls._reftable)
+        del(cls._dbpath_noppp)
+        del(cls._reftable_noppp)
 
     def print_comparison_info(self, msg, reftable, res2, relerr):
         print(msg)
@@ -45,6 +56,17 @@ class TestLegacyDivergence(unittest.TestCase):
         print(cmptable.iloc[perm[:50]])
         extramsg = '\n'.join([f'p-val: {x[0]} - q-val: {x[1]}' for x in pq])
         print(extramsg)
+
+    def test_equivalence_if_ppp_option_disabled(self):
+        dbpath = self._dbpath_noppp
+        reftable = self._reftable_noppp
+        upd_res = run_gmap(dbpath, num_iter=3,
+                correct_ppp=False, legacy_output=False)
+        res1 = reftable['POST'].to_numpy()
+        res2 = upd_res['table']['POST'].to_numpy()
+        relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
+        maxrelerr = np.max(relerr)
+        self.assertLess(maxrelerr, 1e-8)
 
     def test_equivalence_if_ppp_bug_not_fixed(self):
         dbpath = self._dbpath
