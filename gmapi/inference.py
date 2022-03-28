@@ -3,8 +3,6 @@ import pandas as pd
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 
-from .mappings.compound_map import CompoundMap
-
 
 
 def gls_update(priortable, mapping, exptable, expcovmat, retcov=False):
