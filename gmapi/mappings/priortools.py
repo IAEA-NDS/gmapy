@@ -6,7 +6,7 @@ from .helperfuns import SHAPE_MT_IDS
 
 
 
-def attach_shape_prior(priortable, exptable, refvals=None, uncs=None):
+def attach_shape_prior(priortable, mapping, exptable, refvals=None, uncs=None):
     """Attach experimental normalization constants to prior."""
     if refvals is None:
         raise ValueError('Please provide reference values for propagation')
@@ -34,8 +34,7 @@ def attach_shape_prior(priortable, exptable, refvals=None, uncs=None):
 
     # calculate a first estimate of normalization factor
     # using the propagated prior values
-    compmap = CompoundMap()
-    propvals = compmap.propagate(ext_priortable, exptable, ext_refvals)
+    propvals = mapping.propagate(ext_priortable, exptable, ext_refvals)
     for cur_exp, cur_exp_df in exp_groups:
         cur_propvals = propvals[cur_exp_df.index]
         cur_uncs = uncs[cur_exp_df.index]

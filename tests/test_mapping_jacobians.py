@@ -79,7 +79,8 @@ class TestMappingJacobians(unittest.TestCase):
         exptable = create_experiment_table(datablocklist)
         refvals = priortable['PRIOR']
         uncs = create_relunc_vector(datablocklist)
-        priortable = attach_shape_prior(priortable, exptable,
+        compmap = CompoundMap()
+        priortable = attach_shape_prior(priortable, compmap, exptable,
                 refvals, uncs)
         cls._priortable = priortable
         cls._exptable = exptable

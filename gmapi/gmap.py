@@ -82,7 +82,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     refvals = priortable['PRIOR'].to_numpy()
     uncs = create_relunc_vector(new_datablock_list)
-    priortable = attach_shape_prior(priortable, exptable, refvals, uncs)
+    priortable = attach_shape_prior(priortable, compmap, exptable, refvals, uncs)
 
     # NOTE: The code enclosed by LEGACY is just there
     #       to create the output as produced by
