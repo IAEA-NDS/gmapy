@@ -10,7 +10,6 @@ from gmapi.data_management.uncfuns import (create_relunc_vector,
 from gmapi.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
 from gmapi.mappings.priortools import attach_shape_prior
-from gmapi.inference import iterative_gls_update
 from gmapi.gmap import run_gmap
 
 
