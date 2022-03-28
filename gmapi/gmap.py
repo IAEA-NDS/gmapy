@@ -106,7 +106,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     MODREP = 0
     uncs = create_relunc_vector(new_datablock_list)
-    orig_priorvals = priortable['PRIOR'].to_numpy()
+    orig_priorvals = priortable['PRIOR'].to_numpy().copy()
     while True:
 
         refvals = priortable['PRIOR'].to_numpy()
