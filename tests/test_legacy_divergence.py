@@ -57,6 +57,18 @@ class TestLegacyDivergence(unittest.TestCase):
         extramsg = '\n'.join([f'p-val: {x[0]} - q-val: {x[1]}' for x in pq])
         print(extramsg)
 
+    def test_ppp_fix_irrelevant_if_ppp_option_disabled(self):
+        dbpath = self._dbpath
+        upd_res1 = run_gmap(dbpath, num_iter=3, fix_ppp_bug=False,
+                  correct_ppp=False, legacy_output=False)
+        upd_res2 = run_gmap(dbpath, num_iter=3, fix_ppp_bug=True,
+                  correct_ppp=False, legacy_output=False)
+        res1 = upd_res1['table']['POST'].to_numpy()
+        res2 = upd_res2['table']['POST'].to_numpy()
+        relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
+        maxrelerr = np.max(relerr)
+        self.assertLess(maxrelerr, 1e-8)
+
     def test_equivalence_if_ppp_option_disabled(self):
         dbpath = self._dbpath_noppp
         reftable = self._reftable_noppp
