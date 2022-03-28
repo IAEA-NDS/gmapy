@@ -7,7 +7,7 @@ from .mappings.compound_map import CompoundMap
 
 
 
-def gls_update(priortable, exptable, expcovmat, retcov=False):
+def gls_update(priortable, mapping, exptable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
     priorvals = np.full(len(priortable), 0.)
@@ -17,9 +17,8 @@ def gls_update(priortable, exptable, expcovmat, retcov=False):
     meas = np.full(len(exptable), 0.)
     meas[exptable.index] = exptable['DATA']
 
-    comp_map = CompoundMap()
-    preds = comp_map.propagate(priortable, exptable, refvals)
-    S = comp_map.jacobian(priortable, exptable, refvals, ret_mat=True)
+    preds = mapping.propagate(priortable, exptable, refvals)
+    S = mapping.jacobian(priortable, exptable, refvals, ret_mat=True)
 
     # for the time being mask out the fisdata block
     isfis = np.full(len(priortable), False)

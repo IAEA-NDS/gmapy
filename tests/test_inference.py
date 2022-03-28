@@ -69,6 +69,7 @@ class TestInference(unittest.TestCase):
         self.assertTrue(np.all(S1.todense() == S2.todense()))
 
     def test_inference_permutation_invariance(self):
+        compmap = CompoundMap()
         priortable = self._priortable
         exptable = self._exptable
         datablocklist = self._datablocklist
@@ -80,8 +81,8 @@ class TestInference(unittest.TestCase):
         perm2 = np.random.permutation(len(exptable))
         perm_priortable = priortable.loc[perm1].copy()
         perm_exptable = exptable.loc[perm2].copy()
-        upd_res1 = gls_update(priortable, exptable, expcovmat, retcov=True)
-        upd_res2 = gls_update(perm_priortable, perm_exptable,
+        upd_res1 = gls_update(priortable, compmap, exptable, expcovmat, retcov=True)
+        upd_res2 = gls_update(perm_priortable, compmap, perm_exptable,
                                   expcovmat, retcov=True)
         upd_vals_same = np.all(upd_res1['upd_vals'] == upd_res2['upd_vals'])
         upd_covmat_same = np.all(upd_res1['upd_covmat'] == upd_res2['upd_covmat'])

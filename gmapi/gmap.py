@@ -120,7 +120,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         expcovmat = create_experimental_covmat(new_datablock_list, expdata,
                 uncs, effuncs, fix_ppp_bug=fix_ppp_bug)
 
-        upd_res = gls_update(priortable, exptable, expcovmat, retcov=True)
+        upd_res = gls_update(priortable, compmap, exptable, expcovmat, retcov=True)
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
 
