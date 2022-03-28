@@ -113,7 +113,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         propvals = compmap.propagate(priortable, exptable, refvals)
         update_dummy_datapoints(exptable, propvals)
         if correct_ppp:
-            effuncs = calculate_PPP_correction(priortable, exptable, refvals, uncs)
+            effuncs = calculate_PPP_correction(priortable, compmap, exptable, refvals, uncs)
         else:
             effuncs = uncs.copy()
         expdata = exptable['DATA'].to_numpy()

@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import re
-from .compound_map import CompoundMap
 from .helperfuns import SHAPE_MT_IDS
 
 
@@ -61,16 +60,15 @@ def update_dummy_datapoints(exptable, refvals):
 
 
 
-def calculate_PPP_correction(priortable, exptable, refvals, uncs):
+def calculate_PPP_correction(priortable, mapping, exptable, refvals, uncs):
     """Calculate the PPP corrected uncertainties."""
-    compmap = CompoundMap()
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # in order to reproduce PPP correction philosophy of Fortran GMAP
     selidx = priortable[priortable['NODE'].str.match('norm_')].index
     refvals[selidx] = 1.
     # calculate PPP correction
-    propvals = compmap.propagate(priortable, exptable, refvals)
+    propvals = mapping.propagate(priortable, exptable, refvals)
     effuncs = uncs * propvals / exptable['DATA'].to_numpy()
     # but no PPP correction for fission averages
     is_sacs = exptable['REAC'].str.match('MT:6-')
