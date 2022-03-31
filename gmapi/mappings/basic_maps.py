@@ -210,5 +210,6 @@ def get_sensmat_fisavg_corrected(ens, vals, ensfis, valsfis):
         print('fission normalization: ' + str(fl))
         raise ValueError('fission spectrum not normalized')
 
+    sensvec[ord] = sensvec.copy()
     return sensvec
 
