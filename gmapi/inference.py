@@ -26,7 +26,7 @@ def gls_update(priortable, mapping, exptable, expcovmat, retcov=False):
     S = S[:,not_isfis].copy()
 
     # perform the update
-    inv_post_cov = S.T @ spsolve(expcovmat, S)
+    inv_post_cov = S.T @ spsolve(expcovmat.tocsc(), S.tocsc())
     upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(expcovmat, meas-preds)))
 
     # introduce the unmodified fission spectrum in the posterior
