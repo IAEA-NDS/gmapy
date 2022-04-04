@@ -36,10 +36,10 @@ class TestMappingJacobians(unittest.TestCase):
         x1 = sgn1 * np.maximum(np.abs(res1), absthres)
         x2 = sgn2 * np.maximum(np.abs(res2), absthres)
         reldiff = (np.max(np.abs(x1-x2) /
-            np.maximum(np.abs(x1), np.abs(x2)))) 
+            np.maximum(np.abs(x1), np.abs(x2))))
         return reldiff
 
-    def create_propagate_wrapper(self, curmap, priortable, exptable):  
+    def create_propagate_wrapper(self, curmap, priortable, exptable):
         """Create propagate wrapper with refvals arg being first."""
         def wrapfun(vals):
             return curmap.propagate(priortable, exptable, vals)
@@ -56,7 +56,7 @@ class TestMappingJacobians(unittest.TestCase):
 
     def get_jacobian_testerror(self, curmap):
         priortable, exptable = self.reduce_tables(curmap, self._priortable,
-                                                  self._exptable) 
+                                                  self._exptable)
         propfun = self.create_propagate_wrapper(curmap, priortable, exptable)
         np.random.seed(15)
         x = np.random.uniform(1, 5, len(priortable))
@@ -72,7 +72,7 @@ class TestMappingJacobians(unittest.TestCase):
         cls._dbpath = (pathlib.Path(__file__).parent / 'testdata' /
                 'data-2017-08-14.gma').resolve().as_posix()
         dbdic = read_gma_database(cls._dbpath)
-        priorlist = sanitize_prior(dbdic['APR']) 
+        priorlist = sanitize_prior(dbdic['APR'])
         datablocklist = [sanitize_datablock(b)
                 for b in dbdic['datablock_list']]
         priortable = create_prior_table(priorlist)
@@ -92,15 +92,15 @@ class TestMappingJacobians(unittest.TestCase):
         del(cls._exptable)
         del(cls._datablocklist)
 
-    def test_cross_section_absolute_ratio_map(self): 
+    def test_cross_section_absolute_ratio_map(self):
         curmap = CrossSectionAbsoluteRatioMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
-    def test_cross_section_fission_average_map(self): 
-        curmap = CrossSectionFissionAverageMap() 
+    def test_cross_section_fission_average_map(self):
+        curmap = CrossSectionFissionAverageMap()
         priortable, exptable = self.reduce_tables(curmap, self._priortable,
-                                                  self._exptable) 
+                                                  self._exptable)
         fistable = self._priortable.copy()
         fistable = fistable[fistable['NODE']=='fis']
         priortable = pd.concat([priortable, fistable], ignore_index=True)
@@ -121,37 +121,37 @@ class TestMappingJacobians(unittest.TestCase):
 
     def test_cross_section_map(self):
         curmap = CrossSectionMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_ratio_map(self):
         curmap = CrossSectionRatioMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_ratio_shape_map(self):
         curmap = CrossSectionRatioShapeMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_shape_map(self):
         curmap = CrossSectionShapeMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_shape_of_ratio_map(self):
         curmap = CrossSectionShapeOfRatioMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_shape_of_sum_map(self):
         curmap = CrossSectionShapeOfSumMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_total_map(self):
         curmap = CrossSectionTotalMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap) 
+        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
 
