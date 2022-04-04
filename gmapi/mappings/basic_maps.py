@@ -129,8 +129,33 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     i = myord[np.concatenate(i)]
     j = np.concatenate(j)
     c = np.concatenate(c)
+    # we sort these arrays according to j to ensure
+    # that the coefficients in one row of the sensitivity
+    # matrix are consecutive elements in the array c.
+    # We have two coefficients per row irrespective of
+    # the interpolation law.
+    # The function basic_multiply_Sdic_rows relies on
+    # this assumption.
+    perm = np.argsort(j)
+    i = i[perm]
+    j = j[perm]
+    c = c[perm]
+
     return return_matrix(i, j, c, dims=(len(xout), len(x)),
                          how='csr' if ret_mat else 'dic')
+
+
+
+def basic_multiply_Sdic_rows(Sdic, rowfacts):
+    """Multiply each row with a multiplication factor.
+
+    Multiply each row of a sensitivity matrix returned
+    by get_basic_sensmat function as a dictionary with a
+    multiplication factor. The dictionary Sdic is changed
+    in place.
+    """
+    Sdic['x'][::2] *= rowfacts
+    Sdic['x'][1::2] *= rowfacts
 
 
 
