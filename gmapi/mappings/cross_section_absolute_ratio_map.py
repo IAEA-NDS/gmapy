@@ -1,5 +1,6 @@
 import numpy as np
-from .basic_maps import get_sensmat_exact, propagate_exact
+from .basic_maps import (basic_propagate, get_basic_sensmat,
+        basic_multiply_Sdic_rows)
 from .helperfuns import return_matrix
 
 
@@ -71,22 +72,32 @@ class CrossSectionAbsoluteRatioMap:
             tar_en = exptable_red['ENERGY']
             # calculate the sensitivity matrix
             # d(a/(b+c)) = 1/(b+c)*da - a/(b+c)^2*db - a/(b+c)^2*dc
-            propvals1 = propagate_exact(src_en1, src_vals1, tar_en)
-            propvals2 = propagate_exact(src_en2, src_vals2, tar_en)
-            propvals3 = propagate_exact(src_en3, src_vals3, tar_en)
+            propvals1 = basic_propagate(src_en1, src_vals1, tar_en)
+            propvals2 = basic_propagate(src_en2, src_vals2, tar_en)
+            propvals3 = basic_propagate(src_en3, src_vals3, tar_en)
 
             if what == 'jacobian':
-                Sdic1 = get_sensmat_exact(src_en1, tar_en, src_idcs1, tar_idcs)
-                Sdic2 = get_sensmat_exact(src_en2, tar_en, src_idcs2, tar_idcs) 
-                Sdic3 = get_sensmat_exact(src_en3, tar_en, src_idcs3, tar_idcs) 
-                Sdic1['x'] = 1 / (propvals2+propvals3)
-                Sdic2['x'] = (-propvals1 / np.square(propvals2+propvals3))
-                Sdic3['x'] = (-propvals1 / np.square(propvals2+propvals3))
+                Sdic1 = get_basic_sensmat(src_en1, src_vals1, tar_en, ret_mat=False)
+                Sdic1['idcs1'] = src_idcs1[Sdic1['idcs1']]
+                Sdic1['idcs2'] = tar_idcs[Sdic1['idcs2']]
+
+                Sdic2 = get_basic_sensmat(src_en2, src_vals2, tar_en, ret_mat=False)
+                Sdic2['idcs1'] = src_idcs2[Sdic2['idcs1']]
+                Sdic2['idcs2'] = tar_idcs[Sdic2['idcs2']]
+
+                Sdic3 = get_basic_sensmat(src_en3, src_vals3, tar_en, ret_mat=False)
+                Sdic3['idcs1'] = src_idcs3[Sdic3['idcs1']]
+                Sdic3['idcs2'] = tar_idcs[Sdic3['idcs2']]
+
+                basic_multiply_Sdic_rows(Sdic1, 1 / (propvals2+propvals3))
+                tmp = (-propvals1 / np.square(propvals2 + propvals3))
+                basic_multiply_Sdic_rows(Sdic2, tmp)
+                basic_multiply_Sdic_rows(Sdic3, tmp)
 
                 Sdic = {'idcs1': concat([Sdic1['idcs1'], Sdic2['idcs1'], Sdic3['idcs1']]),
                         'idcs2': concat([Sdic1['idcs2'], Sdic2['idcs2'], Sdic3['idcs2']]),
                         'x': concat([Sdic1['x'], Sdic2['x'], Sdic3['x']])}
-                
+
                 idcs1 = concat([idcs1, Sdic['idcs1']])
                 idcs2 = concat([idcs2, Sdic['idcs2']])
                 coeff = concat([coeff, Sdic['x']])
