@@ -1,5 +1,136 @@
 import numpy as np
 from scipy.sparse import csr_matrix
+from .helperfuns import return_matrix
+
+
+
+def basic_propagate(x, y, xout, interp_type='lin-lin'):
+    """Propagate from one mesh to another one."""
+    x = np.array(x)
+    y = np.array(y)
+    xout = np.array(xout)
+    myord = np.argsort(x)
+    x = x[myord]
+    y = y[myord]
+    if isinstance(interp_type, str):
+        interp_type = np.full(len(x), interp_type, dtype='<U7')
+    interp_type = np.array(interp_type)[myord]
+
+    possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+    if not np.all(np.isin(interp_type, possible_interp_types)):
+        ValueError('Unspported interpolation type')
+
+    idcs2 = np.searchsorted(x, xout, side='left')
+    idcs2[xout == x[0]] += 1
+    idcs1 = idcs2 - 1
+    if np.any(idcs2 >= len(x)):
+        raise ValueError('some value in xout larger than largest value in x')
+    if np.any(idcs2 < 1):
+        raise ValueError('some value in xout smaller than smallest value in x')
+
+    x1 = x[idcs1]; x2 = x[idcs2]
+    y1 = y[idcs1]; y2 = y[idcs2]
+    xd = x2 - x1
+    # transformed quantities
+    log_x = np.log(x)
+    log_y = np.log(y)
+    log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
+    log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
+    log_xd = log_x2 - log_x1
+    log_xout = np.log(xout)
+    # results
+    yout = {}
+    yout['lin-lin'] = (y1*(x2-xout) + y2*(xout-x1)) / xd
+    yout['log-lin'] = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+    yout['lin-log'] = np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
+    yout['log-log'] = np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
+    # fill final array
+    final_yout = np.full(len(xout), 0., dtype=float)
+    interp = interp_type[idcs1]
+    for curint in possible_interp_types:
+        cursel = interp == curint
+        final_yout[cursel] = yout[curint][cursel]
+
+    return final_yout
+
+
+
+def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
+    """Compute sensitivity matrix for basic mappings."""
+    x = np.array(x)
+    y = np.array(y)
+    xout = np.array(xout)
+    myord = np.argsort(x)
+    x = x[myord]
+    y = y[myord]
+    if isinstance(interp_type, str):
+        interp_type = np.full(len(x), interp_type, dtype='<U7')
+    interp_type = np.array(interp_type)[myord]
+
+    possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+    if not np.all(np.isin(interp_type, possible_interp_types)):
+        ValueError('Unspported interpolation type')
+
+    idcs2 = np.searchsorted(x, xout, side='left')
+    idcs2[xout == x[0]] += 1
+    idcs1 = idcs2 - 1
+    if np.any(idcs2 >= len(x)):
+        raise ValueError('some value in xout larger than largest value in x')
+    if np.any(idcs2 < 1):
+        raise ValueError('some value in xout smaller than smallest value in x')
+
+    x1 = x[idcs1]; x2 = x[idcs2]
+    y1 = y[idcs1]; y2 = y[idcs2]
+    xd = x2 - x1
+    # transformed quantities
+    log_x = np.log(x)
+    log_y = np.log(y)
+    log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
+    log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
+    log_xd = log_x2 - log_x1
+    log_xout = np.log(xout)
+    # results
+    coeffs1 = {}
+    coeffs2 = {}
+    # yout_linlin = (y1*(x2-xout) + y2*(xout-x1)) / xd
+    coeffs1['lin-lin'] = (x2-xout) / xd
+    coeffs2['lin-lin'] = (xout-x1) / xd
+    # yout_loglin = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+    coeffs1['log-lin'] = (log_x2-log_xout) / log_xd
+    coeffs2['log-lin'] = (log_xout-log_x1) / log_xd
+
+    log_yout_linlog = (log_y1*(x2-xout) + log_y2*(xout-x1)) / xd
+    coeffs1['lin-log'] = np.exp(-log_y1 + np.log((x2-xout)/xd) + log_yout_linlog)
+    coeffs2['lin-log'] = np.exp(-log_y2 + np.log((xout-x1)/xd) + log_yout_linlog)
+
+    log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
+    coeffs1['log-log'] = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
+    coeffs2['log-log'] = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
+
+    # fill final array
+    # i ... column indices
+    # j ... row indices of final sensitivity matrix
+    i = []; j = []; c = []
+    idcs_out = np.arange(len(xout))
+    interp = interp_type[idcs1]
+
+    for curint in possible_interp_types:
+        cursel = interp == curint
+        # coeff1
+        i.append(idcs1[cursel])
+        j.append(idcs_out[cursel])
+        c.append(coeffs1[curint][cursel])
+        # coeff2
+        i.append(idcs2[cursel])
+        j.append(idcs_out[cursel])
+        c.append(coeffs2[curint][cursel])
+
+    # better than model casting: casting datatypes
+    i = myord[np.concatenate(i)]
+    j = np.concatenate(j)
+    c = np.concatenate(c)
+    return return_matrix(i, j, c, dims=(len(xout), len(x)),
+                         how='csr' if ret_mat else 'dic')
 
 
 
