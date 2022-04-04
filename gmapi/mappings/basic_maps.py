@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from scipy.sparse import csr_matrix
 from .helperfuns import return_matrix
@@ -42,8 +43,15 @@ def basic_propagate(x, y, xout, interp_type='lin-lin'):
     yout = {}
     yout['lin-lin'] = (y1*(x2-xout) + y2*(xout-x1)) / xd
     yout['log-lin'] = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
-    yout['lin-log'] = np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
-    yout['log-log'] = np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
+    with warnings.catch_warnings():
+        # We ignore a 'divide by zero in log warning due to y1 or y2
+        # possibly containing non-positive values. As long as they
+        # are not used, everything is fine. We check at the end of
+        # this function explicitly for NaN values caused here.
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        yout['lin-log'] = np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
+        yout['log-log'] = np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
+
     # fill final array
     final_yout = np.full(len(xout), 0., dtype=float)
     interp = interp_type[idcs1]
@@ -51,6 +59,8 @@ def basic_propagate(x, y, xout, interp_type='lin-lin'):
         cursel = interp == curint
         final_yout[cursel] = yout[curint][cursel]
 
+    if np.any(np.isnan(final_yout)):
+        raise ValueError('NaN values encountered in interpolation result')
     return final_yout
 
 
@@ -99,13 +109,21 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     coeffs1['log-lin'] = (log_x2-log_xout) / log_xd
     coeffs2['log-lin'] = (log_xout-log_x1) / log_xd
 
-    log_yout_linlog = (log_y1*(x2-xout) + log_y2*(xout-x1)) / xd
-    coeffs1['lin-log'] = np.exp(-log_y1 + np.log((x2-xout)/xd) + log_yout_linlog)
-    coeffs2['lin-log'] = np.exp(-log_y2 + np.log((xout-x1)/xd) + log_yout_linlog)
+    with warnings.catch_warnings():
+        # We ignore a 'divide by zero in log warning due to y1 or y2
+        # possibly containing non-positive values. As long as they
+        # are not used, everything is fine. We check at the end of
+        # this function explicitly for NaN values in the sensitivity
+        # matrix before it is returned.
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
 
-    log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
-    coeffs1['log-log'] = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
-    coeffs2['log-log'] = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
+        log_yout_linlog = (log_y1*(x2-xout) + log_y2*(xout-x1)) / xd
+        coeffs1['lin-log'] = np.exp(-log_y1 + np.log((x2-xout)/xd) + log_yout_linlog)
+        coeffs2['lin-log'] = np.exp(-log_y2 + np.log((xout-x1)/xd) + log_yout_linlog)
+
+        log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
+        coeffs1['log-log'] = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
+        coeffs2['log-log'] = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
 
     # fill final array
     # i ... column indices
@@ -140,6 +158,9 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     i = i[perm]
     j = j[perm]
     c = c[perm]
+
+    if np.any(np.isnan(c)):
+        raise ValueError('NaN values encountered in Jacobian matrix')
 
     return return_matrix(i, j, c, dims=(len(xout), len(x)),
                          how='csr' if ret_mat else 'dic')
