@@ -1,5 +1,6 @@
 import numpy as np
-from .basic_maps import get_sensmat_exact, propagate_exact
+from .basic_maps import (basic_propagate, get_basic_sensmat,
+        basic_multiply_Sdic_rows)
 from .helperfuns import return_matrix
 
 
@@ -59,22 +60,25 @@ class CrossSectionShapeMap:
                 idcs2red = exptable_ds.index
                 # calculate the sensitivity matrix
                 if what == 'jacobian':
-                    Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
+                    Sdic = get_basic_sensmat(ens1, vals1, ens2, ret_mat=False)
+                    Sdic['idcs1'] = idcs1red[Sdic['idcs1']]
+                    Sdic['idcs2'] = idcs2red[Sdic['idcs2']]
+                    basic_multiply_Sdic_rows(Sdic, norm_fact)
+
                     curcoeff = np.array(Sdic['x']) * norm_fact
                     # add the sensitivity to normalization factor in prior
-                    numel = len(Sdic['idcs2'])
-                    propvals = propagate_exact(ens1, vals1, ens2)
-                    curidcs1 = concat([Sdic['idcs1'], np.full(numel, norm_index)])
-                    curidcs2 = concat([Sdic['idcs2'], Sdic['idcs2']])
-                    if len(curidcs1) != len(curidcs2):
-                        raise ValueError
-                    curcoeff = concat([curcoeff, propvals])
+                    propvals = basic_propagate(ens1, vals1, ens2)
+                    curidcs1 = concat([Sdic['idcs1'], np.full(len(idcs2red), norm_index)])
+                    curidcs2 = concat([Sdic['idcs2'], idcs2red])
+                    curcoeff = concat([Sdic['x'], propvals])
+
                     idcs1 = concat([idcs1, curidcs1])
                     idcs2 = concat([idcs2, curidcs2])
                     coeff = concat([coeff, curcoeff])
+
                 elif what == 'propagate':
                     idcs2 = concat([idcs2, idcs2red])
-                    propvals = propagate_exact(ens1, vals1, ens2)
+                    propvals = basic_propagate(ens1, vals1, ens2)
                     vals = concat([vals, propvals * norm_fact])
                 else:
                     raise ValueError('argument what must be "propagate" or "jacobian"')
