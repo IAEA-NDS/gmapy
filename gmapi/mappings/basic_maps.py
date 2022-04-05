@@ -243,35 +243,30 @@ def romberg_integral_propagate(x, fun, maxord=4):
     # up to a specified order
     funvals = fun(x)
     ftensor_list = []
-    xtensor_list = []
-    funvals_a = funvals[:-1].reshape((len(x)-1, 1))
-    funvals_b = funvals[1:].reshape((len(x)-1, 1))
+    funvals_a = funvals[:-1]
+    funvals_b = funvals[1:]
     xdiffs = np.diff(x).reshape((len(x)-1, 1))
-    curh = xdiffs.copy()
-    for j in range(1, J):
-        curh /= 2.
-        xtensor = (x[:-1].reshape(len(x)-1,1) +
-                curh * np.arange(1, 2**j).reshape((1,2**j-1)))
-        curshape = xtensor.shape
-        xtensor.shape = (np.prod(curshape),)
-        funvals = fun(xtensor)
-        xtensor.shape = curshape
-        funvals.shape = curshape
-        xtensor_list.append(xtensor)
-        ftensor_list.append(funvals)
-
-    # do the Romberg integration simultaneously
-    # for all the intervals defined by x;
-    # in each interval an independent integration
-    # is performed up to order J
-    # link to document with good explanation:
-    # https://www.math.usm.edu/lambers/mat460/fall09/lecture29.pdf
     T_list = []
     curh = xdiffs.copy()
-    curh.shape = (len(curh),)
-    funvals_a.shape = (len(funvals_a),)
-    funvals_b.shape = (len(funvals_b),)
     for j in range(1, J+1):
+
+        if j < J:
+            curh.shape = (len(curh),1)
+            xtensor = (x[:-1].reshape(len(x)-1,1) +
+                    curh/2 * np.arange(1, 2**j).reshape((1,2**j-1)))
+            curshape = xtensor.shape
+            xtensor.shape = (np.prod(curshape),)
+            funvals = fun(xtensor)
+            funvals.shape = curshape
+            ftensor_list.append(funvals)
+
+        curh.shape = (len(curh),)
+        # do the Romberg integration simultaneously
+        # for all the intervals defined by x;
+        # in each interval an independent integration
+        # is performed up to order J
+        # link to document with good explanation:
+        # https://www.math.usm.edu/lambers/mat460/fall09/lecture29.pdf
         T_j1 = curh/2 * (funvals_a + funvals_b)
         if j >= 2:
             T_j1 += curh * np.sum(ftensor_list[j-2], axis=1)
