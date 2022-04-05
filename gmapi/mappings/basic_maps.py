@@ -21,43 +21,62 @@ def basic_propagate(x, y, xout, interp_type='lin-lin'):
     if not np.all(np.isin(interp_type, possible_interp_types)):
         ValueError('Unspported interpolation type')
 
-    idcs2 = np.searchsorted(x, xout, side='left')
-    idcs2[xout == x[0]] += 1
-    idcs1 = idcs2 - 1
-    if np.any(idcs2 >= len(x)):
-        raise ValueError('some value in xout larger than largest value in x')
-    if np.any(idcs2 < 1):
-        raise ValueError('some value in xout smaller than smallest value in x')
-
-    x1 = x[idcs1]; x2 = x[idcs2]
-    y1 = y[idcs1]; y2 = y[idcs2]
-    xd = x2 - x1
-    # transformed quantities
-    log_x = np.log(x)
-    log_y = np.log(y)
-    log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
-    log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
-    log_xd = log_x2 - log_x1
-    log_xout = np.log(xout)
-    # results
-    yout = {}
-    yout['lin-lin'] = (y1*(x2-xout) + y2*(xout-x1)) / xd
-    yout['log-lin'] = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
-    with warnings.catch_warnings():
-        # We ignore a 'divide by zero in log warning due to y1 or y2
-        # possibly containing non-positive values. As long as they
-        # are not used, everything is fine. We check at the end of
-        # this function explicitly for NaN values caused here.
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-        yout['lin-log'] = np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
-        yout['log-log'] = np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
-
-    # fill final array
+    # variable to store the result of this function
     final_yout = np.full(len(xout), 0., dtype=float)
-    interp = interp_type[idcs1]
-    for curint in possible_interp_types:
-        cursel = interp == curint
-        final_yout[cursel] = yout[curint][cursel]
+
+    idcs2 = np.searchsorted(x, xout, side='left')
+    idcs1 = idcs2 - 1
+    # special case: where the values of xout are exactly on
+    # the limits of the mesh in x
+    limit_sel = np.logical_or(xout == x[0], xout == x[-1])
+    not_limit_sel = np.logical_not(limit_sel)
+    edge_idcs = idcs2[limit_sel]
+    idcs1 = idcs1[not_limit_sel]
+    idcs2 = idcs2[not_limit_sel]
+    xout = xout[not_limit_sel]
+
+    # Make sure that we actually have points that
+    # need to be interpolated
+    if len(idcs2) > 0:
+        if np.any(idcs2 >= len(x)):
+            raise ValueError('some value in xout larger than largest value in x')
+        if np.any(idcs2 < 1):
+            raise ValueError('some value in xout smaller than smallest value in x')
+
+        x1 = x[idcs1]; x2 = x[idcs2]
+        y1 = y[idcs1]; y2 = y[idcs2]
+        xd = x2 - x1
+        # transformed quantities
+        log_x = np.log(x)
+        log_y = np.log(y)
+        log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
+        log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
+        log_xd = log_x2 - log_x1
+        log_xout = np.log(xout)
+        # results
+        yout = {}
+        yout['lin-lin'] = (y1*(x2-xout) + y2*(xout-x1)) / xd
+        yout['log-lin'] = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+        with warnings.catch_warnings():
+            # We ignore a 'divide by zero in log warning due to y1 or y2
+            # possibly containing non-positive values. As long as they
+            # are not used, everything is fine. We check at the end of
+            # this function explicitly for NaN values caused here.
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
+            yout['lin-log'] = np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
+            yout['log-log'] = np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
+
+        # fill final array
+        interp = interp_type[idcs1]
+        interp_yout = np.full(idcs1.shape, 0.)
+        for curint in possible_interp_types:
+            cursel = interp == curint
+            interp_yout[cursel] = yout[curint][cursel]
+
+        final_yout[not_limit_sel] = interp_yout
+
+    # add the edge points
+    final_yout[limit_sel] = y[edge_idcs]
 
     if np.any(np.isnan(final_yout)):
         raise ValueError('NaN values encountered in interpolation result')
@@ -73,6 +92,8 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     myord = np.argsort(x)
     x = x[myord]
     y = y[myord]
+    orig_len_x = len(x)
+    orig_len_xout = len(xout)
     if isinstance(interp_type, str):
         interp_type = np.full(len(x), interp_type, dtype='<U7')
     interp_type = np.array(interp_type)[myord]
@@ -82,68 +103,89 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
         ValueError('Unspported interpolation type')
 
     idcs2 = np.searchsorted(x, xout, side='left')
-    idcs2[xout == x[0]] += 1
     idcs1 = idcs2 - 1
-    if np.any(idcs2 >= len(x)):
-        raise ValueError('some value in xout larger than largest value in x')
-    if np.any(idcs2 < 1):
-        raise ValueError('some value in xout smaller than smallest value in x')
+    idcs_out = np.arange(len(xout))
+    # special case: where the values of xout are exactly on
+    # the limits of the mesh in x
+    limit_sel = np.logical_or(xout == x[0], xout == x[-1])
+    not_limit_sel = np.logical_not(limit_sel)
+    edge_idcs = idcs2[limit_sel]
+    edge_idcs_out = idcs_out[limit_sel]
+    idcs2 = idcs2[not_limit_sel]
+    idcs1 = idcs1[not_limit_sel]
+    xout = xout[not_limit_sel]
+    idcs_out = idcs_out[not_limit_sel]
 
-    x1 = x[idcs1]; x2 = x[idcs2]
-    y1 = y[idcs1]; y2 = y[idcs2]
-    xd = x2 - x1
-    # transformed quantities
-    log_x = np.log(x)
-    log_y = np.log(y)
-    log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
-    log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
-    log_xd = log_x2 - log_x1
-    log_xout = np.log(xout)
-    # results
-    coeffs1 = {}
-    coeffs2 = {}
-    # yout_linlin = (y1*(x2-xout) + y2*(xout-x1)) / xd
-    coeffs1['lin-lin'] = (x2-xout) / xd
-    coeffs2['lin-lin'] = (xout-x1) / xd
-    # yout_loglin = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
-    coeffs1['log-lin'] = (log_x2-log_xout) / log_xd
-    coeffs2['log-lin'] = (log_xout-log_x1) / log_xd
-
-    with warnings.catch_warnings():
-        # We ignore a 'divide by zero in log warning due to y1 or y2
-        # possibly containing non-positive values. As long as they
-        # are not used, everything is fine. We check at the end of
-        # this function explicitly for NaN values in the sensitivity
-        # matrix before it is returned.
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-
-        log_yout_linlog = (log_y1*(x2-xout) + log_y2*(xout-x1)) / xd
-        coeffs1['lin-log'] = np.exp(-log_y1 + np.log((x2-xout)/xd) + log_yout_linlog)
-        coeffs2['lin-log'] = np.exp(-log_y2 + np.log((xout-x1)/xd) + log_yout_linlog)
-
-        log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
-        coeffs1['log-log'] = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
-        coeffs2['log-log'] = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
-
-    # fill final array
+    # initialize the index lists and
+    # value list of te final sensitivity matrix
     # i ... column indices
     # j ... row indices of final sensitivity matrix
     i = []; j = []; c = []
-    idcs_out = np.arange(len(xout))
-    interp = interp_type[idcs1]
 
-    for curint in possible_interp_types:
-        cursel = interp == curint
-        # coeff1
-        i.append(idcs1[cursel])
-        j.append(idcs_out[cursel])
-        c.append(coeffs1[curint][cursel])
-        # coeff2
-        i.append(idcs2[cursel])
-        j.append(idcs_out[cursel])
-        c.append(coeffs2[curint][cursel])
+    # Make sure that we actually have points that
+    # need to be interpolated
+    if len(idcs2) > 0:
+        if np.any(idcs2 >= len(x)):
+            raise ValueError('some value in xout larger than largest value in x')
+        if np.any(idcs2 < 1):
+            raise ValueError('some value in xout smaller than smallest value in x')
 
-    # better than model casting: casting datatypes
+        x1 = x[idcs1]; x2 = x[idcs2]
+        y1 = y[idcs1]; y2 = y[idcs2]
+        xd = x2 - x1
+        # transformed quantities
+        log_x = np.log(x)
+        log_y = np.log(y)
+        log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
+        log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
+        log_xd = log_x2 - log_x1
+        log_xout = np.log(xout)
+        # results
+        coeffs1 = {}
+        coeffs2 = {}
+        # yout_linlin = (y1*(x2-xout) + y2*(xout-x1)) / xd
+        coeffs1['lin-lin'] = (x2-xout) / xd
+        coeffs2['lin-lin'] = (xout-x1) / xd
+        # yout_loglin = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+        coeffs1['log-lin'] = (log_x2-log_xout) / log_xd
+        coeffs2['log-lin'] = (log_xout-log_x1) / log_xd
+
+        with warnings.catch_warnings():
+            # We ignore a 'divide by zero in log warning due to y1 or y2
+            # possibly containing non-positive values. As long as they
+            # are not used, everything is fine. We check at the end of
+            # this function explicitly for NaN values in the sensitivity
+            # matrix before it is returned.
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
+
+            log_yout_linlog = (log_y1*(x2-xout) + log_y2*(xout-x1)) / xd
+            coeffs1['lin-log'] = np.exp(-log_y1 + np.log((x2-xout)/xd) + log_yout_linlog)
+            coeffs2['lin-log'] = np.exp(-log_y2 + np.log((xout-x1)/xd) + log_yout_linlog)
+
+            log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
+            coeffs1['log-log'] = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
+            coeffs2['log-log'] = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
+
+        interp = interp_type[idcs1]
+        for curint in possible_interp_types:
+            cursel = interp == curint
+            # coeff1
+            i.append(idcs1[cursel])
+            j.append(idcs_out[cursel])
+            c.append(coeffs1[curint][cursel])
+            # coeff2
+            i.append(idcs2[cursel])
+            j.append(idcs_out[cursel])
+            c.append(coeffs2[curint][cursel])
+
+    # deal with sensitivies for values at the mesh edges
+    i.append(np.concatenate([edge_idcs, edge_idcs]))
+    j.append(np.concatenate([edge_idcs_out, edge_idcs_out]))
+    c.append(np.concatenate([np.full(edge_idcs.shape, 1.),
+                             np.full(edge_idcs.shape, 0.)]))
+
+    # better than model casting:
+    # flatten the list of arrays to a single array
     i = myord[np.concatenate(i)]
     j = np.concatenate(j)
     c = np.concatenate(c)
@@ -162,7 +204,7 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     if np.any(np.isnan(c)):
         raise ValueError('NaN values encountered in Jacobian matrix')
 
-    return return_matrix(i, j, c, dims=(len(xout), len(x)),
+    return return_matrix(i, j, c, dims=(orig_len_xout, orig_len_x),
                          how='csr' if ret_mat else 'dic')
 
 
