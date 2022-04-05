@@ -1,5 +1,6 @@
 import numpy as np
-from .basic_maps import get_sensmat_exact, propagate_exact
+from .basic_maps import (basic_propagate, get_basic_sensmat,
+        basic_multiply_Sdic_rows)
 from .helperfuns import return_matrix
 
 
@@ -61,7 +62,7 @@ class CrossSectionTotalMap:
             for i in range(len(src_idcs_list)):
                 cur_src_en = src_en_list[i]
                 cur_src_vals = src_vals_list[i]
-                curvals += propagate_exact(cur_src_en, cur_src_vals, tar_en)
+                curvals += basic_propagate(cur_src_en, cur_src_vals, tar_en)
 
             if what == 'jacobian':
                 Sdic = {'idcs1': np.empty(0, dtype=int),
@@ -71,8 +72,11 @@ class CrossSectionTotalMap:
                     cur_src_idcs = src_idcs_list[i]
                     cur_src_en = src_en_list[i]
                     cur_src_vals = src_vals_list[i]
-                    curSdic = get_sensmat_exact(cur_src_en, tar_en,
-                                                cur_src_idcs, tar_idcs)
+                    curSdic = get_basic_sensmat(cur_src_en, cur_src_vals,
+                                                tar_en, ret_mat=False)
+                    curSdic['idcs1'] = cur_src_idcs[curSdic['idcs1']]
+                    curSdic['idcs2'] = tar_idcs[curSdic['idcs2']]
+
                     Sdic['idcs1'] = concat([Sdic['idcs1'], curSdic['idcs1']])
                     Sdic['idcs2'] = concat([Sdic['idcs2'], curSdic['idcs2']])
                     Sdic['x'] = concat([Sdic['x'], curSdic['x']])
