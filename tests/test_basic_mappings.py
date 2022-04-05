@@ -137,6 +137,19 @@ class TestBasicMappingsPropagation(unittest.TestCase):
         self.assertTrue(np.all(np.isclose(yout3, yref)))
         self.assertTrue(np.all(np.isclose(yout4, yref)))
 
+    def test_interp_with_single_element_in_x(self):
+        x = [5]
+        y = [10]
+        xout = [5]
+        yout1 = basic_propagate(x, y, xout, 'lin-lin')
+        yout2 = basic_propagate(x, y, xout, 'lin-log')
+        yout3 = basic_propagate(x, y, xout, 'log-lin')
+        yout4 = basic_propagate(x, y, xout, 'log-log')
+        self.assertEqual(yout1, 10)
+        self.assertEqual(yout2, 10)
+        self.assertEqual(yout3, 10)
+        self.assertEqual(yout4, 10)
+
     def test_correct_working_of_basic_multiply_Sdic_rows(self):
         x = np.exp([1, 3, 5, 7, 9, 10])
         y = np.exp([11, 7, 15, 10, 25, 19])
@@ -230,6 +243,17 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         Stest = get_basic_sensmat(x, y, xout, interp_type, ret_mat=True).toarray()
         maxdiff = np.max(np.abs(Sref-Stest)/np.abs(Sref+1e-8))
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
+
+    def test_sensitivity_calculation_with_a_single_element_in_x(self):
+        x = [5]
+        y = [10]
+        xout = [5]
+        possible_interp_types = np.array(['lin-lin', 'lin-log', 'log-lin', 'log-log'])
+        for curint in possible_interp_types:
+            myprop = self.create_propagate_wrapper(x, xout, curint)
+            Sref = numeric_jacobian(myprop, y)
+            Stest = get_basic_sensmat(x, y, xout, curint, ret_mat=True).toarray()
+            self.assertTrue(np.all(np.isclose(Sref, Stest)))
 
 
 if __name__ == '__main__':
