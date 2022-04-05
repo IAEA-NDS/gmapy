@@ -222,6 +222,76 @@ def basic_multiply_Sdic_rows(Sdic, rowfacts):
 
 
 
+def romberg_integral_propagate(x, fun, maxord=4):
+    """Definite integral by Romberg method.
+
+    Romberg integration is performed for each
+    interval defined by the break points in x.
+    The reason is that we deal with piecewise
+    defined functions, and some interpolation
+    law used in-between the mesh points.
+
+    NOTE: The implementation of this function
+          is a bit inefficient because it
+          calculates the same functions values
+          several times. Can be improved at
+          some point in the future.
+    """
+    J = maxord
+    # pre-calculate all function values
+    # required to perform Romberg integration
+    # up to a specified order
+    funvals = fun(x)
+    ftensor_list = []
+    xtensor_list = []
+    funvals_a = funvals[:-1].reshape((len(x)-1, 1))
+    funvals_b = funvals[1:].reshape((len(x)-1, 1))
+    xdiffs = np.diff(x).reshape((len(x)-1, 1))
+    curh = xdiffs.copy()
+    for j in range(1, J):
+        curh /= 2.
+        xtensor = (x[:-1].reshape(len(x)-1,1) +
+                curh * np.arange(1, 2**j).reshape((1,2**j-1)))
+        curshape = xtensor.shape
+        xtensor.shape = (np.prod(curshape),)
+        funvals = fun(xtensor)
+        xtensor.shape = curshape
+        funvals.shape = curshape
+        xtensor_list.append(xtensor)
+        ftensor_list.append(funvals)
+
+    # do the Romberg integration simultaneously
+    # for all the intervals defined by x;
+    # in each interval an independent integration
+    # is performed up to order J
+    # link to document with good explanation:
+    # https://www.math.usm.edu/lambers/mat460/fall09/lecture29.pdf
+    T_list = []
+    curh = xdiffs.copy()
+    curh.shape = (len(curh),)
+    funvals_a.shape = (len(funvals_a),)
+    funvals_b.shape = (len(funvals_b),)
+    for j in range(1, J+1):
+        T_j1 = curh/2 * (funvals_a + funvals_b)
+        if j >= 2:
+            T_j1 += curh * np.sum(ftensor_list[j-2], axis=1)
+        T_list.append([T_j1])
+        # NOTE: this loop is not entered for the case j=1
+        for k in range(2, j+1):
+            T_jk = T_list[j-1][k-2] + 1/(4**(k-1)-1)*(T_list[j-1][k-2] - T_list[j-2][k-3])
+            T_list[j-1].append(T_jk)
+        curh /= 2
+
+    intval1 = np.sum(T_list[J-2][J-2])
+    intval2 = np.sum(T_list[J-1][J-1])
+    # looking at
+    # https://math.stackexchange.com/questions/1291613/romberg-integration-accuracy
+    # I guess this is an overestimate but in the right ballpark
+    est_error = np.sum(intval2-intval1)
+    return intval2
+
+
+
 def propagate_fisavg(ens, vals, ensfis, valsfis):
     ord = np.argsort(ens)
     ens = ens[ord]
