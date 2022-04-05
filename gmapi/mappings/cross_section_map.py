@@ -1,5 +1,5 @@
 import numpy as np
-from .basic_maps import propagate_exact, get_sensmat_exact
+from .basic_maps import basic_propagate, get_basic_sensmat
 from .helperfuns import return_matrix
 
 
@@ -54,13 +54,15 @@ class CrossSectionMap:
             idcs2red = exptable_red.index
 
             if what == 'jacobian':
-                Sdic = get_sensmat_exact(ens1, ens2, idcs1red, idcs2red)
+                Sdic = get_basic_sensmat(ens1, vals1, ens2, ret_mat=False)
+                Sdic['idcs1'] = idcs1red[Sdic['idcs1']]
+                Sdic['idcs2'] = idcs2red[Sdic['idcs2']]
                 idcs1 = concat([idcs1, Sdic['idcs1']])
                 idcs2 = concat([idcs2, Sdic['idcs2']])
                 coeff = concat([coeff, Sdic['x']])
 
             elif what == 'propagate':
-                curvals = propagate_exact(ens1, vals1, ens2)
+                curvals = basic_propagate(ens1, vals1, ens2)
                 idcs2 = concat([idcs2, idcs2red])
                 propvals = concat([propvals, curvals])
 
