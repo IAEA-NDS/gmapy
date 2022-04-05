@@ -1,5 +1,6 @@
 import numpy as np
-from .basic_maps import get_sensmat_exact, propagate_exact
+from .basic_maps import (basic_propagate, get_basic_sensmat,
+        basic_multiply_Sdic_rows)
 from .helperfuns import return_matrix
 
 
@@ -70,14 +71,21 @@ class CrossSectionRatioShapeMap:
                 norm_fact = refvals[norm_index]
                 # calculate the sensitivity matrix for cross section ratio shape
                 # d(c*a/b) = c/b*da - c*a/b^2*db + a/b*dc
-                propvals1 = propagate_exact(src_en1, src_vals1, tar_en)
-                propvals2 = propagate_exact(src_en2, src_vals2, tar_en)
+                propvals1 = basic_propagate(src_en1, src_vals1, tar_en)
+                propvals2 = basic_propagate(src_en2, src_vals2, tar_en)
 
                 if what == 'jacobian':
-                    Sdic1 = get_sensmat_exact(src_en1, tar_en, src_idcs1, tar_idcs)
-                    Sdic2 = get_sensmat_exact(src_en2, tar_en, src_idcs2, tar_idcs) 
-                    Sdic1['x'] = 1 / propvals2 * norm_fact
-                    Sdic2['x'] = (-propvals1 / np.square(propvals2)) * norm_fact
+                    Sdic1 = get_basic_sensmat(src_en1, src_vals1, tar_en, ret_mat=False)
+                    Sdic1['idcs1'] = src_idcs1[Sdic1['idcs1']]
+                    Sdic1['idcs2'] = tar_idcs[Sdic1['idcs2']]
+
+                    Sdic2 = get_basic_sensmat(src_en2, src_vals2, tar_en, ret_mat=False)
+                    Sdic2['idcs1'] = src_idcs2[Sdic2['idcs1']]
+                    Sdic2['idcs2'] = tar_idcs[Sdic2['idcs2']]
+
+                    basic_multiply_Sdic_rows(Sdic1, 1 / propvals2 * norm_fact)
+                    basic_multiply_Sdic_rows(Sdic2, (-propvals1 / np.square(propvals2)) * norm_fact)
+
                     Sdic = {'idcs1': concat([Sdic1['idcs1'], Sdic2['idcs1']]),
                             'idcs2': concat([Sdic1['idcs2'], Sdic2['idcs2']]),
                             'x': concat([Sdic1['x'], Sdic2['x']])}
@@ -87,7 +95,7 @@ class CrossSectionRatioShapeMap:
                     Sdic['idcs1'] = concat([Sdic['idcs1'], src_norm_idcs])
                     Sdic['idcs2'] = concat([Sdic['idcs2'], tar_idcs])
                     Sdic['x'] = concat([Sdic['x'], norm_coeffs])
-                    
+
                     # add everything to global triple list
                     idcs1 = concat([idcs1, Sdic['idcs1']])
                     idcs2 = concat([idcs2, Sdic['idcs2']])
