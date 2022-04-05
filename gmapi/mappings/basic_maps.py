@@ -244,7 +244,7 @@ def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5):
     if rtol <= 0:
         raise ValueError('rtol must be positive')
 
-    x = np.array(x, dtype=float)
+    x = np.sort(np.array(x, dtype=float))
     funvals = fun(x)
     ftensor_list = []
     funvals_a = funvals[:-1]
