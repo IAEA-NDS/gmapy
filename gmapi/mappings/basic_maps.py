@@ -222,7 +222,7 @@ def basic_multiply_Sdic_rows(Sdic, rowfacts):
 
 
 
-def romberg_integral_propagate(x, fun, maxord=4):
+def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5):
     """Definite integral by Romberg method.
 
     Romberg integration is performed for each
@@ -237,10 +237,12 @@ def romberg_integral_propagate(x, fun, maxord=4):
           several times. Can be improved at
           some point in the future.
     """
-    J = maxord
-    # pre-calculate all function values
-    # required to perform Romberg integration
-    # up to a specified order
+    if maxord < 2:
+        raise ValueError('maxord must be at least two')
+    if atol <= 0:
+        raise ValueError('atol must be positive')
+    if rtol <= 0:
+        raise ValueError('rtol must be positive')
     funvals = fun(x)
     ftensor_list = []
     funvals_a = funvals[:-1]
@@ -248,9 +250,18 @@ def romberg_integral_propagate(x, fun, maxord=4):
     xdiffs = np.diff(x).reshape((len(x)-1, 1))
     T_list = []
     curh = xdiffs.copy()
-    for j in range(1, J+1):
+    # do the Romberg integration simultaneously
+    # for all the intervals defined by x;
+    # in each interval an independent integration
+    # is performed up to order J
+    # link to document with good explanation:
+    # https://www.math.usm.edu/lambers/mat460/fall09/lecture29.pdf
+    for j in range(1, maxord+1):
 
-        if j < J:
+        # pre-calculate all function values obtained
+        # by walking curh/2 steps
+        # required in the Romberg integration
+        if j < maxord:
             curh.shape = (len(curh),1)
             xtensor = (x[:-1].reshape(len(x)-1,1) +
                     curh/2 * np.arange(1, 2**j).reshape((1,2**j-1)))
@@ -261,12 +272,6 @@ def romberg_integral_propagate(x, fun, maxord=4):
             ftensor_list.append(funvals)
 
         curh.shape = (len(curh),)
-        # do the Romberg integration simultaneously
-        # for all the intervals defined by x;
-        # in each interval an independent integration
-        # is performed up to order J
-        # link to document with good explanation:
-        # https://www.math.usm.edu/lambers/mat460/fall09/lecture29.pdf
         T_j1 = curh/2 * (funvals_a + funvals_b)
         if j >= 2:
             T_j1 += curh * np.sum(ftensor_list[j-2], axis=1)
@@ -277,13 +282,24 @@ def romberg_integral_propagate(x, fun, maxord=4):
             T_list[j-1].append(T_jk)
         curh /= 2
 
-    intval1 = np.sum(T_list[J-2][J-2])
-    intval2 = np.sum(T_list[J-1][J-1])
-    # looking at
-    # https://math.stackexchange.com/questions/1291613/romberg-integration-accuracy
-    # I guess this is an overestimate but in the right ballpark
-    est_error = np.sum(intval2-intval1)
-    return intval2
+        est_intval = np.sum(T_list[j-1][j-1])
+        if j > 1:
+            # looking at
+            # https://math.stackexchange.com/questions/1291613/romberg-integration-accuracy
+            # I guess this is an overestimate but in the right ballpark
+            prev_intval = np.sum(T_list[j-2][j-2])
+            est_error = np.abs(np.sum(np.abs(est_intval-prev_intval)))
+            # accuracy goal reached?
+            if (est_error < np.abs(atol + rtol*est_intval)):
+                break
+
+    if est_error >= np.abs(atol + rtol*est_intval):
+        raise ValueError(f'Desired accuracy (atol={atol}, rtol={rtol}) could not be reached.\n' +
+                         f'The estimated absolute error is {est_error} ' +
+                         f'and the estimated integral {est_intval}.\n' + 
+                          'Try to increase maxord or reduce the accuracy by increasing atol and or rtol.')
+
+    return est_intval
 
 
 
