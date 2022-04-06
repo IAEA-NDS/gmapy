@@ -86,6 +86,8 @@ def basic_propagate(x, y, xout, interp_type='lin-lin'):
 
 def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     """Compute sensitivity matrix for basic mappings."""
+    orig_x = np.array(x)
+    x = orig_x.copy()
     x = np.array(x)
     y = np.array(y)
     xout = np.array(xout)
@@ -200,6 +202,18 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     i = i[perm]
     j = j[perm]
     c = c[perm]
+    # We further do swaps of the variables associated
+    # with a row j if x[j_k] > x[j_(k+1)], to be sure
+    # that the coefficient associated with the lower x-value
+    # comes first. The function basic_extract_Sdic_coeffs
+    # relies on this structure.
+    i_tmp = i.copy()
+    c_tmp = c.copy()
+    should_swap = orig_x[i[::2]] > orig_x[i[1::2]]
+    i[::2] = np.where(should_swap, i_tmp[1::2], i_tmp[::2])
+    i[1::2] = np.where(should_swap, i_tmp[::2], i_tmp[1::2])
+    c[::2] = np.where(should_swap, c_tmp[1::2], c_tmp[::2])
+    c[1::2] = np.where(should_swap, c_tmp[::2], c_tmp[1::2])
 
     if np.any(np.isnan(c)):
         raise ValueError('NaN values encountered in Jacobian matrix')
