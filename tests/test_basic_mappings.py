@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
 from gmapi.mappings.basic_maps import (basic_propagate, get_basic_sensmat,
-        basic_multiply_Sdic_rows)
+        basic_multiply_Sdic_rows, basic_extract_Sdic_coeffs)
 from gmapi.mappings.helperfuns import numeric_jacobian, return_matrix
 
 
@@ -185,6 +185,22 @@ class TestBasicMappingsPropagation(unittest.TestCase):
                 vals=Sdic3['x'], dims=(len(xout), len(x)), how='csr').toarray()
         res3 = np.ravel(Smat3 @ y)
         self.assertTrue(np.all(np.isclose(res1, res3)))
+
+    def test_correct_working_of_basic_extract_Sdic_coeffs(self):
+        x1 = np.array([3, 1, 7, 5])
+        y1 = np.array([1, 9, 14, 23])
+        perm = np.argsort(x1)
+        x2 = np.array(x1[perm], copy=True)
+        y2 = np.array(y1[perm], copy=True)
+        xout = [1.4, 1.8, 3.7, 4.9, 5.2]
+        possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for curint in possible_interp_types:
+            Sdic1 = get_basic_sensmat(x1, y1, xout, curint, ret_mat=False)
+            Sdic2 = get_basic_sensmat(x2, y2, xout, curint, ret_mat=False)
+            df_da1, df_db1 = basic_extract_Sdic_coeffs(Sdic1)
+            df_da2, df_db2 = basic_extract_Sdic_coeffs(Sdic2)
+            self.assertTrue(np.all(np.isclose(df_da1, df_da2)))
+            self.assertTrue(np.all(np.isclose(df_db2, df_db2)))
 
 
 class TestBasicMappingsJacobian(unittest.TestCase):
