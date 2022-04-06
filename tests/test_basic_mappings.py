@@ -244,6 +244,21 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         maxdiff = np.max(np.abs(Sref-Stest)/np.abs(Sref+1e-8))
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
+    def test_permuted_sensitivity_calculation_in_another_way(self):
+        x = np.exp([1, 3, 5, 7, 9, 10])
+        y = np.exp([11, 7, 15, 10, 3, 7])
+        interp_type = np.array(['lin-log', 'lin-lin', 'log-log', 'log-lin', 'log-log', 'lin-lin'])
+        xout = np.exp([2, 3, 4.4, 5, 7, 9, 8, 2.2, 1.4])
+        # do the permutation
+        np.random.seed(31)
+        perm = np.random.permutation(len(x))
+        x2 = x[perm]; y2 = y[perm]; interp_type2 = interp_type[perm]
+        Smat1 = get_basic_sensmat(x, y, xout, interp_type, ret_mat=True).toarray()
+        Smat2 = get_basic_sensmat(x2, y2, xout, interp_type2, ret_mat=True).toarray()
+        res1 = Smat1 @ y
+        res2 = Smat2 @ y2
+        self.assertTrue(np.all(res1 == res2))
+
     def test_sensitivity_calculation_with_a_single_element_in_x(self):
         x = [5]
         y = [10]
