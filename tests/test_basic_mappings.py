@@ -123,6 +123,20 @@ class TestBasicMappingsPropagation(unittest.TestCase):
         # comparison
         self.assertTrue(np.all(yout == yout_ref))
 
+    def test_permuted_propagation_calculation_in_yet_another_way(self):
+        x1 = [5, 3, 1, 7]
+        y1 = [1, 9, 14, 23]
+        perm = np.argsort(x1)
+        x2 = np.array(x1, copy=True)[perm]
+        y2 = np.array(y1, copy=True)[perm]
+        xout = [1.4, 1.8, 3.7, 4.9, 5.2]
+        possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for curint in possible_interp_types:
+            errmsg = f'propagation failed for interpolation type {curint}'
+            propvals1 = basic_propagate(x1, y1, xout, curint)
+            propvals2 = basic_propagate(x2, y2, xout, curint)
+            self.assertTrue(np.all(propvals1==propvals2), errmsg)
+
     def test_interp_at_mesh_boundaries(self):
         x = [1, 5, 10]
         y = [2, 8, 10]
@@ -258,6 +272,22 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         res1 = Smat1 @ y
         res2 = Smat2 @ y2
         self.assertTrue(np.all(res1 == res2))
+
+    def test_permuted_sensitivity_calculation_in_yet_another_way(self):
+        x1 = [5, 3, 1, 7]
+        y1 = [1, 9, 14, 23]
+        perm = np.argsort(x1)
+        x2 = np.array(x1, copy=True)[perm]
+        y2 = np.array(y1, copy=True)[perm]
+        xout = [1.4, 1.8, 3.7, 4.9, 5.2]
+        possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for curint in possible_interp_types:
+            errmsg = f'failed for interpolation type {curint}'
+            Smat1 = get_basic_sensmat(x1, y1, xout, curint, ret_mat=True).toarray()
+            Smat2 = get_basic_sensmat(x2, y2, xout, curint, ret_mat=True).toarray()
+            res1 = Smat1 @ y1
+            res2 = Smat2 @ y2
+            self.assertTrue(np.all(np.isclose(res1, res2)), msg=errmsg)
 
     def test_sensitivity_calculation_with_a_single_element_in_x(self):
         x = [5]
