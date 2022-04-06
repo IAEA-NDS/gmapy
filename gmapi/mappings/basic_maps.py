@@ -255,7 +255,7 @@ def basic_extract_Sdic_coeffs(Sdic):
 
 
 
-def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5):
+def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5, dfun=None):
     """Definite integral by Romberg method.
 
     Romberg integration is performed for each
@@ -277,20 +277,39 @@ def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5):
     if rtol <= 0:
         raise ValueError('rtol must be positive')
 
-    x = np.sort(np.array(x, dtype=float))
+    calc_deriv = False
+    if dfun is not None:
+        calc_deriv=True
+        if not callable(dfun):
+            raise TypeError('dfun must be a function')
+
+    orig_x = np.array(x, dtype=float)
+    x = np.sort(orig_x)
     funvals = fun(x)
-    ftensor_list = []
     funvals_a = funvals[:-1]
     funvals_b = funvals[1:]
-    xdiffs = np.diff(x).reshape((len(x)-1, 1))
-    T_list = []
-    curh = xdiffs.copy()
+    if calc_deriv:
+        dfunvals_a = np.full(funvals_a.shape, 1.)
+        dfunvals_b = np.full(funvals_b.shape, 1.)
+        # the limits of the mesh are only
+        # upper and lower interval limits,
+        # respectively.
+        #dfunvals_a[-1] = 0.
+        #dfunvals_b[0] = 0.
+
     # do the Romberg integration simultaneously
     # for all the intervals defined by x;
     # in each interval an independent integration
     # is performed up to order J
     # link to document with good explanation:
     # https://www.math.usm.edu/lambers/mat460/fall09/lecture29.pdf
+    ftensor_list = []
+    df1tensor_list = []
+    df2tensor_list = []
+    T_list = []
+    dT1_list = []
+    dT2_list = []
+    curh = np.diff(x).reshape((len(x)-1, 1))
     for j in range(1, maxord+1):
 
         # pre-calculate all function values obtained
@@ -305,19 +324,56 @@ def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5):
             funvals = fun(xtensor)
             funvals.shape = curshape
             ftensor_list.append(funvals)
+            if calc_deriv:
+                # NOTE: xtensor does not contain
+                #       any values of x. This is
+                #       important because otherwise
+                #       dfun1 and dfun2 may not
+                #       yield the correct result
+                #       (i.e., 0 instead of 1)
+                dfunvals1, dfunvals2 = dfun(xtensor)
+                dfunvals1.shape = curshape
+                dfunvals2.shape = curshape
+                df1tensor_list.append(dfunvals1)
+                df2tensor_list.append(dfunvals2)
 
         curh.shape = (len(curh),)
         T_j1 = curh/2 * (funvals_a + funvals_b)
+        T_list.append([T_j1])
+        if calc_deriv:
+            dT1_j1 = curh/2 * dfunvals_a
+            dT2_j1 = curh/2 * dfunvals_b
+            dT1_list.append([dT1_j1])
+            dT2_list.append([dT2_j1])
+
         if j >= 2:
             T_j1 += curh * np.sum(ftensor_list[j-2], axis=1)
-        T_list.append([T_j1])
+            if calc_deriv:
+                dT1_j1 += curh * np.sum(df1tensor_list[j-2], axis=1)
+                dT2_j1 += curh * np.sum(df2tensor_list[j-2], axis=1)
+
         # NOTE: this loop is not entered for the case j=1
         for k in range(2, j+1):
             T_jk = T_list[j-1][k-2] + 1/(4**(k-1)-1)*(T_list[j-1][k-2] - T_list[j-2][k-3])
             T_list[j-1].append(T_jk)
-        curh /= 2
+            if calc_deriv:
+                dT1_jk = (dT1_list[j-1][k-2] +
+                          1/(4**(k-1)-1)*(dT1_list[j-1][k-2] - dT1_list[j-2][k-3]))
+                dT2_jk = (dT2_list[j-1][k-2] +
+                          1/(4**(k-1)-1)*(dT2_list[j-1][k-2] - dT2_list[j-2][k-3]))
+                dT1_list[j-1].append(dT1_jk)
+                dT2_list[j-1].append(dT2_jk)
+
+        if calc_deriv:
+            last_dT1 = dT1_list[j-1][j-1]
+            last_dT2 = dT2_list[j-1][j-1]
+            dT = np.empty(len(x), dtype=float)
+            dT[1:-1] = last_dT1[1:] + last_dT2[:-1]
+            dT[0] = last_dT1[0]
+            dT[-1] = last_dT2[-1]
 
         est_intval = np.sum(T_list[j-1][j-1])
+
         if j > 1:
             # looking at
             # https://math.stackexchange.com/questions/1291613/romberg-integration-accuracy
@@ -328,13 +384,19 @@ def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5):
             if (est_error < np.abs(atol + rtol*est_intval)):
                 break
 
+        # half step size for next loop iteration
+        curh /= 2
+
     if est_error >= np.abs(atol + rtol*est_intval):
         raise ValueError(f'Desired accuracy (atol={atol}, rtol={rtol}) could not be reached.\n' +
                          f'The estimated absolute error is {est_error} ' +
-                         f'and the estimated integral {est_intval}.\n' + 
+                         f'and the estimated integral {est_intval}.\n' +
                           'Try to increase maxord or reduce the accuracy by increasing atol and or rtol.')
 
-    return est_intval
+    if not calc_deriv:
+        return est_intval
+    else:
+        return dT
 
 
 
