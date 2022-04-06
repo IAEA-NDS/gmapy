@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 from gmapi.mappings.basic_maps import (basic_propagate, get_basic_sensmat,
-        basic_extract_Sdic_coeffs, romberg_integral_propagate)
-from gmapi.mappings.helperfuns import numeric_jacobian
+        basic_extract_Sdic_coeffs)
+from gmapi.mappings.helperfuns import numeric_jacobian, romberg_integral_propagate
 
 
 class TestRombergIntegralMapping(unittest.TestCase):
