@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def romberg_integral_propagate(x, fun, maxord=4, atol=1e-8, rtol=1e-5, dfun=None):
+def compute_romberg_integral(x, fun, maxord=4, atol=1e-8, rtol=1e-5, dfun=None):
     """Definite integral by Romberg method.
 
     Romberg integration is performed for each
