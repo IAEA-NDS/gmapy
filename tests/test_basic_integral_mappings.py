@@ -38,7 +38,7 @@ class TestBasicIntegralMappings(unittest.TestCase):
         log_y1 = log_y[:-1]
         log_y2 = log_y[1:]
         C = (log_y2-log_y1)/(log_x2-log_x1)
-        intvals = y1 * np.exp(-C*log_x1) * (x2**(C+1) - x1**(C+1)) / (C+1) 
+        intvals = y1 * np.exp(-C*log_x1) * (x2**(C+1) - x1**(C+1)) / (C+1)
         intval = np.sum(intvals)
         return intval
 
