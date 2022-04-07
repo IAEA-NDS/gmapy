@@ -5,7 +5,7 @@ from gmapi.mappings.basic_integral_maps import (basic_integral_propagate,
 from gmapi.mappings.helperfuns import numeric_jacobian
 
 
-class TestBasicIntegralMappings(unittest.TestCase):
+class TestBasicIntegralMapping(unittest.TestCase):
 
     # auxiliary functions
     def integrate_linlin(self, x, y):
