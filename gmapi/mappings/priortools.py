@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import re
-from .helperfuns import SHAPE_MT_IDS
 
+
+SHAPE_MT_IDS = (2,4,8,9)
 
 
 def attach_shape_prior(priortable, mapping, exptable, refvals=None, uncs=None):

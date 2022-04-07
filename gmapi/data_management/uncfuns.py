@@ -2,7 +2,7 @@ import numpy as np
 from scipy.sparse import block_diag, csr_matrix
 from collections import OrderedDict
 
-from ..mappings.helperfuns import SHAPE_MT_IDS
+from ..mappings.priortools import SHAPE_MT_IDS
 
 
 
