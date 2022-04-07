@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
-from gmapi.mappings.basic_integral_maps import basic_integral_propagate
+from gmapi.mappings.basic_integral_maps import (basic_integral_propagate,
+                                                get_basic_integral_sensmat)
+from gmapi.mappings.helperfuns import numeric_jacobian
 
 
 class TestBasicIntegralMappings(unittest.TestCase):
@@ -91,6 +93,54 @@ class TestBasicIntegralMappings(unittest.TestCase):
             res1 = basic_integral_propagate(x1, y1, interp_type=curint, rtol=1e-5)
             res2 = basic_integral_propagate(x2, y2, interp_type=curint, rtol=1e-5)
             self.assertTrue(np.all(res1==res2), errmsg)
+
+
+class TestBasicIntegralJacobian(unittest.TestCase):
+
+    def test_basic_integral_sensitivity(self):
+        xref = [1, 10, 20, 50]
+        yref = [5, 10,  8, 23]
+        interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for rtol in [1e-3, 1e-5, 1e-8]:
+            for interp in interp_types:
+                errmsg = f'failed for interpolation {interp} and rtol {rtol}'
+                def propfun(y):
+                    return np.array([basic_integral_propagate(xref, y, interp,
+                                                              maxord=20, rtol=rtol)])
+                test_res = get_basic_integral_sensmat(xref, yref, interp, maxord=20, rtol=rtol)
+                ref_res = numeric_jacobian(propfun, yref)
+                self.assertTrue(np.all(np.isclose(test_res, ref_res, rtol=rtol)), errmsg)
+
+    def test_basic_integral_sensitivity_for_mixed_interpolation(self):
+        xref = [1, 10, 20, 50]
+        yref = [5, 10,  8, 23]
+        interp = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for rtol in [1e-3, 1e-5, 1e-8]:
+            errmsg = f'failed for interpolation {interp} and rtol {rtol}'
+            def propfun(y):
+                return np.array([basic_integral_propagate(xref, y, interp,
+                                                          maxord=20, rtol=rtol)])
+            test_res = get_basic_integral_sensmat(xref, yref, interp, maxord=20, rtol=rtol)
+            ref_res = numeric_jacobian(propfun, yref)
+            self.assertTrue(np.all(np.isclose(test_res, ref_res, rtol=rtol)), errmsg)
+
+    def test_basic_integral_sensitivity_for_permuted_xmesh(self):
+        xref1 = np.array([1, 10, 20, 50])
+        yref1 = np.array([5, 10,  8, 23])
+        np.random.seed(12)
+        perm = np.random.permutation(len(xref1))
+        xref2 = xref1[perm]
+        yref2 = yref1[perm]
+        interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for rtol in [1e-3, 1e-5]:
+            for interp in interp_types:
+                errmsg = f'failed for interpolation {interp} and rtol {rtol}'
+                def propfun(y):
+                    return np.array([basic_integral_propagate(xref, y, interp,
+                                                              maxord=20, rtol=rtol)])
+                res1 = get_basic_integral_sensmat(xref1, yref1, interp, maxord=20, rtol=rtol)
+                res2 = get_basic_integral_sensmat(xref2, yref2, interp, maxord=20, rtol=rtol)
+                self.assertTrue(np.all(res1==res2), errmsg)
 
 
 if __name__ == '__main__':
