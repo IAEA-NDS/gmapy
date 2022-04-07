@@ -28,3 +28,26 @@ def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
     ret = np.array([ret])
     return ret
 
+
+def basic_integral_of_product_propagate(xlist, ylist, interplist,
+                                        maxord=16, rtol=1e-8):
+    if len(xlist) != len(ylist) or len(ylist) != len(interplist):
+        raise IndexError('xlist, ylist and interplist must have ' +
+                         'the same number of elements')
+    def propfun(x):
+        myzip = zip(xlist, ylist, interplist)
+        prod = 1
+        for curprop in myzip:
+            xref, yref, interp = curprop
+            prod *= basic_propagate(xref, yref, x, interp)
+        return prod
+    # we assume that a function is zero outside its x-mesh limits
+    min_x = np.max([np.min(cx) for cx in xlist])
+    max_x = np.min([np.max(cx) for cx in xlist])
+    xref = np.unique(np.concatenate(xlist))
+    xref = xref[np.logical_and(xref >= min_x, xref <= max_x)]
+    # compute the integral
+    ret = compute_romberg_integral(xref, propfun, maxord=maxord, rtol=rtol)
+    ret = np.array([ret])
+    return ret
+
