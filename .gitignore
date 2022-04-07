@@ -1,0 +1,5 @@
+__pycache__/
+.ipynb_checkpoints/
+legacy-tests/test_???/GMAP-Fortran/
+legacy-tests/test_???/result/
+tests/testoutput
