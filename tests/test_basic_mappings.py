@@ -18,6 +18,26 @@ class TestBasicMappingsPropagation(unittest.TestCase):
         with self.assertRaises(ValueError):
             basic_propagate(x, y, xout2)
 
+    def test_mapping_for_xout_beyond_mesh_with_zero_outside_true(self):
+        x = [1, 5, 10]
+        y = [11, 13, 19]
+        xout1 = [0.99]
+        xout2 = [10.01]
+        yval1 = basic_propagate(x, y, xout1, zero_outside=True)
+        yval2 = basic_propagate(x, y, xout2, zero_outside=True)
+        self.assertEqual(yval1, 0.)
+        self.assertEqual(yval2, 0.)
+
+    def test_mapping_for_some_xout_beyond_mesh_with_zero_outside_true(self):
+        x = [1, 3, 7, 13]
+        y = [4, 9, 8, 20]
+        interp = 'lin-log'
+        xout = [-2, 5, 7, 15]
+        red_res = basic_propagate(x, y, xout[1:3], interp)
+        ref_res = np.concatenate([[0], red_res, [0]])
+        test_res = basic_propagate(x, y, xout, interp, zero_outside=True)
+        self.assertTrue(np.all(test_res == ref_res))
+
     def test_lin_lin_propagate(self):
         x = [1, 5, 10]
         y = [11, 15, 10]
