@@ -90,8 +90,8 @@ class TestBasicIntegralMapping(unittest.TestCase):
         interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
         for curint in interp_types:
             errmsg = f'failed for interpolation type {curint}'
-            res1 = basic_integral_propagate(x1, y1, interp_type=curint, rtol=1e-5)
-            res2 = basic_integral_propagate(x2, y2, interp_type=curint, rtol=1e-5)
+            res1 = basic_integral_propagate(x1, y1, interp_type=curint, maxord=20, rtol=1e-5)
+            res2 = basic_integral_propagate(x2, y2, interp_type=curint, maxord=20, rtol=1e-5)
             self.assertTrue(np.all(res1==res2), errmsg)
 
 
