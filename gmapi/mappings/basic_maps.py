@@ -5,7 +5,7 @@ from .helperfuns import return_matrix
 
 
 
-def basic_propagate(x, y, xout, interp_type='lin-lin'):
+def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
     """Propagate from one mesh to another one."""
     x = np.array(x)
     y = np.array(y)
@@ -38,10 +38,16 @@ def basic_propagate(x, y, xout, interp_type='lin-lin'):
     # Make sure that we actually have points that
     # need to be interpolated
     if len(idcs2) > 0:
-        if np.any(idcs2 >= len(x)):
+        if np.any(idcs2 >= len(x)) and not zero_outside:
             raise ValueError('some value in xout larger than largest value in x')
-        if np.any(idcs2 < 1):
+        if np.any(idcs2 < 1) and not zero_outside:
             raise ValueError('some value in xout smaller than smallest value in x')
+
+        inside_sel = np.logical_and(idcs2 < len(x), idcs2 >= 1)
+        outside_sel = np.logical_not(inside_sel)
+        idcs1 = idcs1[inside_sel]
+        idcs2 = idcs2[inside_sel]
+        xout = xout[inside_sel]
 
         x1 = x[idcs1]; x2 = x[idcs2]
         y1 = y[idcs1]; y2 = y[idcs2]
@@ -73,7 +79,10 @@ def basic_propagate(x, y, xout, interp_type='lin-lin'):
             cursel = interp == curint
             interp_yout[cursel] = yout[curint][cursel]
 
-        final_yout[not_limit_sel] = interp_yout
+        tmp = np.empty(len(inside_sel), dtype=float)
+        tmp[inside_sel] = interp_yout
+        tmp[outside_sel] = 0.
+        final_yout[not_limit_sel] = tmp
 
     # add the edge points
     final_yout[limit_sel] = y[edge_idcs]
