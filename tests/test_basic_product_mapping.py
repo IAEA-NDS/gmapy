@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from gmapi.mappings.basic_maps import (basic_propagate, basic_product_propagate,
-        get_basic_product_sensmat)
+        get_basic_product_sensmats)
 from gmapi.mappings.helperfuns import numeric_jacobian
 
 
@@ -70,7 +70,7 @@ class TestBasicProductJacobian(unittest.TestCase):
 
         ref_res1 = numeric_jacobian(propfun1, ylist[0])
         ref_res2 = numeric_jacobian(propfun2, ylist[1]) 
-        test_res = get_basic_product_sensmat(xlist, ylist, xout, interplist, 
+        test_res = get_basic_product_sensmats(xlist, ylist, xout, interplist,
                                              ret_mat=True, zero_outside=True)
         self.assertTrue(np.all(np.isclose(test_res[0].toarray(), ref_res1)))
         self.assertTrue(np.all(np.isclose(test_res[1].toarray(), ref_res2)))
@@ -101,7 +101,7 @@ class TestBasicProductJacobian(unittest.TestCase):
 
         funlist = [generate_propfun(i) for i in range(len(xlist))]
         ref_res_list = [numeric_jacobian(f, y) for f, y in zip(funlist, ylist)]
-        test_res = get_basic_product_sensmat(xlist, ylist, xout, interplist,
+        test_res = get_basic_product_sensmats(xlist, ylist, xout, interplist,
                                              ret_mat=True, zero_outside=True)
         for ref_res, test_res in zip(ref_res_list, test_res):
             self.assertTrue(np.all(np.isclose(test_res.toarray(), ref_res)))

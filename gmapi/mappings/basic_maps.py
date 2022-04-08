@@ -283,7 +283,7 @@ def basic_product_propagate(xlist, ylist, xout, interplist, **kwargs):
 
 
 
-def get_basic_product_sensmat(xlist, ylist, xout, interplist,
+def get_basic_product_sensmats(xlist, ylist, xout, interplist,
                               ret_mat=True, **kwargs):
     """Get a list of Jacobians for each factor in a product of basic maps."""
     if len(xlist) != len(ylist) or len(ylist) != len(interplist):
