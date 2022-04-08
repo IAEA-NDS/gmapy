@@ -271,6 +271,45 @@ def basic_extract_Sdic_coeffs(Sdic):
 
 
 
+def basic_product_propagate(xlist, ylist, xout, interplist, **kwargs):
+    """Propagate the product of two basic maps."""
+    prod = 1.
+    for x, y, interp in zip(xlist, ylist, interplist):
+        prod *= basic_propagate(x, y, xout, interp, **kwargs)
+    return prod
+
+
+
+def get_basic_product_sensmat(xlist, ylist, xout, interplist,
+                              ret_mat=True, **kwargs):
+    """Get a list of Jacobians for each factor in a product of basic maps."""
+    proplist = []
+    for x, y, interp in zip(xlist, ylist, interplist):
+        proplist.append(basic_propagate(x, y, xout, interp, **kwargs))
+    proparr = np.stack(proplist, axis=0)
+
+    Slist = []
+    for i, (x, y, interp) in enumerate(zip(xlist, ylist, interplist)):
+        curSdic = get_basic_sensmat(x, y, xout, interp,
+                                    ret_mat=False, **kwargs)
+        sel = np.logical_and(np.min(x) <= xout, np.max(x) >= xout)
+        curfacts = np.prod(proparr[:i,:], axis=0)
+        if i+1 < proparr.shape[0]:
+            curfacts *= np.prod(proparr[(i+1):,:], axis=0)
+        basic_multiply_Sdic_rows(curSdic, curfacts[sel])
+        Slist.append(curSdic)
+
+    if ret_mat:
+        for i in range(len(Slist)):
+            curS = Slist[i]
+            curS = return_matrix(curS['idcs1'], curS['idcs2'], curS['x'],
+                                 dims=(len(xout), len(xlist[i])), how='csr')
+            Slist[i] = curS
+
+    return Slist
+
+
+
 def propagate_fisavg(ens, vals, ensfis, valsfis):
     ord = np.argsort(ens)
     ens = ens[ord]
