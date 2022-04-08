@@ -230,6 +230,37 @@ class TestBasicMappingsJacobian(unittest.TestCase):
             return basic_propagate(x, y, xout, interp_type)
         return myprop
 
+    def test_failure_for_xout_beyond_mesh(self):
+        x = [1, 5, 10]
+        y = [11, 13, 19]
+        xout1 = [0.99]
+        xout2 = [10.01]
+        with self.assertRaises(ValueError):
+            get_basic_sensmat(x, y, xout1)
+        with self.assertRaises(ValueError):
+            get_basic_sensmat(x, y, xout2)
+            basic_propagate(x, y, xout2)
+
+    def test_sensmat_for_xout_beyond_mesh_with_zero_outside_true(self):
+        x = [1, 5, 10]
+        y = [11, 13, 19]
+        xout1 = [0.99]
+        xout2 = [10.01]
+        Smat1 = get_basic_sensmat(x, y, xout1, zero_outside=True, ret_mat=True)
+        Smat2 = get_basic_sensmat(x, y, xout2, zero_outside=True, ret_mat=True)
+        self.assertTrue(np.all(Smat1.toarray() == Smat2.toarray()))
+
+    def test_mapping_for_some_xout_beyond_mesh_with_zero_outside_true(self):
+        x = [1, 3, 7, 13]
+        y = [4, 9, 8, 20]
+        interp = 'lin-log'
+        xout = [-2, 5, 7, 15]
+        red_Smat = get_basic_sensmat(x, y, xout[1:3], interp, ret_mat=True)
+        test_Smat = get_basic_sensmat(x, y, xout, interp, zero_outside=True)
+        self.assertTrue(np.all(test_Smat[1:-1,:].toarray() == red_Smat.toarray()))
+        self.assertTrue(np.all(test_Smat[0,:].toarray() == 0.))
+        self.assertTrue(np.all(test_Smat[-1,:].toarray() == 0))
+
     def test_lin_lin_sensitivity(self):
         x = [1, 5, 10]
         y = [11, 15, 10]
