@@ -26,15 +26,13 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
             return r1*r2*r3
         min_x = max([min(x1), min(x2), min(x3)])
         max_x = min([max(x1), max(x2), max(x3)])
-        ref_x1 = np.array(x1)[np.logical_and(x1 >= min_x, x1 <= max_x)]
-        ref_x2 = np.array(x2)[np.logical_and(x2 >= min_x, x2 <= max_x)]
-        ref_x3 = np.array(x3)[np.logical_and(x3 >= min_x, x3 <= max_x)]
         ref_x = np.unique(np.concatenate([x1, x2, x3]))
         ref_x = ref_x[np.logical_and(ref_x >= min_x, ref_x <= max_x)]
         interplist = [interp1, interp2, interp3]
-        test_res = basic_integral_of_product_propagate(xlist, ylist, interplist, maxord=20, rtol=1e-6)
+        test_res = basic_integral_of_product_propagate(xlist, ylist, interplist,
+                                                       maxord=20, rtol=1e-6)
         ref_res = compute_romberg_integral(ref_x, propfun, maxord=20, rtol=1e-6)
-        self.assertTrue(np.all(test_res == ref_res))
+        self.assertTrue(np.all(np.isclose(test_res, ref_res, rtol=1e-6)))
 
     def test_basic_integral_of_product_propagate_with_permutated_input(self):
         np.random.seed(17)
