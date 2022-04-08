@@ -93,7 +93,8 @@ def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
 
 
 
-def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
+def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
+                      zero_outside=False, ret_mat=True):
     """Compute sensitivity matrix for basic mappings."""
     orig_x = np.array(x)
     x = orig_x.copy()
@@ -136,10 +137,16 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin', ret_mat=True):
     # Make sure that we actually have points that
     # need to be interpolated
     if len(idcs2) > 0:
-        if np.any(idcs2 >= len(x)):
+        if np.any(idcs2 >= len(x)) and not zero_outside:
             raise ValueError('some value in xout larger than largest value in x')
-        if np.any(idcs2 < 1):
+        if np.any(idcs2 < 1) and not zero_outside:
             raise ValueError('some value in xout smaller than smallest value in x')
+
+        inside_sel = np.logical_and(idcs2 < len(x), idcs2 >= 1)
+        idcs1 = idcs1[inside_sel]
+        idcs2 = idcs2[inside_sel]
+        idcs_out = idcs_out[inside_sel]
+        xout = xout[inside_sel]
 
         x1 = x[idcs1]; x2 = x[idcs2]
         y1 = y[idcs1]; y2 = y[idcs2]
