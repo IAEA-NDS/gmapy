@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
 from gmapi.mappings.basic_maps import basic_propagate
-from gmapi.mappings.basic_integral_maps import basic_integral_of_product_propagate
+from gmapi.mappings.basic_integral_maps import (
+        basic_integral_of_product_propagate,
+        get_basic_integral_of_product_sensmats)
 from gmapi.mappings.helperfuns import numeric_jacobian, compute_romberg_integral
 
 
@@ -62,10 +64,47 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         perm_ylist = [y3, y1, y2]
         perm_interplist = [interp3, interp1, interp2]
 
-        test_res1 = basic_integral_of_product_propagate(xlist, ylist, interplist, maxord=20, rtol=1e-3)
+        test_res1 = basic_integral_of_product_propagate(xlist, ylist, interplist, maxord=10, rtol=1e-3)
         test_res2 = basic_integral_of_product_propagate(perm_xlist, perm_ylist, perm_interplist,
-                                                        maxord=20, rtol=1e-3)
+                                                        maxord=10, rtol=1e-3)
         self.assertTrue(np.all(test_res1 == test_res2))
+
+
+class TestBasicIntegralOfProductJacobian(unittest.TestCase):
+
+    def test_basic_integral_of_product_sensmat_with_two_factors(self):
+        x1 = np.array([1, 3, 8, 14])
+        y1 = np.array([7, 2, 9, 16])
+        interp1 = 'lin-lin'
+        x2 = np.array([4, 5.5, 6.9, 9])
+        y2 = np.array([11, 22, 3, 29])
+        interp2 = 'log-log'
+        x3 = np.array([2.1, 4.9, 7.8])
+        y3 = np.array([5,   5.5, 2.4])
+        interp3 = 'lin-log'
+        xlist = [x1, x2, x3]
+        ylist = [y1, y2, y3]
+        interplist = [interp1, interp2, interp3]
+
+        def generate_propfun(curi):
+            def propfun(x):
+                curylist = ylist.copy()
+                curylist[curi] = x
+                ret = basic_integral_of_product_propagate(xlist, curylist,
+                        interplist, maxord=18, rtol=1e-6)
+                return ret
+            return propfun
+
+        ref_res = []
+        ref_res.append(numeric_jacobian(generate_propfun(0), ylist[0]) )
+        ref_res.append(numeric_jacobian(generate_propfun(1), ylist[1]) )
+        ref_res.append(numeric_jacobian(generate_propfun(2), ylist[2]) )
+        test_res = get_basic_integral_of_product_sensmats(xlist, ylist,
+                interplist, maxord=18, rtol=1e-6)
+
+        self.assertTrue(np.all(np.isclose(test_res[0], ref_res[0], rtol=1e-5)))
+        self.assertTrue(np.all(np.isclose(test_res[1], ref_res[1], rtol=1e-5)))
+        self.assertTrue(np.all(np.isclose(test_res[2], ref_res[2], rtol=1e-5)))
 
 
 if __name__ == '__main__':
