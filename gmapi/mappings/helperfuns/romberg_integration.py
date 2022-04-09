@@ -29,20 +29,24 @@ def compute_romberg_integral(x, fun, maxord=4, atol=1e-8, rtol=1e-5, dfun=None):
         if not callable(dfun):
             raise TypeError('dfun must be a function')
 
-    orig_x = np.array(x, dtype=float)
-    x = np.sort(orig_x)
+    x = np.sort(np.array(x, dtype=float))
     funvals = fun(x)
     funvals_a = funvals[:-1]
     funvals_b = funvals[1:]
     if calc_deriv:
-        dfunvals_a = np.full(funvals_a.shape, 1.)
-        dfunvals_b = np.full(funvals_b.shape, 1.)
-        # the limits of the mesh are only
-        # upper and lower interval limits,
-        # respectively.
-        #dfunvals_a[-1] = 0.
-        #dfunvals_b[0] = 0.
-
+        # NOTE: The function dfun provided as argument
+        # yields for an x-value two partial derivatives
+        # with respect to the two enclosing mesh points
+        # left and right, respectively. If the x-value
+        # coincides with a mesh point, one partial
+        # derivative will be zero, hence  we can sum
+        # over the two derivatives to get the derivative
+        # with repect to the value of the coinciding
+        # mesh point.
+        dfunvals = np.array(dfun(x))
+        dfunvals = np.sum(dfunvals, axis=0)
+        dfunvals_a = dfunvals[:-1]
+        dfunvals_b = dfunvals[1:]
     # do the Romberg integration simultaneously
     # for all the intervals defined by x;
     # in each interval an independent integration
