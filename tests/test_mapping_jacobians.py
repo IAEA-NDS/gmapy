@@ -26,18 +26,9 @@ from gmapi.mappings.cross_section_total_map import CrossSectionTotalMap
 class TestMappingJacobians(unittest.TestCase):
 
     # helper functions for the tests
-    def get_error(self, res1, res2):
-        absthres = 1e-6
-        sgn1 = np.sign(res1)
-        sgn2 = np.sign(res2)
-        sgn1[sgn1==0] = 1
-        sgn2[sgn2==0] = 1
-
-        x1 = sgn1 * np.maximum(np.abs(res1), absthres)
-        x2 = sgn2 * np.maximum(np.abs(res2), absthres)
-        reldiff = (np.max(np.abs(x1-x2) /
-            np.maximum(np.abs(x1), np.abs(x2))))
-        return reldiff
+    def get_error(self, res1, res2, atol=1e-7):
+        relerr = np.max(np.abs(res1 - res2) / (np.abs(res2) + atol))
+        return relerr
 
     def create_propagate_wrapper(self, curmap, priortable, exptable):
         """Create propagate wrapper with refvals arg being first."""
@@ -98,26 +89,30 @@ class TestMappingJacobians(unittest.TestCase):
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_fission_average_map(self):
-        curmap = CrossSectionFissionAverageMap()
-        priortable, exptable = self.reduce_tables(curmap, self._priortable,
-                                                  self._exptable)
-        fistable = self._priortable.copy()
-        fistable = fistable[fistable['NODE']=='fis']
-        priortable = pd.concat([priortable, fistable], ignore_index=True)
-        numel = len(priortable) - len(fistable)
-        def propfun(x):
-            refvals = priortable['PRIOR'].to_numpy()
-            refvals[:numel] = x
-            return curmap.propagate(priortable, exptable, refvals)
-        np.random.seed(15)
-        x = np.random.uniform(1, 5, numel)
-        res1 = numeric_jacobian(propfun, x, o=4, h1=1e-2, v=2)
-        res2 = curmap.jacobian(priortable, exptable, x, ret_mat=True)
-        res2 = np.array(res2.todense())
-        res2 = res2[:, :numel]
-        relerr = self.get_error(res1, res2)
-        msg = f'Maximum relative error in SACS Jacobian is {relerr}'
-        self.assertLess(relerr, 1e-7, msg)
+
+        for legacy_integration in [False, True]:
+            curmap = CrossSectionFissionAverageMap(fix_jacobian=True,
+                    legacy_integration=legacy_integration)
+            priortable, exptable = self.reduce_tables(curmap, self._priortable,
+                                                      self._exptable)
+            fistable = self._priortable.copy()
+            fistable = fistable[fistable['NODE']=='fis']
+            priortable = pd.concat([priortable, fistable], ignore_index=True)
+            numel = len(priortable) - len(fistable)
+            def propfun(x):
+                refvals = priortable['PRIOR'].to_numpy()
+                refvals[:numel] = x
+                return curmap.propagate(priortable, exptable, refvals)
+            np.random.seed(15)
+            x = np.random.uniform(1, 5, numel)
+            res1 = numeric_jacobian(propfun, x, o=4, h1=1e-2, v=2)
+            res2 = curmap.jacobian(priortable, exptable, x, ret_mat=True)
+            res2 = np.array(res2.todense())
+            res2 = res2[:, :numel]
+            relerr = self.get_error(res1, res2, atol=1e-7)
+            msg = (f'Maximum relative error in SACS Jacobian is {relerr}' +
+                   f'for legacy_integration={legacy_integration}')
+            self.assertTrue(np.all(np.isclose(res1, res2, rtol=1e-7, atol=1e-7)), msg)
 
     def test_cross_section_map(self):
         curmap = CrossSectionMap()
