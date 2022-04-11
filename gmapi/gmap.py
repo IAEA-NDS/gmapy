@@ -29,7 +29,8 @@ from .mappings.compound_map import CompoundMap
 
 def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         dbtype='legacy', num_iter=3, correct_ppp=True, legacy_output=False,
-        fix_ppp_bug=True, fix_sacs_jacobian=True, format_dic={}):
+        fix_ppp_bug=True, fix_sacs_jacobian=True, legacy_integration=True,
+        format_dic={}):
 
     # BEGIN LEGACY
     if legacy_output:
@@ -37,7 +38,8 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         file_IO5 = open(plotfile, 'w')
     # END LEGACY
 
-    compmap = CompoundMap(fix_sacs_jacobian=fix_sacs_jacobian)
+    compmap = CompoundMap(fix_sacs_jacobian=fix_sacs_jacobian,
+                          legacy_integration=legacy_integration)
 
     if dbtype == 'legacy':
         db_dic = read_gma_database(dbfile, format_dic=format_dic)

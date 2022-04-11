@@ -16,7 +16,7 @@ from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 
 class CompoundMap:
 
-    def __init__(self, fix_sacs_jacobian=True):
+    def __init__(self, fix_sacs_jacobian=True, legacy_integration=True):
         self.maplist = [
                 CrossSectionMap(),
                 CrossSectionShapeMap(),
@@ -26,7 +26,8 @@ class CompoundMap:
                 CrossSectionShapeOfRatioMap(),
                 CrossSectionTotalMap(),
                 CrossSectionShapeOfSumMap(),
-                CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian)
+                CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian,
+                                              legacy_integration=legacy_integration)
             ]
 
     def is_responsible(self, exptable):
