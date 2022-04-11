@@ -90,7 +90,9 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
     interplist_ref = []
     for x, y, interp in zip(xlist, ylist, interplist):
         cury = basic_propagate(x, y, xref, interp, zero_outside)
-        idcs = np.searchsorted(x, xref)
+        tmpord = np.argsort(x)
+        idcs = np.searchsorted(x[tmpord], xref)
+        idcs = tmpord[idcs]
         if isinstance(interp, str):
             interp = np.full(len(x), interp)
         curinterp = np.array(interp, copy=False)[idcs]
