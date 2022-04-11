@@ -271,32 +271,34 @@ def basic_extract_Sdic_coeffs(Sdic):
 
 
 
-def basic_product_propagate(xlist, ylist, xout, interplist, **kwargs):
+def basic_product_propagate(xlist, ylist, xout, interplist,
+                            zero_outside=False, **kwargs):
     """Propagate the product of two basic maps."""
     if len(xlist) != len(ylist) or len(ylist) != len(interplist):
         raise IndexError('xlist, ylist and interplist must have ' +
                          'the same number of elements')
     prod = 1.
     for x, y, interp in zip(xlist, ylist, interplist):
-        prod *= basic_propagate(x, y, xout, interp, **kwargs)
+        prod *= basic_propagate(x, y, xout, interp, zero_outside, **kwargs)
     return prod
 
 
 
 def get_basic_product_sensmats(xlist, ylist, xout, interplist,
-                              ret_mat=True, **kwargs):
+                              zero_outside=False, ret_mat=True, **kwargs):
     """Get a list of Jacobians for each factor in a product of basic maps."""
     if len(xlist) != len(ylist) or len(ylist) != len(interplist):
         raise IndexError('xlist, ylist and interplist must have ' +
                          'the same number of elements')
     proplist = []
     for x, y, interp in zip(xlist, ylist, interplist):
-        proplist.append(basic_propagate(x, y, xout, interp, **kwargs))
+        proplist.append(basic_propagate(x, y, xout, interp,
+                        zero_outside, **kwargs))
     proparr = np.stack(proplist, axis=0)
 
     Slist = []
     for i, (x, y, interp) in enumerate(zip(xlist, ylist, interplist)):
-        curSdic = get_basic_sensmat(x, y, xout, interp,
+        curSdic = get_basic_sensmat(x, y, xout, interp, zero_outside,
                                     ret_mat=False, **kwargs)
         sel = np.logical_and(np.min(x) <= xout, np.max(x) >= xout)
         curfacts = np.prod(proparr[:i,:], axis=0)
