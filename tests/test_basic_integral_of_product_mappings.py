@@ -22,9 +22,9 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         xlist = [x1, x2, x3]
         ylist = [y1, y2, y3]
         def propfun(x):
-            r1 = basic_propagate(x1, y1, x, interp1) 
-            r2 = basic_propagate(x2, y2, x, interp2)
-            r3 = basic_propagate(x3, y3, x, interp3)
+            r1 = basic_propagate(x1, y1, x, interp1, zero_outside=True)
+            r2 = basic_propagate(x2, y2, x, interp2, zero_outside=True)
+            r3 = basic_propagate(x3, y3, x, interp3, zero_outside=True)
             return r1*r2*r3
         min_x = max([min(x1), min(x2), min(x3)])
         max_x = min([max(x1), max(x2), max(x3)])
@@ -32,6 +32,7 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         ref_x = ref_x[np.logical_and(ref_x >= min_x, ref_x <= max_x)]
         interplist = [interp1, interp2, interp3]
         test_res = basic_integral_of_product_propagate(xlist, ylist, interplist,
+                                                       zero_outside=True,
                                                        maxord=20, rtol=1e-6)
         ref_res = compute_romberg_integral(ref_x, propfun, maxord=20, rtol=1e-6)
         self.assertTrue(np.all(np.isclose(test_res, ref_res, rtol=1e-6)))
@@ -64,9 +65,10 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         perm_ylist = [y3, y1, y2]
         perm_interplist = [interp3, interp1, interp2]
 
-        test_res1 = basic_integral_of_product_propagate(xlist, ylist, interplist, maxord=10, rtol=1e-3)
-        test_res2 = basic_integral_of_product_propagate(perm_xlist, perm_ylist, perm_interplist,
-                                                        maxord=10, rtol=1e-3)
+        test_res1 = basic_integral_of_product_propagate(xlist, ylist, interplist,
+                zero_outside=True, maxord=10, rtol=1e-3)
+        test_res2 = basic_integral_of_product_propagate(perm_xlist, perm_ylist,
+                perm_interplist, zero_outside=True, maxord=10, rtol=1e-3)
         self.assertTrue(np.all(test_res1 == test_res2))
 
 
@@ -91,7 +93,7 @@ class TestBasicIntegralOfProductJacobian(unittest.TestCase):
                 curylist = ylist.copy()
                 curylist[curi] = x
                 ret = basic_integral_of_product_propagate(xlist, curylist,
-                        interplist, maxord=18, rtol=1e-6)
+                        interplist, zero_outside=True, maxord=18, rtol=1e-6)
                 return ret
             return propfun
 
@@ -100,7 +102,7 @@ class TestBasicIntegralOfProductJacobian(unittest.TestCase):
         ref_res.append(numeric_jacobian(generate_propfun(1), ylist[1]) )
         ref_res.append(numeric_jacobian(generate_propfun(2), ylist[2]) )
         test_res = get_basic_integral_of_product_sensmats(xlist, ylist,
-                interplist, maxord=18, rtol=1e-6)
+                interplist, zero_outside=True, maxord=18, rtol=1e-6)
 
         self.assertTrue(np.all(np.isclose(test_res[0], ref_res[0], rtol=1e-5)))
         self.assertTrue(np.all(np.isclose(test_res[1], ref_res[1], rtol=1e-5)))

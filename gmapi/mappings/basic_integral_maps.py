@@ -8,22 +8,25 @@ from .helperfuns import compute_romberg_integral
 
 
 
-def basic_integral_propagate(x, y, interp_type='lin-lin', **kwargs):
+def basic_integral_propagate(x, y, interp_type='lin-lin',
+                             zero_outside=False, **kwargs):
     xref = x; yref = y
     def propfun(x):
-        return basic_propagate(xref, yref, x, interp_type)
+        return basic_propagate(xref, yref, x, interp_type, zero_outside)
     ret = compute_romberg_integral(xref, propfun, **kwargs)
     ret = np.array(ret, float)
     return ret
 
 
 
-def get_basic_integral_sensmat(x, y, interp_type='lin-lin', **kwargs):
+def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
+                               zero_outside=False, **kwargs):
     xref = x; yref = y
     def propfun(x):
-        return basic_propagate(xref, yref, x, interp_type)
+        return basic_propagate(xref, yref, x, interp_type, zero_outside)
     def dpropfun(x):
-        Sdic = get_basic_sensmat(xref, yref, x, interp_type, ret_mat=False)
+        Sdic = get_basic_sensmat(xref, yref, x, interp_type,
+                                 zero_outside, ret_mat=False)
         coeffs1, coeffs2 = basic_extract_Sdic_coeffs(Sdic)
         return (coeffs1, coeffs2)
     ret = compute_romberg_integral(xref, propfun, dfun=dpropfun, **kwargs)
@@ -32,10 +35,11 @@ def get_basic_integral_sensmat(x, y, interp_type='lin-lin', **kwargs):
 
 
 
-def basic_integral_of_product_propagate(xlist, ylist, interplist, **kwargs):
+def basic_integral_of_product_propagate(xlist, ylist, interplist,
+                                        zero_outside=False, **kwargs):
     def propfun(x):
         return basic_product_propagate(xlist, ylist, x,
-                                       interplist, zero_outside=True)
+                                       interplist, zero_outside)
     xref = np.unique(np.concatenate(xlist))
     ret = compute_romberg_integral(xref, propfun, **kwargs)
     ret = np.array([ret])
@@ -43,11 +47,12 @@ def basic_integral_of_product_propagate(xlist, ylist, interplist, **kwargs):
 
 
 
-def get_basic_integral_of_product_sensmats(xlist, ylist, interplist, **kwargs):
+def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
+                                           zero_outside=False, **kwargs):
 
     def propfun(x):
         return basic_product_propagate(xlist, ylist, x,
-                                       interplist, zero_outside=False)
+                                       interplist, zero_outside)
     # The function sensfun is introduced in order to
     # cache the results of get_basic_product_sensmats called
     # in cur_dpropfun because it will be called several times
@@ -56,7 +61,7 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist, **kwargs):
     def sensfun(x):
         x = np.array(x)
         return get_basic_product_sensmats(xlist_ref, ylist_ref, x, interplist,
-                                          zero_outside=False, ret_mat=False)
+                                          zero_outside, ret_mat=False)
     def generate_dpropfun(i):
         def cur_dpropfun(x):
             # convert to tuple because ndarrays are
@@ -68,6 +73,13 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist, **kwargs):
             return (coeffs1, coeffs2)
         return cur_dpropfun
     # determine a common mesh
+    min_x_list = np.array([np.min(tx) for tx in xlist])
+    max_x_list = np.array([np.max(tx) for tx in xlist])
+    if not zero_outside:
+        if (not np.all(min_x_list == min_x_list[0]) or
+            not np.all(max_x_list == max_x_list[0])):
+            raise ValueError('The x-limits of the meshes do not coincide')
+
     min_x = np.max([np.min(tx) for tx in xlist])
     max_x = np.min([np.max(tx) for tx in xlist])
     xref = np.unique(np.concatenate(xlist))
@@ -77,7 +89,7 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist, **kwargs):
     ylist_ref = []
     interplist_ref = []
     for x, y, interp in zip(xlist, ylist, interplist):
-        cury = basic_propagate(x, y, xref, interp, zero_outside=True)
+        cury = basic_propagate(x, y, xref, interp, zero_outside)
         idcs = np.searchsorted(x, xref)
         if isinstance(interp, str):
             interp = np.full(len(x), interp)
@@ -91,7 +103,8 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist, **kwargs):
         cur_dfun = generate_dpropfun(i)
         cur_Smat =  compute_romberg_integral(xref, propfun,
                 dfun=cur_dfun, **kwargs)
-        curSref = get_basic_sensmat(xlist[i], ylist[i], xref, interplist[i])
+        curSref = get_basic_sensmat(xlist[i], ylist[i], xref, interplist[i],
+                                    zero_outside, ret_mat=True)
         cur_Smat = np.array([cur_Smat]) @ curSref
         Smat_list.append(cur_Smat)
 
