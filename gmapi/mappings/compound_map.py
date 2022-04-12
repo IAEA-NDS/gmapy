@@ -18,16 +18,16 @@ class CompoundMap:
 
     def __init__(self, fix_sacs_jacobian=True, legacy_integration=True):
         self.maplist = [
-                CrossSectionMap(),
-#                CrossSectionShapeMap(),
-                CrossSectionRatioMap(),
-                CrossSectionRatioShapeMap()
-#                CrossSectionAbsoluteRatioMap(),
-#                CrossSectionShapeOfRatioMap(),
-#                CrossSectionTotalMap(),
-#                CrossSectionShapeOfSumMap(),
-#                CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian,
-#                                              legacy_integration=legacy_integration)
+#w                CrossSectionMap(),
+#w                CrossSectionShapeMap(),
+#w                CrossSectionRatioMap(),
+#w                CrossSectionRatioShapeMap()
+#w               CrossSectionAbsoluteRatioMap(),
+#w                CrossSectionShapeOfRatioMap(),
+#w                CrossSectionTotalMap(),
+#w                CrossSectionShapeOfSumMap(),
+                CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian,
+                                              legacy_integration=legacy_integration)
             ]
 
     def is_responsible(self, datatable):

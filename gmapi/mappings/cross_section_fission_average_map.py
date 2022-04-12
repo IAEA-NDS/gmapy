@@ -15,28 +15,27 @@ class CrossSectionFissionAverageMap:
         self._legacy_integration = legacy_integration
 
 
-    def is_responsible(self, exptable):
-        expmask = exptable['REAC'].str.match('MT:6-R1:')
+    def is_responsible(self, datatable):
+        expmask = datatable['REAC'].str.match('MT:6-R1:')
         return np.array(expmask, dtype=bool)
 
 
-    def propagate(self, priortable, exptable, refvals):
-        preds = np.full(len(exptable), 0., dtype=float) 
-        mapdic = self.__compute(priortable, exptable, refvals, what='propagate')
-        preds[mapdic['idcs2']] = mapdic['propvals'] 
+    def propagate(self, datatable, refvals):
+        preds = np.full(len(datatable), 0., dtype=float)
+        mapdic = self.__compute(datatable, refvals, what='propagate')
+        preds[mapdic['idcs2']] = mapdic['propvals']
         return preds
 
 
-    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
-        num_exp_points = exptable.shape[0]
-        num_prior_points = priortable.shape[0]
-        Sdic = self.__compute(priortable, exptable, refvals, what='jacobian')
+    def jacobian(self, datatable, refvals, ret_mat=False):
+        num_points = datatable.shape[0]
+        Sdic = self.__compute(datatable, refvals, what='jacobian')
         return return_matrix(Sdic['idcs1'], Sdic['idcs2'], Sdic['coeff'],
-                  dims = (num_exp_points, num_prior_points),
+                  dims = (num_points, num_points),
                   how = 'csr' if ret_mat else 'dic')
 
 
-    def __compute(self, priortable, exptable, refvals, what):
+    def __compute(self, datatable, refvals, what):
         legacy_integration = self._legacy_integration
 
         idcs1 = np.empty(0, dtype=int)
@@ -45,12 +44,13 @@ class CrossSectionFissionAverageMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = priortable['REAC'].str.match('MT:1-R1:')
-        priormask = np.logical_or(priormask, priortable['NODE'] == 'fis')
-        priortable = priortable[priormask]
+        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
+                     datatable['NODE'].str.match('xsid_'))
+        priormask = np.logical_or(priormask, datatable['NODE'] == 'fis')
+        priortable = datatable[priormask]
 
-        expmask = self.is_responsible(exptable)
-        exptable = exptable[expmask]
+        expmask = self.is_responsible(datatable)
+        exptable = datatable[expmask]
         expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
