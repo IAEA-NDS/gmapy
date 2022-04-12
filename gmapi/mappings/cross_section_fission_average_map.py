@@ -1,8 +1,8 @@
 import numpy as np
 from .basic_maps import (propagate_fisavg, get_sensmat_fisavg,
         get_sensmat_fisavg_corrected)
-from .basic_integral_maps import (basic_integral_of_product_propagate,
-        get_basic_integral_of_product_sensmats)
+from .basic_integral_maps import (basic_integral_propagate,
+        basic_integral_of_product_propagate, get_basic_integral_of_product_sensmats)
 from .helperfuns import return_matrix
 
 
@@ -71,6 +71,10 @@ class CrossSectionFissionAverageMap:
                 scl_valsfis[0] = valsfis[0] / (xdiff[0]/2)
                 scl_valsfis[-1] = valsfis[-1] / (xdiff[-1]/2)
                 valsfis = scl_valsfis
+                # evaluate the normalization of the fission spectrum
+                normfact = 1./float(basic_integral_propagate(ensfis, valsfis,
+                                                            'lin-lin', maxord=16,
+                                                            rtol=1e-6))
 
         for curexp in expids:
             exptable_red = exptable[exptable['NODE'] == curexp]
@@ -85,16 +89,17 @@ class CrossSectionFissionAverageMap:
             vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
             idcs2red = exptable_red.index
-
             if what == 'propagate':
+
                 if legacy_integration:
                     curval = propagate_fisavg(ens1, vals1, ensfis, valsfis)
+
                 else:
                     curval = basic_integral_of_product_propagate(
                             [ens1, ensfis], [vals1, valsfis],
                             ['lin-lin', 'lin-lin'], zero_outside=True,
-                            maxord=16)
-                    curval = float(curval)
+                            maxord=16, rtol=1e-6)
+                    curval = float(curval) * normfact
 
                 idcs2 = concat([idcs2, idcs2red])
                 propvals = concat([propvals, [curval]])
@@ -102,6 +107,7 @@ class CrossSectionFissionAverageMap:
             elif what == 'jacobian':
 
                 if legacy_integration:
+
                     if self._fix_jacobian:
                         sensvec = get_sensmat_fisavg_corrected(ens1, vals1, ensfis, valsfis)
                     else:
@@ -110,10 +116,12 @@ class CrossSectionFissionAverageMap:
                 else:
                     sensvecs = get_basic_integral_of_product_sensmats(
                             [ens1, ensfis], [vals1, valsfis],
-                            ['lin-lin', 'lin-lin'], zero_outside=True, maxord=16)
+                            ['lin-lin', 'lin-lin'], zero_outside=True,
+                            maxord=16, rtol=1e-6)
                     # because we assume that the fission spectrum is constant
                     # we can ignore the sensitivity to it
                     sensvec = np.ravel(sensvecs[0])
+                    sensvec *= normfact
 
                 idcs1 = concat([idcs1, idcs1red])
                 idcs2 = concat([idcs2, np.full(len(idcs1red), idcs2red, dtype=int)])
