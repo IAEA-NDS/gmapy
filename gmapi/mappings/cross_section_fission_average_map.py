@@ -1,9 +1,10 @@
 import numpy as np
-from .basic_maps import (propagate_fisavg, get_sensmat_fisavg,
-        get_sensmat_fisavg_corrected)
 from .basic_integral_maps import (basic_integral_propagate,
         basic_integral_of_product_propagate, get_basic_integral_of_product_sensmats)
 from .helperfuns import return_matrix
+
+from ..legacy.legacy_maps import (propagate_fisavg, get_sensmat_fisavg,
+        get_sensmat_fisavg_corrected)
 
 
 
