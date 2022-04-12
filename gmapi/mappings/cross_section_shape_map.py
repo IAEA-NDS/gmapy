@@ -7,27 +7,27 @@ from .helperfuns import return_matrix
 
 class CrossSectionShapeMap:
 
-    def is_responsible(self, exptable):
-        expmask = exptable['REAC'].str.match('MT:2-R1:')
+    def is_responsible(self, datatable):
+        expmask = (datatable['REAC'].str.match('MT:2-R1:') &
+                   datatable['NODE'].str.match('exp_'))
         return np.array(expmask, dtype=bool)
 
 
-    def propagate(self, priortable, exptable, refvals):
-        vals = self.__compute(priortable, exptable, refvals, 'propagate')
+    def propagate(self, datatable, refvals):
+        vals = self.__compute(datatable, refvals, 'propagate')
         return vals
 
 
-    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
-        jac = self.__compute(priortable, exptable, refvals, 'jacobian')
+    def jacobian(self, datatable, refvals, ret_mat=False):
+        jac = self.__compute(datatable, refvals, 'jacobian')
         ret = return_matrix(jac['idcs1'], jac['idcs2'], jac['x'],
-                dims = (len(exptable.index), len(priortable.index)),
+                dims = (len(datatable.index), len(datatable.index)),
                 how = 'csr' if ret_mat else 'dic')
         return ret
 
 
-    def __compute(self, priortable, exptable, refvals, what):
-        num_prior_points = priortable.shape[0]
-        num_exp_points = exptable.shape[0]
+    def __compute(self, datatable, refvals, what):
+        num_points = datatable.shape[0]
 
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
@@ -35,12 +35,13 @@ class CrossSectionShapeMap:
         vals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        isresp = self.is_responsible(exptable)
-        reacs = exptable.loc[isresp, 'REAC'].unique()
+        isresp = self.is_responsible(datatable)
+        reacs = datatable.loc[isresp, 'REAC'].unique()
         for curreac in reacs:
-            priormask = priortable['REAC'] == curreac.replace('MT:2','MT:1')
-            priortable_red = priortable[priormask]
-            exptable_red = exptable[exptable['REAC'] == curreac]
+            priormask = ((datatable['REAC'] == curreac.replace('MT:2','MT:1')) &
+                         datatable['NODE'].str.match('xsid_'))
+            priortable_red = datatable[priormask]
+            exptable_red = datatable[datatable['REAC'] == curreac]
             ens1 = priortable_red['ENERGY']
             vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
@@ -49,8 +50,8 @@ class CrossSectionShapeMap:
             for dataset_id in dataset_ids:
                 exptable_ds = exptable_red[exptable_red['NODE'] == dataset_id]
                 # get the respective normalization factor from prior
-                mask = priortable['NODE'] == dataset_id.replace('exp_', 'norm_')
-                norm_index = priortable[mask].index
+                mask = datatable['NODE'] == dataset_id.replace('exp_', 'norm_')
+                norm_index = datatable[mask].index
                 if (len(norm_index) != 1):
                     raise IndexError('There are ' + str(len(norm_index)) +
                         ' normalization factors in prior for dataset ' + str(dataset_id))
@@ -92,7 +93,7 @@ class CrossSectionShapeMap:
 
         elif what == 'propagate':
             # bring the elements into order
-            allvals = np.full(num_exp_points, 0.)
+            allvals = np.full(num_points, 0.)
             allvals[idcs2] = vals
             return allvals
 

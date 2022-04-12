@@ -5,35 +5,47 @@ from scipy.linalg.lapack import dpotri, dpotrf
 
 
 
-def gls_update(priortable, mapping, exptable, expcovmat, retcov=False):
+def gls_update(mapping, datatable, expcovmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
-    priorvals = np.full(len(priortable), 0.)
-    priorvals[priortable.index] = priortable['PRIOR']
+    priorvals = np.full(len(datatable), 0.)
+    priorvals[datatable.index] = datatable['PRIOR']
     refvals = priorvals.copy()
 
-    meas = np.full(len(exptable), 0.)
-    meas[exptable.index] = exptable['DATA']
+    meas = np.full(len(datatable), 0.)
+    meas[datatable.index] = datatable['DATA']
 
-    preds = mapping.propagate(priortable, exptable, refvals)
-    S = mapping.jacobian(priortable, exptable, refvals, ret_mat=True)
+    preds = mapping.propagate(datatable, refvals)
+    S = mapping.jacobian(datatable, refvals, ret_mat=True)
 
     # for the time being mask out the fisdata block
-    isfis = np.full(len(priortable), False)
-    isfis[priortable.index] = priortable['NODE'] == 'fis'
+    isfis = np.full(len(datatable), False)
+    isfis[datatable.index] = datatable['NODE'] == 'fis'
     not_isfis = np.logical_not(isfis)
-    priorvals = priorvals[not_isfis]
-    S = S[:,not_isfis].copy()
+
+    isresp = np.empty(len(datatable), dtype=float)
+    isresp[datatable.index] = mapping.is_responsible(datatable)
+    not_isresp = np.logical_not(isresp)
+    has_zerounc = expcovmat.diagonal() == 0.
+    not_has_zerounc = np.logical_not(has_zerounc)
+    is_indep = np.logical_and(not_isresp, not_isfis)
+    is_indep = np.logical_and(is_indep, has_zerounc)
+    is_dep = np.logical_and(isresp, not_has_zerounc)
+
+    # reduce the matrices for the GLS solve
+    priorvals = priorvals[is_indep]
+    meas = meas[is_dep]
+    preds = preds[is_dep]
+    S = S[is_dep,:].tocsc()
+    S = S[:,is_indep]
+    expcovmat = expcovmat[is_dep,:].tocsc()
+    expcovmat = expcovmat[:,is_dep]
 
     # perform the update
-    inv_post_cov = S.T @ spsolve(expcovmat.tocsc(), S.tocsc())
-    upd_priorvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(expcovmat, meas-preds)))
+    inv_post_cov = S.T @ spsolve(expcovmat, S)
+    postvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(expcovmat, meas-preds)))
 
-    # introduce the unmodified fission spectrum in the posterior
-    ext_upd_priorvals = refvals.copy()
-    ext_upd_priorvals[not_isfis] = upd_priorvals
-
-    ext_post_covmat = None
+    post_covmat = None
     if retcov is True:
         # following is equivalent to:
         # post_covmat = np.linalg.inv(inv_post_cov.toarray())
@@ -41,11 +53,8 @@ def gls_update(priortable, mapping, exptable, expcovmat, retcov=False):
         invres , info = dpotri(cholfact)
         if info != 0:
             raise ValueError('Experimental covariance matrix not positive definite')
-
-        # extend posterior covariance matrix with fission block
-        ext_post_covmat = np.full((len(priortable), len(priortable)), 0., dtype=float)
         post_covmat = np.triu(invres) + np.triu(invres, k=1).T
-        ext_post_covmat[np.ix_(not_isfis, not_isfis)] = post_covmat
 
-    return {'upd_vals': ext_upd_priorvals, 'upd_covmat': ext_post_covmat}
+    return {'upd_vals': postvals, 'upd_covmat': post_covmat,
+            'idcs': np.sort(datatable.index[is_indep])}
 

@@ -33,6 +33,14 @@ class TestLegacyDivergence(unittest.TestCase):
             os.mkdir('testoutput')
         except FileExistsError:
             pass
+
+        # remove the fis values because they are constant
+        reftable = reftable[reftable['NODE'] != 'fis']
+        reftable.reset_index(drop=True, inplace=True)
+
+        reftable_noppp = reftable_noppp[reftable_noppp['NODE'] != 'fis']
+        reftable_noppp.reset_index(drop=True, inplace=True)
+
         cls._dbpath = dbpath
         cls._reftable = reftable
         cls._dbpath_noppp = dbpath_noppp
@@ -88,6 +96,8 @@ class TestLegacyDivergence(unittest.TestCase):
                 fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
+        idcs = upd_res['idcs']
+        res2 = res2[idcs]
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
         maxrelerr = np.max(relerr)
         self.assertLess(maxrelerr, 1e-8)
@@ -100,6 +110,8 @@ class TestLegacyDivergence(unittest.TestCase):
                 fix_ppp_bug=False, fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
+        idcs = upd_res['idcs']
+        res2 = res2[idcs]
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
         maxrelerr = np.max(relerr)
         self.assertLess(maxrelerr, 1e-8)
@@ -112,6 +124,8 @@ class TestLegacyDivergence(unittest.TestCase):
                 fix_ppp_bug=True, fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
+        idcs = upd_res['idcs']
+        res2 = res2[idcs]
         # just select the cross sections and
         # skip the normalization constants
         sel = reftable['NODE'].str.match('xsid')
@@ -136,6 +150,8 @@ class TestLegacyDivergence(unittest.TestCase):
                 fix_ppp_bug=True, fix_sacs_jacobian=False)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
+        idcs = upd_res['idcs']
+        res2 = res2[idcs]
         # just select the cross sections and
         # skip the normalization constants
         sel = reftable['NODE'].str.match('xsid')
@@ -160,6 +176,8 @@ class TestLegacyDivergence(unittest.TestCase):
                 fix_ppp_bug=False, fix_sacs_jacobian=True)
         res1 = reftable['POST'].to_numpy()
         res2 = upd_res['table']['POST'].to_numpy()
+        idcs = upd_res['idcs']
+        res2 = res2[idcs]
         relerr = np.abs(res1-res2) / np.maximum(1e-8, res2)
         maxrelerr = np.max(relerr)
         #self.print_comparison_info(titlemsg, reftable[sel], res2, relerr)

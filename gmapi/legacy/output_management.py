@@ -96,7 +96,7 @@ def write_prior_info(APR, IPP, file_IO4):
         fort_write(file_IO4, format135, [K, APR.CLAB[K, 1:2]])
     # label .lbl22
     if IPP[1] != 0:
-        format136 = "(1H1//,2X,35HENERGIES AND APRIORI CROSS SECTIONS//)" 
+        format136 = "(1H1//,2X,35HENERGIES AND APRIORI CROSS SECTIONS//)"
         fort_write(file_IO4, format136, [])
         format137 = "(/ '     INDEX     E/MEV   ',7X,A16 /)"
         for  K in fort_range(1,NC):  # .lbl24
@@ -205,7 +205,7 @@ def write_dataset_table(ID, data, APR, MPPP, IPP, file_IO4):
         WXX = 1./(DCSK*DCSK)
         WWT = WWT + WXX
 
-        #VPEND 
+        #VPEND
         #
         #      DATA OUTPUT
         #
@@ -368,7 +368,7 @@ def output_result(gauss, fisdata, APR, MODAP,
         new_APR_CS = new_APR_CS.copy()
 
     for L in fort_range(1,NC):  # .lbl14
-        format117 = "(1H1,'   RESULT',5X,A16//)" 
+        format117 = "(1H1,'   RESULT',5X,A16//)"
         fort_write(file_IO4, format117, [APR.CLAB[L,1:2]])
         fort_write(file_IO5, format117, [APR.CLAB[L,1:2]])
         format112 = "( '   E/MEV         CS/B            DCS/B       DCS/%" + \
@@ -408,7 +408,7 @@ def output_result(gauss, fisdata, APR, MODAP,
 
             FQW=DDX*100./CXX
             SECS=np.sqrt(APR.EN[K])*CXX
-            format153 = "(1X,E10.4,2F15.8,2X,F6.1,3X,F7.2,3X,F10.5)" 
+            format153 = "(1X,E10.4,2F15.8,2X,F6.1,3X,F7.2,3X,F10.5)"
             fort_write(file_IO4, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
             fort_write(file_IO5, format153, [APR.EN[K],CXX,DDX,FQW,CXXD,SECS])
             if not (MODAP == 0):
@@ -435,7 +435,7 @@ def output_result(gauss, fisdata, APR, MODAP,
             fort_write(file_IO4, format153, [APR.EN[K], new_APR_CS[K], SSMOO, DSMOOR])
         # VP above is writing CS in B-6 format and smoothing with CS conserving
 
-        format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)" 
+        format158 = "(1H*//,'  FISSION AVERAGE ' ,F8.4//)"
         fort_write(file_IO4, format158, [FLX])
 
     #
@@ -494,7 +494,7 @@ def get_matrix_products(gauss, data, curAM):
 
 
 def write_iteration_info(APR, datablock_list, gauss,
-        priortable, mapping, exptable,
+        datatable, mapping,
         MODREP, MODAP, MPPP, IPP, LABL, file_IO4, file_IO5):
     dc = copy.deepcopy
     APR = dc(APR)
@@ -506,15 +506,16 @@ def write_iteration_info(APR, datablock_list, gauss,
 
     # compute on the fly the old AM quantity
     # not used in the Python code anymore
-    priorvals = priortable['PRIOR'].to_numpy()
-    expvals = exptable['DATA'].to_numpy()
+    priorvals = datatable['PRIOR'].to_numpy()
+    isexp = datatable['NODE'].str.match('exp_')
+    expvals = datatable[isexp]['DATA'].to_numpy()
     effDCS = extract_effDCS_values(datablock_list)
-    propvals = mapping.propagate(priortable, exptable, priorvals)
+    propvals = mapping.propagate(datatable, priorvals)[isexp]
     DQQQ = effDCS * expvals * 0.01
     AMvec = (expvals - propvals)/DQQQ
 
     # get fission spectrum from prior
-    fisvals = priorvals[priortable['NODE'] == 'fis']
+    fisvals = priorvals[datatable['NODE'] == 'fis']
 
     curNSHP = 0
     totNSHP = APR.NSHP
@@ -637,7 +638,7 @@ def output_result_correlation_matrix(gauss, data, APR, IPP,
                             data.AAA[J-J3+1, I-J1+1] = gauss.BM[J]
                             # CVP
 
-                        fort_write(file_IO4, format151, [gauss.BM[J3:(J4+1)]]) 
+                        fort_write(file_IO4, format151, [gauss.BM[J3:(J4+1)]])
 
                     # CVP   Lines below are added by VP, 26 July, 2004
                     format388 = '(6E11.4)'

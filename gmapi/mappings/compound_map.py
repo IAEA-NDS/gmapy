@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.sparse import csr_matrix, coo_matrix
 
 from .helperfuns import return_matrix
 from .cross_section_map import CrossSectionMap
@@ -30,30 +31,34 @@ class CompoundMap:
                                               legacy_integration=legacy_integration)
             ]
 
-    def is_responsible(self, exptable):
-        resp = np.full(len(exptable.index), False, dtype=bool)
+    def is_responsible(self, datatable):
+        resp = np.full(len(datatable.index), False, dtype=bool)
         for curmap in self.maplist:
-            curresp = curmap.is_responsible(exptable)
+            curresp = curmap.is_responsible(datatable)
             if np.any(np.logical_and(resp, curresp)):
                 raise ValueError('Several maps claim responsibility')
             resp = np.logical_or(resp, curresp)
         return resp
 
 
-    def propagate(self, priortable, exptable, refvals):
-        if not np.all(self.is_responsible(exptable)):
+    def propagate(self, datatable, refvals):
+        datatable = datatable.sort_index()
+        isresp = self.is_responsible(datatable)
+        isexp = datatable['NODE'].str.match('exp_')
+        not_isresp = np.logical_not(isresp)
+        if not np.all(isresp[isexp]):
             raise TypeError('No known link from prior to some experimental data points')
 
-        treated = np.full(exptable.shape[0], False)
-        propvals = np.full(exptable.shape[0], 0.)
+        treated = np.full(datatable.shape[0], False)
+        propvals = np.full(datatable.shape[0], 0.)
+        propvals[not_isresp] = refvals[not_isresp]
 
-        exptable = exptable.sort_index()
         for curmap in self.maplist:
-            curresp = curmap.is_responsible(exptable)
+            curresp = curmap.is_responsible(datatable)
             if np.any(np.logical_and(treated, curresp)):
                 raise ValueError('Several maps claim responsibility for the same rows')
             treated[curresp] = True
-            curvals = curmap.propagate(priortable, exptable, refvals)
+            curvals = curmap.propagate(datatable, refvals)
             if np.any(np.logical_and(propvals!=0., curvals!=0.)):
                 raise ValueError('Several maps contribute to same experimental datapoint')
             propvals += curvals
@@ -61,27 +66,27 @@ class CompoundMap:
         return propvals
 
 
-    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
-        if not np.all(self.is_responsible(exptable)):
+    def jacobian(self, datatable, refvals, ret_mat=False):
+        isexp = datatable['NODE'].str.match('exp_')
+        isresp = self.is_responsible(datatable)
+        if not np.all(isresp[isexp]):
             raise TypeError('No known link from prior to some experimental data points')
 
+        numel = len(datatable)
+        idcs = np.arange(len(datatable))
+
+        ones = np.full(len(datatable), 1., dtype=float)
+        idmat = csr_matrix((ones, (idcs, idcs)),
+                           shape=(numel, numel), dtype=float)
+        compSmat = idmat
         concat = np.concatenate
-        Sdic = {'idcs1': np.empty(0, dtype=int),
-                'idcs2': np.empty(0, dtype=int),
-                'x': np.empty(0, dtype=float)}
         for curmap in self.maplist:
-            curSdic = curmap.jacobian(priortable, exptable, refvals)
+            curSmat = curmap.jacobian(datatable, refvals, ret_mat=True)
+            compSmat = (idmat + curSmat) @ compSmat
 
-            if len(curSdic['idcs1']) != len(curSdic['idcs2']):
-                raise ValueError('Lengths of idcs1 and idcs2 not equal')
-            if len(curSdic['idcs1']) != len(curSdic['x']):
-                raise ValueError('Lengths of idcs1 and x not equal')
-
-            Sdic['idcs1'] = concat([Sdic['idcs1'], curSdic['idcs1']])
-            Sdic['idcs2'] = concat([Sdic['idcs2'], curSdic['idcs2']])
-            Sdic['x'] = concat([Sdic['x'], curSdic['x']])
-
-        return return_matrix(Sdic['idcs1'], Sdic['idcs2'], Sdic['x'],
-                dims = (exptable.shape[0], priortable.shape[0]),
-                how = 'csr' if ret_mat else 'dic')
+        if ret_mat:
+            return compSmat
+        else:
+            tmp = coo_matrix(compSmat)
+            return {'idcs1': tmp.col, 'idcs2': tmp.row, 'x': tmp.data}
 

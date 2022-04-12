@@ -6,12 +6,16 @@ import re
 SHAPE_MT_IDS = (2,4,8,9)
 
 
-def attach_shape_prior(priortable, mapping, exptable, refvals=None, uncs=None):
+def attach_shape_prior(datatable, mapping, refvals=None, uncs=None):
     """Attach experimental normalization constants to prior."""
     if refvals is None:
         raise ValueError('Please provide reference values for propagation')
     if uncs is None:
         raise ValueError('Please provide uncertainties for weighting')
+
+    # split datatable into priortable and exptable
+    priortable = datatable[datatable['NODE'].str.match('xsid_')]
+    exptable = datatable[datatable['NODE'].str.match('exp_')]
 
     # obtain all experimental points that are affected by unknown normalization
     mtnums = exptable['REAC'].str.extract('^ *MT:([0-9]+)-', expand=False)
@@ -29,12 +33,12 @@ def attach_shape_prior(priortable, mapping, exptable, refvals=None, uncs=None):
         norm_prior_dic['REAC'].append('NA')
         norm_prior_dic['ENERGY'].append(0.)
     norm_df = pd.DataFrame.from_dict(norm_prior_dic)
-    ext_priortable = pd.concat([priortable, norm_df], axis=0, ignore_index=True)
+    ext_datatable = pd.concat([datatable, norm_df], axis=0, ignore_index=True)
     ext_refvals = np.concatenate([refvals, norm_df['PRIOR'].to_numpy()])
 
     # calculate a first estimate of normalization factor
     # using the propagated prior values
-    propvals = mapping.propagate(ext_priortable, exptable, ext_refvals)
+    propvals = mapping.propagate(ext_datatable, ext_refvals)
     for cur_exp, cur_exp_df in exp_groups:
         cur_propvals = propvals[cur_exp_df.index]
         cur_uncs = uncs[cur_exp_df.index]
@@ -47,33 +51,35 @@ def attach_shape_prior(priortable, mapping, exptable, refvals=None, uncs=None):
         # to obtain experimental values
         cur_expscale = 1. / invexpscale
 
-        normmask = ext_priortable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
-        ext_priortable.loc[normmask, 'PRIOR'] = cur_expscale
+        normmask = ext_datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
+        ext_datatable.loc[normmask, 'PRIOR'] = cur_expscale
 
-    return ext_priortable
+    return ext_datatable
 
 
 
-def update_dummy_datapoints(exptable, refvals):
+def update_dummy_datapoints(datatable, refvals):
     """Replace values of dummy datapoints by those in refvals."""
-    sel = exptable['NODE'].str.fullmatch('exp_90[0-9]')
-    exptable.loc[sel, 'DATA'] = refvals[exptable.loc[sel].index]
+    sel = datatable['NODE'].str.fullmatch('exp_90[0-9]')
+    datatable.loc[sel, 'DATA'] = refvals[datatable.loc[sel].index]
 
 
 
-def calculate_PPP_correction(priortable, mapping, exptable, refvals, uncs):
+def calculate_PPP_correction(datatable, mapping, refvals, uncs):
     """Calculate the PPP corrected uncertainties."""
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # in order to reproduce PPP correction philosophy of Fortran GMAP
-    selidx = priortable[priortable['NODE'].str.match('norm_')].index
+    selidx = datatable[datatable['NODE'].str.match('norm_')].index
     refvals[selidx] = 1.
     # calculate PPP correction
-    propvals = mapping.propagate(priortable, exptable, refvals)
-    effuncs = uncs * propvals / exptable['DATA'].to_numpy()
+    propvals = mapping.propagate(datatable, refvals)
+    effuncs = uncs * propvals / datatable['DATA'].to_numpy()
     # but no PPP correction for fission averages
-    is_sacs = exptable['REAC'].str.match('MT:6-')
-    sacs_idx = exptable[is_sacs].index
+    is_sacs = (datatable['REAC'].str.match('MT:6-') &
+               datatable['NODE'].str.match('exp_'))
+
+    sacs_idx = datatable[is_sacs].index
     effuncs[sacs_idx] = uncs[sacs_idx]
     return effuncs
 

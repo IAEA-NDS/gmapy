@@ -6,41 +6,39 @@ from .helperfuns import return_matrix
 
 class CrossSectionMap:
 
-    def is_responsible(self, exptable):
-        expmask = exptable['REAC'].str.match('MT:1-R1:')
+    def is_responsible(self, datatable):
+        expmask = (datatable['REAC'].str.match('MT:1-R1:') &
+                   datatable['NODE'].str.match('exp_'))
         return np.array(expmask, dtype=bool)
 
 
-    def propagate(self, priortable, exptable, refvals):
-        propdic = self.__compute(priortable, exptable, refvals, 'propagate')
-        propvals = np.full(exptable.shape[0], 0., dtype=float)
+    def propagate(self, datatable, refvals):
+        propdic = self.__compute(datatable, refvals, 'propagate')
+        propvals = np.full(datatable.shape[0], 0., dtype=float)
         propvals[propdic['idcs2']] = propdic['propvals']
         return propvals
 
 
-    def jacobian(self, priortable, exptable, refvals, ret_mat=False):
-        num_exp_points = exptable.shape[0]
-        num_prior_points = priortable.shape[0]
-        Sdic = self.__compute(priortable, exptable, refvals, 'jacobian')
+    def jacobian(self, datatable, refvals, ret_mat=False):
+        num_points = datatable.shape[0]
+        Sdic = self.__compute(datatable, refvals, 'jacobian')
         return return_matrix(Sdic['idcs1'], Sdic['idcs2'], Sdic['coeffs'],
-                  dims = (num_exp_points, num_prior_points),
+                  dims = (num_points, num_points),
                   how = 'csr' if ret_mat else 'dic')
 
 
-    def __compute(self, priortable, exptable, refvals, what):
-        num_exp_points = exptable.shape[0]
-        num_prior_points = priortable.shape[0]
-
+    def __compute(self, datatable, refvals, what):
         idcs1 = np.empty(0, dtype=int)
         idcs2 = np.empty(0, dtype=int)
         coeff = np.empty(0, dtype=float)
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = priortable['REAC'].str.match('MT:1-R1:')
-        priortable = priortable[priormask]
-        expmask = self.is_responsible(exptable)
-        exptable = exptable[expmask]
+        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
+                     datatable['NODE'].str.match('xsid_'))
+        priortable = datatable[priormask]
+        expmask = self.is_responsible(datatable)
+        exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
         for curreac in reacs:

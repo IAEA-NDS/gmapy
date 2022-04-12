@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 import json
+from scipy.sparse import coo_matrix, csr_matrix
 
 # BEGIN LEGACY
 from .legacy.inference import (link_prior_and_datablocks, update_prior_estimates,
@@ -82,9 +84,14 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     else:
         raise ValueError('dbtype must be "legacy" or "json"')
 
-    refvals = priortable['PRIOR'].to_numpy()
-    uncs = create_relunc_vector(new_datablock_list)
-    priortable = attach_shape_prior(priortable, compmap, exptable, refvals, uncs)
+
+    datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
+    refvals = datatable['PRIOR'].to_numpy()
+
+    uncs = np.full(len(refvals), np.nan)
+    expsel = datatable['NODE'].str.match('exp_').to_numpy()
+    uncs[expsel] = create_relunc_vector(new_datablock_list)
+    datatable = attach_shape_prior(datatable, compmap, refvals, uncs)
 
     # NOTE: The code enclosed by LEGACY is just there
     #       to create the output as produced by
@@ -107,52 +114,64 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     # END LEGACY
 
     MODREP = 0
-    uncs = create_relunc_vector(new_datablock_list)
-    orig_priorvals = priortable['PRIOR'].to_numpy().copy()
+    expsel = datatable['NODE'].str.match('exp_').to_numpy()
+    idcs = datatable.index[expsel].to_numpy()
+    uncs = np.full(len(datatable), 0.)
+    uncs[idcs] = create_relunc_vector(new_datablock_list)
+
+    orig_priorvals = datatable['PRIOR'].to_numpy().copy()
     while True:
 
-        refvals = priortable['PRIOR'].to_numpy()
-        propvals = compmap.propagate(priortable, exptable, refvals)
-        update_dummy_datapoints(exptable, propvals)
+        refvals = datatable['PRIOR'].to_numpy()
+        propvals = compmap.propagate(datatable, refvals)
+        update_dummy_datapoints(datatable, propvals)
         if correct_ppp:
-            effuncs = calculate_PPP_correction(priortable, compmap, exptable, refvals, uncs)
+            effuncs = calculate_PPP_correction(datatable, compmap, refvals, uncs)
         else:
             effuncs = uncs.copy()
-        expdata = exptable['DATA'].to_numpy()
-        expcovmat = create_experimental_covmat(new_datablock_list, expdata,
-                uncs, effuncs, fix_ppp_bug=fix_ppp_bug)
 
-        upd_res = gls_update(priortable, compmap, exptable, expcovmat, retcov=True)
+        expdata = datatable['DATA'].to_numpy()
+        # construct covariance matrix
+        uncs_red = uncs[expsel]
+        effuncs_red = effuncs[expsel]
+        expdata_red = expdata[expsel]
+        tmp = create_experimental_covmat(new_datablock_list, expdata_red, uncs_red,
+                                         effuncs_red, fix_ppp_bug=fix_ppp_bug)
+        tmp = coo_matrix(tmp)
+        expcovmat = csr_matrix((tmp.data, (idcs[tmp.row], idcs[tmp.col])),
+                               shape = (len(datatable), len(datatable)),
+                               dtype=float)
+        del(tmp)
+
+        upd_res = gls_update(compmap, datatable, expcovmat, retcov=True)
+        prior_idcs = upd_res['idcs']
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
 
         # BEGIN LEGACY
         if legacy_output:
-            fismask = priortable['NODE'] == 'fis'
-            invfismask = np.logical_not(fismask)
-            red_upd_covmat = upd_covmat[np.ix_(invfismask, invfismask)]
-            red_upd_vals = upd_vals[invfismask]
+            fismask = datatable['NODE'] == 'fis'
             MPPP = 1 if correct_ppp else 0
 
             for datablock in datablock_list:
                 add_compinfo_to_datablock(datablock, APR, MPPP)
 
-            update_effDCS_values(datablock_list, effuncs)
+            update_effDCS_values(datablock_list, effuncs_red)
             gauss = create_gauss_structure(APR, datablock_list,
-                    red_upd_vals, red_upd_covmat)
+                    upd_vals, upd_covmat)
 
             LABL = init_labels()
             write_iteration_info(APR, datablock_list, gauss,
-                    priortable, compmap, exptable,
+                    datatable, compmap,
                     MODREP, num_iter, MPPP, IPP, LABL, file_IO4, file_IO5)
 
             if num_iter != 0:
-                update_prior_estimates(APR, red_upd_vals)
+                update_prior_estimates(APR, upd_vals)
 
-            update_prior_shape_estimates(APR, red_upd_vals)
+            update_prior_shape_estimates(APR, upd_vals)
         # END LEGACY
 
-        priortable['PRIOR'] = upd_vals
+        datatable.loc[prior_idcs, 'PRIOR'] = upd_vals
 
         if (num_iter == 0 or MODREP == num_iter):
             break
@@ -166,10 +185,14 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         file_IO5.close()
     # END LEGACY
 
-    priortable['PRIOR'] = orig_priorvals
-    priortable['POST'] = upd_vals
-    priortable['POSTUNC'] = np.sqrt(np.diag(upd_covmat))
-    priortable['RELPOSTUNC'] = priortable['POSTUNC'].to_numpy() / priortable['POST'].to_numpy()
-    return {'table': priortable, 'postcov': upd_covmat,
-            'exptable': exptable, 'expcov': expcovmat}
+    datatable['PRIOR'] = orig_priorvals
+
+    postvals = datatable['PRIOR'].to_numpy()
+    postvals[prior_idcs] = upd_vals
+    datatable['POST'] = compmap.propagate(datatable, postvals)
+    datatable['POSTUNC'] = np.full(len(datatable), np.NaN, dtype=float)
+    datatable.loc[prior_idcs, 'POSTUNC'] = np.sqrt(np.diag(upd_covmat))
+    datatable['RELPOSTUNC'] = datatable['POSTUNC'].to_numpy() / datatable['POST'].to_numpy()
+    return {'table': datatable, 'postcov': upd_covmat, 'idcs': prior_idcs,
+            'priorcov': expcovmat}
 
