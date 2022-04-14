@@ -28,6 +28,7 @@ def create_prior_table(prior_list):
             prd['REAC'] = 'MT:1-R1:' + str(xsid)
             prd['ENERGY'] = item['EN']
             prd['PRIOR'] = item['CS']
+            prd['UNC'] = np.inf
             prd['DESCR'] = item['CLAB'].strip()
             curdf = pd.DataFrame.from_dict(prd)
             df.append(curdf)
@@ -45,6 +46,8 @@ def create_prior_table(prior_list):
             prd['REAC'] = 'NA'
             prd['ENERGY'] = item['ENFIS']
             prd['PRIOR'] = item['FIS']
+            prd['UNC'] = 0.
+            prd['DATA'] = np.nan
             prd['DESCR'] = 'fission spectrum'
             curdf = pd.DataFrame.from_dict(prd)
             df.append(curdf)
@@ -69,7 +72,9 @@ def create_experiment_table(datablock_list):
                 'REAC': 'MT:' + str(ds['MT']) +
                         ''.join(['-R%d:%d'%(i+1,r) for i,r in enumerate(ds['NT'])]),
                 'ENERGY': ds['E'],
-                'DATA': ds['CSS'],
+                'PRIOR':  0.,
+                'UNC':    np.nan,
+                'DATA':   ds['CSS'],
                 'DB_IDX': dbidx,
                 'DS_IDX': dsidx
             })

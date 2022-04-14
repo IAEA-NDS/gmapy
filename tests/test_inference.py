@@ -69,26 +69,29 @@ class TestInference(unittest.TestCase):
         datablocklist = self._datablocklist
         compmap = CompoundMap()
         # prepare experimental data and uncertainties
-        uncs = np.full(len(datatable), np.nan)
+        uncs = datatable['UNC'].to_numpy()
         expsel = datatable['NODE'].str.match('exp_').to_numpy()
         uncs[expsel] = create_relunc_vector(datablocklist)
         expdata = datatable['DATA'].to_numpy()
         # construct the sparse csr covariance matrix
         uncs_red = uncs[expsel]
         expdata_red = expdata[expsel]
-        idcs = datatable.index[expsel].to_numpy()
+        exp_idcs = datatable.index[expsel].to_numpy()
         tmp = create_experimental_covmat(datablocklist, expdata_red, uncs_red)
         tmp = coo_matrix(tmp)
-        expcovmat = csr_matrix((tmp.data, (idcs[tmp.row], idcs[tmp.col])),
+        covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
                                shape = (len(datatable), len(datatable)),
                                dtype=float)
+        nonexp_idcs = datatable.index[np.logical_not(expsel)]
+        covmat += csr_matrix((uncs[nonexp_idcs], (nonexp_idcs, nonexp_idcs)),
+                             shape=(len(datatable), len(datatable)), dtype=float)
         del(tmp)
 
         np.random.seed(27)
         perm = np.random.permutation(len(datatable))
         perm_datatable = datatable.loc[perm].copy()
-        upd_res1 = gls_update(compmap, datatable, expcovmat, retcov=True)
-        upd_res2 = gls_update(compmap, perm_datatable, expcovmat, retcov=True)
+        upd_res1 = gls_update(compmap, datatable, covmat, retcov=True)
+        upd_res2 = gls_update(compmap, perm_datatable, covmat, retcov=True)
 
         upd_vals_same = np.all(upd_res1['upd_vals'] == upd_res2['upd_vals'])
         upd_covmat_same = np.all(upd_res1['upd_covmat'] == upd_res2['upd_covmat'])
