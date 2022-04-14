@@ -138,12 +138,12 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         tmp = create_experimental_covmat(new_datablock_list, expdata_red, uncs_red,
                                          effuncs_red, fix_ppp_bug=fix_ppp_bug)
         tmp = coo_matrix(tmp)
-        expcovmat = csr_matrix((tmp.data, (idcs[tmp.row], idcs[tmp.col])),
+        covmat = csr_matrix((tmp.data, (idcs[tmp.row], idcs[tmp.col])),
                                shape = (len(datatable), len(datatable)),
                                dtype=float)
         del(tmp)
 
-        upd_res = gls_update(compmap, datatable, expcovmat, retcov=True)
+        upd_res = gls_update(compmap, datatable, covmat, retcov=True)
         prior_idcs = upd_res['idcs']
         upd_vals = upd_res['upd_vals']
         upd_covmat = upd_res['upd_covmat']
@@ -194,5 +194,5 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     datatable.loc[prior_idcs, 'POSTUNC'] = np.sqrt(np.diag(upd_covmat))
     datatable['RELPOSTUNC'] = datatable['POSTUNC'].to_numpy() / datatable['POST'].to_numpy()
     return {'table': datatable, 'postcov': upd_covmat, 'idcs': prior_idcs,
-            'priorcov': expcovmat}
+            'priorcov': covmat}
 

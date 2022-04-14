@@ -5,7 +5,7 @@ from scipy.linalg.lapack import dpotri, dpotrf
 
 
 
-def gls_update(mapping, datatable, expcovmat, retcov=False):
+def gls_update(mapping, datatable, covmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
     priorvals = np.full(len(datatable), 0.)
@@ -26,7 +26,7 @@ def gls_update(mapping, datatable, expcovmat, retcov=False):
     isresp = np.empty(len(datatable), dtype=float)
     isresp[datatable.index] = mapping.is_responsible(datatable)
     not_isresp = np.logical_not(isresp)
-    has_zerounc = expcovmat.diagonal() == 0.
+    has_zerounc = covmat.diagonal() == 0.
     not_has_zerounc = np.logical_not(has_zerounc)
     is_indep = np.logical_and(not_isresp, not_isfis)
     is_indep = np.logical_and(is_indep, has_zerounc)
@@ -38,12 +38,12 @@ def gls_update(mapping, datatable, expcovmat, retcov=False):
     preds = preds[is_dep]
     S = S[is_dep,:].tocsc()
     S = S[:,is_indep]
-    expcovmat = expcovmat[is_dep,:].tocsc()
-    expcovmat = expcovmat[:,is_dep]
+    covmat = covmat[is_dep,:].tocsc()
+    covmat = covmat[:,is_dep]
 
     # perform the update
-    inv_post_cov = S.T @ spsolve(expcovmat, S)
-    postvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(expcovmat, meas-preds)))
+    inv_post_cov = S.T @ spsolve(covmat, S)
+    postvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(covmat, meas-preds)))
 
     post_covmat = None
     if retcov is True:
