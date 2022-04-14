@@ -18,28 +18,22 @@ def gls_update(mapping, datatable, covmat, retcov=False):
     preds = mapping.propagate(datatable, refvals)
     S = mapping.jacobian(datatable, refvals, ret_mat=True)
 
-    # for the time being mask out the fisdata block
-    isfis = np.full(len(datatable), False)
-    isfis[datatable.index] = datatable['NODE'] == 'fis'
-    not_isfis = np.logical_not(isfis)
-
-    isresp = np.empty(len(datatable), dtype=float)
-    isresp[datatable.index] = mapping.is_responsible(datatable)
-    not_isresp = np.logical_not(isresp)
+    not_isobs = np.isnan(meas)
+    isobs = np.logical_not(not_isobs)
     has_zerounc = covmat.diagonal() == 0.
-    not_has_zerounc = np.logical_not(has_zerounc)
-    is_indep = np.logical_and(not_isresp, not_isfis)
-    is_indep = np.logical_and(is_indep, has_zerounc)
-    is_dep = np.logical_and(isresp, not_has_zerounc)
+    has_nonzerounc = np.logical_not(has_zerounc)
+    isadj = np.logical_and(has_nonzerounc, not_isobs)
+    if np.any(np.logical_and(has_zerounc, isobs)):
+        raise ValueError('Observed data must have non-zero uncertainty')
 
     # reduce the matrices for the GLS solve
-    priorvals = priorvals[is_indep]
-    meas = meas[is_dep]
-    preds = preds[is_dep]
-    S = S[is_dep,:].tocsc()
-    S = S[:,is_indep]
-    covmat = covmat[is_dep,:].tocsc()
-    covmat = covmat[:,is_dep]
+    priorvals = priorvals[isadj]
+    preds = preds[isobs]
+    meas = meas[isobs]
+    S = S[isobs,:].tocsc()
+    S = S[:,isadj]
+    covmat = covmat[isobs,:].tocsc()
+    covmat = covmat[:,isobs]
 
     # perform the update
     inv_post_cov = S.T @ spsolve(covmat, S)
@@ -56,5 +50,5 @@ def gls_update(mapping, datatable, covmat, retcov=False):
         post_covmat = np.triu(invres) + np.triu(invres, k=1).T
 
     return {'upd_vals': postvals, 'upd_covmat': post_covmat,
-            'idcs': np.sort(datatable.index[is_indep])}
+            'idcs': np.sort(datatable.index[isadj])}
 

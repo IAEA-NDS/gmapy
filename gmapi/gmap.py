@@ -115,9 +115,10 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     MODREP = 0
     expsel = datatable['NODE'].str.match('exp_').to_numpy()
-    idcs = datatable.index[expsel].to_numpy()
+    exp_idcs = datatable.index[expsel].to_numpy()
+    nonexp_idcs = datatable.index[np.logical_not(expsel)]
     uncs = np.full(len(datatable), 0.)
-    uncs[idcs] = create_relunc_vector(new_datablock_list)
+    uncs[exp_idcs] = create_relunc_vector(new_datablock_list)
 
     orig_priorvals = datatable['PRIOR'].to_numpy().copy()
     while True:
@@ -138,10 +139,14 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         tmp = create_experimental_covmat(new_datablock_list, expdata_red, uncs_red,
                                          effuncs_red, fix_ppp_bug=fix_ppp_bug)
         tmp = coo_matrix(tmp)
-        covmat = csr_matrix((tmp.data, (idcs[tmp.row], idcs[tmp.col])),
-                               shape = (len(datatable), len(datatable)),
+        covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
+                               shape=(len(datatable), len(datatable)),
                                dtype=float)
         del(tmp)
+        # add prior uncertainties
+        prioruncs = datatable.loc[nonexp_idcs, 'UNC'].to_numpy()
+        covmat += csr_matrix((np.square(prioruncs), (nonexp_idcs, nonexp_idcs)),
+                             shape=(len(datatable), len(datatable)), dtype=float)
 
         upd_res = gls_update(compmap, datatable, covmat, retcov=True)
         prior_idcs = upd_res['idcs']
