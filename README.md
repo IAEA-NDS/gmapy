@@ -67,18 +67,14 @@ The Python version does not accept unusable datapoints anymore since commit 07da
 ### Ensuring functional equivalence
 
 To ensure the functional equivalence of the Python and Fortran version,
-a test case was introduced that compares the output of the Python and Fortran
-version. As both versions work with double precision, implement
-the same code logic and rely on the same Fortran functions for the
-Cholesky decomposition and inversion, they produce exactly the same output.
-The test case is written in bash and has only been tested with Linux.
+test cases were introduced that compare the output of the Python and Fortran
+version. They can be found in the `legacy-tests` directory along with a
+README file with more information.
 
-To run the test case, change into the `tests/test_002` directory and run
-```
-./run_fort.sh
-```
-The return code accessible by typing `$?` is zero if successful.
-If differences exist, they will be written out to the console.
-Please note that if you re-run the test case after a modification of the Python
-source code, you should first delete the `result` directory in `tests/test_002`.
+Because the Python version will go beyond the capabilities of the Fortran
+version, testing by comparing to the results of the Fortran version
+will then not be possible anymore. Therefore, tests were
+introduced relying on the `unittest` package to validate the Python
+version without invoking the Fortran version, which can be found in the
+`tests` directory.
 
