@@ -85,6 +85,18 @@ class Dataset(object):
             })
         self._update_dic_skeleton()
 
+    def add_norm_uncertainty(self, uncertainty):
+        if not isinstance(uncertainty, float):
+            raise TypeError('uncertainty must be a float')
+        ENFF = self.dataset_dic['ENFF']
+        NENF = self.dataset_dic['NENF']
+        col_idx = 0
+        while col_idx < len(ENFF) and ENFF[col_idx] != 0:
+            col_idx += 1
+        if col_idx == len(ENFF):
+            raise IndexError('no uncertainty slot available anymore')
+        ENFF[col_idx] = uncertainty
+
     def add_uncertainties(self, uncertainties, epaf_params=(0.5,0.5,0.5)):
         if not self._is_float_list(uncertainties):
             raise TypeError('all uncertainties must be float')
