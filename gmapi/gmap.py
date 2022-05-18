@@ -23,6 +23,9 @@ from .mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         calculate_PPP_correction)
 from .mappings.compound_map import CompoundMap
 
+from .data_management.database_IO import (read_legacy_gma_database,
+        read_json_gma_database)
+
 
 #################################################
 #   START OF GMAP PROGRAM
@@ -199,22 +202,6 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     datatable['RELPOSTUNC'] = datatable['POSTUNC'].to_numpy() / datatable['POST'].to_numpy()
     return {'table': datatable, 'postcov': upd_covmat, 'idcs': prior_idcs,
             'priorcov': covmat}
-
-
-def read_legacy_gma_database(dbfile):
-    format_dic = {}
-    db_dic = read_gma_database(dbfile, format_dic=format_dic)
-    legacy_datablock_list = db_dic['datablock_list']
-    prior_list = sanitize_prior(db_dic['APR'])
-    datablock_list = [sanitize_datablock(b) for b in legacy_datablock_list]
-    return {'prior_list': prior_list, 'datablock_list': datablock_list}
-
-
-def read_json_gma_database(dbfile):
-    with open(dbfile, 'r') as f:
-        db_dic = json.load(f)
-    return {'prior_list': db_dic['prior'],
-            'datablock_list': db_dic['datablocks']}
 
 
 def run_gmap_simplified(prior_list=None, datablock_list=None,
