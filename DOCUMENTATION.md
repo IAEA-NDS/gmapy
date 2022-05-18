@@ -59,7 +59,7 @@ in the dataset is denoted by *N*.
                                   to have the same uncertainty but are assumed
                                   to be independent from each other. The uncertainties
                                   in **ENFF** are ignored for *shape measurements*.
-- **NENFF** (list with 10 integers): This field stores a list with integers that
+- **NENF** (list with 10 integers): This field stores a list with integers that
                                   can serve as tags to label the uncertainty
                                   components. Apart from being read into a data
                                   structure, *it is not used by GMAP*.
