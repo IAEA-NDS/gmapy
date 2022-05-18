@@ -10,7 +10,7 @@ from gmapi.data_management.uncfuns import (create_relunc_vector,
         create_experimental_covmat)
 from gmapi.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapi.gmap import run_gmap
+from gmapi.legacy.legacy_gmap import run_gmap
 
 
 class TestLegacyDivergence(unittest.TestCase):

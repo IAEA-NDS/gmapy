@@ -3,7 +3,7 @@ import pathlib
 from tempfile import TemporaryDirectory
 import numpy as np
 
-from gmapi.gmap import run_gmap
+from gmapi.legacy.legacy_gmap import run_gmap
 from gmapi.legacy.database_reading import read_gma_database
 from gmapi.legacy.conversion_utils import (sanitize_datablock,
         desanitize_datablock, compare_legacy_datablock_lists,

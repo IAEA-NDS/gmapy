@@ -20,7 +20,7 @@
 ############################################################
 
 import argparse
-from gmapi.gmap import run_gmap
+from gmapi.legacy.legacy_gmap import run_gmap
 
 
 if __name__ == '__main__':
