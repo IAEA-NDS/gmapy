@@ -12,6 +12,7 @@ from .cross_section_shape_of_ratio_map import CrossSectionShapeOfRatioMap
 from .cross_section_total_map import CrossSectionTotalMap
 from .cross_section_shape_of_sum_map import CrossSectionShapeOfSumMap
 from .cross_section_fission_average_map import CrossSectionFissionAverageMap
+from .cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
 
 
 
@@ -28,7 +29,8 @@ class CompoundMap:
                 CrossSectionTotalMap(),
                 CrossSectionShapeOfSumMap(),
                 CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian,
-                                              legacy_integration=legacy_integration)
+                                              legacy_integration=legacy_integration),
+                CrossSectionRatioOfSacsMap(atol=1e-5, rtol=1e-05, maxord=16)
             ]
 
     def is_responsible(self, datatable):
