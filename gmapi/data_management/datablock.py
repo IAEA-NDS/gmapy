@@ -1,4 +1,8 @@
 from .dataset import Dataset
+from .uncfuns import create_relunc_vector, create_experimental_covmat
+from scipy.sparse import csr_matrix
+import numpy as np
+import warnings
 
 
 class Datablock(object):
@@ -37,9 +41,62 @@ class Datablock(object):
             del self.dataset_list[cur_idx]
             del self.datablock_dic['datasets'][cur_idx]
 
+    def define_correlation_matrix(self, cormat):
+        if len(cormat.shape) != 2 or cormat.shape[0] != cormat.shape[1]:
+            raise TypeError('cormat must be a square atrix')
+        size = self.get_numpoints()
+        m = cormat.shape[0]
+        if m != size:
+            raise IndexError(f'Dimension of matrix ({m} x {m}) must '
+                             f'match number of datapoints in the datablock '
+                             f'({size})')
+        warnings.warn('Correlation matrix will override any correlations ' +
+                      'defined at the level of datasets')
+        self.datablock_dic['ECOR'] = cormat
+
     def list_dataset_ids(self):
         dslist = self.dataset_list
         return [d.get_dataset_id() for d in dslist]
+
+    def get_numpoints(self):
+        sum_numpoints = 0
+        for ds in self.dataset_list:
+            sum_numpoints += ds.get_numpoints()
+        return sum_numpoints
+
+    def get_cross_sections(self):
+        res = []
+        for ds in self.dataset_list:
+            res.extend(ds.get_cross_sections())
+        return tuple(res)
+
+    def get_energies(self):
+        res = []
+        for ds in self.dataset_list:
+            res.extend(ds.get_energies())
+        return tuple(res)
+
+    def get_uncertainties(self, unit='percent'):
+        if unit != 'percent':
+            raise ValueError('unit must be percent')
+        return create_relunc_vector([self.datablock_dic])
+
+    def get_covariance_matrix(self, unit='percent'):
+        css = np.array(self.get_cross_sections())
+        uncs = np.array(self.get_uncertainties(unit='percent'))
+        covmat = create_experimental_covmat([self.datablock_dic],
+                css=css, uncs=uncs)
+        if unit == 'absolute':
+            return csr_matrix(covmat)
+        elif unit == 'relative' or 'percent':
+            tmp = 1/css
+            if 'precent':
+                tmp *= 100
+            res = covmat * tmp.reshape(-1, 1) * tmp.reshape(1,-1)
+            return csr_matrix(res)
+        else:
+            raise ValueError('unit must be absolute, relative or percent')
+
 
     def get_datablock_dic(self):
         return self.datablock_dic

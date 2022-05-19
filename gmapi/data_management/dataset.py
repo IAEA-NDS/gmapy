@@ -133,3 +133,12 @@ class Dataset(object):
     def get_dataset_id(self):
         return self.dataset_dic['NS']
 
+    def get_numpoints(self):
+        return len(self.dataset_dic['CSS'])
+
+    def get_cross_sections(self):
+        return tuple(self.dataset_dic['CSS'])
+
+    def get_energies(self):
+        return tuple(self.dataset_dic['E'])
+
