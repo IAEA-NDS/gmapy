@@ -2,15 +2,17 @@ import numpy as np
 
 class Dataset(object):
 
-    def __init__(self):
-        self.dataset_dic = {}
+    def __init__(self, dataset_dic=None):
+        if dataset_dic is None:
+            dataset_dic = {}
+        self.dataset_dic = dataset_dic
         self._update_dic_skeleton()
 
     def _update_dic_skeleton(self):
         if 'type' not in self.dataset_dic:
             self.dataset_dic['type'] = 'legacy-experiment-dataset'
         # initialize the CO array
-        if 'CSS' in self.dataset_dic:
+        if 'CSS' in self.dataset_dic and 'CO' not in self.dataset_dic:
             numpoints = len(self.dataset_dic['CSS'])
             CO = [[0. for i in range(12)] for j in range(numpoints)]
             self.dataset_dic['CO'] = CO
@@ -129,6 +131,12 @@ class Dataset(object):
         self.dataset_dic['CO'] = CO
         self.dataset_dic['NETG'] = NETG 
         self.dataset_dic['EPAF'] = EPAF
+
+    def get_author(self):
+        return self.dataset_dic['CLABL'].strip()
+
+    def get_mtnum(self):
+        return self.dataset_dic['MT']
 
     def get_dataset_id(self):
         return self.dataset_dic['NS']

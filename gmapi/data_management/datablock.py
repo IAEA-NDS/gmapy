@@ -7,15 +7,22 @@ import warnings
 
 class Datablock(object):
 
-    def __init__(self):
-        self.datablock_dic = {}
-        self.datablock_dic['type'] = 'legacy-experiment-datablock'
-        self.datablock_dic['datasets'] = []
-        self.dataset_list = []
+    def __init__(self, datablock_dic=None):
+        if datablock_dic is None:
+            self.datablock_dic = {}
+            self.datablock_dic['type'] = 'legacy-experiment-datablock'
+            self.datablock_dic['datasets'] = []
+            self.dataset_list = []
+        else:
+            if datablock_dic['type'] != 'legacy-experiment-datablock':
+                raise TypeError('invalid datablock dictionary: ' +
+                                'type must be "legacy-experiment-datablock')
+            self.datablock_dic = datablock_dic
+            self.dataset_list = [Dataset(ds) for ds in datablock_dic['datasets']]
 
     def add_datasets(self, datasets):
         if isinstance(datasets, Dataset):
-            datasets = [datasets] 
+            datasets = [datasets]
         if not all([isinstance(d, Dataset) for d in datasets]):
             raise TypeError('all items in the list must be Datasets')
         dslist = self.dataset_list
@@ -34,8 +41,24 @@ class Datablock(object):
             cur_id = curdataset.get_dataset_id()
             if cur_id in dataset_ids:
                 remove_idcs.append(cur_idx)
-        if len(remove_idcs) != len(dataset_ids) :
+        if len(remove_idcs) != len(dataset_ids):
             raise IndexError('not all dataset_ids were found in the datablock')
+        remove_idcs.reverse()
+        for cur_idx in remove_idcs:
+            del self.dataset_list[cur_idx]
+            del self.datablock_dic['datasets'][cur_idx]
+
+    def remove_datasets_by_mtnums(self, mtnums):
+        if isinstance(mtnums, int):
+            mtnums = [mtnums]
+        if not all([isinstance(v, int) for v in mtnums]):
+            raise TypeError('all items in the list must be integers')
+        remove_idcs = []
+        dslist = self.datablock_dic['datasets']
+        for cur_idx, curdataset in enumerate(self.dataset_list):
+            cur_mtnum = curdataset.get_mtnum()
+            if cur_mtnum in mtnums:
+                remove_idcs.append(cur_idx)
         remove_idcs.reverse()
         for cur_idx in remove_idcs:
             del self.dataset_list[cur_idx]
