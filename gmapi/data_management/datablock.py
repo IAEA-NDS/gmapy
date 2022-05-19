@@ -115,11 +115,18 @@ class Datablock(object):
             tmp = 1/css
             if 'precent':
                 tmp *= 100
-            res = covmat * tmp.reshape(-1, 1) * tmp.reshape(1,-1)
+            res = (covmat.toarray() * tmp.reshape(-1, 1)) * tmp.reshape(1,-1)
             return csr_matrix(res)
         else:
             raise ValueError('unit must be absolute, relative or percent')
 
+    def get_correlation_matrix(self):
+        covmat = self.get_covariance_matrix()
+        uncs = np.sqrt(covmat.diagonal())
+        covmat /= uncs.reshape(-1, 1)
+        covmat /= uncs.reshape(1, -1)
+        cormat = covmat
+        return cormat
 
     def get_datablock_dic(self):
         return self.datablock_dic
