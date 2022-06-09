@@ -37,16 +37,36 @@ class Datablock(object):
             raise TypeError('all items in the list must be integers')
         remove_idcs = []
         dslist = self.datablock_dic['datasets']
+        # variables to keep track of the
+        # indices of the datapoints covered by the datasets
+        point_idcs = []
+        cur_point_idx = 0
         for cur_idx, curdataset in enumerate(self.dataset_list):
             cur_id = curdataset.get_dataset_id()
+            curnumpts = curdataset.get_numpoints()
+            next_point_idx = cur_point_idx + curnumpts
             if cur_id in dataset_ids:
                 remove_idcs.append(cur_idx)
+                point_idcs.append((cur_point_idx, next_point_idx))
+            cur_point_idx = next_point_idx
+
         if len(remove_idcs) != len(dataset_ids):
             raise IndexError('not all dataset_ids were found in the datablock')
         remove_idcs.reverse()
         for cur_idx in remove_idcs:
             del self.dataset_list[cur_idx]
             del self.datablock_dic['datasets'][cur_idx]
+
+        # delete corresponding rows and columns in
+        # datablock correlation matrix if present
+        ptmask = np.full(cur_point_idx, True)
+        for start_idx, stop_idx in point_idcs:
+            ptmask[start_idx:stop_idx] = False
+        if 'ECOR' in self.datablock_dic:
+            new_ecor = self.datablock_dic['ECOR']
+            new_ecor = new_ecor[ptmask,:]
+            new_ecor = new_ecor[:,ptmask]
+            self.datablock_dic['ECOR'] = new_ecor
 
     def remove_datasets_by_mtnums(self, mtnums):
         if isinstance(mtnums, int):
