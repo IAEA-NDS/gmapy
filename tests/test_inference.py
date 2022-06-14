@@ -58,7 +58,7 @@ class TestInference(unittest.TestCase):
         np.random.seed(27)
         perm = np.random.permutation(len(datatable))
         perm_datatable = datatable.loc[perm].copy()
-        comp_map = CompoundMap()
+        comp_map = CompoundMap(legacy_integration=True)
         refvals = datatable['PRIOR'].to_numpy()
         S1 = comp_map.jacobian(datatable, refvals, ret_mat=True)
         S2 = comp_map.jacobian(perm_datatable, refvals, ret_mat=True)
@@ -67,7 +67,7 @@ class TestInference(unittest.TestCase):
     def test_inference_permutation_invariance(self):
         datatable = self._datatable.copy()
         datablocklist = self._datablocklist
-        compmap = CompoundMap()
+        compmap = CompoundMap(legacy_integration=True)
         # prepare experimental data and uncertainties
         uncs = datatable['UNC'].to_numpy()
         expsel = datatable['NODE'].str.match('exp_').to_numpy()

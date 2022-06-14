@@ -18,7 +18,7 @@ from .cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
 
 class CompoundMap:
 
-    def __init__(self, fix_sacs_jacobian=True, legacy_integration=True):
+    def __init__(self, fix_sacs_jacobian=True, legacy_integration=False):
         self.maplist = [
                 CrossSectionMap(),
                 CrossSectionShapeMap(),
