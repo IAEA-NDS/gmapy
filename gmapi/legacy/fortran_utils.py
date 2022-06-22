@@ -16,7 +16,18 @@ def fort_read(fobj, formatstr, none_as=None, debug=False):
         fname = 'console'
         inpline = fobj
 
-    res = frr.read(inpline)
+    # attempt to read a line
+    failed = False
+    try:
+        res = frr.read(inpline)
+    except Exception as e:
+        print(f'ERROR: failed reading line: {inpline}')
+        failed = True
+    # if failure detected, let it fail another
+    # time to reproduce the exceptions
+    if failed:
+        frr.read(inpline)
+
     if none_as is not None:
         res = [none_as if x is None else x for x in res]
 
