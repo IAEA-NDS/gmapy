@@ -1,17 +1,18 @@
 import sys
 sys.path.append('..')
 sys.path.append('../..')
+sys.path.append('../../..')
 from copy import deepcopy
 from gmapi.data_management.datablock_list import DatablockList
 from gmapi.gmap import run_gmap_simplified
 from gmapi.data_management.database_IO import (read_json_gma_database,
         read_legacy_gma_database)
 
-from convenience_funs import (get_sacs_predictions,
+from utils.convenience_funs import (get_sacs_predictions,
         remove_absolute_datasets, output_sacs_preds)
 
 # read the database with NIFFTE TPC data
-dbpath = '../../legacy-tests/test_004/input/data.gma'
+dbpath = '../../../legacy-tests/test_004/input/data.gma'
 db_dic = read_legacy_gma_database(dbpath)
 prior_list = db_dic['prior_list']
 datablock_list = db_dic['datablock_list']

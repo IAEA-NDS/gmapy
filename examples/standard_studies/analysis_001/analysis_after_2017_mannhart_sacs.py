@@ -1,20 +1,21 @@
 import sys
 sys.path.append('..')
 sys.path.append('../..')
+sys.path.append('../../..')
 from copy import deepcopy
 from gmapi.data_management.datablock_list import DatablockList
 from gmapi.gmap import run_gmap_simplified
 from gmapi.data_management.database_IO import (read_json_gma_database,
         read_legacy_gma_database)
 
-from convenience_funs import (get_sacs_predictions,
-        remove_absolute_datasets, output_sacs_preds)
+from utils.convenience_funs import (get_sacs_predictions,
+        remove_absolute_datasets, use_mannhart_sacs, output_sacs_preds)
 
 # read the database with NIFFTE TPC data
-dbpath = '../../legacy-tests/test_002/input/data.gma'
+dbpath = '../../../legacy-tests/test_004/input/data.gma'
 db_dic = read_legacy_gma_database(dbpath)
 prior_list = db_dic['prior_list']
-datablock_list = db_dic['datablock_list']
+datablock_list = use_mannhart_sacs(db_dic['datablock_list'])
 
 gls_result = run_gmap_simplified(prior_list=prior_list, datablock_list=datablock_list)
 ref_table = gls_result['table']
@@ -34,7 +35,8 @@ for cur_reacid in exclude_reacids:
     res_list.append(cur_sacs)
 
 
-output_sacs_preds('output/results_05.txt', ref_sacs, res_list, comment="""
+output_sacs_preds('output/results_02.txt', ref_sacs, res_list, comment="""
 ############################################
-standards data 2017
+standards data as augmented by Denise 2021 but with mannhart sacs
 """)
+
