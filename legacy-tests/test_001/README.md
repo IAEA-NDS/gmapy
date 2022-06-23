@@ -1,4 +1,4 @@
-# Important note
+### Important note
 
 Please be aware that the test script `run_fort.sh`
 contains a commit id for the corresponding Fortran
