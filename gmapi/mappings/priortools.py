@@ -53,6 +53,7 @@ def attach_shape_prior(datatable, mapping, refvals=None, uncs=None):
 
         normmask = ext_datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
         ext_datatable.loc[normmask, 'PRIOR'] = cur_expscale
+        ext_datatable.loc[normmask, 'UNC'] = np.inf
 
     return ext_datatable
 
