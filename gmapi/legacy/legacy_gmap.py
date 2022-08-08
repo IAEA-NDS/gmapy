@@ -193,6 +193,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
     postvals = datatable['PRIOR'].to_numpy()
     postvals[prior_idcs] = upd_vals
+    datatable['DATAUNC'] = np.sqrt(covmat.diagonal())
     datatable['POST'] = compmap.propagate(datatable, postvals)
     datatable['POSTUNC'] = np.full(len(datatable), np.NaN, dtype=float)
     datatable.loc[prior_idcs, 'POSTUNC'] = np.sqrt(np.diag(upd_covmat))
