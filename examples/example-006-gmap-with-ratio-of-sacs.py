@@ -3,8 +3,6 @@ sys.path.append('..')
 from gmapi.data_management.dataset import Dataset
 from gmapi.data_management.datablock import Datablock
 from gmapi.data_management.datablock_list import DatablockList
-from gmapi.data_management.uncfuns import (create_dataset_cormat,
-        create_experimental_covmat, create_relunc_vector)
 import numpy as np
 from gmapi.gmap import run_gmap_simplified
 from gmapi.data_management.database_IO import (read_json_gma_database,
