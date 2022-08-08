@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.sparse import identity
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 
@@ -32,12 +33,18 @@ def gls_update(mapping, datatable, covmat, retcov=False):
     meas = meas[isobs]
     S = S[isobs,:].tocsc()
     S = S[:,isadj]
-    covmat = covmat[isobs,:].tocsc()
-    covmat = covmat[:,isobs]
+    obscovmat = covmat[isobs,:].tocsc()
+    obscovmat = obscovmat[:,isobs]
+
+    # prepare the inverse prior covariance matrix
+    idmat = identity(np.sum(isadj), dtype='d').tocsc()
+    priorcovmat = covmat[isadj,:].tocsc()
+    priorcovmat = priorcovmat[:,isadj]
+    inv_prior_cov = spsolve(priorcovmat, idmat)
 
     # perform the update
-    inv_post_cov = S.T @ spsolve(covmat, S)
-    postvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(covmat, meas-preds)))
+    inv_post_cov = S.T @ spsolve(obscovmat, S) + inv_prior_cov
+    postvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(obscovmat, meas-preds)))
 
     post_covmat = None
     if retcov is True:
