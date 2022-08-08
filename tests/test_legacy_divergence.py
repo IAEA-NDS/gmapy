@@ -4,12 +4,6 @@ import os
 import numpy as np
 import pandas as pd
 
-from gmapi.legacy.database_reading import read_gma_database
-from gmapi.legacy.conversion_utils import (sanitize_datablock, sanitize_prior)
-from gmapi.data_management.uncfuns import (create_relunc_vector,
-        create_experimental_covmat)
-from gmapi.data_management.tablefuns import (create_prior_table,
-        create_experiment_table)
 from gmapi.legacy.legacy_gmap import run_gmap
 
 
