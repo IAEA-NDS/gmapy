@@ -59,9 +59,10 @@ def fix_cormat(cormat):
 
 
 
-def create_dataset_cormat(dataset, uncs):
+def create_relative_dataset_covmat(dataset):
     """Create correlation matrix of dataset."""
     numpts = len(dataset['CSS'])
+    uncs = create_dataset_relunc_vector(dataset)
     if len(uncs) != numpts:
         raise IndexError('length of uncs must equal length of datapoints')
     # some abbreviations
@@ -75,12 +76,10 @@ def create_dataset_cormat(dataset, uncs):
     if NNCOX != 0:
         CO /= 10
     # construct correlation matrix for dataset
-    cormat = np.zeros((numpts, numpts), dtype=float)
+    covmat = np.zeros((numpts, numpts), dtype=float)
     for KS in range(numpts):
-        C1 = uncs[KS]
         for KT in range(KS):
             Q1 = 0.
-            C2 = uncs[KT]
             for L in range(2,11):
                 if dataset['NETG'][L] not in (0,9):
                     FKS = EPAF[0,L] + EPAF[1,L]
@@ -93,14 +92,25 @@ def create_dataset_cormat(dataset, uncs):
             if MT not in SHAPE_MT_IDS:
                 XNORU = np.sum(np.square(ENFF))
 
-            CERR = (Q1 + XNORU) / (C1*C2)
-            CERR = min(CERR, 0.99)
+            CERR = Q1 + XNORU
+            # CERR contains the covariance element.
+            # if corresponding correlation too large, reduce it
+            if CERR / (uncs[KS] * uncs[KT]) > 0.99:
+                CERR = 0.99 * uncs[KS] * uncs[KT]
 
-            cormat[KS, KT] = CERR
-            cormat[KT, KS] = CERR
+            covmat[KS, KT] = CERR
+            covmat[KT, KS] = CERR
 
-        cormat[KS, KS] = 1.
+        covmat[KS, KS] = uncs[KS]*uncs[KS]
+    return covmat
 
+
+
+def create_dataset_cormat(dataset):
+    covmat = create_relative_dataset_covmat(dataset)
+    uncs = np.sqrt(np.diag(covmat))
+    cormat = covmat / uncs.reshape(1,-1) / uncs.reshape(-1,1)
+    np.fill_diagonal(cormat, 1.)
     return cormat
 
 
@@ -148,7 +158,7 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
         numpts = len(ds['CSS'])
         # calculate the correlations within a dataset
         cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
-                create_dataset_cormat(ds, uncs[start_ofs1:next_ofs1])
+                create_dataset_cormat(ds)
         # only continue for current dataset if cross-correlation
         # to other datasets are provided
         if 'NCSST' not in ds:
