@@ -5,6 +5,24 @@ from collections import OrderedDict
 from ..mappings.priortools import SHAPE_MT_IDS
 
 
+def create_dataset_relunc_vector(dataset):
+    XNORU = 0.
+    if dataset['MT'] not in SHAPE_MT_IDS:
+        # calculate total normalization uncertainty squared
+        XNORU = np.sum(np.square(dataset['ENFF']))
+
+    effCO = np.array(dataset['CO'])
+    # Axton special: downweight if NNCOX flag set
+    if dataset['NNCOX'] != 0:
+        effCO /= 10
+
+    # calculate total uncertainty
+    # NOTE: The last element of effCO is ignored!
+    RELU = np.sum(np.square(effCO[:,2:11]), axis=1)
+    curDCS = np.sqrt(XNORU + RELU)
+    return curDCS
+
+
 
 def create_relunc_vector(datablock_list):
     DCS_list = []
