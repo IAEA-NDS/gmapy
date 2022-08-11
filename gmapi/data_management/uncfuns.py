@@ -266,14 +266,14 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
         return cormat
 
     # fill the correlations into the correlation matrix
-    cormat = np.zeros((numpts, numpts), dtype=float)
+    covmat = np.zeros((numpts, numpts), dtype=float)
     for ds in dslist:
         dsid = ds['NS']
         start_ofs1 = start_ofs_dic[dsid]
         next_ofs1 = next_ofs_dic[dsid]
         numpts = len(ds['CSS'])
         # calculate the correlations within a dataset
-        cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
+        covmat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
                 create_relative_dataset_covmat(ds)
         # only continue for current dataset if cross-correlation
         # to other datasets are provided
@@ -402,12 +402,12 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
 
                         Q1 += AMUFA*C11*C22
 
-                    cormat[ofs1, ofs2] = Q1
-                    cormat[ofs2, ofs1] = cormat[ofs1, ofs2]
+                    covmat[ofs1, ofs2] = Q1
+                    covmat[ofs2, ofs1] = covmat[ofs1, ofs2]
 
-                cormat[ofs1, ofs1] = uncs[ofs1]*uncs[ofs1]
+                covmat[ofs1, ofs1] = uncs[ofs1]*uncs[ofs1]
 
-    cormat = relcov_to_wrong_cor(cormat, uncs, effuncs, dslist)
+    cormat = relcov_to_wrong_cor(covmat, uncs, effuncs, dslist)
     if shouldfix:
         cormat = fix_cormat(cormat)
     return cormat
