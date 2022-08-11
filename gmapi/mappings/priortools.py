@@ -66,15 +66,24 @@ def update_dummy_datapoints(datatable, refvals):
 
 
 
-def calculate_PPP_correction(datatable, mapping, refvals, uncs):
-    """Calculate the PPP corrected uncertainties."""
+def propagate_mesh_css(datatable, mapping, refvals):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
-    # in order to reproduce PPP correction philosophy of Fortran GMAP
+    # to obtain the cross section. Otherwise, we
+    # would obtain the cross section renormalized
+    # with the experimental normalization factor
     selidx = datatable[datatable['NODE'].str.match('norm_')].index
     refvals[selidx] = 1.
     # calculate PPP correction
     propvals = mapping.propagate(datatable, refvals)
+    return propvals
+
+
+
+def calculate_PPP_correction(datatable, mapping, refvals, uncs):
+    """Calculate the PPP corrected uncertainties."""
+    # calculate PPP correction
+    propvals = propagate_mesh_css(datatable, mapping, refvals)
     effuncs = uncs * propvals / datatable['DATA'].to_numpy()
     # but no PPP correction for fission averages
     is_sacs = (datatable['REAC'].str.match('MT:6-') &
