@@ -5,6 +5,120 @@ from collections import OrderedDict
 from ..mappings.priortools import SHAPE_MT_IDS
 
 
+
+def scale_covmat(covmat, sclvec):
+    newcovmat = covmat * sclvec.reshape(1,-1) * sclvec.reshape(-1,1)
+    return newcovmat
+
+
+
+def cov2cor(covmat):
+    invuncs = 1. / np.sqrt(covmat.diagonal())
+    cormat = scale_covmat(covmat, invuncs)
+    np.fill_diagonal(cormat, 1.)
+    return cormat
+
+
+
+def cor2cov(cormat, uncs):
+    covmat = scale_covmat(cormat, uncs)
+    return covmat
+
+
+
+# this function is here to reproduce
+# a bug in GMAP Fortran in the PPP correction
+def relcov_to_wrong_cor(relcovmat, uncs, effuncs, datasets):
+    cormat = np.copy(relcovmat)
+    # get number of points in datablock
+    # and build up dictionary with dataset indices
+    numpts = 0
+    dsdic = {}
+    start_ofs_dic = {}
+    next_ofs_dic = {}
+    for i, ds in enumerate(datasets):
+        if len(ds['CSS']) != len(ds['E']):
+            raise IndexError('Incompatible E and CSS mesh for dataset %d' % ds['NS'])
+        dsdic[ds['NS']] = ds
+        start_ofs_dic[ds['NS']] = numpts
+        numpts += len(ds['CSS'])
+        next_ofs_dic[ds['NS']] = numpts
+    # start treating the correlations
+    for ds in datasets:
+        dsid = ds['NS']
+        start_ofs1 = start_ofs_dic[dsid]
+        next_ofs1 = next_ofs_dic[dsid]
+        numpts = len(ds['CSS'])
+        # calculate the correlations within a dataset
+        cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
+                cov2cor(cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1])
+        # only continue for current dataset if cross-correlation
+        # to other datasets are provided
+        if 'NCSST' not in ds:
+            continue
+        # some abbreviations
+        # we also convert the nested lists in JSON to numpy arrays
+        MT = ds['MT']
+
+        # loop over datasets to which correlations exist
+        for pos2, dsid2 in enumerate(set(ds['NCSST'])):
+            # some error checking
+            if not dsid2 in dsdic:
+                if start_ofs1 > 0:
+                    # NOTE: For the time being, we don't stop the
+                    #       computation if datasets specified to
+                    #       be correlated are missing in the datablock.
+                    #       This behavior is the same in Fortran GMAP.
+                    continue
+                    raise IndexError('Dataset %d is marked to be correlated ' % dsid +
+                            'with dataset %d, but the latter dataset does not ' %dsid2  +
+                            'exist in the datablock')
+                else:
+                    # For instance, dataset 403 is the first dataset in a block
+                    # and correlated to dataset 710 and others, which are in another
+                    # datablock. However, the Fortran version ignores this,
+                    # because it never attempts to calculate cross-dataset correlations
+                    # for the first dataset
+                    continue
+            if start_ofs_dic[dsid2] > start_ofs_dic[dsid]:
+                raise IndexError('In dataset %d, the correlations to ' +
+                        'dataset %d are given, but the latter dataset ' +
+                        'must not appear before the former in the list' %
+                        (dsid, dsid2))
+            start_ofs2 = start_ofs_dic[dsid2]
+            # some abbreviations
+            ds2 = dsdic[dsid2]
+            numpts2 = len(ds2['CSS'])
+            MT2 = ds2['MT']
+
+            # We skip if one of the two datasets contains
+            # shape data and there is only one measurement
+            # point in the other dataset. This seems to be
+            # an ad-hoc approach in Fortran GMA to neglect
+            # those correlations as they are present in the
+            # GMA standards database.
+            if ((MT2 in SHAPE_MT_IDS and numpts==1) or
+                    MT in SHAPE_MT_IDS and numpts2==1):
+                continue
+
+            for K in range(numpts):
+                ofs1 = start_ofs1 + K
+                C1 = uncs[ofs1]
+                for KK in range(numpts2):
+                    ofs2 = start_ofs2 + KK
+                    C2 = effuncs[ofs2]
+                    cormat[ofs1, ofs2] /= (C1*C2)
+                    cormat[ofs2, ofs1] = cormat[ofs1, ofs2]
+
+                cormat[ofs1, ofs1] = 1.
+    # symmetrize the matrix
+    cormat[np.triu_indices_from(cormat,k=1)] = \
+            cormat.T[np.triu_indices_from(cormat, k=1)]
+    assert np.all(cormat.diagonal() == 1.)
+    return cormat
+
+
+
 def create_dataset_relunc_vector(dataset):
     XNORU = 0.
     if dataset['MT'] not in SHAPE_MT_IDS:
@@ -147,6 +261,8 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
             raise IndexError('ECOR must be a square matrix')
         if shouldfix:
             cormat = fix_cormat(cormat)
+        covmat = cor2cov(cormat, uncs)
+        cormat = cov2cor(covmat)
         return cormat
 
     # fill the correlations into the correlation matrix
@@ -158,7 +274,7 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
         numpts = len(ds['CSS'])
         # calculate the correlations within a dataset
         cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
-                create_dataset_cormat(ds)
+                create_relative_dataset_covmat(ds)
         # only continue for current dataset if cross-correlation
         # to other datasets are provided
         if 'NCSST' not in ds:
@@ -286,9 +402,12 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
 
                         Q1 += AMUFA*C11*C22
 
-                    cormat[ofs1, ofs2] = Q1 / (C1*C2)
+                    cormat[ofs1, ofs2] = Q1
                     cormat[ofs2, ofs1] = cormat[ofs1, ofs2]
 
+                cormat[ofs1, ofs1] = uncs[ofs1]*uncs[ofs1]
+
+    cormat = relcov_to_wrong_cor(cormat, uncs, effuncs, dslist)
     if shouldfix:
         cormat = fix_cormat(cormat)
     return cormat
