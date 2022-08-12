@@ -69,28 +69,16 @@ def relcov_to_wrong_cor(relcovmat, uncs, effuncs, datasets):
             # some abbreviations
             ds2 = dsdic[dsid2]
             numpts2 = len(ds2['CSS'])
-            MT2 = ds2['MT']
 
-            # We skip if one of the two datasets contains
-            # shape data and there is only one measurement
-            # point in the other dataset. This seems to be
-            # an ad-hoc approach in Fortran GMA to neglect
-            # those correlations as they are present in the
-            # GMA standards database.
-            if ((MT2 in SHAPE_MT_IDS and numpts==1) or
-                    MT in SHAPE_MT_IDS and numpts2==1):
-                continue
+            end_ofs1 = start_ofs1 + numpts
+            end_ofs2 = start_ofs2 + numpts2
+            cormat[start_ofs1:end_ofs1, start_ofs2:end_ofs2] /= \
+                    uncs[start_ofs1:end_ofs1].reshape(-1,1)
 
-            for K in range(numpts):
-                ofs1 = start_ofs1 + K
-                C1 = uncs[ofs1]
-                for KK in range(numpts2):
-                    ofs2 = start_ofs2 + KK
-                    C2 = effuncs[ofs2]
-                    cormat[ofs1, ofs2] /= (C1*C2)
-                    cormat[ofs2, ofs1] = cormat[ofs1, ofs2]
+            cormat[start_ofs1:end_ofs1, start_ofs2:end_ofs2] /= \
+                    effuncs[start_ofs2:end_ofs2].reshape(1,-1)
 
-                cormat[ofs1, ofs1] = 1.
+    np.fill_diagonal(cormat, 1.)
     # symmetrize the matrix
     cormat[np.triu_indices_from(cormat,k=1)] = \
             cormat.T[np.triu_indices_from(cormat, k=1)]
