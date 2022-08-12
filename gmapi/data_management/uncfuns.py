@@ -229,7 +229,7 @@ def create_dataset_cormat(dataset):
 
 
 
-def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
+def create_relative_datablock_covmat(datablock, uncs, effuncs=None, shouldfix=True):
     """Create correlation matrix of datablock."""
     if effuncs is None:
         effuncs = uncs.copy()
@@ -426,7 +426,7 @@ def create_experimental_covmat(datablock_list, css, uncs,
         cureffuncs = effuncs[start_idx:next_idx]
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
-        curcormat = create_datablock_cormat(db,
+        curcormat = create_relative_datablock_covmat(db,
                 uncs = curuncs,
                 effuncs = cureffuncs if not fix_ppp_bug else None)
 
