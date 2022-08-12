@@ -64,27 +64,7 @@ def relcov_to_wrong_cor(relcovmat, uncs, effuncs, datasets):
         for pos2, dsid2 in enumerate(set(ds['NCSST'])):
             # some error checking
             if not dsid2 in dsdic:
-                if start_ofs1 > 0:
-                    # NOTE: For the time being, we don't stop the
-                    #       computation if datasets specified to
-                    #       be correlated are missing in the datablock.
-                    #       This behavior is the same in Fortran GMAP.
-                    continue
-                    raise IndexError('Dataset %d is marked to be correlated ' % dsid +
-                            'with dataset %d, but the latter dataset does not ' %dsid2  +
-                            'exist in the datablock')
-                else:
-                    # For instance, dataset 403 is the first dataset in a block
-                    # and correlated to dataset 710 and others, which are in another
-                    # datablock. However, the Fortran version ignores this,
-                    # because it never attempts to calculate cross-dataset correlations
-                    # for the first dataset
-                    continue
-            if start_ofs_dic[dsid2] > start_ofs_dic[dsid]:
-                raise IndexError('In dataset %d, the correlations to ' +
-                        'dataset %d are given, but the latter dataset ' +
-                        'must not appear before the former in the list' %
-                        (dsid, dsid2))
+                continue
             start_ofs2 = start_ofs_dic[dsid2]
             # some abbreviations
             ds2 = dsdic[dsid2]
