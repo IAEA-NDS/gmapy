@@ -430,7 +430,7 @@ def create_experimental_covmat(datablock_list, css, uncs,
                 uncs = curuncs,
                 effuncs = cureffuncs if not fix_ppp_bug else None)
 
-        if 'ECOR' not in db:
+        if 'ECOR' not in db and not fix_ppp_bug:
             curcormat = relcov_to_wrong_cor(curcovmat, curuncs, cureffuncs, db['datasets'])
         else:
             curcormat = cov2cor(curcovmat)
