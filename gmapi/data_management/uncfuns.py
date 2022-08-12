@@ -31,53 +31,24 @@ def cor2cov(cormat, uncs):
 def relcov_to_wrong_cor(relcovmat, uncs, effuncs, datasets):
     cormat = np.copy(relcovmat)
     # get number of points in datablock
-    # and build up dictionary with dataset indices
-    numpts = 0
-    dsdic = {}
-    start_ofs_dic = {}
-    next_ofs_dic = {}
-    for i, ds in enumerate(datasets):
-        if len(ds['CSS']) != len(ds['E']):
-            raise IndexError('Incompatible E and CSS mesh for dataset %d' % ds['NS'])
-        dsdic[ds['NS']] = ds
-        start_ofs_dic[ds['NS']] = numpts
-        numpts += len(ds['CSS'])
-        next_ofs_dic[ds['NS']] = numpts
-    # start treating the correlations
+    cur_idx = 0
+    ds_idcs = []
     for ds in datasets:
-        dsid = ds['NS']
-        start_ofs1 = start_ofs_dic[dsid]
-        next_ofs1 = next_ofs_dic[dsid]
+        ds_idcs.append(cur_idx)
         numpts = len(ds['CSS'])
-        # calculate the correlations within a dataset
-        cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
-                cov2cor(cormat[start_ofs1:next_ofs1, start_ofs1:next_ofs1])
-        # only continue for current dataset if cross-correlation
-        # to other datasets are provided
-        if 'NCSST' not in ds:
-            continue
-        # some abbreviations
-        # we also convert the nested lists in JSON to numpy arrays
-        MT = ds['MT']
-
-        # loop over datasets to which correlations exist
-        for pos2, dsid2 in enumerate(set(ds['NCSST'])):
-            # some error checking
-            if not dsid2 in dsdic:
-                continue
-            start_ofs2 = start_ofs_dic[dsid2]
-            # some abbreviations
-            ds2 = dsdic[dsid2]
-            numpts2 = len(ds2['CSS'])
-
-            end_ofs1 = start_ofs1 + numpts
-            end_ofs2 = start_ofs2 + numpts2
-            cormat[start_ofs1:end_ofs1, start_ofs2:end_ofs2] /= \
-                    uncs[start_ofs1:end_ofs1].reshape(-1,1)
-
-            cormat[start_ofs1:end_ofs1, start_ofs2:end_ofs2] /= \
-                    effuncs[start_ofs2:end_ofs2].reshape(1,-1)
-
+        cur_idx += numpts
+    ds_idcs.append(cur_idx)
+    # start treating the correlations
+    for start_idx, end_idx in zip(ds_idcs[:-1], ds_idcs[1:]):
+        # correct calculation within dataset
+        cormat[start_idx:end_idx, start_idx:end_idx] = \
+                cov2cor(cormat[start_idx:end_idx, start_idx:end_idx])
+        # but for correlations between datasets
+        # corrected and uncorrected uncertainties are mixed
+        cormat[start_idx:end_idx, :start_idx] /= \
+                uncs[start_idx:end_idx].reshape(-1,1)
+        cormat[start_idx:end_idx, :start_idx] /= \
+                effuncs[:start_idx].reshape(1,-1)
     np.fill_diagonal(cormat, 1.)
     # symmetrize the matrix
     cormat[np.triu_indices_from(cormat,k=1)] = \
