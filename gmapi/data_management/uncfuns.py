@@ -403,25 +403,9 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
 
                 covmat[ofs1, ofs1] = uncs[ofs1]*uncs[ofs1]
 
-    # DEBUG
-    global test_uncs
-    global test_effuncs
-    global test_dslist
-    global test_being
-    global inside_covmat
-    assert np.all(test_uncs == uncs)
-    assert np.all(test_effuncs == effuncs)
-    assert test_dslist == dslist
-    inside_covmat = covmat
-    test_being = True
     return covmat
 
 
-test_unc = None
-test_effuncs = None
-test_dslist = None
-test_being = None
-inside_covmat = None
 
 def create_experimental_covmat(datablock_list, css, uncs,
         effuncs=None, fix_ppp_bug=True):
@@ -441,28 +425,11 @@ def create_experimental_covmat(datablock_list, css, uncs,
         cureffuncs = effuncs[start_idx:next_idx]
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
-        # DEBUG
-        global test_uncs
-        global test_effuncs
-        global test_dslist
-        global test_being
-        global inside_covmat
-        test_uncs = curuncs
-        test_effuncs = cureffuncs
-        test_dslist = db['datasets']
-        test_being = False
         curcormat = create_datablock_cormat(db,
                 uncs = curuncs,
                 effuncs = cureffuncs if not fix_ppp_bug else None)
 
-        if 'ECOR' in db:
-            #assert test_being is False
-            pass
-
         if 'ECOR' not in db:
-            assert test_being is True
-            assert np.all(inside_covmat == curcormat)
-            assert fix_ppp_bug is False
             curcormat = relcov_to_wrong_cor(curcormat, curuncs, cureffuncs, db['datasets'])
 
         curcormat = fix_cormat(curcormat)
