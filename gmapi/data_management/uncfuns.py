@@ -426,14 +426,14 @@ def create_experimental_covmat(datablock_list, css, uncs,
         cureffuncs = effuncs[start_idx:next_idx]
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
-        curcormat = create_relative_datablock_covmat(db,
+        curcovmat = create_relative_datablock_covmat(db,
                 uncs = curuncs,
                 effuncs = cureffuncs if not fix_ppp_bug else None)
 
         if 'ECOR' not in db:
-            curcormat = relcov_to_wrong_cor(curcormat, curuncs, cureffuncs, db['datasets'])
+            curcormat = relcov_to_wrong_cor(curcovmat, curuncs, cureffuncs, db['datasets'])
         else:
-            curcormat = cov2cor(curcormat)
+            curcormat = cov2cor(curcovmat)
 
         curcormat = fix_cormat(curcormat)
 
