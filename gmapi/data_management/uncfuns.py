@@ -259,10 +259,6 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
             raise IndexError('ECOR must be a matrix')
         if cormat.shape[0] != cormat.shape[1]:
             raise IndexError('ECOR must be a square matrix')
-        if shouldfix:
-            cormat = fix_cormat(cormat)
-        covmat = cor2cov(cormat, uncs)
-        cormat = cov2cor(covmat)
         return cormat
 
     # fill the correlations into the correlation matrix
@@ -408,8 +404,6 @@ def create_datablock_cormat(datablock, uncs, effuncs=None, shouldfix=True):
                 covmat[ofs1, ofs1] = uncs[ofs1]*uncs[ofs1]
 
     cormat = relcov_to_wrong_cor(covmat, uncs, effuncs, dslist)
-    if shouldfix:
-        cormat = fix_cormat(cormat)
     return cormat
 
 
@@ -433,8 +427,11 @@ def create_experimental_covmat(datablock_list, css, uncs,
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
         curcormat = create_datablock_cormat(db,
-                uncs = uncs[start_idx:next_idx],
-                effuncs = effuncs[start_idx:next_idx] if not fix_ppp_bug else None)
+                uncs = curuncs,
+                effuncs = cureffuncs if not fix_ppp_bug else None)
+
+        curcormat = fix_cormat(curcormat)
+
         curcovmat = curcormat * sclmat
         covmat_list.append(csr_matrix(curcovmat))
         start_idx = next_idx
