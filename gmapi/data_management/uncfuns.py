@@ -366,9 +366,10 @@ def create_relative_datablock_covmat(datablock, effuncs=None, shouldfix=True):
 
 
 
-def create_experimental_covmat(datablock_list, expcss, propcss, uncs,
+def create_experimental_covmat(datablock_list, expcss, propcss,
         effuncs=None, fix_ppp_bug=True):
     """Calculate experimental covariance matrix."""
+    uncs = create_relunc_vector(datablock_list)
     if effuncs is None:
         effuncs = uncs.copy()
     absuncvec = effuncs.copy()
@@ -402,5 +403,4 @@ def create_experimental_covmat(datablock_list, expcss, propcss, uncs,
 
     covmat = block_diag(covmat_list, format='csr')
     return covmat
-
 
