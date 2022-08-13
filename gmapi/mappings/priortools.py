@@ -66,6 +66,17 @@ def update_dummy_datapoints(datatable, refvals):
 
 
 
+def update_dummy_datapoints2(datablock_list, refvals):
+    cur_idx = 0
+    for db in datablock_list:
+        for ds in db['datasets']:
+            next_idx = cur_idx + len(ds['CSS'])
+            if re.match('^90[0-9]$', str(ds['NS'])):
+                ds['CSS'] = refvals[cur_idx:next_idx]
+            cur_idx = next_idx
+
+
+
 def propagate_mesh_css(datatable, mapping, refvals):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
@@ -91,5 +102,44 @@ def calculate_PPP_correction(datatable, mapping, refvals, uncs):
 
     sacs_idx = datatable[is_sacs].index
     effuncs[sacs_idx] = uncs[sacs_idx]
+    return effuncs, propvals
+
+
+
+def calculate_ppp_factors(datasets, css):
+    cur_idx = 0
+    factors = []
+    for ds in datasets:
+        origcss = np.array(ds['CSS'])
+        next_idx = cur_idx + len(origcss)
+        newcss = css[cur_idx:next_idx]
+        cur_idx = next_idx
+        # no PPP correction for SACS measurements
+        if ds['MT'] == 6:
+            factors.extend(np.ones(len(origcss), dtype='d'))
+        else:
+            factors.extend(newcss/origcss)
+    return factors
+
+
+
+def get_datablock_len(datablock):
+    numpts = 0
+    for ds in datablock['datasets']:
+        numpts += len(ds['CSS'])
+    return numpts
+
+
+
+def calculate_PPP_correction2(datablocks, css, uncs):
+    cur_idx = 0
+    factors = []
+    for db in datablocks:
+        next_idx = cur_idx + get_datablock_len(db)
+        datasets = db['datasets']
+        curcss = css[cur_idx:next_idx]
+        factors.extend(calculate_ppp_factors(datasets, curcss))
+        cur_idx = next_idx
+    effuncs = uncs * factors
     return effuncs
 

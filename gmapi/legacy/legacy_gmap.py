@@ -23,6 +23,10 @@ from ..mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         calculate_PPP_correction)
 from ..mappings.compound_map import CompoundMap
 
+# DEBUG
+from ..mappings.priortools import calculate_PPP_correction2, propagate_mesh_css
+from ..mappings.priortools import update_dummy_datapoints2
+
 
 #################################################
 #   START OF GMAP PROGRAM
@@ -125,8 +129,14 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         refvals = datatable['PRIOR'].to_numpy()
         propvals = compmap.propagate(datatable, refvals)
         update_dummy_datapoints(datatable, propvals)
+        # We also need to update the datablock list
+        # because we are preparing the code to do the
+        # PPP correction in create_experimental_covmat
+        # in a better (=less convoluted) way
+        update_dummy_datapoints2(new_datablock_list, propvals[expsel])
+
         if correct_ppp:
-            effuncs = calculate_PPP_correction(datatable, compmap, refvals, uncs)
+            effuncs, tmppropvals = calculate_PPP_correction(datatable, compmap, refvals, uncs)
         else:
             effuncs = uncs.copy()
 
@@ -135,6 +145,15 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         uncs_red = uncs[expsel]
         effuncs_red = effuncs[expsel]
         expdata_red = expdata[expsel]
+        # DEBUG
+        propcss = propagate_mesh_css(datatable, compmap, refvals)
+        propcss_red = propcss[expsel]
+        assert np.all(propcss_red == tmppropvals[expsel])
+
+        tmpeffuncs = calculate_PPP_correction2(new_datablock_list, propcss_red, uncs_red)
+        # DEBUG
+        assert np.all(np.isclose(effuncs[expsel], tmpeffuncs))
+
         tmp = create_experimental_covmat(new_datablock_list, expdata_red, uncs_red,
                                          effuncs_red, fix_ppp_bug=fix_ppp_bug)
         tmp = coo_matrix(tmp)
