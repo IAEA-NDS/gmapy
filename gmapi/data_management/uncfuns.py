@@ -168,8 +168,10 @@ def create_dataset_cormat(dataset):
 
 
 
-def create_relative_datablock_covmat(datablock, uncs, effuncs=None, shouldfix=True):
+def create_relative_datablock_covmat(datablock, effuncs=None, shouldfix=True):
     """Create correlation matrix of datablock."""
+
+    uncs = create_relunc_vector([datablock])
     if effuncs is None:
         effuncs = uncs.copy()
 
@@ -361,12 +363,13 @@ def create_experimental_covmat(datablock_list, css, uncs,
         for ds in db['datasets']:
             numpts += len(ds['CSS'])
         next_idx = start_idx + numpts
+
         curuncs = uncs[start_idx:next_idx]
         cureffuncs = effuncs[start_idx:next_idx]
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
+
         curcovmat = create_relative_datablock_covmat(db,
-                uncs = curuncs,
                 effuncs = cureffuncs if not fix_ppp_bug else None)
 
         if 'ECOR' not in db and not fix_ppp_bug:
