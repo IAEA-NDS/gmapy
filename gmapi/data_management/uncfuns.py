@@ -185,13 +185,10 @@ def create_dataset_cormat(dataset):
 
 
 
-def create_relative_datablock_covmat(datablock, effuncs=None, shouldfix=True):
+def create_relative_datablock_covmat(datablock, shouldfix=True):
     """Create correlation matrix of datablock."""
 
     uncs = create_relunc_vector([datablock])
-    if effuncs is None:
-        effuncs = uncs.copy()
-
     dslist = datablock['datasets']
 
     # get number of points in datablock
@@ -311,10 +308,8 @@ def create_relative_datablock_covmat(datablock, effuncs=None, shouldfix=True):
             # dataset 1 and dataset 2
             for K in range(numpts):
                 ofs1 = start_ofs1 + K
-                C1 = uncs[ofs1]
                 for KK in range(numpts2):
                     ofs2 = start_ofs2 + KK
-                    C2 = effuncs[ofs2]
                     Q1 = 0.
                     for KKK in range(10):
                         # uncertainty component NC1 of dataset 1 is correlated
@@ -387,8 +382,7 @@ def create_experimental_covmat(datablock_list, expcss, propcss,
         curabsuncs = absuncvec[start_idx:next_idx]
         sclmat = np.outer(curabsuncs, curabsuncs)
 
-        curcovmat = create_relative_datablock_covmat(db,
-                effuncs = cureffuncs if not fix_ppp_bug else None)
+        curcovmat = create_relative_datablock_covmat(db)
 
         if 'ECOR' not in db and not fix_ppp_bug:
             curcormat = relcov_to_wrong_cor(curcovmat, curuncs, cureffuncs, db['datasets'])
