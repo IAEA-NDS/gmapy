@@ -26,6 +26,23 @@ def cor2cov(cormat, uncs):
 
 
 
+def calculate_ppp_factors(datasets, css):
+    cur_idx = 0
+    factors = []
+    for ds in datasets:
+        origcss = np.array(ds['CSS'])
+        next_idx = cur_idx + len(origcss)
+        newcss = css[cur_idx:next_idx]
+        cur_idx = next_idx
+        # no PPP correction for SACS measurements
+        if ds['MT'] == 6:
+            factors.extend(np.ones(len(origcss), dtype='d'))
+        else:
+            factors.extend(newcss/origcss)
+    return factors
+
+
+
 # this function is here to reproduce
 # a bug in GMAP Fortran in the PPP correction
 def relcov_to_wrong_cor(relcovmat, uncs, effuncs, datasets):
@@ -349,13 +366,13 @@ def create_relative_datablock_covmat(datablock, effuncs=None, shouldfix=True):
 
 
 
-def create_experimental_covmat(datablock_list, css, uncs,
+def create_experimental_covmat(datablock_list, expcss, propcss, uncs,
         effuncs=None, fix_ppp_bug=True):
     """Calculate experimental covariance matrix."""
     if effuncs is None:
         effuncs = uncs.copy()
     absuncvec = effuncs.copy()
-    absuncvec *= 0.01 * css
+    absuncvec *= 0.01 * expcss
     covmat_list = []
     start_idx = 0
     for db in datablock_list:

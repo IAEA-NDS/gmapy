@@ -154,7 +154,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # DEBUG
         assert np.all(np.isclose(effuncs[expsel], tmpeffuncs))
 
-        tmp = create_experimental_covmat(new_datablock_list, expdata_red, uncs_red,
+        tmp = create_experimental_covmat(new_datablock_list, expdata_red, propcss_red, uncs_red,
                                          effuncs_red, fix_ppp_bug=fix_ppp_bug)
         tmp = coo_matrix(tmp)
         covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
