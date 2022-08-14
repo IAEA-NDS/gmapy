@@ -20,13 +20,8 @@ from ..inference import gls_update
 from ..data_management.tablefuns import (create_prior_table, create_experiment_table)
 from ..data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
 from ..mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
-        calculate_PPP_correction)
+        update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css)
 from ..mappings.compound_map import CompoundMap
-
-# DEBUG
-from ..mappings.priortools import calculate_PPP_correction2, propagate_mesh_css
-from ..mappings.priortools import update_dummy_datapoints2
-
 
 #################################################
 #   START OF GMAP PROGRAM
@@ -145,15 +140,8 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         uncs_red = uncs[expsel]
         effuncs_red = effuncs[expsel]
         expdata_red = expdata[expsel]
-        # DEBUG
         propcss = propagate_mesh_css(datatable, compmap, refvals)
         propcss_red = propcss[expsel]
-        assert np.all(propcss_red == tmppropvals[expsel])
-
-        tmpeffuncs = calculate_PPP_correction2(new_datablock_list, propcss_red, uncs_red)
-        # DEBUG
-        assert np.all(np.isclose(effuncs[expsel], tmpeffuncs))
-
         tmp = create_experimental_covmat(new_datablock_list, propcss_red, fix_ppp_bug=fix_ppp_bug)
         tmp = coo_matrix(tmp)
         covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
