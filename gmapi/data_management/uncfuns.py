@@ -45,8 +45,10 @@ def calculate_ppp_factors(datasets, css):
 
 # this function is here to reproduce
 # a bug in GMAP Fortran in the PPP correction
-def relcov_to_wrong_cor(relcovmat, effuncs, datasets):
+def relcov_to_wrong_cor(relcovmat, datasets, css):
+    ppp_factors = calculate_ppp_factors(datasets, css)
     uncs = np.sqrt(np.diagonal(relcovmat))
+    effuncs = uncs * ppp_factors
     cormat = np.copy(relcovmat)
     # get number of points in datablock
     cur_idx = 0
@@ -384,7 +386,7 @@ def create_experimental_covmat(datablock_list, propcss, fix_ppp_bug=True):
         curcovmat = create_relative_datablock_covmat(db)
 
         if 'ECOR' not in db and not fix_ppp_bug:
-            curcormat = relcov_to_wrong_cor(curcovmat, cureffuncs, db['datasets'])
+            curcormat = relcov_to_wrong_cor(curcovmat, db['datasets'], curpropcss)
         else:
             curcormat = cov2cor(curcovmat)
 
