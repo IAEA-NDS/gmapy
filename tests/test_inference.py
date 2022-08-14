@@ -77,7 +77,7 @@ class TestInference(unittest.TestCase):
         uncs_red = uncs[expsel]
         expdata_red = expdata[expsel]
         exp_idcs = datatable.index[expsel].to_numpy()
-        tmp = create_experimental_covmat(datablocklist, expdata_red, uncs_red)
+        tmp = create_experimental_covmat(datablocklist, expdata_red)
         tmp = coo_matrix(tmp)
         covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
                                shape = (len(datatable), len(datatable)),
