@@ -7,7 +7,7 @@ from .inference import gls_update
 from .data_management.tablefuns import (create_prior_table, create_experiment_table)
 from .data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
 from .mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
-        calculate_PPP_correction)
+        update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css)
 from .mappings.compound_map import CompoundMap
 
 from .data_management.database_IO import (read_legacy_gma_database,
@@ -63,6 +63,12 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
         refvals = datatable['PRIOR'].to_numpy()
         propvals = compmap.propagate(datatable, refvals)
         update_dummy_datapoints(datatable, propvals)
+        # We also need to update the datablock list
+        # because we are preparing the code to do the
+        # PPP correction in create_experimental_covmat
+        # in a better (=less convoluted) way
+        update_dummy_datapoints2(datablock_list, propvals[expsel])
+
         if correct_ppp:
             effuncs = calculate_PPP_correction(datatable, compmap, refvals, uncs)
         else:
@@ -73,8 +79,9 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
         uncs_red = uncs[expsel]
         effuncs_red = effuncs[expsel]
         expdata_red = expdata[expsel]
-        tmp = create_experimental_covmat(datablock_list, expdata_red, uncs_red,
-                                         effuncs_red)
+        propcss = propagate_mesh_css(datatable, compmap, refvals)
+        propcss_red = propcss[expsel] if correct_ppp else expdata_red
+        tmp = create_experimental_covmat(datablock_list, propcss_red)
         tmp = coo_matrix(tmp)
         covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
                                shape=(len(datatable), len(datatable)),
