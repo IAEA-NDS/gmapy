@@ -131,7 +131,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         update_dummy_datapoints2(new_datablock_list, propvals[expsel])
 
         if correct_ppp:
-            effuncs, tmppropvals = calculate_PPP_correction(datatable, compmap, refvals, uncs)
+            effuncs = calculate_PPP_correction(datatable, compmap, refvals, uncs)
         else:
             effuncs = uncs.copy()
 

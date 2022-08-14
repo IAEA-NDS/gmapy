@@ -102,5 +102,5 @@ def calculate_PPP_correction(datatable, mapping, refvals, uncs):
 
     sacs_idx = datatable[is_sacs].index
     effuncs[sacs_idx] = uncs[sacs_idx]
-    return effuncs, propvals
+    return effuncs
 
