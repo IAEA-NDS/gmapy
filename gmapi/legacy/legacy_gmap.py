@@ -141,7 +141,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         effuncs_red = effuncs[expsel]
         expdata_red = expdata[expsel]
         propcss = propagate_mesh_css(datatable, compmap, refvals)
-        propcss_red = propcss[expsel]
+        propcss_red = propcss[expsel] if correct_ppp else expdata_red
         tmp = create_experimental_covmat(new_datablock_list, propcss_red, fix_ppp_bug=fix_ppp_bug)
         tmp = coo_matrix(tmp)
         covmat = csr_matrix((tmp.data, (exp_idcs[tmp.row], exp_idcs[tmp.col])),
