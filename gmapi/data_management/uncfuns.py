@@ -380,7 +380,6 @@ def create_experimental_covmat(datablock_list, propcss, fix_ppp_bug=True):
         ppp_factors = calculate_ppp_factors(db['datasets'], curpropcss)
         cureffuncs = curuncs * ppp_factors
         curabsuncs = curexpcss * cureffuncs * 0.01
-        sclmat = np.outer(curabsuncs, curabsuncs)
 
         curcovmat = create_relative_datablock_covmat(db)
 
@@ -391,7 +390,9 @@ def create_experimental_covmat(datablock_list, propcss, fix_ppp_bug=True):
 
         curcormat = fix_cormat(curcormat)
 
-        curcovmat = curcormat * sclmat
+        curcovmat = curcormat * curabsuncs.reshape(-1,1)
+        curcovmat *= curabsuncs.reshape(1,-1)
+
         covmat_list.append(csr_matrix(curcovmat))
         start_idx = next_idx
 
