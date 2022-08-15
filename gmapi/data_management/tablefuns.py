@@ -55,7 +55,7 @@ def create_prior_table(prior_list):
         else:
             raise ValueError('Unknown type "%s" of prior block' % item['type'])
 
-    df = pd.concat(df)
+    df = pd.concat(df, axis=0, ignore_index=True)
     return df
 
 
