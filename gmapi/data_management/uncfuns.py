@@ -364,7 +364,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
 
 
 
-def create_experimental_covmat(datablock_list, propcss, fix_ppp_bug=True):
+def create_experimental_covmat(datablock_list, propcss=None, fix_ppp_bug=True):
     """Calculate experimental covariance matrix."""
     uncs = create_relunc_vector(datablock_list)
     covmat_list = []
@@ -378,7 +378,7 @@ def create_experimental_covmat(datablock_list, propcss, fix_ppp_bug=True):
         next_idx = start_idx + numpts
 
         curuncs = uncs[start_idx:next_idx]
-        curpropcss = propcss[start_idx:next_idx]
+        curpropcss = propcss[start_idx:next_idx] if propcss is not None else curexpcss
         ppp_factors = calculate_ppp_factors(db['datasets'], curpropcss)
         cureffuncs = curuncs * ppp_factors
         curabsuncs = curexpcss * cureffuncs * 0.01
