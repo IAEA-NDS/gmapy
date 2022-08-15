@@ -54,8 +54,6 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
     expsel = datatable['NODE'].str.match('exp_').to_numpy()
     exp_idcs = datatable.index[expsel].to_numpy()
     nonexp_idcs = datatable.index[np.logical_not(expsel)]
-    uncs = np.full(len(datatable), 0.)
-    uncs[exp_idcs] = create_relunc_vector(datablock_list)
 
     orig_priorvals = datatable['PRIOR'].to_numpy().copy()
     while True:
@@ -69,15 +67,8 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
         # in a better (=less convoluted) way
         update_dummy_datapoints2(datablock_list, propvals[expsel])
 
-        if correct_ppp:
-            effuncs = calculate_PPP_correction(datatable, compmap, refvals, uncs)
-        else:
-            effuncs = uncs.copy()
-
-        expdata = datatable['DATA'].to_numpy()
         # construct covariance matrix
-        uncs_red = uncs[expsel]
-        effuncs_red = effuncs[expsel]
+        expdata = datatable['DATA'].to_numpy()
         expdata_red = expdata[expsel]
         propcss = propagate_mesh_css(datatable, compmap, refvals)
         propcss_red = propcss[expsel] if correct_ppp else expdata_red
@@ -92,6 +83,7 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
         covmat += csr_matrix((np.square(prioruncs), (nonexp_idcs, nonexp_idcs)),
                              shape=(len(datatable), len(datatable)), dtype=float)
 
+        # perform the GLS update
         upd_res = gls_update(compmap, datatable, covmat, retcov=True)
         prior_idcs = upd_res['idcs']
         upd_vals = upd_res['upd_vals']
