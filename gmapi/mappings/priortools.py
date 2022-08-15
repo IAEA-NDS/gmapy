@@ -77,6 +77,22 @@ def update_dummy_datapoints2(datablock_list, refvals):
 
 
 
+def remove_dummy_datasets(datablock_list):
+    dummy_db_idcs = []
+    for db_idx, db in enumerate(datablock_list):
+        dummy_ds_idcs = []
+        for ds_idx, ds in enumerate(db['datasets']):
+            if re.match('^90[0-9]$', str(ds['NS'])):
+                dummy_ds_idcs.append(ds_idx)
+        if not np.all(dummy_ds_idcs == np.arange(len(dummy_ds_idcs))):
+            raise IndexError('mix of dummy and non-dummy datasets in datablock not allowed')
+        if len(dummy_ds_idcs) > 0:
+            dummy_db_idcs.append(db_idx)
+    for db_idx in reversed(dummy_db_idcs):
+        del datablock_list[db_idx]
+
+
+
 def propagate_mesh_css(datatable, mapping, refvals):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
