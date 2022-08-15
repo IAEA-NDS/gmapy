@@ -6,13 +6,8 @@ import re
 SHAPE_MT_IDS = (2,4,8,9)
 
 
-def attach_shape_prior(datatable, mapping, refvals=None, uncs=None):
+def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     """Attach experimental normalization constants to prior."""
-    if refvals is None:
-        raise ValueError('Please provide reference values for propagation')
-    if uncs is None:
-        raise ValueError('Please provide uncertainties for weighting')
-
     # split datatable into priortable and exptable
     priortable = datatable[datatable['NODE'].str.match('xsid_')]
     exptable = datatable[datatable['NODE'].str.match('exp_')]
@@ -34,26 +29,34 @@ def attach_shape_prior(datatable, mapping, refvals=None, uncs=None):
         norm_prior_dic['ENERGY'].append(0.)
     norm_df = pd.DataFrame.from_dict(norm_prior_dic)
     ext_datatable = pd.concat([datatable, norm_df], axis=0, ignore_index=True)
-    ext_refvals = np.concatenate([refvals, norm_df['PRIOR'].to_numpy()])
 
-    # calculate a first estimate of normalization factor
-    # using the propagated prior values
-    propvals = mapping.propagate(ext_datatable, ext_refvals)
-    for cur_exp, cur_exp_df in exp_groups:
-        cur_propvals = propvals[cur_exp_df.index]
-        cur_uncs = uncs[cur_exp_df.index]
-        cur_expvals = cur_exp_df['DATA'].to_numpy()
-
-        invsquareuncs = 1. / np.square(cur_uncs)
-        weight = invsquareuncs / np.sum(invsquareuncs)
-        invexpscale = np.sum(weight * cur_propvals / cur_expvals)
-        # factor to apply to propagated values
-        # to obtain experimental values
-        cur_expscale = 1. / invexpscale
-
-        normmask = ext_datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
-        ext_datatable.loc[normmask, 'PRIOR'] = cur_expscale
+    if mapping is None or refvals is None or uncs is None:
+        # we don't have any prior estimates to propagate
+        # and/or uncertainties of the experiments given
+        # so we assume that the normalization factors are one
+        normmask = ext_datatable['NODE'].str.match('^norm_')
         ext_datatable.loc[normmask, 'UNC'] = np.inf
+        ext_datatable.loc[normmask, 'PRIOR'] = 1.
+    else:
+        # calculate a first estimate of normalization factor
+        # using the propagated prior values
+        ext_refvals = np.concatenate([refvals, norm_df['PRIOR'].to_numpy()])
+        propvals = mapping.propagate(ext_datatable, ext_refvals)
+        for cur_exp, cur_exp_df in exp_groups:
+            cur_propvals = propvals[cur_exp_df.index]
+            cur_uncs = uncs[cur_exp_df.index]
+            cur_expvals = cur_exp_df['DATA'].to_numpy()
+
+            invsquareuncs = 1. / np.square(cur_uncs)
+            weight = invsquareuncs / np.sum(invsquareuncs)
+            invexpscale = np.sum(weight * cur_propvals / cur_expvals)
+            # factor to apply to propagated values
+            # to obtain experimental values
+            cur_expscale = 1. / invexpscale
+
+            normmask = ext_datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
+            ext_datatable.loc[normmask, 'PRIOR'] = cur_expscale
+            ext_datatable.loc[normmask, 'UNC'] = np.inf
 
     return ext_datatable
 
