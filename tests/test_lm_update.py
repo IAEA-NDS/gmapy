@@ -15,7 +15,8 @@ from gmapi.mappings.compound_map import CompoundMap
 
 class TestLevenbergMarquardtUpdate(unittest.TestCase):
 
-    def test_gls_lm_equivalence(self):
+    @classmethod
+    def setUpClass(cls):
         dbpath = (pathlib.Path(__file__).parent / 'testdata' /
                 'data-2017-07-26.gma').resolve().as_posix()
         db_dic = read_legacy_gma_database(dbpath)
@@ -23,7 +24,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         datablock_list = db_dic['datablock_list']
 
         priortable = create_prior_table(prior_list)
-        priorcov = diags(np.square(priortable['UNC']), format='csc') 
+        priorcov = diags(np.square(priortable['UNC']), format='csc')
 
         exptable = create_experiment_table(datablock_list)
         expcov = create_experimental_covmat(datablock_list)
@@ -33,10 +34,27 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         shapecov = diags(np.full(len(datatable)-len(priortable)-len(exptable), np.inf), format='csc')
         totcov = block_diag([priorcov, expcov, shapecov], format='csc')
 
-        compmap = CompoundMap()
+        cls._datatable = datatable
+        cls._totcov = totcov
 
+    def test_gls_lm_equivalence(self):
+        datatable = self._datatable
+        totcov = self._totcov
+        compmap = CompoundMap()
         res1 = gls_update(compmap, datatable, totcov, retcov=False)
-        res2 = lm_update(compmap, datatable, totcov, retcov=False) 
+        res2 = lm_update(compmap, datatable, totcov, retcov=False,
+                lmb=1e-16, maxiter=1, print_status=True)
+        self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
+            atol=1e-8, rtol=1e-8)))
+
+    def test_lm_unique_convergence(self):
+        datatable = self._datatable
+        totcov = self._totcov
+        compmap = CompoundMap()
+        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+                lmb=1e-8, maxiter=10, print_status=True)
+        res2 = lm_update(compmap, datatable, totcov, retcov=False,
+                lmb=1e-4, maxiter=10, print_status=True)
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
 
