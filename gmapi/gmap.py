@@ -7,7 +7,8 @@ from .inference import gls_update
 from .data_management.tablefuns import (create_prior_table, create_experiment_table)
 from .data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
 from .mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
-        update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css)
+        update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css,
+        remove_dummy_datasets)
 from .mappings.compound_map import CompoundMap
 
 from .data_management.database_IO import (read_legacy_gma_database,
@@ -15,7 +16,8 @@ from .data_management.database_IO import (read_legacy_gma_database,
 
 
 def run_gmap_simplified(prior_list=None, datablock_list=None,
-        dbfile=None, dbtype='legacy', num_iter=3, correct_ppp=True):
+        dbfile=None, dbtype='legacy', num_iter=3, correct_ppp=True,
+        remove_dummy=False):
 
     compmap = CompoundMap(fix_sacs_jacobian=True,
                           legacy_integration=False)
@@ -38,6 +40,10 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
         raise TypeError('you must provide prior_list or a dbfile')
     if datablock_list is None:
         raise TypeError('you must provide datablock_list or a dbfile')
+
+    # remove the dummy datasets as they are a deprecated feature
+    if remove_dummy:
+        remove_dummy_datasets(datablock_list)
 
     priortable = create_prior_table(prior_list)
     exptable = create_experiment_table(datablock_list)
