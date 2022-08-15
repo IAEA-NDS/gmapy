@@ -17,7 +17,7 @@ from .data_management.database_IO import (read_legacy_gma_database,
 
 def run_gmap_simplified(prior_list=None, datablock_list=None,
         dbfile=None, dbtype='legacy', num_iter=3, correct_ppp=True,
-        remove_dummy=False):
+        remove_dummy=True):
 
     compmap = CompoundMap(fix_sacs_jacobian=True,
                           legacy_integration=False)
