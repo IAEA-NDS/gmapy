@@ -45,7 +45,11 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
     # perform the update
     inv_post_cov = S.T @ spsolve(obscovmat, S) + inv_prior_cov
-    postvals = priorvals + spsolve(inv_post_cov, S.T @ (spsolve(obscovmat, meas-preds)))
+    # NOTE: the second term in in zvals, which is
+    # inv_priorcov * (priorvals-refvals) is omitted because in this
+    # GLS update the expansion vector priorvals conincides with refvals
+    zvals = S.T @ spsolve(obscovmat, meas-preds)
+    postvals = priorvals + spsolve(inv_post_cov, zvals)
 
     post_covmat = None
     if retcov is True:
