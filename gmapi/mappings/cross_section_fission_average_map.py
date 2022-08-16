@@ -16,7 +16,7 @@ class CrossSectionFissionAverageMap:
 
 
     def is_responsible(self, datatable):
-        expmask = datatable['REAC'].str.match('MT:6-R1:')
+        expmask = datatable['REAC'].str.match('MT:6-R1:', na=False)
         return np.array(expmask, dtype=bool)
 
 
@@ -44,9 +44,9 @@ class CrossSectionFissionAverageMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
-                     datatable['NODE'].str.match('xsid_'))
-        priormask = np.logical_or(priormask, datatable['NODE'] == 'fis')
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
+        priormask = np.logical_or(priormask, datatable['NODE'].str.fullmatch('fis', na=False))
         priortable = datatable[priormask]
 
         expmask = self.is_responsible(datatable)
@@ -54,7 +54,7 @@ class CrossSectionFissionAverageMap:
         expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
-        fistable = priortable[priortable['NODE']=='fis']
+        fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
         valsfis = fistable['PRIOR'].to_numpy()
 
@@ -78,13 +78,13 @@ class CrossSectionFissionAverageMap:
                                                             rtol=1e-6))
 
         for curexp in expids:
-            exptable_red = exptable[exptable['NODE'] == curexp]
+            exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
             if len(exptable_red) != 1:
                 raise IndexError('None or more than one rows associated with a ' +
                         'fission average, which must not happen!')
             curreac = exptable_red['REAC'].values[0]
             preac = curreac.replace('MT:6-', 'MT:1-')
-            priortable_red = priortable[priortable['REAC'] == preac]
+            priortable_red = priortable[priortable['REAC'].str.fullmatch(preac, na=False)]
             # abbreviate some variables
             ens1 = priortable_red['ENERGY'].to_numpy()
             vals1 = refvals[priortable_red.index]

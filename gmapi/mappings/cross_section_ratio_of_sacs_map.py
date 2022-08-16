@@ -16,7 +16,7 @@ class CrossSectionRatioOfSacsMap:
         self.__maxord = maxord
 
     def is_responsible(self, datatable):
-        expmask = datatable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+')
+        expmask = datatable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
         return np.array(expmask, dtype=bool)
 
 
@@ -46,9 +46,9 @@ class CrossSectionRatioOfSacsMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
-                     datatable['NODE'].str.match('xsid_'))
-        priormask = np.logical_or(priormask, datatable['NODE'] == 'fis')
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
+        priormask = np.logical_or(priormask, datatable['NODE'].str.fullmatch('fis', na=False))
         priortable = datatable[priormask]
 
         expmask = self.is_responsible(datatable)
@@ -56,7 +56,7 @@ class CrossSectionRatioOfSacsMap:
         expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
-        fistable = priortable[priortable['NODE']=='fis']
+        fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
         valsfis = fistable['PRIOR'].to_numpy()
 
@@ -79,7 +79,7 @@ class CrossSectionRatioOfSacsMap:
                                                     rtol=1e-6))
 
         for curexp in expids:
-            exptable_red = exptable[exptable['NODE'] == curexp]
+            exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
             if len(exptable_red) != 1:
                 raise IndexError('None or more than one rows associated with a ' +
                         'ratio of SACS measurement, which must not happen!')
@@ -91,8 +91,8 @@ class CrossSectionRatioOfSacsMap:
             reac1_id = int(curreac_split2[1][1])
             reac2_id = int(curreac_split2[2][1])
 
-            priortable_red1 = priortable[priortable['REAC'] == f'MT:1-R1:{reac1_id}'] 
-            priortable_red2 = priortable[priortable['REAC'] == f'MT:1-R1:{reac2_id}'] 
+            priortable_red1 = priortable[priortable['REAC'].str.fullmatch(f'MT:1-R1:{reac1_id}', na=False)]
+            priortable_red2 = priortable[priortable['REAC'].str.fullmatch(f'MT:1-R1:{reac2_id}', na=False)]
             # abbreviate some variables
             # first the ones associated with the SACS in the numerator
             ens1 = priortable_red1['ENERGY'].to_numpy()

@@ -37,8 +37,10 @@ class CompoundMap:
         resp = np.full(len(datatable.index), False, dtype=bool)
         for curmap in self.maplist:
             curresp = curmap.is_responsible(datatable)
-            if np.any(np.logical_and(resp, curresp)):
-                raise ValueError('Several maps claim responsibility')
+            resp_overlap = np.logical_and(resp, curresp)
+            if np.any(resp_overlap):
+                print(datatable[resp_overlap])
+                raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
         return resp
 

@@ -8,8 +8,8 @@ from .helperfuns import return_matrix
 class CrossSectionShapeMap:
 
     def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:2-R1:') &
-                   datatable['NODE'].str.match('exp_'))
+        expmask = (datatable['REAC'].str.match('MT:2-R1:', na=False) &
+                   datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
 
@@ -38,19 +38,19 @@ class CrossSectionShapeMap:
         isresp = self.is_responsible(datatable)
         reacs = datatable.loc[isresp, 'REAC'].unique()
         for curreac in reacs:
-            priormask = ((datatable['REAC'] == curreac.replace('MT:2','MT:1')) &
-                         datatable['NODE'].str.match('xsid_'))
+            priormask = ((datatable['REAC'].str.fullmatch(curreac.replace('MT:2','MT:1'), na=False)) &
+                         datatable['NODE'].str.match('xsid_', na=False))
             priortable_red = datatable[priormask]
-            exptable_red = datatable[datatable['REAC'] == curreac]
+            exptable_red = datatable[datatable['REAC'].str.fullmatch(curreac, na=False)]
             ens1 = priortable_red['ENERGY']
             vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
             # loop over the datasets
             dataset_ids = exptable_red['NODE'].unique()
             for dataset_id in dataset_ids:
-                exptable_ds = exptable_red[exptable_red['NODE'] == dataset_id]
+                exptable_ds = exptable_red[exptable_red['NODE'].str.fullmatch(dataset_id, na=False)]
                 # get the respective normalization factor from prior
-                mask = datatable['NODE'] == dataset_id.replace('exp_', 'norm_')
+                mask = datatable['NODE'].str.fullmatch(dataset_id.replace('exp_', 'norm_'), na=False)
                 norm_index = datatable[mask].index
                 if (len(norm_index) != 1):
                     raise IndexError('There are ' + str(len(norm_index)) +

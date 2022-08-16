@@ -8,8 +8,8 @@ from .helperfuns import return_matrix
 class CrossSectionTotalMap:
 
     def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:5(-R[0-9]+:[0-9]+)+') &
-                   datatable['NODE'].str.match('exp_'))
+        expmask = (datatable['REAC'].str.match('MT:5(-R[0-9]+:[0-9]+)+', na=False) &
+                   datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
 
@@ -34,8 +34,8 @@ class CrossSectionTotalMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
-                     datatable['NODE'].str.match('xsid_'))
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
         expmask = self.is_responsible(datatable)
         exptable = datatable[expmask]
@@ -49,9 +49,9 @@ class CrossSectionTotalMap:
             if len(np.unique(reacstrs)) < len(reacstrs):
                    raise IndexError('Each reaction must occur only once in reaction string')
             # retrieve the relevant reactions in the prior
-            priortable_reds = [priortable[priortable['REAC'] == r] for r in reacstrs]
+            priortable_reds = [priortable[priortable['REAC'].str.fullmatch(r, na=False)] for r in reacstrs]
             # retrieve relevant rows in exptable
-            exptable_red = exptable[exptable['REAC'] == curreac]
+            exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             # some abbreviations
             src_idcs_list = [pt.index for pt in priortable_reds]
             src_en_list = [pt['ENERGY'] for pt in priortable_reds]

@@ -8,8 +8,8 @@ from .helperfuns import return_matrix
 class CrossSectionRatioMap:
 
     def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:3-R1:[0-9]+-R2:[0-9]+') &
-                   datatable['NODE'].str.match('exp_'))
+        expmask = (datatable['REAC'].str.match('MT:3-R1:[0-9]+-R2:[0-9]+', na=False) &
+                   datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
 
@@ -34,8 +34,8 @@ class CrossSectionRatioMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
-                     datatable['NODE'].str.match('xsid_'))
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
 
         priortable = datatable[priormask]
         expmask = self.is_responsible(datatable)
@@ -50,10 +50,10 @@ class CrossSectionRatioMap:
             reac1str = 'MT:1-R1:' + str(reac1id)
             reac2str = 'MT:1-R1:' + str(reac2id)
             # retrieve the relevant reactions in the prior
-            priortable_red1 = priortable[priortable['REAC'] == reac1str]
-            priortable_red2 = priortable[priortable['REAC'] == reac2str]
+            priortable_red1 = priortable[priortable['REAC'].str.fullmatch(reac1str, na=False)]
+            priortable_red2 = priortable[priortable['REAC'].str.fullmatch(reac2str, na=False)]
             # and in the exptable
-            exptable_red = exptable[exptable['REAC'] == curreac]
+            exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             # some abbreviations
             src_idcs1 = priortable_red1.index
             src_idcs2 = priortable_red2.index

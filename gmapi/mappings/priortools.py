@@ -9,8 +9,8 @@ SHAPE_MT_IDS = (2,4,8,9)
 def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable
-    priortable = datatable[datatable['NODE'].str.match('xsid_')]
-    exptable = datatable[datatable['NODE'].str.match('exp_')]
+    priortable = datatable[datatable['NODE'].str.match('xsid_', na=False)]
+    exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
 
     # obtain all experimental points that are affected by unknown normalization
     mtnums = exptable['REAC'].str.extract('^ *MT:([0-9]+)-', expand=False)
@@ -34,7 +34,7 @@ def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
         # we don't have any prior estimates to propagate
         # and/or uncertainties of the experiments given
         # so we assume that the normalization factors are one
-        normmask = ext_datatable['NODE'].str.match('^norm_')
+        normmask = ext_datatable['NODE'].str.match('^norm_', na=False)
         ext_datatable.loc[normmask, 'UNC'] = np.inf
         ext_datatable.loc[normmask, 'PRIOR'] = 1.
     else:
@@ -64,7 +64,7 @@ def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
 
 def update_dummy_datapoints(datatable, refvals):
     """Replace values of dummy datapoints by those in refvals."""
-    sel = datatable['NODE'].str.fullmatch('exp_90[0-9]')
+    sel = datatable['NODE'].str.fullmatch('exp_90[0-9]', na=False)
     datatable.loc[sel, 'DATA'] = refvals[datatable.loc[sel].index]
 
 
@@ -102,7 +102,7 @@ def propagate_mesh_css(datatable, mapping, refvals):
     # to obtain the cross section. Otherwise, we
     # would obtain the cross section renormalized
     # with the experimental normalization factor
-    selidx = datatable[datatable['NODE'].str.match('norm_')].index
+    selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
     refvals[selidx] = 1.
     # calculate PPP correction
     propvals = mapping.propagate(datatable, refvals)
@@ -116,8 +116,8 @@ def calculate_PPP_correction(datatable, mapping, refvals, uncs):
     propvals = propagate_mesh_css(datatable, mapping, refvals)
     effuncs = uncs * propvals / datatable['DATA'].to_numpy()
     # but no PPP correction for fission averages
-    is_sacs = (datatable['REAC'].str.match('MT:6-') &
-               datatable['NODE'].str.match('exp_'))
+    is_sacs = (datatable['REAC'].str.match('MT:6-', na=False) &
+               datatable['NODE'].str.match('exp_', na=False))
 
     sacs_idx = datatable[is_sacs].index
     effuncs[sacs_idx] = uncs[sacs_idx]

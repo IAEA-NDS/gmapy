@@ -9,8 +9,8 @@ from .helperfuns import return_matrix
 class CrossSectionShapeOfSumMap:
 
     def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:8(-R[0-9]+:[0-9]+)+') &
-                   datatable['NODE'].str.match('exp_'))
+        expmask = (datatable['REAC'].str.match('MT:8(-R[0-9]+:[0-9]+)+', na=False) &
+                   datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
 
@@ -35,9 +35,9 @@ class CrossSectionShapeOfSumMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
-                     datatable['NODE'].str.match('xsid_'))
-        priormask = np.logical_or(priormask, datatable['NODE'].str.match('norm_'))
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
+        priormask = np.logical_or(priormask, datatable['NODE'].str.match('norm_', na=False))
         priortable = datatable[priormask]
         expmask = self.is_responsible(datatable)
         exptable = datatable[expmask]
@@ -51,22 +51,23 @@ class CrossSectionShapeOfSumMap:
             if len(np.unique(reacstrs)) < len(reacstrs):
                    raise IndexError('Each reaction must occur only once in reaction string')
             # retrieve the relevant reactions in the prior
-            priortable_reds = [priortable[priortable['REAC'] == r] for r in reacstrs]
+            priortable_reds = [priortable[priortable['REAC'].str.fullmatch(r, na=False)]
+                                    for r in reacstrs]
             # some abbreviations
             src_idcs_list = [pt.index for pt in priortable_reds]
             src_en_list = [pt['ENERGY'] for pt in priortable_reds]
             src_vals_list = [refvals[pt.index] for pt in priortable_reds]
 
             # retrieve relevant rows in exptable
-            exptable_red = exptable[exptable['REAC'] == curreac]
+            exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             datasets = exptable_red['NODE'].unique()
             for ds in datasets:
                 # subset another time exptable to get dataset info
-                tar_idcs = exptable_red[exptable_red['NODE']==ds].index
-                tar_en = exptable_red[exptable_red['NODE']==ds]['ENERGY']
+                tar_idcs = exptable_red[exptable_red['NODE'].str.fullmatch(ds, na=False)].index
+                tar_en = exptable_red[exptable_red['NODE'].str.fullmatch(ds, na=False)]['ENERGY']
                 # obtain normalization and position in priortable
                 normstr = ds.replace('exp_', 'norm_')
-                norm_index = priortable[priortable['NODE']==normstr].index
+                norm_index = priortable[priortable['NODE'].str.fullmatch(normstr, na=False)].index
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
                 norm_fact = refvals[norm_index]

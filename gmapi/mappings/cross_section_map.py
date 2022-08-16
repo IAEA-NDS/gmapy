@@ -7,8 +7,8 @@ from .helperfuns import return_matrix
 class CrossSectionMap:
 
     def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:1-R1:') &
-                   datatable['NODE'].str.match('exp_'))
+        expmask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                   datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
 
@@ -34,16 +34,16 @@ class CrossSectionMap:
         propvals = np.empty(0, dtype=float)
         concat = np.concatenate
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:') &
-                     datatable['NODE'].str.match('xsid_'))
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
         expmask = self.is_responsible(datatable)
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
         for curreac in reacs:
-            priortable_red = priortable[priortable['REAC'] == curreac]
-            exptable_red = exptable[exptable['REAC'] == curreac]
+            priortable_red = priortable[priortable['REAC'].str.fullmatch(curreac, na=False)]
+            exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             # abbreviate some variables
             ens1 = priortable_red['ENERGY']
             vals1 = refvals[priortable_red.index]
