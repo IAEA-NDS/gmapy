@@ -58,6 +58,31 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
 
+    def test_lm_prior_influence(self):
+        datatable = self._datatable
+        totcov = self._totcov
+        prior_sel = datatable.NODE.str.match('xsid_|norm_').to_numpy()
+        priorvals = datatable.PRIOR[prior_sel].to_numpy()
+        totcov2 = totcov.copy()
+        totcov2_diag = totcov2.diagonal()
+        totcov2_diag[prior_sel] = 1e-8
+        totcov2.setdiag(0.)
+        totcov2 = totcov2 + diags(totcov2_diag)
+        compmap = CompoundMap()
+        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+                lmb=1e-8, maxiter=10, print_status=True)
+        res2 = lm_update(compmap, datatable, totcov2, retcov=False,
+                lmb=1e-8, maxiter=10, print_status=True)
+
+        diff1 = np.mean(np.abs(res1['upd_vals'] - priorvals))
+        diff2 = np.mean(np.abs(res2['upd_vals'] - priorvals))
+        # if we have a prior with finite uncertainties compared
+        # to one with infinite uncertainties will yield a
+        # posterior closer to the prior
+        self.assertTrue(diff1 > diff2)
+        self.assertTrue(diff1 > 0.04)
+        self.assertTrue(diff2 < 1e-4)
+
 
 
 if __name__ == '__main__':
