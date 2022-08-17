@@ -6,12 +6,12 @@ from gmapi.data_management.database_IO import read_legacy_gma_database
 from gmapi.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
 from gmapi.mappings.priortools import attach_shape_prior
-from gmapi.mappings.usu_map import USUMap
+from gmapi.mappings.usu_error_map import USUErrorMap
 from gmapi.mappings.compound_map import CompoundMap
 from gmapi.mappings.helperfuns import numeric_jacobian
 
 
-class TestUSUMapping(unittest.TestCase):
+class TestUSUErrorMapping(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -30,7 +30,7 @@ class TestUSUMapping(unittest.TestCase):
 
     def test_usu_error_propagation(self):
         compmap = CompoundMap()
-        usumap = USUMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
+        usumap = USUErrorMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
         dt = self._datatable
         # we add two USU components
         dt['FEAT'] = 'NA'
@@ -85,7 +85,7 @@ class TestUSUMapping(unittest.TestCase):
 
     def test_multi_feature_error_propagation(self):
         compmap = CompoundMap()
-        usumap = USUMap(compmap, ['FEAT1','FEAT2'], NA_values=('NA', np.nan))
+        usumap = USUErrorMap(compmap, ['FEAT1','FEAT2'], NA_values=('NA', np.nan))
         dt = self._datatable
         # we add two USU components
         usu_dt = pd.DataFrame.from_dict({
@@ -123,7 +123,7 @@ class TestUSUMapping(unittest.TestCase):
 
     def test_usu_jacobian(self):
         compmap = CompoundMap()
-        usumap = USUMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
+        usumap = USUErrorMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
         dt = self._datatable
         # we add two USU components
         dt['FEAT'] = 'NA'
@@ -171,7 +171,7 @@ class TestUSUMapping(unittest.TestCase):
 
     def test_permutation_invariance(self):
         compmap = CompoundMap()
-        usumap = USUMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
+        usumap = USUErrorMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
         dt = self._datatable
         # we add two USU components
         dt['FEAT'] = 'NA'

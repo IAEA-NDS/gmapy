@@ -4,7 +4,7 @@ from .helperfuns import return_matrix
 
 
 
-class USUMap:
+class USUErrorMap:
 
     def __init__(self, compmap, feature_columns, NA_values=('NA', np.isnan)):
         self.compmap = compmap
