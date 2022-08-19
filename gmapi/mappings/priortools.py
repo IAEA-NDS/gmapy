@@ -96,16 +96,20 @@ def remove_dummy_datasets(datablock_list):
 
 
 
-def propagate_mesh_css(datatable, mapping, refvals):
+def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # to obtain the cross section. Otherwise, we
     # would obtain the cross section renormalized
     # with the experimental normalization factor
-    selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
-    refvals[selidx] = 1.
+    if not prop_normfact:
+        selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
+        normvals = refvals[selidx]
+        refvals[selidx] = 1.
     # calculate PPP correction
     propvals = mapping.propagate(datatable, refvals)
+    if not prop_normfact:
+        propvals[selidx] = normvals
     return propvals
 
 
