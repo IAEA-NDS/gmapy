@@ -123,7 +123,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
         # GLS update
         inv_post_cov = S.T @ obscovmat_fact(S) + inv_prior_cov + lmb * idmat
-        zvec = S.T @ spsolve(obscovmat, meas-preds) + priorcovmat_fact(priorvals-refvals)
+        zvec = S.T @ obscovmat_fact(meas-preds) + priorcovmat_fact(priorvals-refvals)
         postvals = refvals + spsolve(inv_post_cov, zvec)
 
         # calculate real prediction and expected prediction
