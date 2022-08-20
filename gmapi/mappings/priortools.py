@@ -96,7 +96,7 @@ def remove_dummy_datasets(datablock_list):
 
 
 
-def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False):
+def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp=False):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # to obtain the cross section. Otherwise, we
@@ -110,6 +110,14 @@ def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False):
     propvals = mapping.propagate(datatable, refvals)
     if not prop_normfact:
         propvals[selidx] = normvals
+    # the substitution of propagated values by experimental ones
+    # for MT6 (SACS) is there to facilitate the PPP correction
+    # as done by Fortran GMAP, which does not apply it to MT6.
+    if mt6_exp:
+        dt = datatable
+        mt6_idcs = dt.index[(dt.NODE.str.match('exp_') &
+                            dt.REAC.str.match('MT:6-R1:'))]
+        propvals[mt6_idcs] = datatable.loc[mt6_idcs, 'DATA']
     return propvals
 
 
