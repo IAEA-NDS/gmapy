@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
-from scipy.sparse import identity
+from scipy.sparse import identity, csc_matrix
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 from sksparse.cholmod import cholesky
+import warnings
+from .mappings.priortools import propagate_mesh_css
 
 
 
@@ -67,7 +69,8 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
-        maxiter=10, atol=1e-8, rtol=1e-5, lmb=1e-6, print_status=False):
+        maxiter=10, atol=1e-8, rtol=1e-5, lmb=1e-6, print_status=False,
+        correct_ppp=False):
     # define the prior vector
     priorvals = np.full(len(datatable), 0.)
     priorvals[datatable.index] = datatable['PRIOR']
@@ -94,6 +97,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     obscovmat = covmat[isobs,:].tocsc()
     obscovmat = obscovmat[:,isobs]
     obscovmat_fact = cholesky(obscovmat)
+    orig_obscovmat = obscovmat.copy()
     # prepare parameter prior covariance matrix
     priorcovmat = covmat[isadj,:].tocsc()
     priorcovmat = priorcovmat[:,isadj]
@@ -109,6 +113,8 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
     old_postvals = None
     num_iter = 0
+    first_cycle = True
+    converged = False
     while num_iter < maxiter:
         # termination condition at end of loop
         num_iter += 1
@@ -120,6 +126,22 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         preds = preds[isobs]
         S = S[isobs,:].tocsc()
         S = S[:,isadj]
+
+        # PPP correction
+        if correct_ppp:
+            tmp_preds = propagate_mesh_css(datatable, mapping, fullrefvals,
+                                            prop_normfact=False, mt6_exp=True)
+            ppp_factors = tmp_preds[isobs] / meas
+            obscovmat = orig_obscovmat.copy()
+            # the following lines achieve the elementwise
+            # product of obscovmat with ppp_factors^T * ppp_factors.
+            # see answer https://stackoverflow.com/a/16046783/1860946
+            assert obscovmat.getformat() == 'csc'
+            obscovmat.data *= ppp_factors[obscovmat.indices]
+            obscovmat = obscovmat.tocsr()
+            obscovmat.data *= ppp_factors[obscovmat.indices]
+            obscovmat = obscovmat.tocsc()
+            obscovmat_fact = cholesky(obscovmat)
 
         # GLS update
         inv_post_cov = S.T @ obscovmat_fact(S) + inv_prior_cov + lmb * idmat
@@ -144,7 +166,18 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         new_neglogprior = newpardiff.T @ priorcovmat_fact(newpardiff)
         exp_measdiff = meas - expected_propcss
         real_measdiff = meas - real_propcss
-        cur_negloglike = cur_measdiff.T @ obscovmat_fact(cur_measdiff) + cur_neglogprior
+        # without PPP correction, we only need to calculate the cur_negloglike
+        # in the first iteration because in later iterations it is given by
+        # real_negloglike of the previous iteration.
+        # with the ppp correction, we also need to calculate the cur_negloglike,
+        # to have a diagnostic tool that tells us the point when the
+        # misspecification of the loglike gradient prevents further convergence.
+        if first_cycle or correct_ppp:
+            cur_negloglike = cur_measdiff.T @ obscovmat_fact(cur_measdiff) + cur_neglogprior
+        if not first_cycle and correct_ppp:
+            if old_negloglike < cur_negloglike:
+                warnings.warn('Oscillation of likelihood detected in PPP enabled optimization')
+
         exp_negloglike = exp_measdiff.T @ obscovmat_fact(exp_measdiff) + new_neglogprior
         real_negloglike = real_measdiff.T @ obscovmat_fact(real_measdiff) + new_neglogprior
         # calculate expected and real improvement and use the ratio
@@ -157,11 +190,13 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         elif rho < 0.25:
             lmb *= 2
 
+        old_negloglike = cur_negloglike
         # only accept new parameter set
         # if the associated log likelihood is larger
         if real_negloglike < cur_negloglike:
             old_postvals = fullrefvals[isadj]
             fullrefvals[isadj] = postvals
+            cur_negloglike = real_negloglike
 
         if print_status:
             print('###############')
@@ -175,7 +210,13 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         if old_postvals is not None:
             absdiff = postvals - old_postvals
             if np.all(absdiff < atol + rtol*old_postvals):
+                converged = True
                 break
+
+        first_cycle = False
+
+    if not converged:
+        warnings.warn('Maximal number of iterations reached without achieving convergence')
 
     return {'upd_vals': postvals, 'upd_covmat': None,
             'idcs': np.sort(datatable.index[isadj])}
