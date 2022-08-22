@@ -102,11 +102,16 @@ class USUErrorMap:
             coeffs = np.concatenate(coeffs_list)
             return idcs1, idcs2, coeffs
 
-    # additional functions to obtain gradients with respect
-    # to the USU uncertainties
-
-    # mapings interface can rely on datatable (but not on 'data' or 'covmat'
-    # which quantities do I need? datatable, refvals, expvals, covmat
+    # additional functions to obtain scores and
+    # gradients related to the USU uncertainties.
+    # A design choice was that functions below should
+    # not rely on the DATA and UNC column in the datatable
+    # but such information passed as arguments.
+    # Thereby, the functions do not expect more to be
+    # available in the datatable than other methods here.
+    # Furthermore, optimization routines that find a
+    # good assignment of uncertainties do not have to
+    # update the datatable.
 
     def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
         usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
