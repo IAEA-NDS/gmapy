@@ -170,3 +170,18 @@ class USUErrorMap:
         return self._mult_inv_A_SUST(expcov_fact,
                                      usucov_fact, Susu, d)
 
+
+    def grad_logdet(self, datatable, refvals, covmat):
+        usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
+        usu_idcs = usu_aux['usu_idcs']
+        Susu = usu_aux['Susu']
+        usucov_fact = usu_aux['usucov_fact']
+        expcov_fact = usu_aux['expcov_fact']
+        S_invCov_ST = self._mult_inv_A_SUST(expcov_fact, usucov_fact,
+                                            Susu, Susu)
+        res = S_invCov_ST.diagonal()
+        # given that the diagonal in USU covmat is given by UNC^2
+        # the derivatives are given by 2*UNC = 2*sqrt(diag(covmat))
+        res *= 2*np.sqrt(covmat[usu_idcs,:][:,usu_idcs].diagonal())
+        return res
+
