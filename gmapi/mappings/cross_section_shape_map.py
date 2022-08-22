@@ -41,7 +41,8 @@ class CrossSectionShapeMap:
             priormask = ((datatable['REAC'].str.fullmatch(curreac.replace('MT:2','MT:1'), na=False)) &
                          datatable['NODE'].str.match('xsid_', na=False))
             priortable_red = datatable[priormask]
-            exptable_red = datatable[datatable['REAC'].str.fullmatch(curreac, na=False)]
+            exptable_red = datatable[(datatable['REAC'].str.fullmatch(curreac, na=False) &
+                                      datatable['NODE'].str.match('exp_'))]
             ens1 = priortable_red['ENERGY']
             vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index

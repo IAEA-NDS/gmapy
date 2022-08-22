@@ -16,7 +16,8 @@ class CrossSectionFissionAverageMap:
 
 
     def is_responsible(self, datatable):
-        expmask = datatable['REAC'].str.match('MT:6-R1:', na=False)
+        expmask = (datatable['REAC'].str.match('MT:6-R1:', na=False) &
+                   datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
 
