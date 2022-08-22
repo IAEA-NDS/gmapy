@@ -56,7 +56,6 @@ class GMADatabase:
         covmat = csr_matrix((elems, (row_idcs, col_idcs)),
                 shape=(len(datatable), len(datatable)), dtype='d')
         # update uncertainties in datatable
-        datatable.loc[expsel, 'PRIOR'] = np.sqrt(covmat.diagonal()[expsel])
         datatable.loc[expsel, 'UNC'] = np.sqrt(covmat.diagonal()[expsel])
         # update class state
         self._covmat = covmat
