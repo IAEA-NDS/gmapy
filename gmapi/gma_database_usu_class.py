@@ -56,6 +56,8 @@ class GMADatabaseUSU(GMADatabase):
         covmat = self._covmat
         self._covmat = spsp.block_diag([covmat, usucov],
                 format='csr')  
+        self._cache['uncertainties'] =  np.concatenate(
+                [self._cache['uncertainties'], usuuncs])
 
         # update the mapping
         self._mapping = USUErrorMap(self._base_mapping, feature_columns,
