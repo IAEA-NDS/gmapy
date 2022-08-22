@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from .basic_maps import basic_propagate, get_basic_sensmat
 from .helperfuns import return_matrix
 
@@ -61,14 +62,13 @@ class USUErrorMap:
             raise ValueError('what must be either "propagate" or "jacobian"')
 
         for feat_col in feat_columns:
-            usu_feat = priortable[feat_col].to_numpy()
-            exp_feat = exptable[feat_col].to_numpy()
-
-            # np.isin does not handle np.nan in the intended way
-            is_nonna_src = np.array([x not in na_vals for x in usu_feat])
-            is_nonna_tar = np.array([x not in na_vals for x in exp_feat])
-            usu_nonna_feat = usu_feat[is_nonna_src]
-            exp_nonna_feat = exp_feat[is_nonna_tar]
+            usu_feat = priortable[feat_col]
+            exp_feat = exptable[feat_col]
+            is_nonna_src = np.logical_not(usu_feat.isin(na_vals))
+            is_nonna_tar = np.logical_not(exp_feat.isin(na_vals))
+            # cast usu_feat and exp_usu feat to avoid surprises with indexing
+            usu_nonna_feat = usu_feat[is_nonna_src].to_numpy()
+            exp_nonna_feat = exp_feat[is_nonna_tar].to_numpy()
             sort_idcs = usu_nonna_feat.argsort()
             src_idcs = sort_idcs[np.searchsorted(usu_nonna_feat, exp_nonna_feat, sorter=sort_idcs)]
             glob_src_idcs = priortable.index[is_nonna_src][src_idcs]
