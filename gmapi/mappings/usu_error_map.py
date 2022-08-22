@@ -130,6 +130,17 @@ class USUErrorMap:
         return usu_aux
 
 
+    def _mult_inv_A_SUST(self, A_fact, U_fact, S, d):
+        z0 = A_fact(d)
+        first_term = d.T @ z0
+        z1 = S.T @ z0
+        zc = U_fact.inv() + S.T @ A_fact(S)
+        zc_fact = cholesky(zc)
+        z2 = zc_fact(z1)
+        second_term = z1.T @ z2
+        return first_term - second_term
+
+
     def logdet(self, datatable, refvals, covmat):
         usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
         Susu = usu_aux['Susu']
@@ -156,12 +167,6 @@ class USUErrorMap:
         preds = preds[exp_idcs]
         real_expvals = expvals[exp_idcs]
         d = real_expvals - preds
-        z0 = expcov_fact(d)
-        first_term = d.T @ z0
-        z1 = Susu.T @ z0
-        zc = usucov_fact.inv() + Susu.T @ expcov_fact(Susu)
-        zc_fact = cholesky(zc)
-        z2 = zc_fact(z1)
-        second_term = z1.T @ z2
-        return first_term - second_term
+        return self._mult_inv_A_SUST(expcov_fact,
+                                     usucov_fact, Susu, d)
 
