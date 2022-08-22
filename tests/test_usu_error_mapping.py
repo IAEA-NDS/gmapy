@@ -197,6 +197,40 @@ class TestUSUErrorMapping(unittest.TestCase):
         self.assertTrue((S != permS).nnz == 0)
 
 
+    def test_effect_of_only_usu_option(self):
+        compmap = CompoundMap()
+        usumap = USUErrorMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
+        dt = self._datatable
+        # we add two USU components
+        dt['FEAT'] = 'NA'
+        dt.loc[dt.ENERGY < 4, 'FEAT'] = 'RNG1'
+        dt.loc[dt.ENERGY > 10, 'FEAT'] = 'RNG2'
+        # add the USU errors
+        usu_dt = pd.DataFrame.from_dict({
+            'NODE': 'usu_errors',
+            'PRIOR': [0.1, -0.3, 5.],
+            'FEAT': ('RNG1', 'RNG2', 'RNG3')
+            })
+        orig_dt = dt.copy()
+        usu_dt = pd.concat([dt, usu_dt], ignore_index=True)
+        refvals1 = orig_dt.PRIOR.to_numpy()
+        refvals2 = usu_dt.PRIOR.to_numpy()
+        # propagation
+        propcss1 = compmap.propagate(orig_dt, refvals1)
+        propcss2 = usumap.propagate(usu_dt, refvals2, only_usu=True)
+        propcss_direct = usumap.propagate(usu_dt, refvals2, only_usu=False)
+        propcss_direct = propcss_direct[:len(propcss1)]
+        propcss_sum = propcss1 + propcss2[:len(propcss1)]
+        self.assertTrue(np.allclose(propcss_direct, propcss_sum))
+        # jacobian
+        jac1 = compmap.jacobian(orig_dt, refvals1, ret_mat=True)
+        jac2 = usumap.jacobian(usu_dt, refvals2, ret_mat=True, only_usu=True)
+        jac3 = usumap.jacobian(usu_dt, refvals2, ret_mat=True, only_usu=False)
+        jac_sum = jac1 + jac2[:jac1.shape[0],:][:,:jac1.shape[1]]
+        jac_direct = jac3[:jac1.shape[0],:][:, :jac1.shape[1]]
+        self.assertTrue((jac_sum != jac_direct).nnz == 0)
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,20 +27,20 @@ class USUErrorMap:
         return np.array(expmask, dtype=bool)
 
 
-    def propagate(self, datatable, refvals):
-        propvals = self.__compute(datatable, refvals, 'propagate')
+    def propagate(self, datatable, refvals, only_usu=False):
+        propvals = self.__compute(datatable, refvals, 'propagate', only_usu)
         return propvals
 
 
-    def jacobian(self, datatable, refvals, ret_mat=False):
+    def jacobian(self, datatable, refvals, ret_mat=False, only_usu=False):
         num_points = datatable.shape[0]
-        idcs1, idcs2, coeffs = self.__compute(datatable, refvals, 'jacobian')
+        idcs1, idcs2, coeffs = self.__compute(datatable, refvals, 'jacobian', only_usu)
         return return_matrix(idcs1, idcs2, coeffs,
                   dims = (num_points, num_points),
                   how = 'csr' if ret_mat else 'dic')
 
 
-    def __compute(self, datatable, refvals, what):
+    def __compute(self, datatable, refvals, what, only_usu=False):
         compmap = self.compmap
         feat_columns = self.feature_columns
         na_vals = self.NA_values
@@ -50,14 +50,25 @@ class USUErrorMap:
         expmask = self.is_responsible(datatable)
         exptable = datatable[expmask]
 
+        # if only_usu is false, we also include the mapping component
+        # associated with contribution of other (i.e. non-USU)
+        # quantities to the prediction of experimental datasets
         base_propvals = compmap.propagate(datatable, refvals)
         if what == 'propagate':
-            propvals = base_propvals.copy()
+            if not only_usu:
+                propvals = base_propvals.copy()
+            else:
+                propvals = np.full(len(base_propvals), 0., dtype='d')
         elif what == 'jacobian':
-            base_S = compmap.jacobian(datatable, refvals, ret_mat=False)
-            idcs1_list = [base_S['idcs1']]
-            idcs2_list = [base_S['idcs2']]
-            coeffs_list = [base_S['x']]
+            if not only_usu:
+                base_S = compmap.jacobian(datatable, refvals, ret_mat=False)
+                idcs1_list = [base_S['idcs1']]
+                idcs2_list = [base_S['idcs2']]
+                coeffs_list = [base_S['x']]
+            else:
+                idcs1_list = []
+                idcs2_list = []
+                coeffs_list = []
         else:
             raise ValueError('what must be either "propagate" or "jacobian"')
 
