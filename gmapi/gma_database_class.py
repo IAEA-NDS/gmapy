@@ -176,3 +176,6 @@ class GMADatabase:
         datatable.UNC = np.sqrt(covmat.diagonal())
         self._covmat = covmat
 
+    def get_mapping(self):
+        return self._mapping
+
