@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sksparse.cholmod import cholesky
 from .basic_maps import basic_propagate, get_basic_sensmat
 from .helperfuns import return_matrix
 
@@ -100,4 +101,67 @@ class USUErrorMap:
             idcs2 = np.concatenate(idcs2_list)
             coeffs = np.concatenate(coeffs_list)
             return idcs1, idcs2, coeffs
+
+    # additional functions to obtain gradients with respect
+    # to the USU uncertainties
+
+    # mapings interface can rely on datatable (but not on 'data' or 'covmat'
+    # which quantities do I need? datatable, refvals, expvals, covmat
+
+    def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
+        usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
+        exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
+        Susu = self.jacobian(datatable, refvals, ret_mat=True, only_usu=True)
+        Susu = Susu[exp_idcs,:][:,usu_idcs].tocsc()
+        # the .tocsc() addition to avoid an efficiency warning
+        # during the Cholesky decomposition
+        expcov = covmat[exp_idcs,:][:,exp_idcs].tocsc()
+        usucov = covmat[usu_idcs,:][:,usu_idcs].tocsc()
+        expcov_fact = cholesky(expcov)
+        usucov_fact = cholesky(usucov)
+        usu_aux = {
+            'refvals': refvals,
+            'usu_idcs': usu_idcs,
+            'exp_idcs': exp_idcs,
+            'Susu': Susu,
+            'expcov_fact': expcov_fact,
+            'usucov_fact': usucov_fact,
+                }
+        return usu_aux
+
+
+    def logdet(self, datatable, refvals, covmat):
+        usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
+        Susu = usu_aux['Susu']
+        usucov_fact = usu_aux['usucov_fact']
+        expcov_fact = usu_aux['expcov_fact']
+        Z = usucov_fact.inv() + Susu.T @ expcov_fact(Susu)
+        Z_fact = cholesky(Z)
+        res = expcov_fact.logdet() + usucov_fact.logdet() + Z_fact.logdet()
+        return res
+
+
+    def chisquare(self, datatable, refvals, expvals, covmat):
+        usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
+        usu_idcs = usu_aux['usu_idcs']
+        exp_idcs = usu_aux['exp_idcs']
+        Susu = usu_aux['Susu']
+        usucov_fact = usu_aux['usucov_fact']
+        expcov_fact = usu_aux['expcov_fact']
+        refvals = np.copy(refvals)
+        # calculate the difference between predictions and experiments
+        # (we force the USU error to be zero; however, should this be a user choice?)
+        refvals[usu_idcs] = 0.
+        preds = self.propagate(datatable, refvals)
+        preds = preds[exp_idcs]
+        real_expvals = expvals[exp_idcs]
+        d = real_expvals - preds
+        z0 = expcov_fact(d)
+        first_term = d.T @ z0
+        z1 = Susu.T @ z0
+        zc = usucov_fact.inv() + Susu.T @ expcov_fact(Susu)
+        zc_fact = cholesky(zc)
+        z2 = zc_fact(z1)
+        second_term = z1.T @ z2
+        return first_term - second_term
 
