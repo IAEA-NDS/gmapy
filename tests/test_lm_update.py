@@ -59,7 +59,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
 
-    def test_iterative_gls_lm_equivalence_with_ppp(self):
+    def test_gls_lm_equivalence_with_ppp(self):
         dbpath = self._dbpath
         datatable = self._datatable
         totcov = self._totcov
@@ -67,11 +67,11 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         # setting lmb to such a small value renders the
         # LM update steps equivalent to the GLS update
         res1 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-50, maxiter=3, print_status=True, correct_ppp=True)
+                lmb=1e-50, maxiter=1, print_status=True, correct_ppp=True)
         # due to different convention of counting we must set
         # num_iter=2 to have in total 3 iterations
         res2 = run_gmap_simplified(dbfile=dbpath, dbtype='legacy',
-                num_iter=2, correct_ppp=True, remove_dummy=True)
+                num_iter=0, correct_ppp=True, remove_dummy=True)
         resvals1 = res1['upd_vals']
         tbl = res2['table']
         sel = (tbl.NODE.str.match('xsid_') | tbl.NODE.str.match('norm_'))

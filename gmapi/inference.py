@@ -122,6 +122,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     old_postvals = None
     num_iter = 0
     converged = False
+    first_cycle = True
     while num_iter < maxiter:
         # termination condition at end of loop
         num_iter += 1
@@ -156,22 +157,22 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         new_neglogprior = newpardiff.T @ priorcovmat_fact(newpardiff)
         exp_measdiff = meas - expected_propcss
         real_measdiff = meas - real_propcss
-        # without PPP correction, we only need to calculate the cur_negloglike
-        # in the first iteration because in later iterations it is given by
-        # real_negloglike of the previous iteration.
-        # with the ppp correction, we also need to calculate the cur_negloglike,
-        # to have a diagnostic tool that tells us the point when the
-        # misspecification of the loglike gradient prevents further convergence.
-        cur_negloglike = cur_measdiff.T @ obscovmat_fact(cur_measdiff) + cur_neglogprior
+        # in later iterations, we can adopt for cur_negloglike
+        # one of the values from the previous iterations
+        if first_cycle:
+            cur_negloglike = cur_measdiff.T @ obscovmat_fact(cur_measdiff) + cur_neglogprior
         exp_negloglike = exp_measdiff.T @ obscovmat_fact(exp_measdiff) + new_neglogprior
         # calculate the PPP corrected matrix
         if correct_ppp:
             tmp_preds = propagate_mesh_css(datatable, mapping, new_fullrefvals,
                                             prop_normfact=False, mt6_exp=True)
-            obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
-            obscovmat_fact = cholesky(obscovmat)
+            new_obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
+            new_obscovmat_fact = cholesky(obscovmat)
+        else:
+            new_obscovmat = obscovmat
+            new_obscovmat_fact = obscovmat_fact
 
-        real_negloglike = real_measdiff.T @ obscovmat_fact(real_measdiff) + new_neglogprior
+        real_negloglike = real_measdiff.T @ new_obscovmat_fact(real_measdiff) + new_neglogprior
         # calculate expected and real improvement and use the ratio
         # as criterion to determine the adjustment of the damping term
         exp_improvement = cur_negloglike - exp_negloglike
@@ -185,10 +186,14 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         old_negloglike = cur_negloglike
         # only accept new parameter set
         # if the associated log likelihood is larger
+        accepted = False
         if real_negloglike < cur_negloglike:
             old_postvals = fullrefvals[isadj]
             fullrefvals[isadj] = postvals
             cur_negloglike = real_negloglike
+            obscovmat = new_obscovmat
+            obscovmat_fact = new_obscovmat_fact
+            accepted = True
 
         if print_status:
             print('###############')
@@ -198,6 +203,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
             print('exp_improvement: ' + str(exp_improvement))
             print('real_improvement: ' + str(real_improvement))
             print('lambda: ' + str(lmb))
+            print('accepted' if accepted else 'REJECTED!')
 
         if old_postvals is not None:
             absdiff = postvals - old_postvals
@@ -205,11 +211,14 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
                 converged = True
                 break
 
+        first_cycle = False
+
     if not converged:
         warnings.warn('Maximal number of iterations reached without achieving convergence')
 
-    return {'upd_vals': postvals, 'upd_covmat': None,
+    res = {'upd_vals': postvals, 'upd_covmat': None,
             'idcs': np.sort(datatable.index[isadj])}
+    return res
 
 
 
