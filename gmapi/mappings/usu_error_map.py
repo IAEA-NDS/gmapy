@@ -3,6 +3,7 @@ import pandas as pd
 from sksparse.cholmod import cholesky
 from .basic_maps import basic_propagate, get_basic_sensmat
 from .helperfuns import return_matrix
+from scipy.sparse import issparse
 
 
 
@@ -156,6 +157,8 @@ class USUErrorMap:
         z1 = S.T @ z0
         zc = U_fact.inv() + S.T @ A_fact(S)
         zc_fact = cholesky(zc.tocsc())
+        if issparse(z1):
+            z1 = z1.asformat('csc')
         z2 = zc_fact(z1)
         second_term = z1.T @ z2
         return first_term - second_term
