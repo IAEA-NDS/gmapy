@@ -107,6 +107,7 @@ class GMADatabase:
             kwargs['startvals'] = startvals
 
         lmres = lm_update(mapping, datatable, covmat, **kwargs)
+        self._cache['lmb'] = lmres['lmb']
 
         if remove_idcs is None:
             adj_idcs = lmres['idcs']
