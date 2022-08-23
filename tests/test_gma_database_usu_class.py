@@ -9,6 +9,9 @@ from sksparse.cholmod import cholesky
 from gmapi.mappings.helperfuns import numeric_jacobian
 
 
+# NOTE: This test case tests at present tests mostly the functionality
+#       of the USUErrorMap class regarding the calculation of
+#       the log likelihood and gradients thereof.
 
 class TestGMADatabaseUSU(unittest.TestCase):
 
@@ -146,6 +149,41 @@ class TestGMADatabaseUSU(unittest.TestCase):
         red_res1 = res1[optim_idcs]
         self.assertTrue(np.allclose(red_res1, res2))
 
+    def test_grad_loglikelihood_computation(self):
+        gmadb = deepcopy(self._gmadb)
+        gmadb.set_usu_components(['REAC'])
+        datatable = gmadb.get_datatable()
+        mapping = gmadb.get_mapping()
+        refvals = datatable['PRIOR'].to_numpy()
+        usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
+        usu_uncs = np.linspace(1, 50, num=len(usu_idcs))
+        expvals = datatable.DATA.to_numpy()
+        # we only calculate some elements of the gradient
+        # to keep the computation time reasonable for a test
+        optim_idcs = np.array([3, 9, 27])
+        # specify the USU uncertainty values
+        counter = 0
+        def loglikelihood_wrap(x):
+            nonlocal counter
+            nonlocal usu_uncs
+            nonlocal expvals
+            counter += 1
+            print('call number: ' + str(counter))
+            cur_usu_uncs = usu_uncs.copy()
+            cur_usu_uncs[optim_idcs] = x
+            datatable.loc[usu_idcs, 'UNC'] = cur_usu_uncs
+            gmadb.set_datatable(datatable)
+            covmat = gmadb.get_covmat()
+            res = mapping.loglikelihood(datatable, refvals, expvals, covmat)
+            return np.ravel(res)
+        # call loglikelihood_wrap once to initialize USU uncertainties
+        loglikelihood_wrap(usu_uncs[optim_idcs])
+        covmat = gmadb.get_covmat()
+        res1 = mapping.grad_loglikelihood(datatable, refvals, expvals, covmat)
+        # now do it by numerical differentiation
+        res2 = numeric_jacobian(loglikelihood_wrap, usu_uncs[optim_idcs])
+        red_res1 = res1[optim_idcs]
+        self.assertTrue(np.allclose(red_res1, res2))
 
 if __name__ == '__main__':
     unittest.main()
