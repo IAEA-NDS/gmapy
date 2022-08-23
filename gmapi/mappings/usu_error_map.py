@@ -113,6 +113,21 @@ class USUErrorMap:
     # good assignment of uncertainties do not have to
     # update the datatable.
 
+    def loglikelihood(self, datatable, refvals, expvals, covmat):
+        logdet_res = self.logdet(datatable, refvals, covmat)
+        chisquare_res = self.chisquare(datatable, refvals, expvals, covmat)
+        num_points = np.sum(datatable.NODE.str.match('exp_'))
+        loglike_res = (-0.5) * (logdet_res + chisquare_res + num_points*np.log(2*np.pi))
+        return loglike_res
+
+
+    def grad_loglikelihood(self, datatable, refvals, expvals, covmat):
+        grad_logdet_res = self.grad_logdet(datatable, refvals, covmat)
+        grad_chisquare_res = self.grad_chisquare(datatable, refvals, expvals, covmat)
+        grad_loglike_res = (-0.5) * (grad_logdet_res + grad_chisquare_res)
+        return grad_loglike_res
+
+
     def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
         usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
         exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
