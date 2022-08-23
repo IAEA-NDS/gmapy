@@ -187,6 +187,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # only accept new parameter set
         # if the associated log likelihood is larger
         accepted = False
+        old_negloglike = cur_negloglike
         if real_negloglike < cur_negloglike:
             old_postvals = fullrefvals[isadj]
             fullrefvals[isadj] = postvals
@@ -197,7 +198,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
         if print_status:
             print('###############')
-            print('cur_loglike: ' + str(cur_negloglike))
+            print('cur_loglike: ' + str(old_negloglike))
             print('exp_loglike: ' + str(exp_negloglike))
             print('real_loglike: ' + str(real_negloglike))
             print('exp_improvement: ' + str(exp_improvement))
@@ -217,7 +218,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         warnings.warn('Maximal number of iterations reached without achieving convergence')
 
     res = {'upd_vals': postvals, 'upd_covmat': None,
-            'idcs': np.sort(datatable.index[isadj])}
+            'idcs': np.sort(datatable.index[isadj]), 'lmb': lmb}
     return res
 
 
