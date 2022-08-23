@@ -126,23 +126,12 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         preds = preds[isobs]
         S = S[isobs,:].tocsc()
         S = S[:,isadj]
-
         # PPP correction
         if correct_ppp:
             tmp_preds = propagate_mesh_css(datatable, mapping, fullrefvals,
                                             prop_normfact=False, mt6_exp=True)
-            ppp_factors = tmp_preds[isobs] / meas
-            obscovmat = orig_obscovmat.copy()
-            # the following lines achieve the elementwise
-            # product of obscovmat with ppp_factors^T * ppp_factors.
-            # see answer https://stackoverflow.com/a/16046783/1860946
-            assert obscovmat.getformat() == 'csc'
-            obscovmat.data *= ppp_factors[obscovmat.indices]
-            obscovmat = obscovmat.tocsr()
-            obscovmat.data *= ppp_factors[obscovmat.indices]
-            obscovmat = obscovmat.tocsc()
+            obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
             obscovmat_fact = cholesky(obscovmat)
-
         # GLS update
         inv_post_cov = S.T @ obscovmat_fact(S) + inv_prior_cov + lmb * idmat
         zvec = S.T @ obscovmat_fact(meas-preds) + priorcovmat_fact(priorvals-refvals)
@@ -220,4 +209,19 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
     return {'upd_vals': postvals, 'upd_covmat': None,
             'idcs': np.sort(datatable.index[isadj])}
+
+
+
+def rescale_covmat(covmat, expvals, preds):
+    ppp_factors = preds / expvals
+    covmat = covmat.copy()
+    # the following lines achieve the elementwise
+    # product of covmat with ppp_factors^T * ppp_factors.
+    # see answer https://stackoverflow.com/a/16046783/1860946
+    assert covmat.getformat() == 'csc'
+    covmat.data *= ppp_factors[covmat.indices]
+    covmat = covmat.tocsr()
+    covmat.data *= ppp_factors[covmat.indices]
+    covmat = covmat.tocsc()
+    return covmat
 
