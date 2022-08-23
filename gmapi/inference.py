@@ -82,6 +82,8 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     # NaN (=not a number) values indicate that quantity was not measured
     not_isobs = np.isnan(meas)
     isobs = np.logical_not(not_isobs)
+    # restrict the measurement vector to the real measurement points
+    meas = meas[isobs]
     # quantities with zero uncertainty are fixed,
     # hence will be propagated but not adjusted
     has_zerounc = covmat.diagonal() == 0.
@@ -96,8 +98,15 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     # prepare experimental covariance matrix
     obscovmat = covmat[isobs,:].tocsc()
     obscovmat = obscovmat[:,isobs]
-    obscovmat_fact = cholesky(obscovmat)
     orig_obscovmat = obscovmat.copy()
+    # PPP correction
+    if correct_ppp:
+        tmp_preds = propagate_mesh_css(datatable, mapping, fullrefvals,
+                                        prop_normfact=False, mt6_exp=True)
+        obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
+        obscovmat_fact = cholesky(obscovmat)
+    else:
+        obscovmat_fact = cholesky(obscovmat)
     # prepare parameter prior covariance matrix
     priorcovmat = covmat[isadj,:].tocsc()
     priorcovmat = priorcovmat[:,isadj]
@@ -109,11 +118,9 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     # these quantities remain constant despite
     # throughout the loops below
     priorvals = priorvals[isadj]
-    meas = meas[isobs]
 
     old_postvals = None
     num_iter = 0
-    first_cycle = True
     converged = False
     while num_iter < maxiter:
         # termination condition at end of loop
@@ -126,12 +133,6 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         preds = preds[isobs]
         S = S[isobs,:].tocsc()
         S = S[:,isadj]
-        # PPP correction
-        if correct_ppp:
-            tmp_preds = propagate_mesh_css(datatable, mapping, fullrefvals,
-                                            prop_normfact=False, mt6_exp=True)
-            obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
-            obscovmat_fact = cholesky(obscovmat)
         # GLS update
         inv_post_cov = S.T @ obscovmat_fact(S) + inv_prior_cov + lmb * idmat
         zvec = S.T @ obscovmat_fact(meas-preds) + priorcovmat_fact(priorvals-refvals)
@@ -161,13 +162,15 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # with the ppp correction, we also need to calculate the cur_negloglike,
         # to have a diagnostic tool that tells us the point when the
         # misspecification of the loglike gradient prevents further convergence.
-        if first_cycle or correct_ppp:
-            cur_negloglike = cur_measdiff.T @ obscovmat_fact(cur_measdiff) + cur_neglogprior
-        if not first_cycle and correct_ppp:
-            if old_negloglike < cur_negloglike:
-                warnings.warn('Oscillation of likelihood detected in PPP enabled optimization')
-
+        cur_negloglike = cur_measdiff.T @ obscovmat_fact(cur_measdiff) + cur_neglogprior
         exp_negloglike = exp_measdiff.T @ obscovmat_fact(exp_measdiff) + new_neglogprior
+        # calculate the PPP corrected matrix
+        if correct_ppp:
+            tmp_preds = propagate_mesh_css(datatable, mapping, new_fullrefvals,
+                                            prop_normfact=False, mt6_exp=True)
+            obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
+            obscovmat_fact = cholesky(obscovmat)
+
         real_negloglike = real_measdiff.T @ obscovmat_fact(real_measdiff) + new_neglogprior
         # calculate expected and real improvement and use the ratio
         # as criterion to determine the adjustment of the damping term
@@ -201,8 +204,6 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
             if np.all(absdiff < atol + rtol*old_postvals):
                 converged = True
                 break
-
-        first_cycle = False
 
     if not converged:
         warnings.warn('Maximal number of iterations reached without achieving convergence')
