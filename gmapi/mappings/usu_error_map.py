@@ -146,6 +146,16 @@ class USUErrorMap:
         return first_term - second_term
 
 
+    def _mult_Z_d(self, A_fact, U_fact, S, d):
+        first_term = A_fact(d)
+        z1 = S.T @ first_term
+        zc = U_fact.inv() + S.T @ A_fact(S)
+        zc_fact = cholesky(zc)
+        z2 = zc_fact(z1)
+        second_term = A_fact(S @ z2)
+        return first_term - second_term
+
+
     def logdet(self, datatable, refvals, covmat):
         usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
         Susu = usu_aux['Susu']
