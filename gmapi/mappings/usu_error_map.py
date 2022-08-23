@@ -200,3 +200,23 @@ class USUErrorMap:
         res *= 2*np.sqrt(covmat[usu_idcs,:][:,usu_idcs].diagonal())
         return res
 
+
+    def grad_chisquare(self, datatable, refvals, expvals, covmat):
+        usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
+        usu_idcs = usu_aux['usu_idcs']
+        exp_idcs = usu_aux['exp_idcs']
+        Susu = usu_aux['Susu']
+        usucov_fact = usu_aux['usucov_fact']
+        expcov_fact = usu_aux['expcov_fact']
+        # calculate the difference between predictions and experiments
+        # (we force the USU error to be zero; however, should this be a user choice?)
+        refvals[usu_idcs] = 0.
+        preds = self.propagate(datatable, refvals)
+        preds = preds[exp_idcs]
+        real_expvals = expvals[exp_idcs]
+        d = real_expvals - preds
+        zvec = self._mult_Z_d(expcov_fact, usucov_fact, Susu, d)
+        zvec = Susu.T @ zvec
+        zvec *= zvec * 2*np.sqrt(covmat[usu_idcs,:][:,usu_idcs].diagonal())
+        return (-zvec)
+
