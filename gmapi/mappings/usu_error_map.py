@@ -135,7 +135,7 @@ class USUErrorMap:
         return usu_aux
 
 
-    def _mult_inv_A_SUST(self, A_fact, U_fact, S, d):
+    def _mult_dt_Z_d(self, A_fact, U_fact, S, d):
         z0 = A_fact(d)
         first_term = d.T @ z0
         z1 = S.T @ z0
@@ -172,7 +172,7 @@ class USUErrorMap:
         preds = preds[exp_idcs]
         real_expvals = expvals[exp_idcs]
         d = real_expvals - preds
-        return self._mult_inv_A_SUST(expcov_fact,
+        return self._mult_dt_Z_d(expcov_fact,
                                      usucov_fact, Susu, d)
 
 
@@ -182,7 +182,7 @@ class USUErrorMap:
         Susu = usu_aux['Susu']
         usucov_fact = usu_aux['usucov_fact']
         expcov_fact = usu_aux['expcov_fact']
-        S_invCov_ST = self._mult_inv_A_SUST(expcov_fact, usucov_fact,
+        S_invCov_ST = self._mult_dt_Z_d(expcov_fact, usucov_fact,
                                             Susu, Susu)
         res = S_invCov_ST.diagonal()
         # given that the diagonal in USU covmat is given by UNC^2
