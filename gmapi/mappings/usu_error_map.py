@@ -155,7 +155,7 @@ class USUErrorMap:
         first_term = d.T @ z0
         z1 = S.T @ z0
         zc = U_fact.inv() + S.T @ A_fact(S)
-        zc_fact = cholesky(zc)
+        zc_fact = cholesky(zc.tocsc())
         z2 = zc_fact(z1)
         second_term = z1.T @ z2
         return first_term - second_term
