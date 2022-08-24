@@ -45,7 +45,7 @@ class GMADatabaseUSU(GMADatabase):
             new_usu_dt = pd.DataFrame.from_dict({
                 'NODE': cur_usu_name,
                 'PRIOR': 0.,
-                'UNC': np.inf,
+                'UNC': 0.01,
                 feat_col: uniq_feat_attrs
                 })
             dt_list.append(new_usu_dt)
