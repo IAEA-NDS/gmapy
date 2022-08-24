@@ -74,6 +74,7 @@ class USUErrorMap:
         else:
             raise ValueError('what must be either "propagate" or "jacobian"')
 
+        relpropvals = np.full(len(base_propvals), 1.)
         for feat_col in feat_columns:
             usu_feat = priortable[feat_col]
             exp_feat = exptable[feat_col]
@@ -87,9 +88,10 @@ class USUErrorMap:
             glob_src_idcs = priortable.index[is_nonna_src][src_idcs]
             glob_tar_idcs = exptable.index[is_nonna_tar]
 
+            relpropvals[glob_tar_idcs] += refvals[glob_src_idcs]
             if what == 'propagate':
                 propvals[glob_tar_idcs] += base_propvals[glob_tar_idcs] * refvals[glob_src_idcs]
-            elif what == 'jacobian':
+            if what == 'jacobian':
                 glob_sensvals = base_propvals[glob_tar_idcs]
                 idcs1_list.append(glob_src_idcs)
                 idcs2_list.append(glob_tar_idcs)
@@ -98,6 +100,7 @@ class USUErrorMap:
         if what == 'propagate':
             return propvals
         elif what == 'jacobian':
+            coeffs_list[0] *= relpropvals[idcs2_list[0]]
             idcs1 = np.concatenate(idcs1_list)
             idcs2 = np.concatenate(idcs2_list)
             coeffs = np.concatenate(coeffs_list)
