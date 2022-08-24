@@ -128,17 +128,19 @@ class GMADatabaseUSU(GMADatabase):
             self.determine_usu_uncertainties()
 
 
-    def determine_usu_uncertainties(self, refvals=None, usu_uncs=None):
+    def determine_usu_uncertainties(self, refvals=None):
         if self._usu_coupling_column is None:
             raise IndexError('no uncertainty coupling specified! ' +
                    'Please call set_usu_uncertainty_coupling first')
 
-        dt = self.get_datatable()
-        covmat = self.get_covmat()
+        dt = self._datatable
+        covmat = self._covmat
         mapping = self._mapping
         expvals = dt['DATA'].to_numpy()
         Scoup = self._usu_coupling_mapping
         usu_idcs = dt.index[dt.NODE.str.match('usu_', na=False)]
+        usu_unc_assoc = dt.loc[usu_idcs, self._usu_coupling_column]
+        usu_unc_groups = usu_unc_assoc.unique()
 
         if refvals is None:
             if 'POST' in dt.columns:
@@ -146,57 +148,13 @@ class GMADatabaseUSU(GMADatabase):
             else:
                 refvals = dt.PRIOR.to_numpy()
 
-        if usu_uncs is None:
-            all_usu_uncs = dt.loc[usu_idcs, 'UNC']
-            is_not_finite = all_usu_uncs.isin([np.inf, np.nan])
-            all_usu_uncs = all_usu_uncs.to_numpy()
-            all_usu_uncs[is_not_finite] = 0.01
-            # use generalized least squares to project on
-            # permissible subspace of the distinct uncertainty
-            # components established by usu couplings
-            usu_uncs = spsp.linalg.spsolve(Scoup.T @ Scoup, Scoup.T @ all_usu_uncs)
-
-        def loglike_wrap(x):
-            nonlocal covmat
-            nonlocal dt
-            nonlocal usu_idcs
-            curdt = dt.copy()
-            usu_uncs = np.array(Scoup @ x)
-            curdt.loc[usu_idcs, 'UNC'] = usu_uncs
-            covmat[usu_idcs, usu_idcs] = np.square(usu_uncs)
-            res = mapping.loglikelihood(curdt, refvals, expvals, covmat)
-            print(f'loglike: {res}')
-            return res
-
-        def gradloglike_wrap(x):
-            nonlocal covmat
-            nonlocal dt
-            nonlocal Scoup
-            nonlocal usu_idcs
-            curdt = dt.copy()
-            usu_uncs = np.array(Scoup @ x)
-            curdt.loc[usu_idcs, 'UNC'] = usu_uncs
-            covmat[usu_idcs, usu_idcs] = np.square(usu_uncs)
-            outer_jac = mapping.grad_loglikelihood(curdt, refvals, expvals, covmat)
-            res = outer_jac @ Scoup
-            # if an uncertainty in x is negative
-            # we need to negate the respective element in res.
-            # this is due to the fact that the grad_loglike routine
-            # extracts the uncertainty from the covariance matrix
-            # and assumes it to be always positive.
-            res *= np.sign(x)
-            return res
-
-        def negloglike_wrap(x):
-            return -loglike_wrap(x)
-
-        def neggradloglike_wrap(x):
-            return -gradloglike_wrap(x)
-
-        optim_res = minimize(negloglike_wrap, usu_uncs, method='BFGS',
-                jac=neggradloglike_wrap, options={'disp': False})
-
-        usu_uncs = np.abs(np.array(Scoup @ optim_res.x))
-        self._covmat[usu_idcs, usu_idcs] = np.square(usu_uncs)
-        self._datatable.loc[usu_idcs, 'UNC'] = usu_uncs
+        for usu_unc_group in usu_unc_groups:
+            err_sel = (usu_unc_assoc == usu_unc_group)
+            numel = err_sel.sum()
+            cur_usu_idcs = usu_idcs[err_sel]
+            cur_errs = refvals[cur_usu_idcs]
+            cur_var = 1/numel * np.sum(np.square(cur_errs))
+            dt.loc[cur_usu_idcs, 'UNC'] = np.sqrt(cur_var)
+            covmat[cur_usu_idcs, cur_usu_idcs] = cur_var
+            self._cache['uncertainties'] = dt['UNC'].to_numpy()
 
