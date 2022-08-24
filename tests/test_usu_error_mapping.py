@@ -141,7 +141,12 @@ class TestUSUErrorMapping(unittest.TestCase):
         # are expected to have NaN vs 0. differences
         dt.loc[dt.PRIOR.isna(), 'PRIOR'] = 0.
 
-        usu_sel = dt.NODE.str.match('usu_', na=False)
+        usu_sel = (dt.NODE.str.match('usu_', na=False))
+        # also take into account some cross sections on the mesh
+        # to test derivatives with respect to these cross sections
+        usu_sel[3] = True
+        usu_sel[10] = True
+
         exp_sel = dt.NODE.str.match('exp_', na=False)
         rng1_sel = dt.FEAT.str.fullmatch('RNG1', na=False)
         rng2_sel = dt.FEAT.str.fullmatch('RNG2', na=False)
@@ -160,13 +165,6 @@ class TestUSUErrorMapping(unittest.TestCase):
         S2red = numeric_jacobian(prop_wrap, orig_refvals[usu_sel])
         self.assertTrue(np.allclose(S1red, S2red,
                                     atol=1e-8, rtol=1e-8))
-        # also check that the compound mapping part coincides
-        # with the subblock in the USU map Jacobian
-        Scomp = compmap.jacobian(dt, orig_refvals, ret_mat=True)
-        not_usu_sel = np.logical_not(usu_sel)
-        S1red = S1[:, not_usu_sel].toarray()
-        Scred = Scomp[:, not_usu_sel].toarray()
-        self.assertTrue(np.all(S1red == Scred))
 
 
     def test_permutation_invariance(self):
@@ -222,13 +220,6 @@ class TestUSUErrorMapping(unittest.TestCase):
         propcss_direct = propcss_direct[:len(propcss1)]
         propcss_sum = propcss1 + propcss2[:len(propcss1)]
         self.assertTrue(np.allclose(propcss_direct, propcss_sum))
-        # jacobian
-        jac1 = compmap.jacobian(orig_dt, refvals1, ret_mat=True)
-        jac2 = usumap.jacobian(usu_dt, refvals2, ret_mat=True, only_usu=True)
-        jac3 = usumap.jacobian(usu_dt, refvals2, ret_mat=True, only_usu=False)
-        jac_sum = jac1 + jac2[:jac1.shape[0],:][:,:jac1.shape[1]]
-        jac_direct = jac3[:jac1.shape[0],:][:, :jac1.shape[1]]
-        self.assertTrue((jac_sum != jac_direct).nnz == 0)
 
 
 
