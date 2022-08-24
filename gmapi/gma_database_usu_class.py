@@ -122,6 +122,8 @@ class GMADatabaseUSU(GMADatabase):
             print('starting loop')
             print('LM step')
             super().evaluate(remove_idcs, **kwargs)
+            kwargs['lmb'] = self._cache['lmb']
+            kwargs['startvals'] = self._datatable['POST'].to_numpy()
             print('USU optimization')
             self.determine_usu_uncertainties()
 
