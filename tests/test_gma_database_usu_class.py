@@ -8,6 +8,8 @@ from scipy.sparse import csr_matrix
 from sksparse.cholmod import cholesky
 from gmapi.mappings.helperfuns import numeric_jacobian
 
+from gmapi.optimization_auxfuns import create_posterior_funs
+
 
 # NOTE: This test case tests at present tests mostly the functionality
 #       of the USUErrorMap class regarding the calculation of
@@ -184,6 +186,51 @@ class TestGMADatabaseUSU(unittest.TestCase):
         res2 = numeric_jacobian(loglikelihood_wrap, usu_uncs[optim_idcs])
         red_res1 = res1[optim_idcs]
         self.assertTrue(np.allclose(red_res1, res2))
+
+    def test_evaluation_with_usu_converges(self):
+        gmadb = deepcopy(self._gmadb)
+        dt = gmadb.get_datatable()
+        # add the usu group feature
+        expdt = dt[dt.NODE.str.match('exp_', na=False)]
+        energy_group = expdt.apply(lambda x: 'EN1' if x['ENERGY'] < 5 else 'EN2', axis=1)
+        ds_group = expdt.apply(lambda x: x['NODE'].split('_')[1], axis=1)
+        groupassoc = energy_group + '_' + ds_group
+        dt['usu_feat'] = groupassoc
+        gmadb.set_datatable(dt)
+        gmadb.set_usu_components(['usu_feat'], ['feat'])
+        dt = gmadb.get_datatable()
+        # add the coupling of uncertainties
+        usudt = dt[dt.NODE.str.match('usu_', na=False)]
+        energy_group = usudt.apply(lambda x: x['usu_feat'].split('_')[0], axis=1)
+        dt['usu_coupling'] = energy_group
+        gmadb.set_datatable(dt)
+        gmadb.set_usu_couplings('usu_coupling')
+        #gmadb.determine_usu_uncertainties()
+        gmadb.evaluate(print_status=True, adjust_usu=True, rtol=1e-6, atol=1e-6)
+        self.assertTrue(gmadb._cache['converged'])
+
+    # NOTE: At present this test is at present not really related
+    # to the GMADatabaseUSU class but is here for convenience
+    # of a programmer that does not want to move a small
+    # tiny single test to somewhere else.
+    def test_logposterior_and_gradient_coherence(self):
+        gmadb = deepcopy(self._gmadb)
+        dt = gmadb.get_datatable()
+        postobj = create_posterior_funs(gmadb.get_mapping(),
+                gmadb.get_datatable(), gmadb.get_covmat(), fnscale=-1)
+        def logpost_wrap(x):
+            cur_refvals = refvals.copy()
+            cur_refvals[red_adj_idcs] = x
+            res = postobj['logposterior'](cur_refvals[postobj['adj_idcs']])
+            return np.ravel(res)
+
+        red_adj_idcs = postobj['adj_idcs'][:3]
+        refvals = dt.PRIOR.to_numpy()
+        res = postobj['logposterior'](refvals[postobj['adj_idcs']])
+        grad = postobj['grad_logposterior'](refvals[postobj['adj_idcs']])
+        numgrad = numeric_jacobian(logpost_wrap, refvals[red_adj_idcs])
+        self.assertTrue(np.allclose(numgrad, grad[red_adj_idcs]))
+
 
 if __name__ == '__main__':
     unittest.main()
