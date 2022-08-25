@@ -6,6 +6,7 @@ from scipy.linalg.lapack import dpotri, dpotrf
 from sksparse.cholmod import cholesky
 import warnings
 from .mappings.priortools import propagate_mesh_css
+from .data_management.uncfuns import scale_covmat
 
 
 
@@ -103,7 +104,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     if correct_ppp:
         tmp_preds = propagate_mesh_css(datatable, mapping, fullrefvals,
                                         prop_normfact=False, mt6_exp=True)
-        obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
+        obscovmat = scale_covmat(orig_obscovmat, tmp_preds[isobs] / meas)
         obscovmat_fact = cholesky(obscovmat)
     else:
         obscovmat_fact = cholesky(obscovmat)
@@ -166,7 +167,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         if correct_ppp:
             tmp_preds = propagate_mesh_css(datatable, mapping, new_fullrefvals,
                                             prop_normfact=False, mt6_exp=True)
-            new_obscovmat = rescale_covmat(orig_obscovmat, meas, tmp_preds[isobs])
+            new_obscovmat = scale_covmat(orig_obscovmat, tmp_preds[isobs] / meas)
             new_obscovmat_fact = cholesky(obscovmat)
         else:
             new_obscovmat = obscovmat
@@ -232,19 +233,4 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
             'idcs': np.sort(datatable.index[isadj]), 'lmb': lmb,
             'last_rejected': (not accepted), 'converged': converged}
     return res
-
-
-
-def rescale_covmat(covmat, expvals, preds):
-    ppp_factors = preds / expvals
-    covmat = covmat.copy()
-    # the following lines achieve the elementwise
-    # product of covmat with ppp_factors^T * ppp_factors.
-    # see answer https://stackoverflow.com/a/16046783/1860946
-    assert covmat.getformat() == 'csc'
-    covmat.data *= ppp_factors[covmat.indices]
-    covmat = covmat.tocsr()
-    covmat.data *= ppp_factors[covmat.indices]
-    covmat = covmat.tocsc()
-    return covmat
 

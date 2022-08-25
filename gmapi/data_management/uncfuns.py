@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.sparse import block_diag, csr_matrix
+from scipy.sparse import block_diag, csr_matrix, issparse
 from collections import OrderedDict
 
 from ..mappings.priortools import SHAPE_MT_IDS
@@ -7,7 +7,17 @@ from ..mappings.priortools import SHAPE_MT_IDS
 
 
 def scale_covmat(covmat, sclvec):
-    newcovmat = covmat * sclvec.reshape(1,-1) * sclvec.reshape(-1,1)
+    if issparse(covmat):
+        newcovmat = covmat.tocsc(copy=True)
+        # the following lines achieve the elementwise
+        # product of covmat with sclvec.T * sclvec
+        # see answer https://stackoverflow.com/a/16046783/1860946
+        newcovmat.data *= sclvec[newcovmat.indices]
+        newcovmat = newcovmat.tocsr()
+        newcovmat.data *= sclvec[newcovmat.indices]
+        newcovmat = newcovmat.tocsc()
+    else:
+        newcovmat = covmat * sclvec.reshape(1,-1) * sclvec.reshape(-1,1)
     return newcovmat
 
 
