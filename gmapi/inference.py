@@ -103,7 +103,8 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     # PPP correction
     if correct_ppp:
         tmp_preds = propagate_mesh_css(datatable, mapping, fullrefvals,
-                                        prop_normfact=False, mt6_exp=True)
+                                        prop_normfact=False, mt6_exp=True,
+                                        prop_usu_errors=False)
         obscovmat = scale_covmat(orig_obscovmat, tmp_preds[isobs] / meas)
         obscovmat_fact = cholesky(obscovmat)
     else:
@@ -166,7 +167,8 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # calculate the PPP corrected matrix
         if correct_ppp:
             tmp_preds = propagate_mesh_css(datatable, mapping, new_fullrefvals,
-                                            prop_normfact=False, mt6_exp=True)
+                                            prop_normfact=False, mt6_exp=True,
+                                            prop_usu_errors=False)
             new_obscovmat = scale_covmat(orig_obscovmat, tmp_preds[isobs] / meas)
             new_obscovmat_fact = cholesky(obscovmat)
         else:

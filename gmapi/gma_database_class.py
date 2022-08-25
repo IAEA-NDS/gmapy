@@ -121,7 +121,7 @@ class GMADatabase:
         refvals[adj_idcs] = lmres['upd_vals']
 
         propvals = propagate_mesh_css(datatable, mapping, refvals,
-                                      prop_normfact=False)
+                                      prop_normfact=False, prop_usu_errors=False)
         self._datatable['POST'] = propvals
         return propvals
 
