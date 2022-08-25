@@ -121,6 +121,7 @@ class GMADatabaseUSU(GMADatabase):
             old_postvals = dt['POST'].to_numpy()
         else:
             old_postvals = dt['PRIOR'].to_numpy()
+        lm_options['startvals'] = old_postvals
 
         converged = False
         for i in range(outer_iter):
