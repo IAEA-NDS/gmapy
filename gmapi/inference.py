@@ -178,7 +178,10 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         exp_improvement = cur_negloglike - exp_negloglike
         real_improvement = cur_negloglike - real_negloglike
         rho = (exp_improvement+1e-8) / (real_improvement+1e-8)
-        if rho > 0.75:
+        lmb_used = lmb
+        if real_improvement < 0:
+            lmb *= 97
+        elif rho > 0.75:
             lmb /= 3
         elif rho < 0.25:
             lmb *= 2
