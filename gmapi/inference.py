@@ -191,7 +191,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # if the associated log likelihood is larger
         accepted = False
         old_negloglike = cur_negloglike
-        if real_negloglike < cur_negloglike:
+        if real_improvement > 0:
             old_postvals = fullrefvals[isadj]
             fullrefvals[isadj] = postvals
             cur_negloglike = real_negloglike
@@ -199,19 +199,27 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
             obscovmat_fact = new_obscovmat_fact
             accepted = True
 
+        if old_postvals is not None:
+            absdiff = postvals - old_postvals
+            reldiff = np.abs(absdiff) / (atol + np.abs(old_postvals))
+            maxreldiff = np.max(reldiff)
+            meanreldiff = np.mean(reldiff)
+
         if print_status:
             print('###############')
-            print('cur_loglike: ' + str(old_negloglike))
-            print('exp_loglike: ' + str(exp_negloglike))
-            print('real_loglike: ' + str(real_negloglike))
+            print('cur_negloglike: ' + str(old_negloglike))
+            print('exp_negloglike: ' + str(exp_negloglike))
+            print('real_negloglike: ' + str(real_negloglike))
             print('exp_improvement: ' + str(exp_improvement))
             print('real_improvement: ' + str(real_improvement))
-            print('lambda: ' + str(lmb))
+            print('lambda used: ' + str(lmb_used))
+            print('rho: ' + str(rho))
+            if old_postvals is not None:
+                print('maximal relative parameter change: ' + str(maxreldiff))
             print('accepted' if accepted else 'REJECTED!')
 
         if old_postvals is not None:
-            absdiff = postvals - old_postvals
-            if np.all(absdiff < atol + rtol*old_postvals):
+            if np.all(absdiff < (atol + rtol*old_postvals)):
                 converged = True
                 break
 
