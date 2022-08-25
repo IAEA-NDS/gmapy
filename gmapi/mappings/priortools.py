@@ -96,20 +96,28 @@ def remove_dummy_datasets(datablock_list):
 
 
 
-def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp=False):
+def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp=False,
+                       prop_usu_errors=False):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # to obtain the cross section. Otherwise, we
     # would obtain the cross section renormalized
     # with the experimental normalization factor
     if not prop_normfact:
-        selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
-        normvals = refvals[selidx]
-        refvals[selidx] = 1.
+        norm_selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
+        normvals = refvals[norm_selidx]
+        refvals[norm_selidx] = 1.
+    # or renomalized by the usu errors...
+    if not prop_usu_errors:
+        usu_selidx = datatable[datatable['NODE'].str.match('usu_', na=False)].index
+        usuvals = refvals[usu_selidx]
+        refvals[usu_selidx] = 0.
     # calculate PPP correction
     propvals = mapping.propagate(datatable, refvals)
     if not prop_normfact:
-        propvals[selidx] = normvals
+        propvals[norm_selidx] = normvals
+    if not prop_usu_errors:
+        propvals[usu_selidx] = usuvals
     # the substitution of propagated values by experimental ones
     # for MT6 (SACS) is there to facilitate the PPP correction
     # as done by Fortran GMAP, which does not apply it to MT6.
