@@ -4,6 +4,7 @@ from .mappings.usu_error_map import USUErrorMap
 from .gma_database_class import GMADatabase
 import scipy.sparse as spsp
 from scipy.optimize import minimize
+from warnings import warn
 
 
 class GMADatabaseUSU(GMADatabase):
@@ -99,20 +100,81 @@ class GMADatabaseUSU(GMADatabase):
         self._usu_coupling_column = coupling_column
 
 
-
-    def evaluate(self, remove_idcs=None, adjust_usu=True, **kwargs):
+    def evaluate(self, remove_idcs=None, adjust_usu=True,
+            outer_iter=50, inner_iter=1, atol=1e-6, rtol=1e-6, print_status=False, **lm_options):
         if adjust_usu and remove_idcs is not None:
             raise ValueError('dynamic removal of experimental data ' +
                             'and USU adjustment not allowed at the same time')
+        dt = self._datatable
 
-        for i in range(10):
-            print('starting loop')
-            print('LM step')
-            super().evaluate(remove_idcs, **kwargs)
-            kwargs['lmb'] = self._cache['lmb']
-            kwargs['startvals'] = self._datatable['POST'].to_numpy()
-            print('USU optimization')
-            self.determine_usu_uncertainties()
+        if not adjust_usu:
+            inner_iter = outer_iter * inner_iter
+            outer_iter = 1
+
+        lm_options['maxiter'] = inner_iter
+        lm_options['atol'] = atol
+        lm_options['rtol'] = rtol
+        lm_options['print_status'] = print_status
+        lm_options['show_conv_warning'] = False
+
+        if 'POST' in dt.columns:
+            old_postvals = dt['POST'].to_numpy()
+        else:
+            old_postvals = dt['PRIOR'].to_numpy()
+
+        converged = False
+        for i in range(outer_iter):
+            if print_status:
+                print(f'##############################')
+                print(f'Outer iteration nr. {i}')
+                print('Estimate posterior values and associated uncertainties...')
+            super().evaluate(remove_idcs, **lm_options)
+            # for convergence diagnostics
+            new_postvals = self._datatable['POST'].to_numpy()
+            # keep track of the step size control parameter
+            # and the use as new startvals in next iteration
+            # the posterior values of the current iteration
+            lm_options['lmb'] = self._cache['lmb']
+            lm_options['startvals'] = new_postvals
+            if adjust_usu:
+                if print_status:
+                    print('Estimate USU uncertainties...')
+                old_usu_uncs = dt.UNC[dt.NODE.str.match('usu_')]
+                self.determine_usu_uncertainties()
+                new_usu_uncs = dt.UNC[dt.NODE.str.match('usu_')]
+
+            if print_status:
+                absdiff_postvals = np.abs(new_postvals - old_postvals)
+                reldiff_postvals = absdiff_postvals / (atol + old_postvals)
+                max_reldiff_postvals = np.nanmax(reldiff_postvals)
+                print( 'Maximum relative change in:')
+                print(f'    posterior estimates: {max_reldiff_postvals}')
+                if adjust_usu:
+                    absdiff_usu_uncs = np.abs(new_usu_uncs - old_usu_uncs)
+                    reldiff_usu_uncs = absdiff_usu_uncs / (atol + old_usu_uncs)
+                    max_reldiff_usu_uncs = np.nanmax(reldiff_usu_uncs)
+                    print(f'    USU uncertainties: {max_reldiff_usu_uncs}\n')
+
+            last_rejected = self._cache['last_rejected']
+            # we access the convergence flag of the LM algorithm
+            if self._cache['converged']:
+                if not adjust_usu or np.allclose(new_usu_uncs, old_usu_uncs,
+                                                 atol=atol, rtol=rtol, equal_nan=True):
+                    converged = True
+                    break
+
+            old_postvals = new_postvals.copy()
+            if adjust_usu:
+                old_usu_uncs = new_usu_uncs.copy()
+
+        if not converged:
+            warn(f'The estimates did not converge within the desired accuracy. '
+                     'You may want to rerun this function with relaxed '
+                     'numbers for atol and rtol or more iterations. '
+                     'It may also suffice to rerun this function with '
+                     'the same parameter specifications as the results '
+                     'of this run will be used as starting values for '
+                     'the next run.')
 
 
     def determine_usu_uncertainties(self, refvals=None):
