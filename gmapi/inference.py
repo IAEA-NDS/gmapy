@@ -69,7 +69,7 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
-        maxiter=10, atol=1e-8, rtol=1e-5, lmb=1e-6, print_status=False,
+        maxiter=10, atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
         correct_ppp=False):
     # define the prior vector
     priorvals = np.full(len(datatable), 0.)
