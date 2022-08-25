@@ -99,19 +99,6 @@ class GMADatabaseUSU(GMADatabase):
         self._usu_coupling_column = coupling_column
 
 
-    def get_loglikelihood(self, refvals=None):
-        dt = self._datatable
-        mapping = self._mapping
-        expvals = dt['DATA'].to_numpy()
-        covmat = self.get_covmat()
-        if refvals is None:
-            if 'POST' in dt.columns:
-                refvals = dt['POST'].to_numpy()
-            else:
-                refvals = dt['PRIOR'].to_numpy()
-        res = mapping.loglikelihood(dt, refvals, expvals, covmat)
-        return res
-
 
     def evaluate(self, remove_idcs=None, adjust_usu=True, **kwargs):
         if adjust_usu and remove_idcs is not None:
