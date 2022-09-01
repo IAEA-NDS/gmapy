@@ -12,7 +12,7 @@ from .mappings.priortools import (propagate_mesh_css,
 
 class GMADatabase:
 
-    def __init__(self, dbfile, remove_dummy=True, mapping=None):
+    def __init__(self, dbfile, remove_dummy=True, mapping=None, fix_covmat=True):
         db = read_gma_database(dbfile)
         if remove_dummy:
             remove_dummy_datasets(db['datablock_list'])
@@ -34,17 +34,18 @@ class GMADatabase:
         self._datatable = datatable
         self._covmat = None
         self._mapping = mapping
-        self._initialize_uncertainty_info()
+        self._initialize_uncertainty_info(fix_covmat=fix_covmat)
 
 
-    def _initialize_uncertainty_info(self):
+    def _initialize_uncertainty_info(self, fix_covmat):
         datatable = self._datatable
         db = self._raw_database
         datatable.sort_index(inplace=True)
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         nonexpsel = np.logical_not(expsel)
         # assemble covariance matrix
-        expcov = create_experimental_covmat(db['datablock_list'])
+        expcov = create_experimental_covmat(db['datablock_list'],
+                                            fix_covmat=fix_covmat)
         expcov = coo_matrix(expcov)
         prioruncs = datatable.loc[nonexpsel, 'UNC'].to_numpy()
         priorvars = np.square(prioruncs)
