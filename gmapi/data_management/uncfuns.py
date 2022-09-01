@@ -404,8 +404,7 @@ def create_experimental_covmat(datablock_list, propcss=None,
         if fix_covmat:
             curcormat = fix_cormat(curcormat)
 
-        curcovmat = curcormat * curabsuncs.reshape(-1,1)
-        curcovmat *= curabsuncs.reshape(1,-1)
+        curcovmat = scale_covmat(curcormat, curabsuncs)
 
         covmat_list.append(csr_matrix(curcovmat))
         start_idx = next_idx
