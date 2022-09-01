@@ -374,7 +374,8 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
 
 
 
-def create_experimental_covmat(datablock_list, propcss=None, fix_ppp_bug=True):
+def create_experimental_covmat(datablock_list, propcss=None,
+        fix_ppp_bug=True, fix_covmat=True):
     """Calculate experimental covariance matrix."""
     uncs = create_relunc_vector(datablock_list)
     covmat_list = []
@@ -400,7 +401,8 @@ def create_experimental_covmat(datablock_list, propcss=None, fix_ppp_bug=True):
         else:
             curcormat = cov2cor(curcovmat)
 
-        curcormat = fix_cormat(curcormat)
+        if fix_covmat:
+            curcormat = fix_cormat(curcormat)
 
         curcovmat = curcormat * curabsuncs.reshape(-1,1)
         curcovmat *= curabsuncs.reshape(1,-1)
