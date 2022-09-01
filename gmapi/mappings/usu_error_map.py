@@ -135,7 +135,7 @@ class USUErrorMap:
     def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
         usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
         exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
-        Susu = self.jacobian(datatable, refvals, ret_mat=True, only_usu=True)
+        Susu = self.jacobian(datatable, refvals, ret_mat=True, only_usu=False)
         Susu = Susu[exp_idcs,:][:,usu_idcs].tocsc()
         # the .tocsc() addition to avoid an efficiency warning
         # during the Cholesky decomposition
