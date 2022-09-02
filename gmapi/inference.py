@@ -71,7 +71,7 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         maxiter=10, atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
-        correct_ppp=False, show_conv_warning=False):
+        correct_ppp=False, ret_invcov=False, show_conv_warning=False):
     # define the prior vector
     priorvals = np.full(len(datatable), 0.)
     priorvals[datatable.index] = datatable['PRIOR']
@@ -234,5 +234,10 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     res = {'upd_vals': postvals, 'upd_covmat': None,
             'idcs': np.sort(datatable.index[isadj]), 'lmb': lmb,
             'last_rejected': (not accepted), 'converged': converged}
+
+    if ret_invcov:
+        inv_post_cov = S.T @ obscovmat_fact(S) + inv_prior_cov
+        res['upd_invcov'] = inv_post_cov
+
     return res
 
