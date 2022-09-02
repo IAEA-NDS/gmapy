@@ -7,7 +7,7 @@ from gmapi.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
 from gmapi.data_management.uncfuns import create_experimental_covmat
 from gmapi.mappings.priortools import attach_shape_prior, remove_dummy_datasets
-from gmapi.inference import gls_update, lm_update
+from gmapi.inference import gls_update, lm_update, compute_posterior_covmat
 from gmapi.data_management.database_IO import read_legacy_gma_database
 from gmapi.mappings.compound_map import CompoundMap
 from gmapi.gmap import run_gmap_simplified
@@ -132,6 +132,30 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         self.assertTrue(diff1 > diff2)
         self.assertTrue(diff1 > 0.04)
         self.assertTrue(diff2 < 1e-4)
+
+    def test_post_covmat_computation(self):
+        datatable = self._datatable
+        totcov = self._totcov
+        compmap = CompoundMap()
+        res = lm_update(compmap, datatable, totcov, retcov=False,
+                lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True)
+        source_idcs = res['idcs']
+        idcs = res['idcs']
+        postvals = res['upd_vals']
+        invcov = res['upd_invcov']
+        refcov = np.linalg.inv(invcov.toarray())
+        mycov = compute_posterior_covmat(compmap, datatable, postvals, invcov,
+                idcs=idcs, source_idcs=source_idcs)
+        self.assertTrue(np.allclose(refcov, mycov.toarray()))
+        # propagate everything
+        refvals = np.zeros(len(datatable), dtype='d')
+        refvals[idcs] = postvals
+        S = compmap.jacobian(datatable, refvals, ret_mat=True)
+        S = S[:, idcs]
+        refcov = S @ refcov @ S.T
+        mycov = compute_posterior_covmat(compmap, datatable, postvals, invcov,
+                source_idcs=source_idcs)
+        self.assertTrue(np.allclose(refcov, mycov.toarray()))
 
 
 
