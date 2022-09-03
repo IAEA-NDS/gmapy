@@ -244,7 +244,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
 
 def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
-        idcs=None, source_idcs=None, **mapargs):
+        idcs=None, source_idcs=None, unc_only=False, **mapargs):
     # calculate the refvals
     if source_idcs is None:
         refvals = postvals
@@ -261,6 +261,11 @@ def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
     S = S.tocsr()
     invcovmat = invcovmat.tocsc(copy=True)
 
-    postcov = S @ spsolve(invcovmat, S.T)
-    return postcov
+    cov_times_St = spsolve(invcovmat, S.T)
+    if unc_only:
+        uncs = np.sqrt(np.sum(S.multiply(cov_times_St.T), axis=1))
+        return np.ravel(uncs)
+    else:
+        postcov = S @ cov_times_St
+        return postcov
 
