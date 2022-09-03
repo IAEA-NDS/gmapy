@@ -5,7 +5,7 @@ from .data_management.database_IO import read_gma_database
 from .data_management.tablefuns import create_prior_table, create_experiment_table
 from .data_management.uncfuns import create_relunc_vector, create_experimental_covmat
 from .mappings.compound_map import CompoundMap
-from .inference import lm_update
+from .inference import lm_update, compute_posterior_covmat
 from .mappings.priortools import (propagate_mesh_css,
         attach_shape_prior, remove_dummy_datasets)
 
@@ -92,7 +92,7 @@ class GMADatabase:
         self._cache['uncertainties'] = uncs
 
 
-    def evaluate(self, remove_idcs=None, **kwargs):
+    def evaluate(self, remove_idcs=None, ret_uncs=True, **kwargs):
         mapping = self._mapping
         if remove_idcs is None:
             datatable = self._datatable
@@ -106,6 +106,8 @@ class GMADatabase:
             startvals = kwargs.get('startvals', None)
             startvals = startvals[keep_mask] if startvals is not None else None
             kwargs['startvals'] = startvals
+        if ret_uncs:
+            kwargs['ret_invcov'] = True
 
         lmres = lm_update(mapping, datatable, covmat, **kwargs)
         self._cache['lmb'] = lmres['lmb']
@@ -124,6 +126,12 @@ class GMADatabase:
         propvals = propagate_mesh_css(datatable, mapping, refvals,
                                       prop_normfact=False, prop_usu_errors=False)
         self._datatable['POST'] = propvals
+
+        if ret_uncs:
+            uncs = compute_posterior_covmat(mapping, datatable, lmres['upd_vals'],
+                    lmres['upd_invcov'], source_idcs=adj_idcs, unc_only=True)
+            self._datatable['POSTUNC'] = uncs
+
         return propvals
 
 
