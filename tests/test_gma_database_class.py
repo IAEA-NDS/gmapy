@@ -43,7 +43,7 @@ class TestGMADatabase(unittest.TestCase):
         gmadb1 = deepcopy(self._gmadb)
         gmadb2 = deepcopy(self._gmadb)
         tbl = gmadb1.get_datatable()
-        remove_idcs = tbl.index[tbl.NODE.str.fullmatch('exp_1034')]
+        remove_idcs = tbl.index[tbl.NODE.str.fullmatch('(exp|norm)_1034')]
         keep_idcs = np.full(len(tbl), True)
         keep_idcs[remove_idcs] = False
         gmadb1.evaluate(remove_idcs=remove_idcs, maxiter=2)
