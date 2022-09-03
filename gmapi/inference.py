@@ -244,14 +244,10 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
 
 def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
-        idcs=None, source_idcs=None, unc_only=False, **mapargs):
+        source_idcs, idcs=None,  unc_only=False, **mapargs):
     # calculate the refvals
-    if source_idcs is None:
-        refvals = postvals
-        S = S[:, source_idcs]
-    else:
-        refvals = np.zeros(len(datatable))
-        refvals[source_idcs] = postvals
+    refvals = np.zeros(len(datatable))
+    refvals[source_idcs] = postvals
     # calculate and trim sensitivity matrix
     S = mapping.jacobian(datatable, refvals, ret_mat=True, **mapargs)
     if idcs is not None:
