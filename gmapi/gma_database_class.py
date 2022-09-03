@@ -128,8 +128,9 @@ class GMADatabase:
         self._datatable['POST'] = propvals
 
         if ret_uncs:
-            uncs = compute_posterior_covmat(mapping, datatable, lmres['upd_vals'],
-                    lmres['upd_invcov'], source_idcs=adj_idcs, unc_only=True)
+            uncs = compute_posterior_covmat(mapping, self._datatable,
+                    lmres['upd_vals'], lmres['upd_invcov'],
+                    source_idcs=adj_idcs, unc_only=True)
             self._datatable['POSTUNC'] = uncs
 
         return propvals
