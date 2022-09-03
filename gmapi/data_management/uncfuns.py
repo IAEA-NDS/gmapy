@@ -160,12 +160,21 @@ def create_relative_dataset_covmat(dataset):
         CO /= 10
     # construct correlation matrix for dataset
     covmat = np.zeros((numpts, numpts), dtype=float)
+    problematic_datasets = {}
     for KS in range(numpts):
         for KT in range(KS):
             Q1 = 0.
             for L in range(2,11):
                 if dataset['NETG'][L] not in (0,9):
                     FKS = EPAF[0,L] + EPAF[1,L]
+                    if EPAF[2,L] == 0.:
+                        if dataset['NS'] not in problematic_datasets:
+                            print(f'Warning: EPAF[2,{L}] is zero for dataset {dataset["NS"]} '
+                                  f'(MT: {dataset["MT"]}, {dataset.get("BREF","").strip()}, '
+                                  f'{dataset.get("CLABL").strip()}). '
+                                   'You may want to check the uncertainty specifications '
+                                   'of this datasset.')
+                            problematic_datasets[dataset['NS']] = True
                     XYY = EPAF[1,L] - (E[KS]-E[KT])/(EPAF[2,L]*E[KS])
                     XYY = max(XYY, 0.)
                     FKT = EPAF[0,L] + XYY
