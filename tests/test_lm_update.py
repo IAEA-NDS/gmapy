@@ -157,6 +157,24 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
                 source_idcs=source_idcs)
         self.assertTrue(np.allclose(refcov, mycov.toarray()))
 
+    def test_post_covmat_computation_unc_mode(self):
+        datatable = self._datatable
+        totcov = self._totcov
+        compmap = CompoundMap()
+        res = lm_update(compmap, datatable, totcov, retcov=False,
+                lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True)
+        source_idcs = res['idcs']
+        idcs = np.arange(0, len(datatable), 10)
+        postvals = res['upd_vals']
+        invcov = res['upd_invcov']
+
+        refcov = compute_posterior_covmat(compmap, datatable, postvals,
+                invcov, idcs=idcs, source_idcs=source_idcs, unc_only=False)
+        refuncs = np.sqrt(refcov.diagonal())
+        myuncs = compute_posterior_covmat(compmap, datatable, postvals, invcov,
+                idcs=idcs, source_idcs=source_idcs, unc_only=True)
+        self.assertTrue(np.allclose(refuncs, myuncs))
+
 
 
 if __name__ == '__main__':
