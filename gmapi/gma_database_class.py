@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix
+from scipy.sparse import coo_matrix, csr_matrix, block_diag
 from .data_management.database_IO import read_gma_database
 from .data_management.tablefuns import create_prior_table, create_experiment_table
 from .data_management.uncfuns import create_relunc_vector, create_experimental_covmat
@@ -188,6 +188,17 @@ class GMADatabase:
         datatable.sort_index(inplace=True)
         datatable.UNC = np.sqrt(covmat.diagonal())
         self._covmat = covmat
+
+    def add_data(self, new_datatable, new_covmat):
+        if (len(new_covmat.shape) != 2 or
+            new_covmat.shape[0] != new_covmat.shape[1]):
+            raise ValueError('expect square matrix')
+        if len(new_datatable) != new_covmat.shape[0]:
+            raise ValueError('datatable and covariance matrix must have compatible dimensions')
+
+        self._datatable.sort_index(inplace=True)
+        self._datatable = pd.concat([self._datatable, new_datatable], axis=0, ignore_index=True)
+        self._covmat = block_diag([self._covmat, new_covmat], format='csr', dtype='d')
 
     def get_mapping(self):
         return self._mapping
