@@ -198,15 +198,6 @@ def create_relative_dataset_covmat(dataset):
 
 
 
-def create_dataset_cormat(dataset):
-    covmat = create_relative_dataset_covmat(dataset)
-    uncs = np.sqrt(np.diag(covmat))
-    cormat = covmat / uncs.reshape(1,-1) / uncs.reshape(-1,1)
-    np.fill_diagonal(cormat, 1.)
-    return cormat
-
-
-
 def create_relative_datablock_covmat(datablock, shouldfix=True):
     """Create correlation matrix of datablock."""
 
