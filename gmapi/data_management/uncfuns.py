@@ -4,8 +4,10 @@ from collections import OrderedDict
 from .unc_utils import (scale_covmat, cov2cor, calculate_ppp_factors,
         fix_cormat)
 
-from .specialized_uncertainty_funs import \
-        legacy_uncertainty_funs as legacy_uncfuns
+from .specialized_uncertainty_funs import (
+        legacy_uncertainty_funs as legacy_uncfuns,
+        simple_uncertainty_funs as simple_uncfuns
+    )
 
 
 
@@ -14,6 +16,8 @@ def create_relunc_vector(datablock_list):
     for datablock in datablock_list:
         if datablock['type'] == 'legacy-experiment-datablock':
             relunc_list.append(legacy_uncfuns.create_relunc_vector([datablock]))
+        elif datablock['type'] == 'simple-experiment-datablock':
+            relunc_list.append(simple_uncfuns.create_relunc_vector(datablock))
         else:
             TypeError('datablock type not implemented')
     return np.concatenate(relunc_list)
@@ -23,6 +27,8 @@ def create_relunc_vector(datablock_list):
 def create_relative_datablock_covmat(datablock):
     if datablock['type'] == 'legacy-experiment-datablock':
         return legacy_uncfuns.create_relative_datablock_covmat(datablock)
+    elif datablock['type'] == 'simple-experiment-datablock':
+        return simple_uncfuns.create_relative_datablock_covmat(datablock)
     else:
         TypeError('datablock type not implemented')
 
