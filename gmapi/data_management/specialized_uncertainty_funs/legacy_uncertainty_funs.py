@@ -58,14 +58,12 @@ def create_dataset_relunc_vector(dataset):
 
 
 
-def create_relunc_vector(datablock_list):
+def create_relunc_vector(datablock):
     DCS_list = []
-    for datablock in datablock_list:
-        dataset_list = datablock['datasets']
-        for dataset in dataset_list:
-            curDCS = create_dataset_relunc_vector(dataset)
-            DCS_list.append(curDCS)
-
+    dataset_list = datablock['datasets']
+    for dataset in dataset_list:
+        curDCS = create_dataset_relunc_vector(dataset)
+        DCS_list.append(curDCS)
     DCS = np.concatenate(DCS_list)
     return DCS
 
@@ -130,7 +128,7 @@ def create_relative_dataset_covmat(dataset):
 def create_relative_datablock_covmat(datablock, shouldfix=True):
     """Create correlation matrix of datablock."""
 
-    uncs = create_relunc_vector([datablock])
+    uncs = create_relunc_vector(datablock)
     dslist = datablock['datasets']
 
     # get number of points in datablock

@@ -15,7 +15,7 @@ def create_relunc_vector(datablock_list):
     relunc_list = []
     for datablock in datablock_list:
         if datablock['type'] == 'legacy-experiment-datablock':
-            relunc_list.append(legacy_uncfuns.create_relunc_vector([datablock]))
+            relunc_list.append(legacy_uncfuns.create_relunc_vector(datablock))
         elif datablock['type'] == 'simple-experiment-datablock':
             relunc_list.append(simple_uncfuns.create_relunc_vector(datablock))
         else:
