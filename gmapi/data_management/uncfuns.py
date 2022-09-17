@@ -11,26 +11,31 @@ from .specialized_uncertainty_funs import (
 
 
 
+def get_method(blocktype, method):
+    if blocktype == 'legacy-experiment-datablock':
+        mod = legacy_uncfuns
+    elif blocktype == 'simple-experiment-datablock':
+        mod = simple_uncfuns
+    else:
+        TypeError('unknown datablock type')
+    special_method = getattr(mod, method)
+    return special_method
+
+
+
 def create_relunc_vector(datablock_list):
     relunc_list = []
     for datablock in datablock_list:
-        if datablock['type'] == 'legacy-experiment-datablock':
-            relunc_list.append(legacy_uncfuns.create_relunc_vector(datablock))
-        elif datablock['type'] == 'simple-experiment-datablock':
-            relunc_list.append(simple_uncfuns.create_relunc_vector(datablock))
-        else:
-            TypeError('datablock type not implemented')
+        curtype = datablock['type']
+        curfun = get_method(curtype, 'create_relunc_vector')
+        relunc_list.append(curfun(datablock))
     return np.concatenate(relunc_list)
 
 
 
 def create_relative_datablock_covmat(datablock):
-    if datablock['type'] == 'legacy-experiment-datablock':
-        return legacy_uncfuns.create_relative_datablock_covmat(datablock)
-    elif datablock['type'] == 'simple-experiment-datablock':
-        return simple_uncfuns.create_relative_datablock_covmat(datablock)
-    else:
-        TypeError('datablock type not implemented')
+    curfun = get_method(datablock['type'], 'create_relative_datablock_covmat')
+    return curfun(datablock)
 
 
 
