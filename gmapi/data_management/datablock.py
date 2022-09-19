@@ -126,9 +126,8 @@ class Datablock(object):
 
     def get_covariance_matrix(self, unit='percent'):
         css = np.array(self.get_cross_sections())
-        uncs = np.array(self.get_uncertainties(unit='percent'))
-        covmat = create_experimental_covmat([self.datablock_dic],
-                css=css, uncs=uncs)
+        covmat = create_experimental_covmat(
+                [self.datablock_dic], propcss=css)
         if unit == 'absolute':
             return csr_matrix(covmat)
         elif unit == 'relative' or 'percent':
