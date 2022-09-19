@@ -12,8 +12,21 @@ from .mappings.priortools import (propagate_mesh_css,
 
 class GMADatabase:
 
-    def __init__(self, dbfile, remove_dummy=True, mapping=None, fix_covmat=True):
-        db = read_gma_database(dbfile)
+    def __init__(self, dbfile=None, prior_list=None, datablock_list=None,
+                 remove_dummy=True, mapping=None, fix_covmat=True):
+        if dbfile is not None:
+            if prior_list is not None or datablock_list is not None:
+                raise ValueError('you must not provide the prior_list or ' +
+                        'datablock_list argument if the dbfile argument ' +
+                        'is specified.')
+            db = read_gma_database(dbfile)
+        elif prior_list is not None and datablock_list is not None:
+            db = {'prior_list': prior_list, 'datablock_list': datablock_list}
+        else:
+            raise ValueError('you must provide the prior_list and ' +
+                    'datablock_list argument if the dbfile argument ' +
+                    'is missing.')
+
         if remove_dummy:
             remove_dummy_datasets(db['datablock_list'])
 
