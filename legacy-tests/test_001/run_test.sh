@@ -25,9 +25,9 @@ if [ ! -d "GMAP-Fortran" ]; then
     && git checkout $GMAP_fortran_commit_id \
     && rm -rf .git \
     && cd source \
-    && gfortran -o GMAP GMAP.FOR \
-    && mv GMAP .. \
-    && chmod +x GMAP
+    && gfortran -std=legacy -o GMAP GMAP.FOR \
+    && chmod +x GMAP \
+    && mv GMAP ..
     cd "$basedir"
 fi
 
