@@ -69,7 +69,7 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
                 zero_outside=True, maxord=10, rtol=1e-3)
         test_res2 = basic_integral_of_product_propagate(perm_xlist, perm_ylist,
                 perm_interplist, zero_outside=True, maxord=10, rtol=1e-3)
-        self.assertTrue(np.all(test_res1 == test_res2))
+        self.assertTrue(np.allclose(test_res1, test_res2, rtol=1e-15))
 
 
 class TestBasicIntegralOfProductJacobian(unittest.TestCase):
