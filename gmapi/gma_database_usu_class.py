@@ -10,7 +10,7 @@ from warnings import warn
 class GMADatabaseUSU(GMADatabase):
 
     def __init__(self, dbfile, remove_dummy=True, mapping=None):
-        super().__init__(dbfile, remove_dummy, mapping)
+        super().__init__(dbfile, remove_dummy=remove_dummy, mapping=mapping)
         self._base_mapping = self._mapping
         self._usu_coupling_column = None
         self._usu_coupling_mapping = None
