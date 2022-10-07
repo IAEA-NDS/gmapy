@@ -127,6 +127,7 @@ class GMADatabase:
         self._cache['lmb'] = lmres['lmb']
         self._cache['last_rejected'] = lmres['last_rejected']
         self._cache['converged'] = lmres['converged']
+        self._cache['upd_vals'] = lmres['upd_vals']
         self._cache['upd_invcov']= lmres['upd_invcov']
         if remove_idcs is None:
             adj_idcs = lmres['idcs']
@@ -143,12 +144,16 @@ class GMADatabase:
         self._datatable['POST'] = propvals
 
         if ret_uncs:
-            uncs = compute_posterior_covmat(mapping, self._datatable,
-                    lmres['upd_vals'], lmres['upd_invcov'],
-                    source_idcs=adj_idcs, unc_only=True)
+            uncs = self.get_postcov(unc_only=True)
             self._datatable['POSTUNC'] = uncs
 
         return propvals
+
+
+    def get_postcov(self, idcs=None, unc_only=False):
+        return compute_posterior_covmat(self._mapping, self._datatable,
+                self._cache['upd_vals'], self._cache['upd_invcov'],
+                source_idcs=self._cache['adj_idcs'], idcs=idcs, unc_only=unc_only)
 
 
     def _remove_data_internal(self, datatable, covmat, idcs):
