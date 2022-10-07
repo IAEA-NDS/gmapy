@@ -119,19 +119,18 @@ class GMADatabase:
             startvals = kwargs.get('startvals', None)
             startvals = startvals[keep_mask] if startvals is not None else None
             kwargs['startvals'] = startvals
-        if ret_uncs:
-            kwargs['ret_invcov'] = True
 
-        lmres = lm_update(mapping, datatable, covmat, **kwargs)
+        lmres = lm_update(mapping, datatable, covmat, ret_invcov=True, **kwargs)
         self._cache['lmb'] = lmres['lmb']
         self._cache['last_rejected'] = lmres['last_rejected']
         self._cache['converged'] = lmres['converged']
-
+        self._cache['upd_invcov']= lmres['upd_invcov']
         if remove_idcs is None:
             adj_idcs = lmres['idcs']
         else:
             datatable = self._datatable
             adj_idcs = orig_idcs[lmres['idcs']]
+        self._cache['adj_idcs'] = adj_idcs
 
         refvals = np.full(len(datatable), np.nan)
         refvals[adj_idcs] = lmres['upd_vals']
