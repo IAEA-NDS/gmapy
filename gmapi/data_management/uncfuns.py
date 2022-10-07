@@ -69,15 +69,13 @@ def create_experimental_covmat(datablock_list, propcss=None,
             curcormat = cov2cor(curcovmat)
 
         if fix_covmat:
-            curcormat = fix_cormat(curcormat)
+            try:
+                curcormat = fix_cormat(curcormat)
+            except:
+                print('debug #3')
+                import pdb; pdb.set_trace()
 
         curcovmat = scale_covmat(curcormat, curabsuncs)
-        try:
-            np.linalg.cholesky(curcovmat)
-        except:
-            print('debug #1')
-            import pdb; pdb.set_trace()
-
         covmat_list.append(csr_matrix(curcovmat))
         start_idx = next_idx
 
