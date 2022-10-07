@@ -64,7 +64,10 @@ class Datablock(object):
             ptmask[start_idx:stop_idx] = False
         if 'ECOR' in self.datablock_dic:
             new_ecor = self.datablock_dic['ECOR']
-            new_ecor = new_ecor[ptmask,:]
+            try:
+                new_ecor = new_ecor[ptmask,:]
+            except:
+                import pdb; pdb.set_trace() # debug #10
             new_ecor = new_ecor[:,ptmask]
             self.datablock_dic['ECOR'] = new_ecor
 
