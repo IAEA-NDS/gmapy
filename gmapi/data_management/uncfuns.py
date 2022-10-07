@@ -10,7 +10,6 @@ from .specialized_uncertainty_funs import (
     )
 
 
-
 def get_method(blocktype, method):
     if blocktype == 'legacy-experiment-datablock':
         mod = legacy_uncfuns
@@ -73,6 +72,11 @@ def create_experimental_covmat(datablock_list, propcss=None,
             curcormat = fix_cormat(curcormat)
 
         curcovmat = scale_covmat(curcormat, curabsuncs)
+        try:
+            np.linalg.cholesky(curcovmat)
+        except:
+            print('debug #1')
+            import pdb; pdb.set_trace()
 
         covmat_list.append(csr_matrix(curcovmat))
         start_idx = next_idx
