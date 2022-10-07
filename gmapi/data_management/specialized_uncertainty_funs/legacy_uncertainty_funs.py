@@ -167,6 +167,10 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
         # calculate the correlations within a dataset
         covmat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
                 create_relative_dataset_covmat(ds)
+
+        # debug: we skip the interdataset correlations
+        continue # debug #4
+
         # only continue for current dataset if cross-correlation
         # to other datasets are provided
         if 'NCSST' not in ds:
