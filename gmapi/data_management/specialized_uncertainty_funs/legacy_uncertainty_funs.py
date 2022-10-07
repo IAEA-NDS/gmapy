@@ -65,7 +65,11 @@ def create_relunc_vector(datablock):
     for dataset in dataset_list:
         curDCS = create_dataset_relunc_vector(dataset)
         DCS_list.append(curDCS)
-    DCS = np.concatenate(DCS_list)
+    # debug #8
+    try:
+        DCS = np.concatenate(DCS_list)
+    except:
+        import pdb; pdb.set_trace()
     return DCS
 
 
