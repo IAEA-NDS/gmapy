@@ -109,8 +109,7 @@ def create_relative_dataset_covmat(dataset):
 
             XNORU = 0.
             # debug #5
-            #if MT not in SHAPE_MT_IDS:
-            if ENFF is not None:
+            if MT not in SHAPE_MT_IDS:
                 XNORU = np.sum(np.square(ENFF))
 
             CERR = Q1 + XNORU
