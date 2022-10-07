@@ -63,13 +63,10 @@ class Datablock(object):
         for start_idx, stop_idx in point_idcs:
             ptmask[start_idx:stop_idx] = False
         if 'ECOR' in self.datablock_dic:
-            new_ecor = self.datablock_dic['ECOR']
-            try:
-                new_ecor = new_ecor[ptmask,:]
-            except:
-                import pdb; pdb.set_trace() # debug #10
+            new_ecor = np.array(self.datablock_dic['ECOR'])
+            new_ecor = new_ecor[ptmask,:]
             new_ecor = new_ecor[:,ptmask]
-            self.datablock_dic['ECOR'] = new_ecor
+            self.datablock_dic['ECOR'] = list(new_ecor)
 
     def remove_datasets_by_mtnums(self, mtnums):
         if isinstance(mtnums, int):
