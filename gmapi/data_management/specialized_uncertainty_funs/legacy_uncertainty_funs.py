@@ -108,8 +108,9 @@ def create_relative_dataset_covmat(dataset):
                     Q1 += CO[KS,L]*CO[KT,L]*FKS*FKT
 
             XNORU = 0.
-            if MT not in SHAPE_MT_IDS:
-                XNORU = np.sum(np.square(ENFF))
+            # debug #5
+            #if MT not in SHAPE_MT_IDS:
+            XNORU = np.sum(np.square(ENFF))
 
             CERR = Q1 + XNORU
             # CERR contains the covariance element.
@@ -167,9 +168,6 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
         # calculate the correlations within a dataset
         covmat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
                 create_relative_dataset_covmat(ds)
-
-        # debug: we skip the interdataset correlations
-        continue # debug #4
 
         # only continue for current dataset if cross-correlation
         # to other datasets are provided
