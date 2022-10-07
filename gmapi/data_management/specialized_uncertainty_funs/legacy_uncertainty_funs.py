@@ -41,7 +41,8 @@ def relcov_to_wrong_cor(relcovmat, datasets, css):
 
 def create_dataset_relunc_vector(dataset):
     XNORU = 0.
-    if dataset['MT'] not in SHAPE_MT_IDS:
+    # debug #6
+    if (dataset['MT'] not in SHAPE_MT_IDS or dataset['NS'] in (1029,1030)):
         # calculate total normalization uncertainty squared
         XNORU = np.sum(np.square(dataset['ENFF']))
 
