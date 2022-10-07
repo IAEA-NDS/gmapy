@@ -55,6 +55,7 @@ def fix_cormat(cormat):
         raise ValueError('All diagonal elements of correlation matrix must be one')
     tries = 0
     cormat = cormat.copy()
+    success = False
     while tries < 15:
         success = True
         try:
@@ -67,4 +68,7 @@ def fix_cormat(cormat):
             cormat[sel] /= 1.1
         if success:
             break
+    if not success:
+        raise ValueError('Failed to make the matrix positive definite')
+
     return cormat
