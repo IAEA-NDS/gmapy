@@ -83,8 +83,11 @@ class GMADatabase:
         covmat = self._covmat
         datatable.sort_index(inplace=True)
         uncs = datatable.UNC.to_numpy()
-        olduncs = self._cache['uncertainties']
-        unc_not_changed = np.isclose(uncs, olduncs, equal_nan=True)
+        if 'uncertainties' in self._cache:
+            olduncs = self._cache['uncertainties']
+            unc_not_changed = np.isclose(uncs, olduncs, equal_nan=True)
+        else:
+            unc_not_changed = np.full(len(uncs), False)
         unc_changed = np.logical_not(unc_not_changed)
         static_idcs = datatable.index[unc_not_changed]
         changed_idcs = datatable.index[unc_changed]
@@ -149,6 +152,7 @@ class GMADatabase:
 
 
     def _remove_data_internal(self, datatable, covmat, idcs):
+        self._cache = {}
         datatable = datatable.sort_index()
         remove_mask = np.full(len(datatable), False)
         remove_mask[idcs] = True
@@ -179,6 +183,9 @@ class GMADatabase:
                     'does not match dimension of covariance matrix')
         self._datatable = datatable.copy()
         self._datatable.sort_index(inplace=True)
+        # remove everything from cache except uncertainties
+        # as they are relied upon in _update_covmat
+        self._cache = {'uncertainties': self._cache['uncertainties'] }
         self._update_covmat()
 
 
@@ -195,6 +202,7 @@ class GMADatabase:
             raise IndexError('dimensions of new covariance matrix are ' +
                     'incompatible with the number of rows in datatable')
         # update the uncertainties in table
+        self._cache = {}
         covmat = covmat.copy()
         datatable = self._datatable
         datatable.sort_index(inplace=True)
@@ -208,6 +216,16 @@ class GMADatabase:
         if len(new_datatable) != new_covmat.shape[0]:
             raise ValueError('datatable and covariance matrix must have compatible dimensions')
 
+        new_uncs = np.sqrt(new_covmat.diagonal())
+        if ('UNC' in new_datatable.columns and
+                not np.allclose(new_datatable['UNC'].to_numpy(), new_uncs)):
+            raise ValueError('UNC column must correspond to diagonal of covariance matrix')
+        new_datatable = new_datatable.copy()
+        new_datatable['UNC'] = new_uncs
+
+        ext_uncertainties = np.concatenate([self._cache['uncertainties'], new_uncs])
+        if 'uncertainties' in self._cache:
+            self._cache['uncertainties'] = ext_uncertainties
         self._datatable.sort_index(inplace=True)
         self._datatable = pd.concat([self._datatable, new_datatable], axis=0, ignore_index=True)
         self._covmat = block_diag([self._covmat, new_covmat], format='csr', dtype='d')
