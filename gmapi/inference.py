@@ -106,7 +106,10 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
                                         prop_normfact=False, mt6_exp=True,
                                         prop_usu_errors=False)
         obscovmat = scale_covmat(orig_obscovmat, tmp_preds[isobs] / meas)
-        obscovmat_fact = cholesky(obscovmat)
+        try:
+            obscovmat_fact = cholesky(obscovmat)
+        except:
+            import pdb; pdb.set_trace()  # debug
     else:
         obscovmat_fact = cholesky(obscovmat)
     # prepare parameter prior covariance matrix
