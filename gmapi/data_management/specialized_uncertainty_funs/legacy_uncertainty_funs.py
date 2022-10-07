@@ -196,6 +196,9 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
         #       adapted accordingly (by checking for ENFF is NONE)
         #       later.
         ENFF = np.array(ds['ENFF']) if 'ENFF' in ds else None
+        if ds['MT'] in SHAPE_MT_IDS:
+            ENFF = np.full(10, 0.)
+
         E = np.array(ds['E'])
         # loop over datasets to which correlations exist
         for pos2, dsid2 in enumerate(ds['NCSST']):
@@ -234,6 +237,8 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
             if NNCOX2 != 0:
                 CO2 /= 10
             ENFF2 = np.array(ds2['ENFF']) if 'ENFF' in ds2 else None
+            if ds['MT'] in SHAPE_MT_IDS:
+                ENFF2 = np.full(10, 0.)
             E2 = np.array(ds2['E'])
 
             # We skip if one of the two datasets contains
