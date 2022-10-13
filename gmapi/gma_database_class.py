@@ -150,6 +150,14 @@ class GMADatabase:
         return propvals
 
 
+    def get_postvals(self, testdf, **mapargs):
+        workdf = pd.concat([self._datatable, testdf], axis=0, ignore_index=True)
+        refvals = workdf.POST.to_numpy()
+        propvals = propagate_mesh_css(workdf, self._mapping, refvals, **mapargs)
+        propvals = propvals[len(self._datatable):len(self._datatable)+len(testdf)]
+        return propvals
+
+
     def get_postcov(self, testdf=None, idcs=None, unc_only=False):
         if testdf is not None and idcs is not None:
             raise ValueError('specify either testdf or idcs')
