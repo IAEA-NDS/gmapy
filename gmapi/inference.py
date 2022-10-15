@@ -71,7 +71,8 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         maxiter=10, atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
-        correct_ppp=False, ret_invcov=False, must_converge=True):
+        correct_ppp=False, ret_invcov=False, must_converge=True,
+        no_reject=False):
     # define the prior vector
     priorvals = np.full(len(datatable), 0.)
     priorvals[datatable.index] = datatable['PRIOR']
@@ -194,7 +195,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # if the associated log likelihood is larger
         accepted = False
         old_negloglike = cur_negloglike
-        if real_improvement > 0:
+        if real_improvement > 0 or no_reject:
             old_postvals = fullrefvals[isadj]
             fullrefvals[isadj] = postvals
             cur_negloglike = real_negloglike
