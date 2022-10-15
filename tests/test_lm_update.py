@@ -55,7 +55,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         compmap = CompoundMap()
         res1 = gls_update(compmap, datatable, totcov, retcov=False)
         res2 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-16, maxiter=1, print_status=True)
+                lmb=1e-16, maxiter=1, print_status=True, must_converge=False)
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
 
@@ -67,7 +67,8 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         # setting lmb to such a small value renders the
         # LM update steps equivalent to the GLS update
         res1 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-50, maxiter=1, print_status=True, correct_ppp=True)
+                lmb=1e-50, maxiter=1, print_status=True, correct_ppp=True,
+                must_converge=False)
         # due to different convention of counting we must set
         # num_iter=2 to have in total 3 iterations
         res2 = run_gmap_simplified(dbfile=dbpath, dbtype='legacy',
@@ -86,7 +87,8 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         # setting lmb to such a small value renders the
         # LM update steps equivalent to the GLS update
         res1 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-50, maxiter=3, print_status=True, correct_ppp=False)
+                lmb=1e-50, maxiter=3, print_status=True, correct_ppp=False,
+                must_converge=False)
         # due to different convention of counting we must set
         # num_iter=2 to have in total 3 iterations
         res2 = run_gmap_simplified(dbfile=dbpath, dbtype='legacy',
@@ -102,9 +104,9 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         totcov = self._totcov
         compmap = CompoundMap()
         res1 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-8, maxiter=10, print_status=True)
+                lmb=1e-8, maxiter=20, print_status=True, must_converge=True)
         res2 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-4, maxiter=10, print_status=True)
+                lmb=1e-4, maxiter=20, print_status=True, must_converge=True)
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
 
@@ -120,9 +122,9 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         totcov2 = totcov2 + diags(totcov2_diag)
         compmap = CompoundMap()
         res1 = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-8, maxiter=10, print_status=True)
+                lmb=1e-8, maxiter=20, print_status=True, must_converge=True)
         res2 = lm_update(compmap, datatable, totcov2, retcov=False,
-                lmb=1e-8, maxiter=10, print_status=True)
+                lmb=1e-8, maxiter=20, print_status=True, must_converge=True)
 
         diff1 = np.mean(np.abs(res1['upd_vals'] - priorvals))
         diff2 = np.mean(np.abs(res2['upd_vals'] - priorvals))
@@ -138,7 +140,8 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         totcov = self._totcov
         compmap = CompoundMap()
         res = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True)
+                lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True,
+                must_converge=False)
         source_idcs = res['idcs']
         idcs = res['idcs']
         postvals = res['upd_vals']
@@ -162,7 +165,8 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         totcov = self._totcov
         compmap = CompoundMap()
         res = lm_update(compmap, datatable, totcov, retcov=False,
-                lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True)
+                lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True,
+                must_converge=False)
         source_idcs = res['idcs']
         idcs = np.arange(0, len(datatable), 10)
         postvals = res['upd_vals']

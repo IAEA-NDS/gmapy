@@ -71,7 +71,7 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         maxiter=10, atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
-        correct_ppp=False, ret_invcov=False, show_conv_warning=False):
+        correct_ppp=False, ret_invcov=False, must_converge=True):
     # define the prior vector
     priorvals = np.full(len(datatable), 0.)
     priorvals[datatable.index] = datatable['PRIOR']
@@ -228,8 +228,11 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
         first_cycle = False
 
-    if not converged and show_conv_warning:
-        warnings.warn('Maximal number of iterations reached without achieving convergence')
+    if not converged:
+        if must_converge:
+            raise ValueError('LM algorithm did not converge!')
+        else:
+            warnings.warn('LM algorithm did not converge.')
 
     res = {'upd_vals': postvals, 'upd_covmat': None,
             'idcs': np.sort(datatable.index[isadj]), 'lmb': lmb,
