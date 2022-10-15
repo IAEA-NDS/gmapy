@@ -22,6 +22,7 @@ from ..data_management.uncfuns import (create_relunc_vector, create_experimental
 from ..mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
         update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css)
 from ..mappings.compound_map import CompoundMap
+from ..mappings.priortools import remove_dummy_datasets
 
 #################################################
 #   START OF GMAP PROGRAM
@@ -30,7 +31,7 @@ from ..mappings.compound_map import CompoundMap
 def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         dbtype='legacy', num_iter=3, correct_ppp=True, legacy_output=False,
         fix_ppp_bug=True, fix_sacs_jacobian=True, legacy_integration=True,
-        format_dic={}):
+        format_dic={}, remove_dummy=False):
 
     # BEGIN LEGACY
     if legacy_output:
@@ -56,6 +57,8 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
         # calculate new structures
         new_prior_list = sanitize_prior(APR)
         new_datablock_list = [sanitize_datablock(b) for b in datablock_list]
+        if remove_dummy:
+            remove_dummy_datasets(new_datablock_list)
         priortable = create_prior_table(new_prior_list)
         exptable = create_experiment_table(new_datablock_list)
 
@@ -72,6 +75,8 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
 
         new_prior_list = db_dic['prior']
         new_datablock_list = db_dic['datablocks']
+        if remove_dummy:
+            remove_dummy_datasets(new_datablock_list)
         priortable = create_prior_table(new_prior_list)
         exptable = create_experiment_table(new_datablock_list)
         # convert to legacy quantities
