@@ -88,7 +88,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         # LM update steps equivalent to the GLS update
         res1 = lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-50, maxiter=3, print_status=True, correct_ppp=False,
-                must_converge=False)
+                must_converge=False, no_reject=True)
         # due to different convention of counting we must set
         # num_iter=2 to have in total 3 iterations
         res2 = run_gmap_simplified(dbfile=dbpath, dbtype='legacy',
