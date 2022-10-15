@@ -173,7 +173,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
                                             prop_normfact=False, mt6_exp=True,
                                             prop_usu_errors=False)
             new_obscovmat = scale_covmat(orig_obscovmat, tmp_preds[isobs] / meas)
-            new_obscovmat_fact = cholesky(obscovmat)
+            new_obscovmat_fact = cholesky(new_obscovmat)
         else:
             new_obscovmat = obscovmat
             new_obscovmat_fact = obscovmat_fact
