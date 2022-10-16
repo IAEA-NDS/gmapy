@@ -69,11 +69,7 @@ def create_experimental_covmat(datablock_list, propcss=None,
             curcormat = cov2cor(curcovmat)
 
         if fix_covmat:
-            try:
-                curcormat = fix_cormat(curcormat)
-            except:
-                print('debug #3')
-                import pdb; pdb.set_trace()
+            curcormat = fix_cormat(curcormat)
 
         curcovmat = scale_covmat(curcormat, curabsuncs)
         covmat_list.append(csr_matrix(curcovmat))
