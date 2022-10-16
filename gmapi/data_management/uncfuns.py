@@ -70,7 +70,12 @@ def create_experimental_covmat(datablock_list, propcss=None,
             curcormat = cov2cor(curcovmat)
 
         if fix_covmat:
-            curcormat = fix_cormat(curcormat)
+            try:
+                curcormat = fix_cormat(curcormat)
+            except Exception:
+                ds_ids = ', '.join((str(ds['NS']) for ds in db['datasets']))
+                raise ValueError(f'Problem with covariance matrix of datablock '
+                                 f'with dataset ids {ds_ids}')
 
         curcovmat = scale_covmat(curcormat, curabsuncs)
 
