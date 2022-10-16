@@ -71,7 +71,8 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         maxiter=10, atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
-        correct_ppp=False, ret_invcov=False, show_conv_warning=False):
+        correct_ppp=False, ret_invcov=False, must_converge=True,
+        no_reject=False):
     # define the prior vector
     priorvals = np.full(len(datatable), 0.)
     priorvals[datatable.index] = datatable['PRIOR']
@@ -194,7 +195,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # if the associated log likelihood is larger
         accepted = False
         old_negloglike = cur_negloglike
-        if real_improvement > 0:
+        if real_improvement > 0 or no_reject:
             old_postvals = fullrefvals[isadj]
             fullrefvals[isadj] = postvals
             cur_negloglike = real_negloglike
@@ -228,8 +229,11 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 
         first_cycle = False
 
-    if not converged and show_conv_warning:
-        warnings.warn('Maximal number of iterations reached without achieving convergence')
+    if not converged:
+        if must_converge:
+            raise ValueError('LM algorithm did not converge!')
+        else:
+            warnings.warn('LM algorithm did not converge.')
 
     res = {'upd_vals': postvals, 'upd_covmat': None,
             'idcs': np.sort(datatable.index[isadj]), 'lmb': lmb,
@@ -246,7 +250,9 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
 def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
         source_idcs, idcs=None,  unc_only=False, **mapargs):
     # calculate the refvals
+    has_prior = np.logical_not(datatable.PRIOR.isna())
     refvals = np.zeros(len(datatable))
+    refvals[has_prior] = datatable.loc[has_prior, 'PRIOR'].to_numpy()
     refvals[source_idcs] = postvals
     # calculate and trim sensitivity matrix
     S = mapping.jacobian(datatable, refvals, ret_mat=True, **mapargs)

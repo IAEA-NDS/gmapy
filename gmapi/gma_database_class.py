@@ -150,8 +150,23 @@ class GMADatabase:
         return propvals
 
 
-    def get_postcov(self, idcs=None, unc_only=False):
-        return compute_posterior_covmat(self._mapping, self._datatable,
+    def get_postvals(self, testdf, **mapargs):
+        workdf = pd.concat([self._datatable, testdf], axis=0, ignore_index=True)
+        refvals = workdf.POST.to_numpy()
+        propvals = propagate_mesh_css(workdf, self._mapping, refvals, **mapargs)
+        propvals = propvals[len(self._datatable):len(self._datatable)+len(testdf)]
+        return propvals
+
+
+    def get_postcov(self, testdf=None, idcs=None, unc_only=False):
+        if testdf is not None and idcs is not None:
+            raise ValueError('specify either testdf or idcs')
+        if testdf is None:
+            workdf = self._datatable
+        else:
+            workdf = pd.concat([self._datatable, testdf], axis=0, ignore_index=True)
+            idcs = np.arange(len(self._datatable), len(self._datatable) + len(testdf))
+        return compute_posterior_covmat(self._mapping, workdf,
                 self._cache['upd_vals'], self._cache['upd_invcov'],
                 source_idcs=self._cache['adj_idcs'], idcs=idcs, unc_only=unc_only)
 
