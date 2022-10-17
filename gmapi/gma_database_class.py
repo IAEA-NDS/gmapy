@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix, block_diag
+from scipy.sparse import coo_matrix, csr_matrix, block_diag, diags
 from .data_management.database_IO import read_gma_database
 from .data_management.tablefuns import create_prior_table, create_experiment_table
-from .data_management.uncfuns import create_relunc_vector, create_experimental_covmat
+from .data_management.uncfuns import (
+        create_relunc_vector, create_experimental_covmat,
+        create_prior_covmat)
 from .mappings.compound_map import CompoundMap
 from .inference import lm_update, compute_posterior_covmat
 from .mappings.priortools import (propagate_mesh_css,
@@ -54,23 +56,25 @@ class GMADatabase:
         datatable = self._datatable
         db = self._raw_database
         datatable.sort_index(inplace=True)
+        priorsel = datatable['NODE'].str.match('^fis$|^xsid_', na=False).to_numpy()
+        normsel = datatable['NODE'].str.match('norm_', na=False).to_numpy()
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
-        nonexpsel = np.logical_not(expsel)
+        all_sel = np.logical_or(expsel, np.logical_or(normsel, priorsel))
+        if not np.all(all_sel):
+            raise ValueError('something wrong with the datatable!')
+
         # assemble covariance matrix
+        priorcov = create_prior_covmat(db['prior_list'])
         expcov = create_experimental_covmat(db['datablock_list'],
                                             fix_covmat=fix_covmat)
-        expcov = coo_matrix(expcov)
-        prioruncs = datatable.loc[nonexpsel, 'UNC'].to_numpy()
-        priorvars = np.square(prioruncs)
-        prior_idcs = datatable.index[nonexpsel]
-        exp_idcs = datatable.index[expsel]
-        row_idcs = np.concatenate([prior_idcs, exp_idcs[expcov.row]])
-        col_idcs = np.concatenate([prior_idcs, exp_idcs[expcov.col]])
-        elems = np.concatenate([priorvars, expcov.data])
-        covmat = csr_matrix((elems, (row_idcs, col_idcs)),
-                shape=(len(datatable), len(datatable)), dtype='d')
+        # we know the order because attach_shape_prior attaches
+        # the normalization errors at the end of datatable
+        normuncs = datatable.loc[normsel, 'UNC'].to_numpy()
+        normcov = diags(np.square(normuncs), dtype='d')
+        covmat = block_diag([priorcov, expcov, normcov], format='csr',
+                            dtype='d')
         # update uncertainties in datatable
-        datatable.loc[expsel, 'UNC'] = np.sqrt(covmat.diagonal()[expsel])
+        datatable['UNC'] = np.sqrt(covmat.diagonal())
         # update class state
         self._covmat = covmat
         # self._datatable = ... not necessary because inplace change

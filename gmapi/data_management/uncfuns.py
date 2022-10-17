@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.sparse import block_diag, csr_matrix
+from scipy.sparse import block_diag, csr_matrix, diags
 from collections import OrderedDict
 from .unc_utils import (scale_covmat, cov2cor, calculate_ppp_factors,
         fix_cormat)
@@ -85,3 +85,39 @@ def create_experimental_covmat(datablock_list, propcss=None,
     covmat = block_diag(covmat_list, format='csr')
     return covmat
 
+
+
+def create_prior_covmat(prior_list):
+    cov_list = []
+    for curprior in prior_list:
+
+        curtype = curprior['type']
+        if curtype == 'legacy-prior-cross-section':
+            n = len(curprior['EN'])
+            curcov = diags(np.full(n, np.inf, dtype='d'))
+            cov_list.append(curcov)
+
+        elif curtype == 'legacy-fission-spectrum':
+            n = len(curprior['ENFIS'])
+            curcov = diags(np.full(n, 0., dtype='d'))
+            cov_list.append(curcov)
+
+        elif curtype == 'modern-fission-spectrum':
+            en = curprior['energies']
+            energies = curprior['covmat']['energies']
+            curcov1 = diags(np.full(len(en), 0., dtype='d'))
+            curcov2 = np.array(curprior['covmat']['matrix'])
+            if curcov2.shape[0] != curcov2.shape[0]:
+                raise TypeError('covariance matrix in prior fission spectrum ' +
+                                'is not square')
+            if len(energies)-1 != curcov2.shape[0]:
+                raise IndexError('mismatch between number of energies and ' +
+                                 'dimension of covariance matrix')
+            cov_list.append(curcov1)
+            cov_list.append(curcov2)
+
+        else:
+            raise TypeError(f'Unsupported prior block type {curtype}')
+
+    covmat = block_diag(cov_list, format='csr')
+    return covmat
