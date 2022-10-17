@@ -115,13 +115,13 @@ class GMADatabaseUSU(GMADatabase):
         lm_options['atol'] = atol
         lm_options['rtol'] = rtol
         lm_options['print_status'] = print_status
-        lm_options['show_conv_warning'] = False
 
         if 'POST' in dt.columns:
             old_postvals = dt['POST'].to_numpy()
         else:
             old_postvals = dt['PRIOR'].to_numpy()
         lm_options['startvals'] = old_postvals
+        lm_options['must_converge'] = False
 
         converged = False
         for i in range(outer_iter):
