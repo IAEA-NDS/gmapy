@@ -46,9 +46,10 @@ class TestGMADatabase(unittest.TestCase):
         remove_idcs = tbl.index[tbl.NODE.str.fullmatch('(exp|norm)_1034')]
         keep_idcs = np.full(len(tbl), True)
         keep_idcs[remove_idcs] = False
-        gmadb1.evaluate(remove_idcs=remove_idcs, maxiter=2)
+        gmadb1.evaluate(remove_idcs=remove_idcs, maxiter=2,
+                        must_converge=False)
         gmadb2.remove_data(remove_idcs)
-        gmadb2.evaluate(maxiter=2)
+        gmadb2.evaluate(maxiter=2, must_converge=False)
         res1 = gmadb1.get_datatable().loc[keep_idcs, 'POST'].to_numpy()
         res2 = gmadb2.get_datatable()['POST'].to_numpy()
         # remove fission spectrum, because it is not propagated at present
