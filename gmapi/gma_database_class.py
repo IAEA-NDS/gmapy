@@ -56,7 +56,7 @@ class GMADatabase:
         datatable = self._datatable
         db = self._raw_database
         datatable.sort_index(inplace=True)
-        priorsel = datatable['NODE'].str.match('^fis$|^xsid_', na=False).to_numpy()
+        priorsel = datatable['NODE'].str.match('^fis$|^fis_modern$|fis_errors$|^xsid_', na=False).to_numpy()
         normsel = datatable['NODE'].str.match('norm_', na=False).to_numpy()
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         all_sel = np.logical_or(expsel, np.logical_or(normsel, priorsel))
