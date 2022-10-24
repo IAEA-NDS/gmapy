@@ -70,8 +70,13 @@ and documentation is still missing to a large extent.
 Regarding the GMA database format, you can consult
 [this document][gma-format-cheatsheet].
 
-[gma-format-cheatsheet]: https://github.com/IAEA-NDS/gmapy/blob/master/DOCUMENTATION.md
+To get a first impression of the usage of gmapy, you can
+inspect the Jupyter notebook `examples/example-000-basic-usage.ipynb`.
+You can directly open this notebook in the browser by clicking
+[here][mybinder-example-000].
 
+[gma-format-cheatsheet]: https://github.com/IAEA-NDS/gmapy/blob/master/DOCUMENTATION.md
+[mybinder-example-000]: https://mybinder.org/v2/gh/iaea-nds/gmapy/dev?labpath=examples%2Fexample-000-basic-usage.ipynb
 
 ### Beyond GMAP: New features in gmapy
 
