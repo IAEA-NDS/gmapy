@@ -1,80 +1,106 @@
-## About GMAP
+## About gmapy
 
-GMAP developed by Wolfgang P. Poenitz is a code to obtain evaluations
-of cross sections and their uncertainties based on the combined data
-from various experiments. The code employs the Bayesian version
-of the Generalized Least Squares method and is named after the
-mathematicians Gauss, Markov, and Aitken, who all contributed
-to the statistical theory around the linear least squares method.
-The Fortran version and some more information on GMAP can be found
-in [this repository](https://github.com/iaea-nds/GMAP-Fortran).
+`gmapy` is a Python package to produce nuclear data
+evaluations of cross sections including uncertainties
+based on the combined data from various experiments.
 
-## Python version of GMAP 
+This package can be regarded as a modernized version
+of the [GMAP code] developed by Wolfgang P. Poenitz,
+which was employed for the evaluation of the
+[neutron data standards][std2017-paper].
+A number of [test cases][legacy-tests]
+have been created to prove that the latest neutron
+standards evaluation can be reproduced with gmapy.
+To learn more about improvements of gmapy over GMAP,
+please see the respective section below.
 
-As Python is a popular general-purpose language nowadays with many
-modules to interface with web applications and databases, the Fortran
-version of GMAP was translated to Python in order to facilitate future
-developments and extensions.
+[GMAP code]: https://github.com/iaea-nds/GMAP-Fortran
+[legacy-tests]: https://github.com/iaea-nds/gmapy/legacy-tests
+[std2017-paper]: https://www.sciencedirect.com/science/article/pii/S0090375218300218
 
-### Launching the Python version
+### Installation
 
-The following steps are necessary to run the Python version.
-We recommend to use a package manager, such as `Anaconda`, and
-to work in a new environment (e.g., `conda create -n gmap` and
-then `conda activate gmap`).
+#### Prerequisites
 
-1. Install the `fortranformat` and the `numpy` package.
+gmapy depends on the [SuiteSparse] library.
+With appropriate build tools, it can probably be installed
+on Windows but this has not been tested.
+On Linux it can be installed by
 ```
-  pip install numpy
-  pip install fortranformat
+sudo apt install libsuitesparse-dev
 ```
-2. Point the `PYTHONPATH` to the directory of `GMAP.py`
+and on MacOs via
 ```
- PYTHONPATH="<path-to-GMAP.py>"
-```
-3. Create a directory, create an input file inside named `data.gma`
-(e.g., take it from `tests/test_001/input`), change into that directory
-and launch GMAP:
-```
-python "<path-to-GMAP.py>/GMAP.py"
+brew install suite-sparse
 ```
 
-### Comments on conversion
+It is also important that the source and library files
+of SuiteSparse can be found by the compiler and linker.
+If the installation instructions for gmapy in the next
+section fail with the error message that `cholmod.h`
+cannot be found, execute the following instructions
+with appropriate paths:
+```
+export SUITESPARSE_INCLUDE_DIR=/opt/local/include
+export SUITESPARSE_LIBRARY_DIR=/opt/local/lib
+```
+The given paths are examples of commonly used locations
+and may need to be adjusted on your system.
 
-- This Python version of GMAP was initially a line-by-line translation of the
-original Fortran code including goto-statements enabled by the
-[goto-statement] module.
-Afterwards it has been extensively refactored to
-improve readability. All goto-statements have been removed and replaced
-by other control structures, such as if-blocks and loop control statements
-and consequently the dependence on the [goto-statement] module has been removed.
+[SuiteSparse]: https://github.com/DrTimothyAldenDavis/SuiteSparse
 
-- The [fortranformat] module is used to read and write files using the
-same Fortran format descriptors as present in the original Fortran code.
+#### Installation of gmapy
 
-- The Fortran version processed incomplete datablocks (i.e., end of block indicator EDBL
-immediately followed by DATA keyword). Since commit 88fc22c the Python version does
-not reproduce the results of the Fortran version anymore in the case of an incomplete
-datablock.
+We recommend to create a virtual environment with
+Python version 3.9. With conda you can create a new
+environment by
+```
+conda env create -y -n gmapy python=3.9 pip
+```
+Then activate the environment (`conda activate gmapy`)
+and install the gmapy package:
+```
+pip install git+https://github.com/iaea-nds/gmapy.git
+```
 
-- If it is unknown to the Fortran GMAP version how to link specific measurement
-points to the prior, it proceeds but ignores those measurement points.
-The Python version does not accept unusable datapoints anymore since commit 07da8f1.
+### Basic use of gmapy
 
-[goto-statement]: https://pypi.org/project/goto-statement/
-[fortranformat]: https://pypi.org/project/fortranformat/ 
+The capabilities of the gmapy package are continuously evolving
+and documentation is still missing to a large extent.
+Regarding the GMA database format, you can consult
+[this document][gma-format-cheatsheet].
 
-### Ensuring functional equivalence
+[gma-format-cheatsheet]: https://github.com/IAEA-NDS/gmapy/blob/master/DOCUMENTATION.md
 
-To ensure the functional equivalence of the Python and Fortran version,
-test cases were introduced that compare the output of the Python and Fortran
-version. They can be found in the `legacy-tests` directory along with a
-README file with more information.
 
-Because the Python version will go beyond the capabilities of the Fortran
-version, testing by comparing to the results of the Fortran version
-will then not be possible anymore. Therefore, tests were
-introduced relying on the `unittest` package to validate the Python
-version without invoking the Fortran version, which can be found in the
-`tests` directory.
+### Beyond GMAP: New features in gmapy
 
+Here are the capabilities of gmapy at present that
+go beyond those of the Fortran GMAP code:
+
+- Exact maximum likelihood optimization based on
+  a custom version of the Levenberg-Marquardt algorithm
+  with convergence checking.
+- Adaptive numerical integration by Romberg's method
+  with convergence checking for a precise computation
+  of spectrum averaged cross sections.
+- Indidvidual energy meshes for different reactions
+  are possible to account for reaction-specific structures.
+- Experimental data need not be aligned perfectly
+  to the the computational mesh thanks to the use of
+  linear interpolation.
+- A new data type `ratios of spectrum averaged cross sections`
+  is available.
+- Data can be read in the database format used by GMAP
+  as well as in a new JSON format.
+- Unknown uncertainties can be introduced and estimated
+  during the estimation of the cross sections and their
+  uncertainties via maximum likelihood estimation.
+
+
+## Legal note
+
+This code is distributed under the MIT license, see the
+accompanying license file for more information.
+
+Copyright (c) International Atomic Energy Agency (IAEA)
