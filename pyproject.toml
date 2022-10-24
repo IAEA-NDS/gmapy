@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8, <3.10"
 numpy = ">=1.23.3"
-pandas = ">=1.4.4"
+pandas = "~1.4.0"
 scipy = "^1.9.1"
 fortranformat = "^1.2.2"
 scikit-sparse = "^0.4.6"
