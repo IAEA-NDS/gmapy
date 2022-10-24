@@ -14,6 +14,7 @@ standards evaluation can be reproduced with gmapy.
 To learn more about improvements of gmapy over GMAP,
 please see the respective section below.
 
+This package is still evolving and not well documented yet.
 To get a first impression of the usage of gmapy, you can
 inspect the Jupyter notebook `examples/example-000-basic-usage.ipynb`.
 You can directly open this notebook in the browser by clicking
