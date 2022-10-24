@@ -14,6 +14,12 @@ standards evaluation can be reproduced with gmapy.
 To learn more about improvements of gmapy over GMAP,
 please see the respective section below.
 
+To get a first impression of the usage of gmapy, you can
+inspect the Jupyter notebook `examples/example-000-basic-usage.ipynb`.
+You can directly open this notebook in the browser by clicking
+[here][mybinder-example-000].
+
+[mybinder-example-000]: https://mybinder.org/v2/gh/iaea-nds/gmapy/dev?labpath=examples%2Fexample-000-basic-usage.ipynb
 [GMAP code]: https://github.com/iaea-nds/GMAP-Fortran
 [legacy-tests]: https://github.com/iaea-nds/gmapy/legacy-tests
 [std2017-paper]: https://www.sciencedirect.com/science/article/pii/S0090375218300218
@@ -62,21 +68,6 @@ and install the gmapy package:
 ```
 pip install git+https://github.com/iaea-nds/gmapy.git
 ```
-
-### Basic use of gmapy
-
-The capabilities of the gmapy package are continuously evolving
-and documentation is still missing to a large extent.
-Regarding the GMA database format, you can consult
-[this document][gma-format-cheatsheet].
-
-To get a first impression of the usage of gmapy, you can
-inspect the Jupyter notebook `examples/example-000-basic-usage.ipynb`.
-You can directly open this notebook in the browser by clicking
-[here][mybinder-example-000].
-
-[gma-format-cheatsheet]: https://github.com/IAEA-NDS/gmapy/blob/master/DOCUMENTATION.md
-[mybinder-example-000]: https://mybinder.org/v2/gh/iaea-nds/gmapy/dev?labpath=examples%2Fexample-000-basic-usage.ipynb
 
 ### Beyond GMAP: New features in gmapy
 
