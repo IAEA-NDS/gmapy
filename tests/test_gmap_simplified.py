@@ -2,8 +2,8 @@ import unittest
 import pathlib
 import numpy as np
 from pandas.testing import assert_frame_equal
-from gmapi.gmap import run_gmap_simplified
-from gmapi.legacy.legacy_gmap import run_gmap
+from gmapy.gmap import run_gmap_simplified
+from gmapy.legacy.legacy_gmap import run_gmap
 
 
 class TestGmapSimplified(unittest.TestCase):

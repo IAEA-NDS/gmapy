@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
-from gmapi.mappings.basic_integral_maps import (basic_integral_propagate,
+from gmapy.mappings.basic_integral_maps import (basic_integral_propagate,
                                                 get_basic_integral_sensmat)
-from gmapi.mappings.helperfuns import numeric_jacobian
+from gmapy.mappings.helperfuns import numeric_jacobian
 
 
 class TestBasicIntegralMapping(unittest.TestCase):

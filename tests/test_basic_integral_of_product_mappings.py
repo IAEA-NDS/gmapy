@@ -1,10 +1,10 @@
 import unittest
 import numpy as np
-from gmapi.mappings.basic_maps import basic_propagate
-from gmapi.mappings.basic_integral_maps import (
+from gmapy.mappings.basic_maps import basic_propagate
+from gmapy.mappings.basic_integral_maps import (
         basic_integral_of_product_propagate,
         get_basic_integral_of_product_sensmats)
-from gmapi.mappings.helperfuns import numeric_jacobian, compute_romberg_integral
+from gmapy.mappings.helperfuns import numeric_jacobian, compute_romberg_integral
 
 
 class TestBasicIntegralOfProductMapping(unittest.TestCase):

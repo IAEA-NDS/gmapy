@@ -3,9 +3,9 @@ sys.path.append('..')
 sys.path.append('../..')
 sys.path.append('../../..')
 from copy import deepcopy
-from gmapi.data_management.datablock_list import DatablockList
-from gmapi.gmap import run_gmap_simplified
-from gmapi.data_management.database_IO import (read_json_gma_database,
+from gmapy.data_management.datablock_list import DatablockList
+from gmapy.gmap import run_gmap_simplified
+from gmapy.data_management.database_IO import (read_json_gma_database,
         read_legacy_gma_database)
 
 from utils.convenience_funs import (get_sacs_predictions,

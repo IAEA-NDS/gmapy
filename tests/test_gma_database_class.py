@@ -1,7 +1,7 @@
 import unittest
 import pathlib
 import pandas as pd
-from gmapi.gma_database_class import GMADatabase
+from gmapy.gma_database_class import GMADatabase
 import numpy as np
 from copy import deepcopy
 from scipy.sparse import csr_matrix

@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
-from gmapi.mappings.basic_maps import (basic_propagate, get_basic_sensmat,
+from gmapy.mappings.basic_maps import (basic_propagate, get_basic_sensmat,
         basic_multiply_Sdic_rows, basic_extract_Sdic_coeffs)
-from gmapi.mappings.helperfuns import numeric_jacobian, return_matrix
+from gmapy.mappings.helperfuns import numeric_jacobian, return_matrix
 
 
 class TestBasicMappingsPropagation(unittest.TestCase):

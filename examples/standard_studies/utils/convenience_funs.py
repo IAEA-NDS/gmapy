@@ -4,10 +4,10 @@ sys.path.append('../..')
 from copy import deepcopy
 import pandas as pd
 import numpy as np
-from gmapi.data_management.dataset import Dataset
-from gmapi.data_management.datablock import Datablock
-from gmapi.data_management.datablock_list import DatablockList
-from gmapi.mappings.compound_map import CompoundMap
+from gmapy.data_management.dataset import Dataset
+from gmapy.data_management.datablock import Datablock
+from gmapy.data_management.datablock_list import DatablockList
+from gmapy.mappings.compound_map import CompoundMap
 import json
 
 

@@ -1,14 +1,14 @@
 import unittest
 import pathlib
 import pandas as pd
-from gmapi.gma_database_usu_class import GMADatabaseUSU
+from gmapy.gma_database_usu_class import GMADatabaseUSU
 import numpy as np
 from copy import deepcopy
 from scipy.sparse import csr_matrix
 from sksparse.cholmod import cholesky
-from gmapi.mappings.helperfuns import numeric_jacobian
+from gmapy.mappings.helperfuns import numeric_jacobian
 
-from gmapi.optimization_auxfuns import create_posterior_funs
+from gmapy.optimization_auxfuns import create_posterior_funs
 
 
 # NOTE: This test case tests at present tests mostly the functionality

@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
-from gmapi.mappings.basic_maps import (basic_propagate, basic_product_propagate,
+from gmapy.mappings.basic_maps import (basic_propagate, basic_product_propagate,
         get_basic_product_sensmats)
-from gmapi.mappings.helperfuns import numeric_jacobian
+from gmapy.mappings.helperfuns import numeric_jacobian
 
 
 class TestBasicProductPropagate(unittest.TestCase):

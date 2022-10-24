@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 sys.path.append('../..')
 sys.path.append('../../..')
-from gmapi.mappings.compound_map import CompoundMap
+from gmapy.mappings.compound_map import CompoundMap
 import numpy as np
 import pandas as pd
 

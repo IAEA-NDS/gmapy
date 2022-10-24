@@ -3,9 +3,9 @@ import pathlib
 from tempfile import TemporaryDirectory
 import numpy as np
 
-from gmapi.legacy.legacy_gmap import run_gmap
-from gmapi.legacy.database_reading import read_gma_database
-from gmapi.legacy.conversion_utils import (sanitize_datablock,
+from gmapy.legacy.legacy_gmap import run_gmap
+from gmapy.legacy.database_reading import read_gma_database
+from gmapy.legacy.conversion_utils import (sanitize_datablock,
         desanitize_datablock, compare_legacy_datablock_lists,
         augment_datablocks_with_NTOT, sanitize_prior,
         desanitize_prior, convert_GMA_database_to_JSON)

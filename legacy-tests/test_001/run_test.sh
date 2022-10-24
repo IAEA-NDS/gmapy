@@ -67,7 +67,7 @@ cd result/python/
 PYTHONPATH="$GMAP_python_dir"
 python -c '
 import pandas as pd
-from gmapi.legacy.legacy_gmap import run_gmap;
+from gmapy.legacy.legacy_gmap import run_gmap;
 res = run_gmap(dbfile="data.gma", dbtype="legacy",
                fix_ppp_bug=False, fix_sacs_jacobian=False,
                legacy_output=True)

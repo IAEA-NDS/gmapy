@@ -67,7 +67,7 @@ cd result/python/
 PYTHONPATH="$GMAP_python_dir"
 python -c '
 import pandas as pd
-from gmapi.legacy.legacy_gmap import run_gmap;
+from gmapy.legacy.legacy_gmap import run_gmap;
 res = run_gmap(dbfile="gmadata.json", dbtype="json", correct_ppp=False,
                fix_sacs_jacobian=False, legacy_output=True)
 res["table"].to_csv("restable.csv", sep=";")

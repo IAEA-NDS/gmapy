@@ -2,13 +2,13 @@ import unittest
 import pathlib
 import numpy as np
 import pandas as pd
-from gmapi.data_management.database_IO import read_legacy_gma_database
-from gmapi.data_management.tablefuns import (create_prior_table,
+from gmapy.data_management.database_IO import read_legacy_gma_database
+from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapi.mappings.priortools import attach_shape_prior
-from gmapi.mappings.usu_error_map import USUErrorMap
-from gmapi.mappings.compound_map import CompoundMap
-from gmapi.mappings.helperfuns import numeric_jacobian
+from gmapy.mappings.priortools import attach_shape_prior
+from gmapy.mappings.usu_error_map import USUErrorMap
+from gmapy.mappings.compound_map import CompoundMap
+from gmapy.mappings.helperfuns import numeric_jacobian
 
 
 class TestUSUErrorMapping(unittest.TestCase):

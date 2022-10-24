@@ -7,14 +7,14 @@ import pathlib
 import numpy as np
 import pandas as pd
 
-from gmapi.mappings.helperfuns import numeric_jacobian
-from gmapi.data_management.database_IO import read_legacy_gma_database
-from gmapi.data_management.uncfuns import create_relunc_vector
-from gmapi.data_management.dataset import Dataset
-from gmapi.data_management.datablock import Datablock
-from gmapi.data_management.tablefuns import (create_prior_table,
+from gmapy.mappings.helperfuns import numeric_jacobian
+from gmapy.data_management.database_IO import read_legacy_gma_database
+from gmapy.data_management.uncfuns import create_relunc_vector
+from gmapy.data_management.dataset import Dataset
+from gmapy.data_management.datablock import Datablock
+from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapi.mappings.cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
+from gmapy.mappings.cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
 
 
 class TestNewMappingJacobians(unittest.TestCase):

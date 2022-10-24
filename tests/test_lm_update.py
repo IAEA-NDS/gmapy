@@ -3,15 +3,15 @@ import pathlib
 import pandas as pd
 import numpy as np
 from scipy.sparse import block_diag, diags
-from gmapi.data_management.tablefuns import (create_prior_table,
+from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapi.data_management.uncfuns import create_experimental_covmat
-from gmapi.mappings.priortools import attach_shape_prior, remove_dummy_datasets
-from gmapi.inference import gls_update, lm_update, compute_posterior_covmat
-from gmapi.data_management.database_IO import read_legacy_gma_database
-from gmapi.mappings.compound_map import CompoundMap
-from gmapi.gmap import run_gmap_simplified
-from gmapi.data_management.uncfuns import create_relunc_vector
+from gmapy.data_management.uncfuns import create_experimental_covmat
+from gmapy.mappings.priortools import attach_shape_prior, remove_dummy_datasets
+from gmapy.inference import gls_update, lm_update, compute_posterior_covmat
+from gmapy.data_management.database_IO import read_legacy_gma_database
+from gmapy.mappings.compound_map import CompoundMap
+from gmapy.gmap import run_gmap_simplified
+from gmapy.data_management.uncfuns import create_relunc_vector
 
 
 

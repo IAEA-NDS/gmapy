@@ -1,11 +1,11 @@
 import sys
 sys.path.append('..')
-from gmapi.data_management.dataset import Dataset
-from gmapi.data_management.datablock import Datablock
-from gmapi.data_management.datablock_list import DatablockList
+from gmapy.data_management.dataset import Dataset
+from gmapy.data_management.datablock import Datablock
+from gmapy.data_management.datablock_list import DatablockList
 import numpy as np
-from gmapi.gmap import run_gmap_simplified
-from gmapi.data_management.database_IO import (read_json_gma_database,
+from gmapy.gmap import run_gmap_simplified
+from gmapy.data_management.database_IO import (read_json_gma_database,
         read_legacy_gma_database)
 
 # read the database of standards 2017 and perform the gls fitting

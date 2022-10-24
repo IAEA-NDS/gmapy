@@ -4,7 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from gmapi.legacy.legacy_gmap import run_gmap
+from gmapy.legacy.legacy_gmap import run_gmap
 
 
 class TestLegacyDivergence(unittest.TestCase):

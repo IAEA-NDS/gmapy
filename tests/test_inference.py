@@ -4,15 +4,15 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import coo_matrix, csr_matrix
 
-from gmapi.legacy.database_reading import read_gma_database
-from gmapi.legacy.conversion_utils import (sanitize_datablock, sanitize_prior)
-from gmapi.data_management.uncfuns import (create_relunc_vector,
+from gmapy.legacy.database_reading import read_gma_database
+from gmapy.legacy.conversion_utils import (sanitize_datablock, sanitize_prior)
+from gmapy.data_management.uncfuns import (create_relunc_vector,
         create_experimental_covmat)
-from gmapi.data_management.tablefuns import (create_prior_table,
+from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapi.mappings.priortools import attach_shape_prior
-from gmapi.inference import gls_update
-from gmapi.mappings.compound_map import CompoundMap
+from gmapy.mappings.priortools import attach_shape_prior
+from gmapy.inference import gls_update
+from gmapy.mappings.compound_map import CompoundMap
 
 
 class TestInference(unittest.TestCase):
