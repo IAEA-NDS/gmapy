@@ -62,7 +62,7 @@ We recommend to create a virtual environment with
 Python version 3.9. With conda you can create a new
 environment by
 ```
-conda env create -y -n gmapy python=3.9 pip
+conda create -y -n gmapy python=3.9 pip
 ```
 Then activate the environment (`conda activate gmapy`)
 and install the gmapy package:
