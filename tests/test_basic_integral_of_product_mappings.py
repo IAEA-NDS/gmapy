@@ -14,7 +14,7 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         y1 = np.array([7, 2, 9, 16])
         interp1 = 'lin-lin'
         x2 = np.array([4, 5.5, 6.9])
-        y2 = np.array([11, 22, 3, 29])
+        y2 = np.array([11, 22, 3])
         interp2 = 'log-log'
         x3 = np.array([2.1, 4.9, 7.8])
         y3 = np.array([5,   5.5, 2.4])
@@ -46,7 +46,7 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         perm_y1 = y1[perm1]
         interp1 = 'lin-lin'
         x2 = np.array([4, 5.5, 6.9])
-        y2 = np.array([11, 22, 3, 29])
+        y2 = np.array([11, 22, 3])
         perm2 = np.random.permutation(len(x2))
         perm_x2 = x2[perm2]
         perm_y2 = y2[perm2]
