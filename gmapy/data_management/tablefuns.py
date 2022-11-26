@@ -100,12 +100,14 @@ def create_experiment_table(datablock_list):
                 'UNC':    np.nan,
                 'DATA':   ds['CSS'],
                 'DB_IDX': dbidx,
-                'DS_IDX': dsidx
+                'DS_IDX': dsidx,
+                'AUTHOR': ds['CLABL'].strip(),
+                'PUBREF': ds['BREF'].strip()
             })
             df_list.append(curdf)
 
     expdf = pd.concat(df_list, ignore_index=True)
-    cols = ['NODE', 'REAC', 'ENERGY', 'DATA', 'DB_IDX', 'DS_IDX']
+    cols = ['NODE', 'REAC', 'ENERGY', 'DATA', 'DB_IDX', 'DS_IDX', 'AUTHOR', 'PUBREF']
     expdf = expdf.reindex(columns = cols)
     return expdf
 
