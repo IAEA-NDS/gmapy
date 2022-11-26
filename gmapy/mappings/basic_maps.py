@@ -1,15 +1,82 @@
 import warnings
 import numpy as np
-from scipy.sparse import csr_matrix
 from .helperfuns import return_matrix
 
+
+def _interpolate_lin_lin(x1, y1, x2, y2, xout):
+    return (y1*(x2-xout) + y2*(xout-x1)) / (x2-x1)
+
+
+def _interpolate_log_lin(x1, y1, x2, y2, xout):
+    log_x1 = np.log(x1)
+    log_x2 = np.log(x2)
+    log_xd = log_x2 - log_x1
+    log_xout = np.log(xout)
+    return (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+
+
+def _interpolate_lin_log(x1, y1, x2, y2, xout):
+    if y1 <= 0 or y2 <= 0:
+        raise ValueError('attempted to take logarithm of negative value')
+    xd = x2 - x1
+    log_y1 = np.log(y1)
+    log_y2 = np.log(y2)
+    return np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
+
+
+def _interpolate_log_log(x1, y1, x2, y2, xout):
+    log_x1 = np.log(x1)
+    log_x2 = np.log(x2)
+    log_y1 = np.log(y1)
+    log_y2 = np.log(y2)
+    log_xd = log_x2 - log_x1
+    log_xout = np.log(xout)
+    return np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
+
+
+def _interpolate1d(x1, y1, x2, y2, xout, interp_type, zero_outside):
+    if (xout < x1 or xout > x2):
+        if zero_outside:
+            return 0.
+        else:
+            raise ValueError(f'xout={xout} outside interval '
+                             f'from x1={x1} to x2={x2}')
+    if interp_type == 'lin-lin':
+        interpfun = _interpolate_lin_lin
+    elif interp_type == 'lin-log':
+        interpfun = _interpolate_lin_log
+    elif interp_type == 'log-lin':
+        interpfun = _interpolate_log_lin
+    elif interp_type == 'log-log':
+        interpfun = _interpolate_log_log
+    else:
+        raise TypeError('unsupported interpolation type {interp_type}')
+    return interpfun(x1, y1, x2, y2, xout)
+
+
+def _findintervals(xmesh, xvals):
+    n = len(xmesh)
+    tmp = np.searchsorted(xmesh, xvals, side='left')
+    tmp = [t if t > 0 else 1 for t in tmp]
+    tmp = [t if t < n else n-1 for t in tmp]
+    idcs2 = np.array(tmp)
+    idcs1 = idcs2 - 1
+    return idcs1, idcs2
 
 
 def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
     """Propagate from one mesh to another one."""
+    if len(x) != len(y):
+        raise ValueError('x and y must be of same length')
+
+    xout = np.array(xout)
     x = np.array(x)
     y = np.array(y)
-    xout = np.array(xout)
+    if len(x) == 1:
+        if not np.all(xout == x):
+            raise ValueError('xout must match x for a single mesh point')
+        return np.full(len(xout), y, dtype=float)
+
     myord = np.argsort(x)
     x = x[myord]
     y = y[myord]
@@ -17,80 +84,19 @@ def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
         interp_type = np.full(len(x), interp_type, dtype='<U7')
     interp_type = np.array(interp_type)[myord]
 
-    possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
-    if not np.all(np.isin(interp_type, possible_interp_types)):
-        ValueError('Unspported interpolation type')
+    idcs1, idcs2 = _findintervals(x, xout)
+    x1v = x[idcs1]
+    x2v = x[idcs2]
+    y1v = y[idcs1]
+    y2v = y[idcs2]
+    ityp = interp_type[idcs1]
 
-    # variable to store the result of this function
-    final_yout = np.full(len(xout), 0., dtype=float)
-
-    idcs2 = np.searchsorted(x, xout, side='left')
-    idcs1 = idcs2 - 1
-    # special case: where the values of xout are exactly on
-    # the limits of the mesh in x
-    limit_sel = np.logical_or(xout == x[0], xout == x[-1])
-    not_limit_sel = np.logical_not(limit_sel)
-    edge_idcs = idcs2[limit_sel]
-    idcs1 = idcs1[not_limit_sel]
-    idcs2 = idcs2[not_limit_sel]
-    xout = xout[not_limit_sel]
-
-    # Make sure that we actually have points that
-    # need to be interpolated
-    if len(idcs2) > 0:
-        if np.any(idcs2 >= len(x)) and not zero_outside:
-            raise ValueError('some value in xout larger than largest value in x')
-        if np.any(idcs2 < 1) and not zero_outside:
-            raise ValueError('some value in xout smaller than smallest value in x')
-
-        inside_sel = np.logical_and(idcs2 < len(x), idcs2 >= 1)
-        outside_sel = np.logical_not(inside_sel)
-        idcs1 = idcs1[inside_sel]
-        idcs2 = idcs2[inside_sel]
-        xout = xout[inside_sel]
-
-        x1 = x[idcs1]; x2 = x[idcs2]
-        y1 = y[idcs1]; y2 = y[idcs2]
-        xd = x2 - x1
-        # transformed quantities
-        log_x = np.log(x)
-        log_y = np.log(y)
-        log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
-        log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
-        log_xd = log_x2 - log_x1
-        log_xout = np.log(xout)
-        # results
-        yout = {}
-        yout['lin-lin'] = (y1*(x2-xout) + y2*(xout-x1)) / xd
-        yout['log-lin'] = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
-        with warnings.catch_warnings():
-            # We ignore a 'divide by zero in log warning due to y1 or y2
-            # possibly containing non-positive values. As long as they
-            # are not used, everything is fine. We check at the end of
-            # this function explicitly for NaN values caused here.
-            warnings.filterwarnings('ignore', category=RuntimeWarning)
-            yout['lin-log'] = np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
-            yout['log-log'] = np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
-
-        # fill final array
-        interp = interp_type[idcs1]
-        interp_yout = np.full(idcs1.shape, 0.)
-        for curint in possible_interp_types:
-            cursel = interp == curint
-            interp_yout[cursel] = yout[curint][cursel]
-
-        tmp = np.empty(len(inside_sel), dtype=float)
-        tmp[inside_sel] = interp_yout
-        tmp[outside_sel] = 0.
-        final_yout[not_limit_sel] = tmp
-
-    # add the edge points
-    final_yout[limit_sel] = y[edge_idcs]
-
-    if np.any(np.isnan(final_yout)):
-        raise ValueError('NaN values encountered in interpolation result')
-    return final_yout
-
+    interp_yout = np.array(tuple(
+            _interpolate1d(x1, y1, x2, y2, xout, inttype, zero_outside)
+            for x1, y1, x2, y2, xout, inttype
+            in zip(x1v, y1v, x2v, y2v, xout, ityp)
+        ))
+    return interp_yout
 
 
 def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
