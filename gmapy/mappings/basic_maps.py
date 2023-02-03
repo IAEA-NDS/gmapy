@@ -156,51 +156,59 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
 
         x1 = x[idcs1]; x2 = x[idcs2]
         y1 = y[idcs1]; y2 = y[idcs2]
-        xd = x2 - x1
-        # transformed quantities
-        log_x = np.log(x)
-        log_y = np.log(y)
-        log_x1 = log_x[idcs1]; log_x2 = log_x[idcs2]
-        log_y1 = log_y[idcs1]; log_y2 = log_y[idcs2]
-        log_xd = log_x2 - log_x1
-        log_xout = np.log(xout)
-        # results
-        coeffs1 = {}
-        coeffs2 = {}
-        # yout_linlin = (y1*(x2-xout) + y2*(xout-x1)) / xd
-        coeffs1['lin-lin'] = (x2-xout) / xd
-        coeffs2['lin-lin'] = (xout-x1) / xd
-        # yout_loglin = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
-        coeffs1['log-lin'] = (log_x2-log_xout) / log_xd
-        coeffs2['log-lin'] = (log_xout-log_x1) / log_xd
-
-        with warnings.catch_warnings():
-            # We ignore a 'divide by zero in log warning due to y1 or y2
-            # possibly containing non-positive values. As long as they
-            # are not used, everything is fine. We check at the end of
-            # this function explicitly for NaN values in the sensitivity
-            # matrix before it is returned.
-            warnings.filterwarnings('ignore', category=RuntimeWarning)
-
-            log_yout_linlog = (log_y1*(x2-xout) + log_y2*(xout-x1)) / xd
-            coeffs1['lin-log'] = np.exp(-log_y1 + np.log((x2-xout)/xd) + log_yout_linlog)
-            coeffs2['lin-log'] = np.exp(-log_y2 + np.log((xout-x1)/xd) + log_yout_linlog)
-
-            log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
-            coeffs1['log-log'] = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
-            coeffs2['log-log'] = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
-
         interp = interp_type[idcs1]
         for curint in possible_interp_types:
             cursel = interp == curint
+            if not any(cursel):
+                continue
+            coeffs1 = {}
+            coeffs2 = {}
+            x1s = x1[cursel]
+            x2s = x2[cursel]
+            y1s = y1[cursel]
+            y2s = y2[cursel]
+            xouts = xout[cursel]
+            # yout_linlin = (y1*(x2-xout) + y2*(xout-x1)) / xd
+            if curint == 'lin-lin':
+                xd = x2s - x1s
+                coeffs1 = (x2s-xouts) / xd
+                coeffs2 = (xouts-x1s) / xd
+            # yout_loglin = (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+            elif curint == 'log-lin':
+                log_x1 = np.log(x1s)
+                log_x2 = np.log(x2s)
+                log_xd = log_x2 - log_x1
+                log_xout = np.log(xouts)
+                coeffs1 = (log_x2-log_xout) / log_xd
+                coeffs2 = (log_xout-log_x1) / log_xd
+            elif curint == 'lin-log':
+                xd = x2s - x1s
+                log_y1 = np.log(y1s)
+                log_y2 = np.log(y2s)
+                log_yout_linlog = (log_y1*(x2s-xouts) + log_y2*(xouts-x1s)) / xd
+                coeffs1 = np.exp(-log_y1 + np.log((x2s-xouts)/xd) + log_yout_linlog)
+                coeffs2 = np.exp(-log_y2 + np.log((xouts-x1s)/xd) + log_yout_linlog)
+            elif curint == 'log-log':
+                log_x1 = np.log(x1s)
+                log_x2 = np.log(x2s)
+                log_xd = log_x2 - log_x1
+                log_xout = np.log(xouts)
+                log_y1 = np.log(y1s)
+                log_y2 = np.log(y2s)
+                log_yout_loglog = (log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd
+                coeffs1 = np.exp(-log_y1 + np.log((log_x2-log_xout)/log_xd) + log_yout_loglog)
+                coeffs2 = np.exp(-log_y2 + np.log((log_xout-log_x1)/log_xd) + log_yout_loglog)
+            else:
+                raise TypeError(f'invalid interpolation scheme "{curint}"')
+
             # coeff1
             i.append(idcs1[cursel])
             j.append(idcs_out[cursel])
-            c.append(coeffs1[curint][cursel])
+            c.append(coeffs1)
             # coeff2
             i.append(idcs2[cursel])
             j.append(idcs_out[cursel])
-            c.append(coeffs2[curint][cursel])
+            c.append(coeffs2)
 
     # deal with sensitivies for values at the mesh edges
     i.append(np.concatenate([edge_idcs, edge_idcs]))
