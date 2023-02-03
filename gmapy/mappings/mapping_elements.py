@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, vstack
 from .basic_maps import get_basic_sensmat
 from .helperfuns import numeric_jacobian
 
@@ -108,6 +108,27 @@ class Distributor(MyAlgebra):
 
     def jacobian(self):
         return self.__dist_mat @ self.__obj.jacobian()
+
+
+class Replicator(MyAlgebra):
+
+    def __init__(self, obj, num):
+        self.__num = num
+        self.__obj = obj
+
+    def __len__(self):
+        return len(self.__obj) * self.__num
+
+    def evaluate(self):
+        return np.repeat(
+            self.__obj.evaluate().reshape(1, -1),
+            self.__num, axis=0
+        ).flatten()
+
+    def jacobian(self):
+        return vstack(
+            [self.__obj.jacobian()] * self.__num, format='csr'
+        )
 
 
 class Addition(MyAlgebra):
