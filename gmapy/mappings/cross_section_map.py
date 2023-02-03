@@ -1,7 +1,11 @@
 import numpy as np
-from .basic_maps import basic_propagate, get_basic_sensmat
-from .helperfuns import return_matrix
-
+from .mapping_elements import (
+    Selector,
+    SelectorCollection,
+    Distributor,
+    LinearInterpolation
+)
+from .helperfuns import return_matrix_new
 
 
 class CrossSectionMap:
@@ -11,29 +15,14 @@ class CrossSectionMap:
                    datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
-
     def propagate(self, datatable, refvals):
-        propdic = self.__compute(datatable, refvals, 'propagate')
-        propvals = np.full(datatable.shape[0], 0., dtype=float)
-        propvals[propdic['idcs2']] = propdic['propvals']
-        return propvals
-
+        return self.__compute(datatable, refvals, 'propagate')
 
     def jacobian(self, datatable, refvals, ret_mat=False):
-        num_points = datatable.shape[0]
-        Sdic = self.__compute(datatable, refvals, 'jacobian')
-        return return_matrix(Sdic['idcs1'], Sdic['idcs2'], Sdic['coeffs'],
-                  dims = (num_points, num_points),
-                  how = 'csr' if ret_mat else 'dic')
-
+        S = self.__compute(datatable, refvals, 'jacobian')
+        return return_matrix_new(S, how='csr' if ret_mat else 'dic')
 
     def __compute(self, datatable, refvals, what):
-        idcs1 = np.empty(0, dtype=int)
-        idcs2 = np.empty(0, dtype=int)
-        coeff = np.empty(0, dtype=float)
-        propvals = np.empty(0, dtype=float)
-        concat = np.concatenate
-
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
@@ -41,31 +30,30 @@ class CrossSectionMap:
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
+        inpvars = []
+        outvars = []
         for curreac in reacs:
             priortable_red = priortable[priortable['REAC'].str.fullmatch(curreac, na=False)]
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             # abbreviate some variables
             ens1 = priortable_red['ENERGY']
-            vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
             ens2 = exptable_red['ENERGY']
             idcs2red = exptable_red.index
 
-            if what == 'jacobian':
-                Sdic = get_basic_sensmat(ens1, vals1, ens2, ret_mat=False)
-                Sdic['idcs1'] = idcs1red[Sdic['idcs1']]
-                Sdic['idcs2'] = idcs2red[Sdic['idcs2']]
-                idcs1 = concat([idcs1, Sdic['idcs1']])
-                idcs2 = concat([idcs2, Sdic['idcs2']])
-                coeff = concat([coeff, Sdic['x']])
+            inpvar = Selector(idcs1red, len(datatable))
+            intres = LinearInterpolation(inpvar, ens1, ens2, zero_outside=True)
+            outvar = Distributor(intres, idcs2red, len(datatable))
+            inpvars.append(inpvar)
+            outvars.append(outvar)
 
-            elif what == 'propagate':
-                curvals = basic_propagate(ens1, vals1, ens2)
-                idcs2 = concat([idcs2, idcs2red])
-                propvals = concat([propvals, curvals])
+        inp = SelectorCollection(inpvars)
+        out = sum(outvars)
+        inp.assign(refvals)
 
-        if what == 'jacobian':
-            return {'idcs1': idcs1, 'idcs2': idcs2, 'coeffs': coeff}
-        elif what == 'propagate':
-            return {'idcs2': idcs2, 'propvals': propvals}
-
+        if what == 'propagate':
+            return out.evaluate()
+        elif what == 'jacobian':
+            return out.jacobian()
+        else:
+            raise ValueError(f'what "{what}" not implemented"')
