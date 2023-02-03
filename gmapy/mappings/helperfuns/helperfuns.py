@@ -15,3 +15,17 @@ def return_matrix(idcs1, idcs2, vals, dims, how):
     else:
         raise ValueError('invalid value of parameter "how"')
 
+
+def return_matrix_new(mat, how):
+    if how == 'csr':
+        return mat.tocsr()
+    elif how == 'dic':
+        tmp = mat.tocoo()
+        Sdic = {
+            'idcs1': np.array(tmp.col, dtype=int, copy=False),
+            'idcs2': np.array(tmp.row, dtype=int, copy=False),
+            'x': np.array(tmp.data, dtype=float, copy=False)
+        }
+        return Sdic
+    else:
+        raise ValueError('invalid value of parameter "how"')
