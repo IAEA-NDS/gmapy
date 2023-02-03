@@ -252,7 +252,6 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
                          how='csr' if ret_mat else 'dic')
 
 
-
 def basic_multiply_Sdic_rows(Sdic, rowfacts):
     """Multiply each row with a multiplication factor.
 
@@ -263,7 +262,6 @@ def basic_multiply_Sdic_rows(Sdic, rowfacts):
     """
     Sdic['x'][::2] *= rowfacts
     Sdic['x'][1::2] *= rowfacts
-
 
 
 def basic_extract_Sdic_coeffs(Sdic):
@@ -284,7 +282,6 @@ def basic_extract_Sdic_coeffs(Sdic):
     return [df_da, df_db]
 
 
-
 def basic_product_propagate(xlist, ylist, xout, interplist,
                             zero_outside=False, **kwargs):
     """Propagate the product of two basic maps."""
@@ -295,7 +292,6 @@ def basic_product_propagate(xlist, ylist, xout, interplist,
     for x, y, interp in zip(xlist, ylist, interplist):
         prod *= basic_propagate(x, y, xout, interp, zero_outside, **kwargs)
     return prod
-
 
 
 def get_basic_product_sensmats(xlist, ylist, xout, interplist,
@@ -329,4 +325,3 @@ def get_basic_product_sensmats(xlist, ylist, xout, interplist,
             Slist[i] = curS
 
     return Slist
-
