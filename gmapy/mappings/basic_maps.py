@@ -1,6 +1,6 @@
 import warnings
 import numpy as np
-from .helperfuns import return_matrix
+from .helperfuns import return_matrix, return_matrix_new
 
 
 def _interpolate_lin_lin(x1, y1, x2, y2, xout):
@@ -295,7 +295,7 @@ def basic_product_propagate(xlist, ylist, xout, interplist,
 
 
 def get_basic_product_sensmats(xlist, ylist, xout, interplist,
-                              zero_outside=False, ret_mat=True, **kwargs):
+                               zero_outside=False, ret_mat=True, **kwargs):
     """Get a list of Jacobians for each factor in a product of basic maps."""
     if len(xlist) != len(ylist) or len(ylist) != len(interplist):
         raise IndexError('xlist, ylist and interplist must have ' +
@@ -308,20 +308,15 @@ def get_basic_product_sensmats(xlist, ylist, xout, interplist,
 
     Slist = []
     for i, (x, y, interp) in enumerate(zip(xlist, ylist, interplist)):
-        curSdic = get_basic_sensmat(x, y, xout, interp, zero_outside,
-                                    ret_mat=False, **kwargs)
-        sel = np.logical_and(np.min(x) <= xout, np.max(x) >= xout)
+        curS = get_basic_sensmat(x, y, xout, interp, zero_outside,
+                                 ret_mat=True, **kwargs)
         curfacts = np.prod(proparr[:i,:], axis=0)
         if i+1 < proparr.shape[0]:
             curfacts *= np.prod(proparr[(i+1):,:], axis=0)
-        basic_multiply_Sdic_rows(curSdic, curfacts[sel])
-        Slist.append(curSdic)
+        curS = curS.multiply(curfacts.reshape(-1, 1))
+        Slist.append(curS)
 
-    if ret_mat:
-        for i in range(len(Slist)):
-            curS = Slist[i]
-            curS = return_matrix(curS['idcs1'], curS['idcs2'], curS['x'],
-                                 dims=(len(xout), len(xlist[i])), how='csr')
-            Slist[i] = curS
-
+    for i in range(len(Slist)):
+        how = 'csr' if ret_mat else 'dic'
+        Slist[i] = return_matrix_new(Slist[i], how)
     return Slist
