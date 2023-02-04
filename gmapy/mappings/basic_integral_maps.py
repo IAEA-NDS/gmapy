@@ -55,7 +55,6 @@ def basic_integral_propagate(x, y, interp_type='lin-lin',
     return ret
 
 
-
 def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
                                zero_outside=False, **kwargs):
     xref = x; yref = y
@@ -71,7 +70,6 @@ def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
     return ret
 
 
-
 def basic_integral_of_product_propagate(xlist, ylist, interplist,
                                         zero_outside=False, **kwargs):
     def propfun(x):
@@ -81,7 +79,6 @@ def basic_integral_of_product_propagate(xlist, ylist, interplist,
     ret = compute_romberg_integral(xref, propfun, **kwargs)
     ret = np.array([ret])
     return ret
-
 
 
 def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
@@ -148,4 +145,3 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
         Smat_list.append(cur_Smat)
 
     return Smat_list
-
