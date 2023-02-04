@@ -252,24 +252,6 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
                          how='csr' if ret_mat else 'dic')
 
 
-def basic_extract_Sdic_coeffs(Sdic):
-    """Extract partial derivatives from Sdic.
-
-    Sdic represents the sensitivity matrix S
-    to map from y-values given on mesh x to
-    a mesh xout. Only two non-zero values
-    are present in each row of S which are
-    the partial derivative with respect to
-    the y-value at the lower and upper limit
-    of an interval respectively. This function
-    facilitates the extraction of these
-    partial derivatives.
-    """
-    df_da = Sdic['x'][::2].copy()
-    df_db = Sdic['x'][1::2].copy()
-    return [df_da, df_db]
-
-
 def basic_product_propagate(xlist, ylist, xout, interplist,
                             zero_outside=False, **kwargs):
     """Propagate the product of two basic maps."""

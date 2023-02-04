@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from gmapy.mappings.basic_maps import (basic_propagate, get_basic_sensmat,
-        basic_extract_Sdic_coeffs)
+from gmapy.mappings.basic_maps import basic_propagate, get_basic_sensmat
+from gmapy.mappings.basic_integral_maps import extract_partial_derivatives
 from gmapy.mappings.helperfuns import numeric_jacobian, compute_romberg_integral
 
 
@@ -63,8 +63,8 @@ class TestRombergIntegralJacobian(unittest.TestCase):
 
     def generate_mydfun(self, xref, yref, interp):
         def mydfun(x):
-            Sdic = get_basic_sensmat(xref, yref, x, interp, ret_mat=False)
-            coeffs1, coeffs2 = basic_extract_Sdic_coeffs(Sdic)
+            S = get_basic_sensmat(xref, yref, x, interp, ret_mat=True)
+            coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
             return (coeffs1, coeffs2)
         return mydfun
 

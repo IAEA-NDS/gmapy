@@ -1,13 +1,12 @@
 import numpy as np
 from functools import lru_cache
 from .basic_maps import (basic_propagate, get_basic_sensmat,
-                         basic_extract_Sdic_coeffs,
                          basic_product_propagate,
                          get_basic_product_sensmats)
 from .helperfuns import compute_romberg_integral
 
 
-def __extract_partial_derivatives(S, xmesh, xout):
+def extract_partial_derivatives(S, xmesh, xout):
     S = S.tocsr()
     S.eliminate_zeros()
     z = S.tolil()
@@ -63,7 +62,7 @@ def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
     def dpropfun(x):
         S = get_basic_sensmat(xref, yref, x, interp_type,
                               zero_outside, ret_mat=True)
-        coeffs1, coeffs2 = __extract_partial_derivatives(S, xref, x)
+        coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
         return (coeffs1, coeffs2)
     ret = compute_romberg_integral(xref, propfun, dfun=dpropfun, **kwargs)
     ret = np.array([ret])
@@ -103,7 +102,7 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
             tx = tuple(x)
             S_list = sensfun(tx)
             S = S_list[i]
-            coeffs1, coeffs2 = __extract_partial_derivatives(S, xlist_ref[i], x)
+            coeffs1, coeffs2 = extract_partial_derivatives(S, xlist_ref[i], x)
             return (coeffs1, coeffs2)
         return cur_dpropfun
     # determine a common mesh
