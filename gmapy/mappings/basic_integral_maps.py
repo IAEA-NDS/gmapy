@@ -7,6 +7,43 @@ from .basic_maps import (basic_propagate, get_basic_sensmat,
 from .helperfuns import compute_romberg_integral
 
 
+def __extract_partial_derivatives(S, xmesh, xout):
+    S = S.tocsr()
+    S.eliminate_zeros()
+    z = S.tolil()
+    n = len(z.rows)
+    minx = min(xmesh)
+    maxx = max(xmesh)
+    coeff1 = np.full(S.shape[0], 0., dtype=float)
+    coeff2 = np.full(S.shape[0], 0., dtype=float)
+    for row, idcs, data in zip(range(n), z.rows, z.data):
+        if len(idcs) == 2:
+            idx1 = idcs[0]
+            idx2 = idcs[1]
+            x1 = xmesh[idx1]
+            x2 = xmesh[idx2]
+            if x1 < x2:
+                coeff1[row] = data[0]
+                coeff2[row] = data[1]
+            else:
+                coeff1[row] = data[1]
+                coeff2[row] = data[0]
+        elif len(idcs) == 1:
+            idx = idcs[0]
+            x = xmesh[idx]
+            if x < minx or x > maxx:
+                coeff1[row] = 0.
+                coeff2[row] = 0.
+            elif x == minx:
+                coeff1[row] = data[0]
+                coeff2[row] = 0.
+            else:
+                coeff1[row] = 0.
+                coeff2[row] = data[0]
+        else:
+            raise ValueError('this must not happen')
+    return coeff1, coeff2
+
 
 def basic_integral_propagate(x, y, interp_type='lin-lin',
                              zero_outside=False, **kwargs):
@@ -25,9 +62,9 @@ def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
     def propfun(x):
         return basic_propagate(xref, yref, x, interp_type, zero_outside)
     def dpropfun(x):
-        Sdic = get_basic_sensmat(xref, yref, x, interp_type,
-                                 zero_outside, ret_mat=False)
-        coeffs1, coeffs2 = basic_extract_Sdic_coeffs(Sdic)
+        S = get_basic_sensmat(xref, yref, x, interp_type,
+                              zero_outside, ret_mat=True)
+        coeffs1, coeffs2 = __extract_partial_derivatives(S, xref, x)
         return (coeffs1, coeffs2)
     ret = compute_romberg_integral(xref, propfun, dfun=dpropfun, **kwargs)
     ret = np.array([ret])
