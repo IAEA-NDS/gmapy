@@ -98,15 +98,15 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
     def sensfun(x):
         x = np.array(x)
         return get_basic_product_sensmats(xlist_ref, ylist_ref, x, interplist,
-                                          zero_outside, ret_mat=False)
+                                          zero_outside, ret_mat=True)
     def generate_dpropfun(i):
         def cur_dpropfun(x):
             # convert to tuple because ndarrays are
             # not hashable and lru_cache would fail
             tx = tuple(x)
-            Sdic_list = sensfun(tx)
-            Sdic = Sdic_list[i]
-            coeffs1, coeffs2 = basic_extract_Sdic_coeffs(Sdic)
+            S_list = sensfun(tx)
+            S = S_list[i]
+            coeffs1, coeffs2 = __extract_partial_derivatives(S, xlist_ref[i], x)
             return (coeffs1, coeffs2)
         return cur_dpropfun
     # determine a common mesh
