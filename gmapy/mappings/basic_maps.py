@@ -252,18 +252,6 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
                          how='csr' if ret_mat else 'dic')
 
 
-def basic_multiply_Sdic_rows(Sdic, rowfacts):
-    """Multiply each row with a multiplication factor.
-
-    Multiply each row of a sensitivity matrix returned
-    by get_basic_sensmat function as a dictionary with a
-    multiplication factor. The dictionary Sdic is changed
-    in place.
-    """
-    Sdic['x'][::2] *= rowfacts
-    Sdic['x'][1::2] *= rowfacts
-
-
 def basic_extract_Sdic_coeffs(Sdic):
     """Extract partial derivatives from Sdic.
 

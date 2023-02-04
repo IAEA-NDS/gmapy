@@ -1,9 +1,12 @@
 import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
-from gmapy.mappings.basic_maps import (basic_propagate, get_basic_sensmat,
-        basic_multiply_Sdic_rows, basic_extract_Sdic_coeffs)
-from gmapy.mappings.helperfuns import numeric_jacobian, return_matrix
+from gmapy.mappings.basic_maps import (
+    basic_propagate,
+    get_basic_sensmat,
+    basic_extract_Sdic_coeffs
+)
+from gmapy.mappings.helperfuns import numeric_jacobian
 
 
 class TestBasicMappingsPropagation(unittest.TestCase):
@@ -184,28 +187,6 @@ class TestBasicMappingsPropagation(unittest.TestCase):
         self.assertEqual(yout3, 10)
         self.assertEqual(yout4, 10)
 
-    def test_correct_working_of_basic_multiply_Sdic_rows(self):
-        x = np.exp([1, 3, 5, 7, 9, 10])
-        y = np.exp([11, 7, 15, 10, 25, 19])
-        interp_type = ['lin-log', 'lin-lin', 'log-log', 'log-lin', 'log-log', 'lin-lin']
-        xout = np.exp([2, 3, 4.4, 5, 7, 9, 8, 2.2, 1.4])
-        facts = np.arange(len(xout))
-        # applying the factor a posteriori
-        Smat1 = get_basic_sensmat(x, y, xout, interp_type, ret_mat=True).toarray()
-        res1 = np.ravel(Smat1 @ y) * facts
-        # incorporating the factor in the sensitivity matrix
-        Smat1 *= facts.reshape((len(xout), 1))
-        res2 = np.ravel(Smat1 @ y)
-        self.assertTrue(np.all(np.isclose(res1, res2)))
-        # using my super-duper function to apply the multiplication factors
-        # to the sensitivity matrix
-        Sdic3 = get_basic_sensmat(x, y, xout, interp_type, ret_mat=False)
-        basic_multiply_Sdic_rows(Sdic3, facts)
-        Smat3 = return_matrix(idcs1=Sdic3['idcs1'], idcs2=Sdic3['idcs2'],
-                vals=Sdic3['x'], dims=(len(xout), len(x)), how='csr').toarray()
-        res3 = np.ravel(Smat3 @ y)
-        self.assertTrue(np.all(np.isclose(res1, res3)))
-
     def test_correct_working_of_basic_extract_Sdic_coeffs(self):
         x1 = np.array([3, 1, 7, 5])
         y1 = np.array([1, 9, 14, 23])
@@ -221,7 +202,6 @@ class TestBasicMappingsPropagation(unittest.TestCase):
             df_da2, df_db2 = basic_extract_Sdic_coeffs(Sdic2)
             self.assertTrue(np.all(np.isclose(df_da1, df_da2)))
             self.assertTrue(np.all(np.isclose(df_db2, df_db2)))
-
 
 class TestBasicMappingsJacobian(unittest.TestCase):
 
