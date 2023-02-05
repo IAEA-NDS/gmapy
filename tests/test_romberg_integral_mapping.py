@@ -18,19 +18,20 @@ class TestRombergIntegralMapping(unittest.TestCase):
         ref_intval = np.exp(x[-1]) - np.exp(x[0])
         test_intval = compute_romberg_integral(x, np.exp, maxord=20, atol=1e-8, rtol=1e-5)
         self.assertTrue(np.isclose(test_intval, ref_intval, atol=1e-8, rtol=1e-5))
-        self.assertTrue(np.logical_not(np.isclose(ref_intval, test_intval, rtol=1e-6))) 
+        self.assertTrue(np.logical_not(np.isclose(ref_intval, test_intval, rtol=1e-6)))
 
     def test_integral_of_xsquared(self):
         x = [1,10]
         ref_intval = (x[-1]**3 - x[0]**3) / 3
         test_intval = compute_romberg_integral(x, np.square, maxord=20, atol=1e-8, rtol=1e-8)
+        self.assertTrue(np.isclose(test_intval, ref_intval, atol=1e-8, rtol=1e-5))
 
     def test_integral_of_xsquared_with_lower_accuracy(self):
         x = [1,10]
         ref_intval = (x[-1]**3 - x[0]**3) / 3
         test_intval = compute_romberg_integral(x, np.square, maxord=20, atol=1e-8, rtol=1e-5)
         self.assertTrue(np.isclose(test_intval, ref_intval, atol=1e-8, rtol=1e-5))
-        self.assertTrue(np.logical_not(np.isclose(ref_intval, test_intval, rtol=1e-6))) 
+        self.assertTrue(np.logical_not(np.isclose(ref_intval, test_intval, rtol=1e-6)))
 
     def test_integral_of_expx_several_segments(self):
         x = [1,3,7,10]
