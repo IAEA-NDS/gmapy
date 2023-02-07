@@ -6,6 +6,7 @@ from gmapy.mappings.mapping_elements import (
     LinearInterpolation,
     Integral,
     IntegralOfProduct,
+    FissionAverage,
     Const,
     Replicator
 )
@@ -199,6 +200,15 @@ class TestMappingJacobians(unittest.TestCase):
         z2 = Replicator(z1, 3)
         z3 = z2 + y
         self.assertTrue(self.is_jacobian_correct(inpvec, z3, x, y, z))
+
+    def test_fission_average(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        xs = Selector([0, 1, 2, 3], 9)
+        fisvals = Selector([4, 5, 6, 7, 8], 9)
+        fisavg = FissionAverage([0, 2, 4, 9], xs,
+                                [0, 1, 3, 5, 9], fisvals,
+                                legacy=False)
+        self.assertTrue(self.is_jacobian_correct(inpvec, fisavg, xs, fisvals))
 
 
 if __name__ == '__main__':
