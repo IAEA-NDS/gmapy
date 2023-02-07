@@ -346,22 +346,29 @@ class LegacyFissionAverage(MyAlgebra):
         return out_jac @ xsjac
 
 
-def FissionAverage(MyAlgebra):
+class FissionAverage(MyAlgebra):
 
     def __init__(self, en, xsobj, fisen, fisobj,
                  legacy=False, fix_jacobian=True):
         if legacy:
-            self.__obj = LegacyFissionAverage(
+            self.__fisavg = LegacyFissionAverage(
                 en, xsobj, fisen, fisobj, fix_jacobian
             )
         else:
-            self.__obj = IntegralOfProduct(
+            fisint = Integral(
+                fisobj, fisen, 'lin-lin', maxord=16, rtol=1e-6
+            )
+            intprod = IntegralOfProduct(
                 [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
                 zero_outside=False, maxord=16, rtol=1e-6
             )
+            self.__fisavg = fisint / intprod
+
+    def __len__(self):
+        return 1
 
     def evaluate(self):
-        return self.__obj.evaluate()
+        return self.__fisavg.evaluate()
 
     def jacobian(self):
-        return self.__obj.jacobian()
+        return self.__fisavg.jacobian()
