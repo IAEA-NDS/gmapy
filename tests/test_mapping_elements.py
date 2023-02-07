@@ -4,6 +4,7 @@ from gmapy.mappings.helperfuns import numeric_jacobian
 from gmapy.mappings.mapping_elements import (
     Selector,
     LinearInterpolation,
+    Integral,
     IntegralOfProduct,
     Const,
     Replicator
@@ -82,6 +83,17 @@ class TestMappingElements(unittest.TestCase):
             np.array([5.5, 7.0, 8.5])
         )
 
+    def test_integral(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6])
+        x = Selector([0, 1, 2], 6)
+        y = Selector([3, 4, 5], 6)
+        z = x + y
+        intz = Integral(z, [1, 2, 3], 'lin-lin', maxord=10)
+        self.assert_equal(
+            self.eval_expr(inpvec, intz, x, y),
+            np.array([14.0])
+        )
+
     def test_integral_of_product(self):
         inpvec = np.array([1, 2, 3, 1, 2, 3])
         x = Selector([0, 1, 2], 6)
@@ -158,6 +170,14 @@ class TestMappingJacobians(unittest.TestCase):
         z2 = LinearInterpolation(y, [1, 2, 3], [1, 2, 3])
         z = z1 + z2
         self.assertTrue(self.is_jacobian_correct(inpvec, z, x, y))
+
+    def test_integral(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6])
+        x = Selector([0, 1, 2], 6)
+        y = Selector([3, 4, 5], 6)
+        z = x + y
+        intz = Integral(z, [1, 2, 3], 'lin-lin', maxord=10)
+        self.assertTrue(self.is_jacobian_correct(inpvec, intz, x, y))
 
     def test_integral_of_product(self):
         inpvec = np.array([1, 2, 3, 4, 5, 6])
