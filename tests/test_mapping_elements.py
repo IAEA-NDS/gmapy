@@ -56,11 +56,12 @@ class TestMappingElements(unittest.TestCase):
         inpvec = np.array([1, 2, 3, 4, 5, 6])
         x = Selector([0, 1, 2], 6)
         y = Selector([3, 4, 5], 6)
-        c = Const([1.]*3)
-        z = (x+c)/y
+        c1 = Const([1.]*3)
+        c2 = Const([2.7, 3.4, 8.9])
+        z = (x+c1)/(y+c2)
         self.assert_equal(
             self.eval_expr(inpvec, z, x, y),
-            np.array([2/4, 3/5, 4/6])
+            np.array([2/(4+2.7), 3/(5+3.4), 4/(6+8.9)])
         )
 
     def test_linear_interpolation(self):
@@ -153,8 +154,9 @@ class TestMappingJacobians(unittest.TestCase):
         inpvec = np.array([1, 2, 3, 4, 5, 6])
         x = Selector([0, 1, 2], 6)
         y = Selector([3, 4, 5], 6)
-        c = Const([1.]*3)
-        z = (x+c)/y
+        c1 = Const([1.]*3)
+        c2 = Const([2.7, 3.4, 8.9])
+        z = (x+c1)/(y+c2)
         self.assertTrue(self.is_jacobian_correct(inpvec, z, x, y))
 
     def test_linear_interpolation(self):
