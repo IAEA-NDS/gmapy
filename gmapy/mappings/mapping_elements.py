@@ -245,6 +245,9 @@ class Integral(MyAlgebra):
         self.__interp_type = interp_type
         self.__kwargs = kwargs
 
+    def __len__(self):
+        return 1
+
     def evaluate(self):
         yvals = self.__obj.evaluate()
         ret = basic_integral_propagate(
@@ -316,6 +319,9 @@ class LegacyFissionAverage(MyAlgebra):
         self.__fisobj = fisobj
         self.__fisen = fisen
         self.__fix_jacobian = fix_jacobian
+
+    def __len__(self):
+        return 1
 
     def evaluate(self):
         xs = self.__xsobj.evaluate()
