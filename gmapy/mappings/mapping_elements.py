@@ -2,10 +2,17 @@ import numpy as np
 from scipy.sparse import csr_matrix, vstack
 from .basic_maps import get_basic_sensmat
 from .basic_integral_maps import (
+    basic_integral_propagate,
+    get_basic_integral_sensmat,
     basic_integral_of_product_propagate,
     get_basic_integral_of_product_sensmats
 )
 from .helperfuns import numeric_jacobian
+from ..legacy.legacy_maps import (
+    propagate_fisavg,
+    get_sensmat_fisavg,
+    get_sensmat_fisavg_corrected
+)
 
 
 class MyAlgebra:
@@ -228,6 +235,32 @@ class LinearInterpolation(MyAlgebra):
         return self.__jacobian @ self.__obj.jacobian()
 
 
+class Integral(MyAlgebra):
+
+    def __init__(self, obj, xvals, interp_type, **kwargs):
+        if not isinstance(obj, MyAlgebra):
+            raise TypeError('obj must be of class MyAlgebra')
+        self.__obj = obj
+        self.__xvals = np.array(xvals)
+        self.__interp_type = interp_type
+        self.__kwargs = kwargs
+
+    def evaluate(self):
+        yvals = self.__obj.evaluate()
+        ret = basic_integral_propagate(
+            self.__xvals, yvals, self.__interp_type, **self.__kwargs
+        )
+        return np.array([ret])
+
+    def jacobian(self):
+        yvals = self.__obj.evaluate()
+        outer_jac = csr_matrix(get_basic_integral_sensmat(
+            self.__xvals, yvals, self.__interp_type, **self.__kwargs
+        ))
+        inner_jac = self.__obj.jacobian()
+        return outer_jac @ inner_jac
+
+
 class IntegralOfProduct(MyAlgebra):
 
     def __init__(self, obj_list, xlist, interplist,
@@ -269,3 +302,60 @@ class IntegralOfProduct(MyAlgebra):
         for outer_jac, inner_jac in zip(outer_jacs, inner_jacs):
             jac += outer_jac @ inner_jac
         return jac
+
+
+class LegacyFissionAverage(MyAlgebra):
+
+    def __init__(self, en, xsobj, fisen, fisobj, fix_jacobian=True):
+        if not isinstance(xsobj, MyAlgebra):
+            raise TypeError('xsobj must be of class MyAlgebra')
+        if not isinstance(fisobj, MyAlgebra):
+            raise TypeError('fisobj must be of class MyAlgebra')
+        self.__xsobj = xsobj
+        self.__en = en
+        self.__fisobj = fisobj
+        self.__fisen = fisen
+        self.__fix_jacobian = fix_jacobian
+
+    def evaluate(self):
+        xs = self.__xsobj.evaluate()
+        fisvals = self.__fisobj.evaluate()
+        ret = propagate_fisavg(self.__en, xs, self.__fisen, fisvals)
+        assert type(ret) == float
+        return np.array([ret])
+
+    def jacobian(self):
+        xs = self.__xsobj.evaluate()
+        fisvals = self.__fisobj.evaluate()
+        xsjac = self.__xsobj.jacobian()
+        if self.__fix_jacobian:
+            sensvec = get_sensmat_fisavg_corrected(
+                self.__en, xs, self.__fisen, fisvals
+            )
+        else:
+            sensvec = get_sensmat_fisavg(
+                self.__en, xs, self.__fisen, fisvals
+            )
+        out_jac = csr_matrix(sensvec.reshape(1, -1))
+        return out_jac @ xsjac
+
+
+def FissionAverage(MyAlgebra):
+
+    def __init__(self, en, xsobj, fisen, fisobj,
+                 legacy=False, fix_jacobian=True):
+        if legacy:
+            self.__obj = LegacyFissionAverage(
+                en, xsobj, fisen, fisobj, fix_jacobian
+            )
+        else:
+            self.__obj = IntegralOfProduct(
+                [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
+                zero_outside=False, maxord=16, rtol=1e-6
+            )
+
+    def evaluate(self):
+        return self.__obj.evaluate()
+
+    def jacobian(self):
+        return self.__obj.jacobian()
