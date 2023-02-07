@@ -49,6 +49,7 @@ class CrossSectionFissionAverageMap:
 
 
     def __legacy_compute(self, datatable, refvals, what):
+        assert what in ('propagate', 'jacobian')
         legacy_integration = self._legacy_integration
 
         idcs1 = np.empty(0, dtype=int)
@@ -107,31 +108,31 @@ class CrossSectionFissionAverageMap:
             vals1 = refvals[priortable_red.index]
             idcs1red = priortable_red.index
             idcs2red = exptable_red.index
-            if what == 'propagate':
 
-                if legacy_integration:
+            if legacy_integration:
+                if what == 'propagate':
                     curval = propagate_fisavg(ens1, vals1, ensfis, valsfis)
-
-                else:
+                    idcs2 = concat([idcs2, idcs2red])
+                    propvals = concat([propvals, [curval]])
+                elif what == 'jacobian':
+                    if self._fix_jacobian:
+                        sensvec = get_sensmat_fisavg_corrected(ens1, vals1, ensfis, valsfis)
+                    else:
+                        sensvec = get_sensmat_fisavg(ens1, vals1, ensfis, valsfis)
+                    idcs1 = concat([idcs1, idcs1red])
+                    idcs2 = concat([idcs2, np.full(len(idcs1red), idcs2red, dtype=int)])
+                    coeff = concat([coeff, sensvec])
+            # modern (Romberg) integration
+            else:
+                if what == 'propagate':
                     curval = basic_integral_of_product_propagate(
                             [ens1, ensfis], [vals1, valsfis],
                             ['lin-lin', 'lin-lin'], zero_outside=True,
                             maxord=16, rtol=1e-6)
                     curval = float(curval) * normfact
-
-                idcs2 = concat([idcs2, idcs2red])
-                propvals = concat([propvals, [curval]])
-
-            elif what == 'jacobian':
-
-                if legacy_integration:
-
-                    if self._fix_jacobian:
-                        sensvec = get_sensmat_fisavg_corrected(ens1, vals1, ensfis, valsfis)
-                    else:
-                        sensvec = get_sensmat_fisavg(ens1, vals1, ensfis, valsfis)
-
-                else:
+                    idcs2 = concat([idcs2, idcs2red])
+                    propvals = concat([propvals, [curval]])
+                elif what == 'jacobian':
                     sensvecs = get_basic_integral_of_product_sensmats(
                             [ens1, ensfis], [vals1, valsfis],
                             ['lin-lin', 'lin-lin'], zero_outside=True,
@@ -141,12 +142,9 @@ class CrossSectionFissionAverageMap:
                     sensvec = np.ravel(sensvecs[0])
                     sensvec *= normfact
 
-                idcs1 = concat([idcs1, idcs1red])
-                idcs2 = concat([idcs2, np.full(len(idcs1red), idcs2red, dtype=int)])
-                coeff = concat([coeff, sensvec])
-
-            else:
-                raise ValueError('what must be either "propagate" or "jacobian"')
+                    idcs1 = concat([idcs1, idcs1red])
+                    idcs2 = concat([idcs2, np.full(len(idcs1red), idcs2red, dtype=int)])
+                    coeff = concat([coeff, sensvec])
 
         retdic = {}
         if what == 'jacobian':
