@@ -83,15 +83,17 @@ class CrossSectionFissionAverageMap:
             sorted_ensfis = ensfis[sort_idcs]
             xdiff = np.diff(sorted_ensfis)
             xmid = sorted_ensfis[:-1] + xdiff/2
-            scl = np.full(len(sorted_ensfis), 1.)
-            scl[1:-1] /= np.diff(xmid)
-            scl[0] /= (xdiff[0]/2)
-            scl[-1] /= (xdiff[-1]/2)
-            valsfis[sort_idcs] *= scl
+            sorted_scl = np.full(len(sorted_ensfis), 1.)
+            sorted_scl[1:-1] /= np.diff(xmid)
+            sorted_scl[0] /= (xdiff[0]/2)
+            sorted_scl[-1] /= (xdiff[-1]/2)
+            scl = np.empty(len(sorted_scl), dtype=float)
+            scl[sort_idcs] = sorted_scl
+            valsfis *= scl
             # evaluate the normalization of the fission spectrum
             normfact = 1./float(basic_integral_propagate(ensfis, valsfis,
-                                                        'lin-lin', maxord=16,
-                                                        rtol=1e-6))
+                                                         'lin-lin', maxord=16,
+                                                         rtol=1e-6))
 
         for curexp in expids:
             exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
