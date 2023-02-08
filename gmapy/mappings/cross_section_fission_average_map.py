@@ -73,27 +73,25 @@ class CrossSectionFissionAverageMap:
         valsfis = fistable['PRIOR'].to_numpy()
 
         if not legacy_integration:
-                # The fission spectrum values in the legacy GMA database
-                # are given as a histogram (piecewise rectangular function)
-                # where the spectrum value in each bin is divided by the
-                # energy bin size. For the new routine, where we interpret
-                # the spectrum point-wise, we therefore need to multiply
-                # by the energy bin size
-                sort_idcs = ensfis.argsort()
-                sorted_ensfis = ensfis[sort_idcs]
-                sorted_valsfis = valsfis[sort_idcs]
-
-                xdiff = np.diff(sorted_ensfis)
-                xmid = sorted_ensfis[:-1] + xdiff/2
-                scl_valsfis = np.full(len(sorted_ensfis), 0.)
-                scl_valsfis[1:-1] = sorted_valsfis[1:-1] / np.diff(xmid)
-                scl_valsfis[0] = sorted_valsfis[0] / (xdiff[0]/2)
-                scl_valsfis[-1] = sorted_valsfis[-1] / (xdiff[-1]/2)
-                valsfis[sort_idcs] = scl_valsfis
-                # evaluate the normalization of the fission spectrum
-                normfact = 1./float(basic_integral_propagate(ensfis, valsfis,
-                                                            'lin-lin', maxord=16,
-                                                            rtol=1e-6))
+            # The fission spectrum values in the legacy GMA database
+            # are given as a histogram (piecewise rectangular function)
+            # where the spectrum value in each bin is divided by the
+            # energy bin size. For the new routine, where we interpret
+            # the spectrum point-wise, we therefore need to multiply
+            # by the energy bin size
+            sort_idcs = ensfis.argsort()
+            sorted_ensfis = ensfis[sort_idcs]
+            xdiff = np.diff(sorted_ensfis)
+            xmid = sorted_ensfis[:-1] + xdiff/2
+            scl = np.full(len(sorted_ensfis), 1.)
+            scl[1:-1] /= np.diff(xmid)
+            scl[0] /= (xdiff[0]/2)
+            scl[-1] /= (xdiff[-1]/2)
+            valsfis[sort_idcs] *= scl
+            # evaluate the normalization of the fission spectrum
+            normfact = 1./float(basic_integral_propagate(ensfis, valsfis,
+                                                        'lin-lin', maxord=16,
+                                                        rtol=1e-6))
 
         for curexp in expids:
             exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
