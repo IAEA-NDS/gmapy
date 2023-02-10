@@ -14,6 +14,31 @@ from ..legacy.legacy_maps import (
     get_sensmat_fisavg_corrected
 )
 
+# the following two helper functions
+# to multiply matrices have a special
+# case for one matrix being a float number
+# which appear if the jacobian method
+# of the Const class is called
+
+
+def matmul(x, y):
+    if type(x) == float or type(y) == float:
+        return x * y
+    else:
+        return x @ y
+
+
+def elem_mul(x, y):
+    if type(x) == float and x == 0.0:
+        return 0.0
+    else:
+        return x.multiply(y)
+
+
+# the following classes are the building
+# blocks to construct mathematical expressions
+# enabling the automated computation of derivatives
+
 
 class MyAlgebra:
 
@@ -88,7 +113,7 @@ class Const(MyAlgebra):
         return self.__values
 
     def jacobian(self):
-        return 0.
+        return 0.0
 
 
 class Distributor(MyAlgebra):
@@ -118,7 +143,7 @@ class Distributor(MyAlgebra):
         return res
 
     def jacobian(self):
-        return self.__dist_mat @ self.__obj.jacobian()
+        return matmul(self.__dist_mat, self.__obj.jacobian())
 
 
 class Replicator(MyAlgebra):
@@ -187,8 +212,8 @@ class Multiplication(MyAlgebra):
     def jacobian(self):
         vals1 = self.__obj1.evaluate().reshape(-1, 1)
         vals2 = self.__obj2.evaluate().reshape(-1, 1)
-        S1 = self.__obj1.jacobian().multiply(vals2)
-        S2 = self.__obj2.jacobian().multiply(vals1)
+        S1 = elem_mul(self.__obj1.jacobian(), vals2)
+        S2 = elem_mul(self.__obj2.jacobian(), vals1)
         return S1 + S2
 
 
@@ -209,8 +234,8 @@ class Division(MyAlgebra):
     def jacobian(self):
         v1 = self.__obj1.evaluate().reshape(-1, 1)
         v2_inv = 1.0 / self.__obj2.evaluate().reshape(-1, 1)
-        S1 = self.__obj1.jacobian().multiply(v2_inv)
-        S2 = self.__obj2.jacobian().multiply(-v1 * np.square(v2_inv))
+        S1 = elem_mul(self.__obj1.jacobian(), v2_inv)
+        S2 = elem_mul(self.__obj2.jacobian(), -v1 * np.square(v2_inv))
         return S1 + S2
 
 
@@ -229,10 +254,10 @@ class LinearInterpolation(MyAlgebra):
         return self.__jacobian.shape[0]
 
     def evaluate(self):
-        return (self.__jacobian @ self.__obj.evaluate()).flatten()
+        return matmul(self.__jacobian, self.__obj.evaluate()).flatten()
 
     def jacobian(self):
-        return self.__jacobian @ self.__obj.jacobian()
+        return matmul(self.__jacobian, self.__obj.jacobian())
 
 
 class Integral(MyAlgebra):
@@ -261,7 +286,7 @@ class Integral(MyAlgebra):
             self.__xvals, yvals, self.__interp_type, **self.__kwargs
         ))
         inner_jac = self.__obj.jacobian()
-        return outer_jac @ inner_jac
+        return matmul(outer_jac, inner_jac)
 
 
 class IntegralOfProduct(MyAlgebra):
@@ -303,7 +328,7 @@ class IntegralOfProduct(MyAlgebra):
         inner_jacs = [obj.jacobian() for obj in self.__obj_list]
         jac = 0.
         for outer_jac, inner_jac in zip(outer_jacs, inner_jacs):
-            jac += outer_jac @ inner_jac
+            jac += matmul(outer_jac, inner_jac)
         return jac
 
 
@@ -343,7 +368,7 @@ class LegacyFissionAverage(MyAlgebra):
                 self.__en, xs, self.__fisen, fisvals
             )
         out_jac = csr_matrix(sensvec.reshape(1, -1))
-        return out_jac @ xsjac
+        return matmul(out_jac, xsjac)
 
 
 class FissionAverage(MyAlgebra):
@@ -360,7 +385,7 @@ class FissionAverage(MyAlgebra):
             )
             intprod = IntegralOfProduct(
                 [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
-                zero_outside=False, maxord=16, rtol=1e-6
+                zero_outside=True, maxord=16, rtol=1e-6
             )
             self.__fisavg = fisint / intprod
 
@@ -368,7 +393,8 @@ class FissionAverage(MyAlgebra):
         return 1
 
     def evaluate(self):
-        return self.__fisavg.evaluate()
+        ret = self.__fisavg.evaluate()
+        return ret
 
     def jacobian(self):
         return self.__fisavg.jacobian()
