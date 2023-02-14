@@ -2,11 +2,18 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from .basic_integral_maps import (basic_integral_propagate,
         basic_integral_of_product_propagate, get_basic_integral_of_product_sensmats)
-from .helperfuns import return_matrix
-
+from .helperfuns import return_matrix, return_matrix_new
 from ..legacy.legacy_maps import (propagate_fisavg, get_sensmat_fisavg,
         get_sensmat_fisavg_corrected)
-
+from .mapping_elements import (
+    Selector,
+    SelectorCollection,
+    Const,
+    Integral,
+    FissionAverage,
+    Replicator,
+    Distributor
+)
 
 
 class CrossSectionFissionAverageMap:
@@ -15,38 +22,137 @@ class CrossSectionFissionAverageMap:
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
 
-
     def is_responsible(self, datatable):
         expmask = (datatable['REAC'].str.match('MT:6-R1:', na=False) &
                    datatable['NODE'].str.match('exp_', na=False))
         return np.array(expmask, dtype=bool)
 
-
     def propagate(self, datatable, refvals):
-        preds = np.full(len(datatable), 0., dtype=float)
+        # keep temporary to test equivalence of new way
+        oldpreds = np.full(len(datatable), 0., dtype=float)
         mapdic = self.__compute(datatable, refvals, what='propagate')
-        preds[mapdic['idcs2']] = mapdic['propvals']
+        oldpreds[mapdic['idcs2']] = mapdic['propvals']
+        # new way
+        preds = self.__compute(datatable, refvals, what='propagate', new_way=True)
+        assert np.allclose(oldpreds, preds)
         return preds
 
-
     def jacobian(self, datatable, refvals, ret_mat=False):
+        # keep temporary to test equivalence of new way
         num_points = datatable.shape[0]
-        Sdic = self.__compute(datatable, refvals, what='jacobian')
-        return return_matrix(Sdic['idcs1'], Sdic['idcs2'], Sdic['coeff'],
+        oldSdic = self.__compute(datatable, refvals, what='jacobian')
+        oldret = return_matrix(oldSdic['idcs1'], oldSdic['idcs2'], oldSdic['coeff'],
                   dims = (num_points, num_points),
                   how = 'csr' if ret_mat else 'dic')
+        # new way
+        Smat = self.__compute(datatable, refvals, what='jacobian', new_way=True)
+        ret = return_matrix_new(Smat, how='csr' if ret_mat else 'dic')
+        # compare
+        if not self._legacy_integration:
+            if ret_mat:
+                tmp1 = oldret.toarray()
+                tmp2 = ret.toarray()
+                assert np.allclose(tmp2[tmp1 != 0], tmp1[tmp1 != 0])
+            else:
+                tmp = oldret['x'] != 0
+                assert (np.any(oldret['idcs1'][tmp] != ret['idcs1'][tmp]) or
+                        np.any(oldret['idcs2'][tmp] != ret['idcs2'][tmp]) or
+                        not np.allclose(oldret['x'][tmp], ret['x'][tmp]))
+        return ret
 
-
-    def __compute(self, datatable, refvals, what):
+    def __compute(self, datatable, refvals, what, new_way=False):
         has_legacy_fis = datatable.NODE.str.fullmatch('fis', na=False).any()
         has_modern_fis = datatable.NODE.str.fullmatch('fis_modern', na=False).any()
         if has_legacy_fis and has_modern_fis:
             raise ValueError('either legacy or modern fission spectrum, not both!')
         if has_legacy_fis:
-            return self.__legacy_compute(datatable, refvals, what)
+            if new_way:
+                return self.__new_legacy_compute(datatable, refvals, what)
+            else:
+                return self.__legacy_compute(datatable, refvals, what)
         elif has_modern_fis:
             return self.__modern_compute(datatable, refvals, what)
 
+    def __new_legacy_compute(self, datatable, refvals, what):
+        assert what in ('propagate', 'jacobian')
+        legacy_integration = self._legacy_integration
+        fix_jacobian = self._fix_jacobian
+
+        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
+                     datatable['NODE'].str.match('xsid_', na=False))
+        priormask = np.logical_or(priormask, datatable['NODE'].str.fullmatch('fis', na=False))
+        priortable = datatable[priormask]
+
+        expmask = self.is_responsible(datatable)
+        exptable = datatable[expmask]
+        expids = exptable['NODE'].unique()
+
+        # retrieve fission spectrum
+        fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
+        ensfis = fistable['ENERGY'].to_numpy()
+
+        inpvars = []
+        outvars = []
+        raw_fisobj = Selector(fistable.index, len(datatable))
+        inpvars.append(raw_fisobj)
+        if legacy_integration:
+            fisobj = raw_fisobj
+        if not legacy_integration:
+            # The fission spectrum values in the legacy GMA database
+            # are given as a histogram (piecewise rectangular function)
+            # where the spectrum value in each bin is divided by the
+            # energy bin size. For the new routine, where we interpret
+            # the spectrum point-wise, we therefore need to multiply
+            # by the energy bin size
+            sort_idcs = ensfis.argsort()
+            sorted_ensfis = ensfis[sort_idcs]
+            xdiff = np.diff(sorted_ensfis)
+            xmid = sorted_ensfis[:-1] + xdiff/2
+            sorted_scl = np.full(len(sorted_ensfis), 1.)
+            sorted_scl[1:-1] /= np.diff(xmid)
+            sorted_scl[0] /= (xdiff[0]/2)
+            sorted_scl[-1] /= (xdiff[-1]/2)
+            scl = np.empty(len(sorted_scl), dtype=float)
+            scl[sort_idcs] = sorted_scl
+            # here come the autodiff augmented expressions
+            unnorm_fisobj = raw_fisobj * Const(scl)
+            fisint = Integral(
+                unnorm_fisobj, ensfis, 'lin-lin', maxord=16, rtol=1e-6
+            )
+            fisobj = unnorm_fisobj / Replicator(fisint, len(unnorm_fisobj))
+
+        for curexp in expids:
+            exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
+            if len(exptable_red) != 1:
+                raise IndexError('None or more than one rows associated with a ' +
+                        'fission average, which must not happen!')
+            curreac = exptable_red['REAC'].values[0]
+            preac = curreac.replace('MT:6-', 'MT:1-')
+            priortable_red = priortable[priortable['REAC'].str.fullmatch(preac, na=False)]
+            # abbreviate some variables
+            ens1 = priortable_red['ENERGY'].to_numpy()
+            idcs1red = priortable_red.index
+            idcs2red = exptable_red.index
+
+            xsobj = Selector(idcs1red, len(datatable))
+            inpvars.append(xsobj)
+
+            curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,
+                                       check_norm=False,
+                                       legacy=legacy_integration,
+                                       fix_jacobian=fix_jacobian)
+            outvar = Distributor(curfisavg, idcs2red, len(datatable))
+            outvars.append(outvar)
+
+        inp = SelectorCollection(inpvars)
+        out = sum(outvars)
+        inp.assign(refvals)
+        if what == 'propagate':
+            return out.evaluate()
+        elif what == 'jacobian':
+            return out.jacobian()
+        else:
+            raise ValueError(f'what "{what}" not implemented"')
 
     def __legacy_compute(self, datatable, refvals, what):
         assert what in ('propagate', 'jacobian')
