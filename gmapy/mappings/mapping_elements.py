@@ -71,13 +71,17 @@ class MyAlgebra:
         self._jacobian_updated = False
 
     def values_updated(self):
-        parvals_updated = any(obj.values_updated() for obj in self._obj_list)
-        self._values_updated = self._values_updated or parvals_updated
+        self._values_updated = (
+            self._values_updated or
+            any(obj.values_updated() for obj in self._obj_list)
+        )
         return self._values_updated
 
     def jacobian_updated(self):
-        parjacs_updated = any(obj.jacobian_updated() for obj in self._obj_list)
-        self._jacobian_updated = self._jacobian_updated or parjacs_updated
+        self._jacobian_updated = (
+            self._jacobian_updated or
+            any(obj.jacobian_updated() for obj in self._obj_list)
+        )
         if not self.islinear():
             self._jacobian_updated = (
                 self._jacobian_updated or
