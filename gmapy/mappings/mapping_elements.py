@@ -499,7 +499,7 @@ class FissionAverage(MyAlgebra):
                 [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
                 zero_outside=True, maxord=16, rtol=1e-6
             )
-            self.__fisavg = fisint / intprod
+            self.__fisavg = intprod / fisint
         self._obj_list = [self.__fisavg]
 
     def __len__(self):
