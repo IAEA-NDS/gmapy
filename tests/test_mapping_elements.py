@@ -127,6 +127,13 @@ class TestMappingJacobians(unittest.TestCase):
         ref_jac = self.eval_reference_jacobian(x0, obj, *inpobjs)
         return np.allclose(test_jac, ref_jac)
 
+    def is_subjacobian_correct(self, row_idcs, x0, obj, *inpobjs):
+        test_jac = self.eval_test_jacobian(x0, obj, *inpobjs)
+        ref_jac = self.eval_reference_jacobian(x0, obj, *inpobjs)
+        test_jac = test_jac[:, np.array(row_idcs)]
+        ref_jac = ref_jac[:, np.array(row_idcs)]
+        return np.allclose(test_jac, ref_jac)
+
     def test_addition(self):
         inpvec = np.array([1, 2, 3, 4, 5, 6])
         x1 = Selector([0, 1, 2], 6)
@@ -209,8 +216,21 @@ class TestMappingJacobians(unittest.TestCase):
         fisvals = Selector([4, 5, 6, 7, 8], 9)
         fisavg = FissionAverage([0, 2, 4, 9], xs,
                                 [0, 1, 3, 5, 9], fisvals,
-                                legacy=False)
+                                legacy=False, check_norm=False)
         self.assertTrue(self.is_jacobian_correct(inpvec, fisavg, xs, fisvals))
+
+    def test_legacy_fission_average(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        xsidcs = [0, 1, 2, 3]
+        fisen = [0, 1, 3, 5, 9]
+        xs = Selector(xsidcs, 9)
+        fisvals = Selector([4, 5, 6, 7, 8], 9)
+        fisavg = FissionAverage([0, 2, 4, 9], xs,
+                                fisen, fisvals, check_norm=False,
+                                legacy=True, fix_jacobian=True)
+        self.assertTrue(self.is_subjacobian_correct(
+            xsidcs, inpvec, fisavg, xs, fisvals)
+        )
 
 
 if __name__ == '__main__':
