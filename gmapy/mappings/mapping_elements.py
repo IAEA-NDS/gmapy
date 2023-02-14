@@ -7,7 +7,6 @@ from .basic_integral_maps import (
     basic_integral_of_product_propagate,
     get_basic_integral_of_product_sensmats
 )
-from .helperfuns import numeric_jacobian
 from ..legacy.legacy_maps import (
     propagate_fisavg,
     get_sensmat_fisavg,
@@ -42,6 +41,11 @@ def elem_mul(x, y):
 
 class MyAlgebra:
 
+    def __init__(self):
+        self._values_updated = True
+        self._jacobian_updated = True
+        self._obj_list = []
+
     def __add__(self, other):
         return Addition(self, other)
 
@@ -57,10 +61,35 @@ class MyAlgebra:
     def __truediv__(self, other):
         return Division(self, other)
 
+    def islinear(self):
+        return False
+
+    def evaluate(self):
+        self._values_updated = False
+
+    def jacobian(self):
+        self._jacobian_updated = False
+
+    def values_updated(self):
+        parvals_updated = any(obj.values_updated() for obj in self._obj_list)
+        self._values_updated = self._values_updated or parvals_updated
+        return self._values_updated
+
+    def jacobian_updated(self):
+        parjacs_updated = any(obj.jacobian_updated() for obj in self._obj_list)
+        self._jacobian_updated = self._jacobian_updated or parjacs_updated
+        if not self.islinear():
+            self._jacobian_updated = (
+                self._jacobian_updated or
+                self.values_updated()
+            )
+        return self._jacobian_updated
+
 
 class Selector(MyAlgebra):
 
     def __init__(self, idcs, size):
+        super().__init__()
         self.__idcs = np.array(idcs)
         self.__size = size
         self.__values = None
@@ -68,12 +97,17 @@ class Selector(MyAlgebra):
     def __len__(self):
         return len(self.__idcs)
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         if self.__values is None:
             raise ValueError('please assign numbers')
         return self.__values
 
     def jacobian(self):
+        super().jacobian()
         tar_size = len(self.__idcs)
         coeffs = np.ones(tar_size)
         tar_idcs = np.arange(tar_size)
@@ -86,6 +120,7 @@ class Selector(MyAlgebra):
         if len(arraylike) != self.__size:
             raise IndexError('wrong length of vector')
         self.__values = np.array(arraylike)[self.__idcs]
+        self._values_updated = True
 
 
 class SelectorCollection:
@@ -103,27 +138,35 @@ class SelectorCollection:
 class Const(MyAlgebra):
 
     def __init__(self, values):
+        super().__init__()
         self.__values = np.array(values)
         self.__shape = (len(values),)*2
 
     def __len__(self):
         return len(self.__values)
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         return self.__values
 
     def jacobian(self):
+        super().jacobian()
         return 0.0
 
 
 class Distributor(MyAlgebra):
 
     def __init__(self, obj, idcs, size):
+        super().__init__()
         if len(obj) != len(idcs):
             raise ValueError('size mismatch')
         self.__idcs = np.array(idcs)
         self.__size = size
         self.__obj = obj
+        self._obj_list = [obj]
         # construct distribution matrix
         src_len = len(self.__obj)
         src_idcs = np.arange(src_len)
@@ -137,31 +180,43 @@ class Distributor(MyAlgebra):
     def __len__(self):
         return self.__size
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         res = np.zeros(self.__size, dtype=float)
         res[self.__idcs] = self.__obj.evaluate()
         return res
 
     def jacobian(self):
+        super().jacobian()
         return matmul(self.__dist_mat, self.__obj.jacobian())
 
 
 class Replicator(MyAlgebra):
 
     def __init__(self, obj, num):
+        super().__init__()
         self.__num = num
         self.__obj = obj
+        self._obj_list = [obj]
 
     def __len__(self):
         return len(self.__obj) * self.__num
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         return np.repeat(
             self.__obj.evaluate().reshape(1, -1),
             self.__num, axis=0
         ).flatten()
 
     def jacobian(self):
+        super().jacobian()
         return vstack(
             [self.__obj.jacobian()] * self.__num, format='csr'
         )
@@ -170,18 +225,25 @@ class Replicator(MyAlgebra):
 class Addition(MyAlgebra):
 
     def __init__(self, obj1, obj2):
+        super().__init__()
         if len(obj1) != len(obj2):
             raise ValueError('length mismatch')
         self.__obj1 = obj1
         self.__obj2 = obj2
+        self._obj_list = [obj1, obj2]
 
     def __len__(self):
         return len(self.__obj1)
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         return self.__obj1.evaluate() + self.__obj2.evaluate()
 
     def jacobian(self):
+        super().jacobian()
         return self.__obj1.jacobian() + self.__obj2.jacobian()
 
     def assign(self, arraylike):
@@ -198,18 +260,22 @@ class Addition(MyAlgebra):
 class Multiplication(MyAlgebra):
 
     def __init__(self, obj1, obj2):
+        super().__init__()
         if len(obj1) != len(obj2):
             raise ValueError('length mismatch')
         self.__obj1 = obj1
         self.__obj2 = obj2
+        self._obj_list = [obj1, obj2]
 
     def __len__(self):
         return len(self.__obj1)
 
     def evaluate(self):
+        super().evaluate()
         return self.__obj1.evaluate() * self.__obj2.evaluate()
 
     def jacobian(self):
+        super().jacobian()
         vals1 = self.__obj1.evaluate().reshape(-1, 1)
         vals2 = self.__obj2.evaluate().reshape(-1, 1)
         S1 = elem_mul(self.__obj1.jacobian(), vals2)
@@ -220,18 +286,22 @@ class Multiplication(MyAlgebra):
 class Division(MyAlgebra):
 
     def __init__(self, obj1, obj2):
+        super().__init__()
         if len(obj1) != len(obj2):
             raise ValueError('length mismatch')
         self.__obj1 = obj1
         self.__obj2 = obj2
+        self._obj_list = [obj1, obj2]
 
     def __len__(self):
         return len(self.__obj1)
 
     def evaluate(self):
+        super().evaluate()
         return self.__obj1.evaluate() / self.__obj2.evaluate()
 
     def jacobian(self):
+        super().jacobian()
         v1 = self.__obj1.evaluate().reshape(-1, 1)
         v2_inv = 1.0 / self.__obj2.evaluate().reshape(-1, 1)
         S1 = elem_mul(self.__obj1.jacobian(), v2_inv)
@@ -242,9 +312,11 @@ class Division(MyAlgebra):
 class LinearInterpolation(MyAlgebra):
 
     def __init__(self, obj, src_x, tar_x, zero_outside=False):
+        super().__init__()
         if len(obj) != len(src_x):
             raise ValueError('length mismatch')
         self.__obj = obj
+        self._obj_list = [obj]
         yzeros = np.zeros(len(src_x), dtype=float)
         self.__jacobian = get_basic_sensmat(
             src_x, yzeros, tar_x, 'lin-lin', zero_outside
@@ -253,46 +325,67 @@ class LinearInterpolation(MyAlgebra):
     def __len__(self):
         return self.__jacobian.shape[0]
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         return matmul(self.__jacobian, self.__obj.evaluate()).flatten()
 
     def jacobian(self):
+        super().jacobian()
         return matmul(self.__jacobian, self.__obj.jacobian())
 
 
 class Integral(MyAlgebra):
 
-    def __init__(self, obj, xvals, interp_type, **kwargs):
+    def __init__(self, obj, xvals, interp_type, cache=False, **kwargs):
+        super().__init__()
         if not isinstance(obj, MyAlgebra):
             raise TypeError('obj must be of class MyAlgebra')
         self.__obj = obj
+        self._obj_list = [obj]
         self.__xvals = np.array(xvals)
         self.__interp_type = interp_type
         self.__kwargs = kwargs
+        self.__last_result = None
+        self.__last_jacobian = None
+        self.__cache = cache
 
     def __len__(self):
         return 1
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        if self.__cache and not self.values_updated():
+            return self.__last_result
+        super().evaluate()
         yvals = self.__obj.evaluate()
-        ret = basic_integral_propagate(
+        self.__last_result = np.array([basic_integral_propagate(
             self.__xvals, yvals, self.__interp_type, **self.__kwargs
-        )
-        return np.array([ret])
+        )])
+        return self.__last_result.copy()
 
     def jacobian(self):
+        if self.__cache and not self.jacobian_updated():
+            return self.__last_jacobian.copy()
+        super().jacobian()
         yvals = self.__obj.evaluate()
         outer_jac = csr_matrix(get_basic_integral_sensmat(
             self.__xvals, yvals, self.__interp_type, **self.__kwargs
         ))
         inner_jac = self.__obj.jacobian()
-        return matmul(outer_jac, inner_jac)
+        self.__last_jacobian = matmul(outer_jac, inner_jac)
+        return self.__last_jacobian.copy()
 
 
 class IntegralOfProduct(MyAlgebra):
 
     def __init__(self, obj_list, xlist, interplist,
-                 zero_outside=False, **kwargs):
+                 zero_outside=False, cache=False, **kwargs):
+        super().__init__()
         if not all(isinstance(obj, MyAlgebra) for obj in obj_list):
             raise TypeError('all objects in obj_list must be of type ' +
                             'obj_list')
@@ -302,44 +395,57 @@ class IntegralOfProduct(MyAlgebra):
         if len(interplist) != len(obj_list):
             raise IndexError('length of interp_list must equal ' +
                              'length of obj_list')
-        self.__obj_list = obj_list
+        self._obj_list = obj_list
         self.__xlist = [np.array(xv) for xv in xlist]
         self.__interplist = interplist
         self.__zero_outside = zero_outside
         self.__kwargs = kwargs
+        self.__last_result = None
+        self.__last_jacobian = None
+        self.__cache = cache
 
     def __len__(self):
         return 1
 
     def evaluate(self):
-        ylist = [obj.evaluate() for obj in self.__obj_list]
-        return basic_integral_of_product_propagate(
+        if self.__cache and not self.values_updated():
+            return self.__last_result.copy()
+        super().evaluate()
+        ylist = [obj.evaluate() for obj in self._obj_list]
+        self.__last_result = basic_integral_of_product_propagate(
             self.__xlist, ylist, self.__interplist,
             self.__zero_outside, **self.__kwargs
         )
+        return self.__last_result.copy()
 
     def jacobian(self):
-        ylist = [obj.evaluate() for obj in self.__obj_list]
+        if self.__cache and not self.jacobian_updated():
+            return self.__last_jacobian.copy()
+        super().jacobian()
+        ylist = [obj.evaluate() for obj in self._obj_list]
         outer_jacs = get_basic_integral_of_product_sensmats(
             self.__xlist, ylist, self.__interplist,
             self.__zero_outside, **self.__kwargs
         )
         outer_jacs = [csr_matrix(mat) for mat in outer_jacs]
-        inner_jacs = [obj.jacobian() for obj in self.__obj_list]
+        inner_jacs = [obj.jacobian() for obj in self._obj_list]
         jac = 0.
         for outer_jac, inner_jac in zip(outer_jacs, inner_jacs):
             jac += matmul(outer_jac, inner_jac)
-        return jac
+        self.__last_jacobian = jac
+        return self.__last_jacobian.copy()
 
 
 class LegacyFissionAverage(MyAlgebra):
 
     def __init__(self, en, xsobj, fisen, fisobj, fix_jacobian=True):
+        super().__init__()
         if not isinstance(xsobj, MyAlgebra):
             raise TypeError('xsobj must be of class MyAlgebra')
         if not isinstance(fisobj, MyAlgebra):
             raise TypeError('fisobj must be of class MyAlgebra')
         self.__xsobj = xsobj
+        self._obj_list = [xsobj]
         self.__en = en
         self.__fisobj = fisobj
         self.__fisen = fisen
@@ -348,7 +454,11 @@ class LegacyFissionAverage(MyAlgebra):
     def __len__(self):
         return 1
 
+    def islinear(self):
+        return True
+
     def evaluate(self):
+        super().evaluate()
         xs = self.__xsobj.evaluate()
         fisvals = self.__fisobj.evaluate()
         ret = propagate_fisavg(self.__en, xs, self.__fisen, fisvals)
@@ -356,6 +466,7 @@ class LegacyFissionAverage(MyAlgebra):
         return np.array([ret])
 
     def jacobian(self):
+        super().jacobian()
         xs = self.__xsobj.evaluate()
         fisvals = self.__fisobj.evaluate()
         xsjac = self.__xsobj.jacobian()
@@ -375,6 +486,7 @@ class FissionAverage(MyAlgebra):
 
     def __init__(self, en, xsobj, fisen, fisobj,
                  legacy=False, fix_jacobian=True):
+        super().__init__()
         if legacy:
             self.__fisavg = LegacyFissionAverage(
                 en, xsobj, fisen, fisobj, fix_jacobian
@@ -388,13 +500,19 @@ class FissionAverage(MyAlgebra):
                 zero_outside=True, maxord=16, rtol=1e-6
             )
             self.__fisavg = fisint / intprod
+        self._obj_list = [self.__fisavg]
 
     def __len__(self):
         return 1
 
+    def islinear(self):
+        return type(self.__fisavg) == LegacyFissionAverage
+
     def evaluate(self):
+        super().evaluate()
         ret = self.__fisavg.evaluate()
         return ret
 
     def jacobian(self):
+        super().jacobian()
         return self.__fisavg.jacobian()
