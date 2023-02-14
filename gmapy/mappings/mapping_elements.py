@@ -442,7 +442,8 @@ class IntegralOfProduct(MyAlgebra):
 
 class LegacyFissionAverage(MyAlgebra):
 
-    def __init__(self, en, xsobj, fisen, fisobj, fix_jacobian=True):
+    def __init__(self, en, xsobj, fisen, fisobj,
+                 check_norm=True, fix_jacobian=True):
         super().__init__()
         if not isinstance(xsobj, MyAlgebra):
             raise TypeError('xsobj must be of class MyAlgebra')
@@ -454,6 +455,7 @@ class LegacyFissionAverage(MyAlgebra):
         self.__fisobj = fisobj
         self.__fisen = fisen
         self.__fix_jacobian = fix_jacobian
+        self.__check_norm = check_norm
 
     def __len__(self):
         return 1
@@ -465,8 +467,9 @@ class LegacyFissionAverage(MyAlgebra):
         super().evaluate()
         xs = self.__xsobj.evaluate()
         fisvals = self.__fisobj.evaluate()
-        ret = propagate_fisavg(self.__en, xs, self.__fisen, fisvals)
-        assert type(ret) == float
+        ret = propagate_fisavg(self.__en, xs, self.__fisen, fisvals,
+                               check_norm=self.__check_norm)
+        assert isinstance(ret, float)
         return np.array([ret])
 
     def jacobian(self):
@@ -476,7 +479,8 @@ class LegacyFissionAverage(MyAlgebra):
         xsjac = self.__xsobj.jacobian()
         if self.__fix_jacobian:
             sensvec = get_sensmat_fisavg_corrected(
-                self.__en, xs, self.__fisen, fisvals
+                self.__en, xs, self.__fisen, fisvals,
+                check_norm=self.__check_norm
             )
         else:
             sensvec = get_sensmat_fisavg(
@@ -489,22 +493,26 @@ class LegacyFissionAverage(MyAlgebra):
 class FissionAverage(MyAlgebra):
 
     def __init__(self, en, xsobj, fisen, fisobj,
-                 legacy=False, fix_jacobian=True):
+                 check_norm=True, legacy=False, fix_jacobian=True):
         super().__init__()
+        en = np.array(en)
+        fisen = np.array(fisen)
         if legacy:
             self.__fisavg = LegacyFissionAverage(
-                en, xsobj, fisen, fisobj, fix_jacobian
+                en, xsobj, fisen, fisobj, check_norm, fix_jacobian,
             )
         else:
-            fisint = Integral(
-                fisobj, fisen, 'lin-lin', maxord=16, rtol=1e-6
-            )
-            intprod = IntegralOfProduct(
+            if check_norm:
+                self.__fisint = Integral(
+                    fisobj, fisen, 'lin-lin', maxord=16, rtol=1e-6
+                )
+            self.__fisavg = IntegralOfProduct(
                 [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
                 zero_outside=True, maxord=16, rtol=1e-6
             )
-            self.__fisavg = intprod / fisint
         self._obj_list = [self.__fisavg]
+        self.__check_norm = check_norm
+        self.__legacy = legacy
 
     def __len__(self):
         return 1
@@ -514,6 +522,10 @@ class FissionAverage(MyAlgebra):
 
     def evaluate(self):
         super().evaluate()
+        if self.__check_norm and not self.__legacy:
+            if not np.isclose(self.__fisint.evaluate()[0], 1.,
+                            rtol=1e-5, atol=1e-5):
+                raise ValueError('fission spectrum not normalized')
         ret = self.__fisavg.evaluate()
         return ret
 
