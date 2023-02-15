@@ -52,30 +52,6 @@ def create_prior_table(prior_list):
             curdf = pd.DataFrame.from_dict(prd)
             df.append(curdf)
 
-        elif item['type'] == 'modern-fission-spectrum':
-            # the static part of the fission spectrum
-            prd = prior_dic = OrderedDict()
-            prd['NODE'] = 'fis_modern'
-            prd['REAC'] = 'NA'
-            prd['ENERGY'] = item['energies']
-            prd['PRIOR'] = item['spectrum']
-            prd['UNC'] = 0.
-            prd['DATA'] = np.nan
-            prd['DESCR'] = 'modern fission spectrum'
-            curdf = pd.DataFrame.from_dict(prd)
-            df.append(curdf)
-            # the variables associated with the errors
-            cov_ens = item['covmat']['energies'][:-1]
-            prd = prior_dic = OrderedDict()
-            prd['NODE'] = 'fis_errors'
-            prd['REAC'] = 'NA'
-            prd['ENERGY'] = cov_ens
-            prd['PRIOR'] = np.full(len(cov_ens), 0.)
-            prd['UNC'] = np.nan
-            prd['DATA'] = np.nan
-            prd['DESCR'] = 'modern fission spectrum errors'
-            curdf = pd.DataFrame.from_dict(prd)
-            df.append(curdf)
         else:
             raise ValueError('Unknown type "%s" of prior block' % item['type'])
 
