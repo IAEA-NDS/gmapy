@@ -1,8 +1,10 @@
 import numpy as np
 from .basic_integral_maps import (basic_integral_propagate,
         basic_integral_of_product_propagate, get_basic_integral_of_product_sensmats)
-from .helperfuns import return_matrix
-
+from .helperfuns import (
+    return_matrix,
+    get_legacy_to_pointwise_fis_factors
+)
 from ..legacy.legacy_maps import (propagate_fisavg, get_sensmat_fisavg,
         get_sensmat_fisavg_corrected)
 
@@ -59,22 +61,8 @@ class CrossSectionRatioOfSacsMap:
         ensfis = fistable['ENERGY'].to_numpy()
         valsfis = fistable['PRIOR'].to_numpy()
 
-        # The fission spectrum values in the legacy GMA database
-        # are given as a histogram (piecewise rectangular function)
-        # where the spectrum value in each bin is divided by the
-        # energy bin size. For the new routine, where we interpret
-        # the spectrum point-wise, we therefore need to multiply
-        # by the energy bin size
-        sort_idcs = ensfis.argsort()
-        sorted_ensfis = ensfis[sort_idcs]
-        sorted_valsfis = valsfis[sort_idcs]
-        xdiff = np.diff(sorted_ensfis)
-        xmid = sorted_ensfis[:-1] + xdiff/2
-        scl_valsfis = np.full(len(sorted_ensfis), 0.)
-        scl_valsfis[1:-1] = sorted_valsfis[1:-1] / np.diff(xmid)
-        scl_valsfis[0] = sorted_valsfis[0] / (xdiff[0]/2)
-        scl_valsfis[-1] = sorted_valsfis[-1] / (xdiff[-1]/2)
-        valsfis[sort_idcs] = scl_valsfis
+        scl = get_legacy_to_pointwise_fis_factors(ensfis)
+        valsfis *= scl
         # evaluate the normalization of the fission spectrum
         normfact = 1./float(basic_integral_propagate(ensfis, valsfis,
                                                     'lin-lin', maxord=16,
