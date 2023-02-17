@@ -250,16 +250,6 @@ class Addition(MyAlgebra):
         super().jacobian()
         return self.__obj1.jacobian() + self.__obj2.jacobian()
 
-    def assign(self, arraylike):
-        if len(arraylike) != self.__size:
-            raise IndexError('wrong length of vector')
-        if type(self.__obj1) != Selector or type(self.__obj2) != Selector:
-            raise TypeError(
-                'assignment only supported for addition of Selector'
-            )
-        self.__obj1.assign(arraylike)
-        self.__obj2.assign(arraylike)
-
 
 class Multiplication(MyAlgebra):
 
