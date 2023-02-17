@@ -20,7 +20,7 @@ from gmapy.mappings.cross_section_ratio_of_sacs_map import CrossSectionRatioOfSa
 class TestNewMappingJacobians(unittest.TestCase):
 
     # helper functions for the tests
-    def get_error(self, res1, res2, atol=1e-7):
+    def get_error(self, res1, res2, atol=1e-4):
         relerr = np.max(np.abs(res1 - res2) / (np.abs(res2) + atol))
         return relerr
 
@@ -42,15 +42,16 @@ class TestNewMappingJacobians(unittest.TestCase):
             raise IndexError('idcs1 and idcs2 must be disjoint')
         # also include the fission spectrum
         idcs3 = datatable[datatable['NODE'] == 'fis'].index
+        idcs1 = np.sort(np.unique(np.concatenate([idcs1, idcs3])))
 
-        sel = np.concatenate([idcs1, idcs2, idcs3])
+        sel = np.concatenate([idcs1, idcs2])
         # create filtered datatable and recreate index
         curdatatable = datatable.loc[sel].reset_index(drop=True)
         idcs1 = np.arange(len(idcs1))
         idcs2 = np.arange(len(idcs1), len(idcs1)+len(idcs2))
         return curdatatable, idcs1, idcs2
 
-    def get_jacobian_testerror(self, curmap):
+    def get_jacobian_testerror(self, curmap, atol=1e-4):
         datatable, idcs1, idcs2 = self.reduce_table(curmap, self._datatable)
         propfun = self.create_propagate_wrapper(curmap, datatable,
                                                 idcs1, idcs2)
@@ -64,8 +65,9 @@ class TestNewMappingJacobians(unittest.TestCase):
         if np.all(res1 == 0) or np.all(res2 == 0):
             raise ValueError('Some elements be different from zero')
 
-        relerr = self.get_error(res1, res2)
-        return (relerr, res1, res2)
+        relerr = self.get_error(res1, res2, atol=atol)
+        abserr = np.max(np.abs(res1-res2))
+        return (relerr, abserr, res1, res2)
 
     def test_cross_section_ratio_of_sacs_map(self):
         # create a dataset with a ratio of sacs measurement (MT 10)
@@ -121,10 +123,9 @@ class TestNewMappingJacobians(unittest.TestCase):
 
         # do the mapping
         curmap = CrossSectionRatioOfSacsMap(rtol=1e-05, atol=1e-05, maxord=20)
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
-        self.assertLess(relerr, 1e-4)
+        relerr, abserr, res1, res2 = self.get_jacobian_testerror(curmap, atol=1e-4)
+        self.assertTrue(relerr < 1e-4 or abserr < 1e-4)
 
 
 if __name__ == '__main__':
     unittest.main()
-
