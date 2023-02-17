@@ -493,10 +493,14 @@ class LegacyFissionAverage(MyAlgebra):
 class FissionAverage(MyAlgebra):
 
     def __init__(self, en, xsobj, fisen, fisobj,
-                 check_norm=True, legacy=False, fix_jacobian=True):
+                 check_norm=True, legacy=False,
+                 fix_jacobian=True, **kwargs):
         super().__init__()
         en = np.array(en)
         fisen = np.array(fisen)
+        self.__rtol = kwargs.get('rtol', 1e-5)
+        self.__atol = kwargs.get('atol', 1e-6)
+        self.__maxord = kwargs.get('maxord', 16)
         if legacy:
             self.__fisavg = LegacyFissionAverage(
                 en, xsobj, fisen, fisobj, check_norm, fix_jacobian,
@@ -504,11 +508,13 @@ class FissionAverage(MyAlgebra):
         else:
             if check_norm:
                 self.__fisint = Integral(
-                    fisobj, fisen, 'lin-lin', maxord=16, rtol=1e-6
+                    fisobj, fisen, 'lin-lin',
+                    atol=self.__atol, rtol=self.__rtol, maxord=self.__maxord
                 )
             self.__fisavg = IntegralOfProduct(
                 [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
-                zero_outside=True, maxord=16, rtol=1e-6
+                zero_outside=True, atol=self.__atol, rtol=self.__rtol,
+                maxord=self.__maxord
             )
         self._obj_list = [self.__fisavg]
         self.__check_norm = check_norm
@@ -524,7 +530,7 @@ class FissionAverage(MyAlgebra):
         super().evaluate()
         if self.__check_norm and not self.__legacy:
             if not np.isclose(self.__fisint.evaluate()[0], 1.,
-                            rtol=1e-5, atol=1e-5):
+                              rtol=self.__rtol, atol=self.__atol):
                 raise ValueError('fission spectrum not normalized')
         ret = self.__fisavg.evaluate()
         return ret
