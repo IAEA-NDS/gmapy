@@ -244,25 +244,35 @@ class TestMappingJacobians(unittest.TestCase):
         self.assertTrue(self.is_jacobian_correct(inpvec, fisavg, xs, fisvals))
 
     def test_fission_average_with_permuted_input(self):
-        inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-        xs = Selector([0, 1, 2, 3], 9)
-        perm_xs = Selector([3, 2, 1, 0], 9)
-        fisvals = Selector([4, 5, 6, 7, 8], 9)
-        perm_fisvals = Selector([8, 7, 6, 5, 4], 9)
+        for fix_jac in [False, True]:
+            for legacy_integration in [False, True]:
+                inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+                xs = Selector([0, 1, 2, 3], 9)
+                perm_xs = Selector([3, 2, 1, 0], 9)
+                fisvals = Selector([4, 5, 6, 7, 8], 9)
+                perm_fisvals = Selector([8, 7, 6, 5, 4], 9)
 
-        fisavg = FissionAverage([0, 2, 4, 9], xs,
-                                [0, 1, 3, 5, 9], fisvals,
-                                legacy=False, check_norm=False)
-        perm_fisavg = FissionAverage([9, 4, 2, 0], perm_xs,
-                                     [9, 5, 3, 1, 0], perm_fisvals,
-                                     legacy=False, check_norm=False)
-        xs.assign(inpvec)
-        perm_xs.assign(inpvec)
-        fisvals.assign(inpvec)
-        perm_fisvals.assign(inpvec)
-        jac = fisavg.jacobian().toarray()
-        perm_jac = perm_fisavg.jacobian().toarray()
-        self.assertTrue(np.all(jac == perm_jac))
+                fisavg = FissionAverage([0, 2, 4, 9], xs,
+                                        [0, 1, 3, 5, 9], fisvals,
+                                        legacy=legacy_integration,
+                                        fix_jacobian=fix_jac,
+                                        check_norm=False)
+                perm_fisavg = FissionAverage([9, 4, 2, 0], perm_xs,
+                                             [9, 5, 3, 1, 0], perm_fisvals,
+                                             legacy=legacy_integration,
+                                             fix_jacobian=fix_jac,
+                                             check_norm=False)
+                xs.assign(inpvec)
+                perm_xs.assign(inpvec)
+                fisvals.assign(inpvec)
+                perm_fisvals.assign(inpvec)
+                jac = fisavg.jacobian().toarray()
+                perm_jac = perm_fisavg.jacobian().toarray()
+                self.assertTrue(
+                    np.all(jac == perm_jac),
+                    msg=f'fission average calculation with permuted input '
+                        f'failed for legacy_integration: {legacy_integration}'
+                )
 
     def test_legacy_fission_average(self):
         inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
