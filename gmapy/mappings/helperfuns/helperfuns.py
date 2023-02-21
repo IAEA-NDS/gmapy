@@ -38,6 +38,7 @@ def get_legacy_to_pointwise_fis_factors(energies):
     # energy bin size. For the new routine, where we interpret
     # the spectrum point-wise, we therefore need to multiply
     # by the energy bin size
+    assert len(np.unique(energies)) == len(energies)
     ensfis = np.array(energies)
     sort_idcs = ensfis.argsort()
     sorted_ensfis = ensfis[sort_idcs]
