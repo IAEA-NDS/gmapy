@@ -127,7 +127,7 @@ class TestBasicIntegralJacobian(unittest.TestCase):
     def test_basic_integral_sensitivity_for_permuted_xmesh(self):
         xref1 = np.array([1, 10, 20, 50])
         yref1 = np.array([5, 10,  8, 23])
-        np.random.seed(12)
+        np.random.seed(13)
         perm = np.random.permutation(len(xref1))
         xref2 = xref1[perm]
         yref2 = yref1[perm]
@@ -135,14 +135,13 @@ class TestBasicIntegralJacobian(unittest.TestCase):
         for rtol in [1e-3, 1e-5]:
             for interp in interp_types:
                 errmsg = f'failed for interpolation {interp} and rtol {rtol}'
-                def propfun(y):
-                    return np.array([basic_integral_propagate(xref, y, interp,
-                                                              maxord=20, rtol=rtol)])
-                res1 = get_basic_integral_sensmat(xref1, yref1, interp, maxord=20, rtol=rtol)
-                res2 = get_basic_integral_sensmat(xref2, yref2, interp, maxord=20, rtol=rtol)
-                self.assertTrue(np.all(res1==res2), errmsg)
+                res1 = get_basic_integral_sensmat(xref1, yref1, interp,
+                                                  maxord=20, rtol=rtol)
+                res2 = get_basic_integral_sensmat(xref2, yref2, interp,
+                                                  maxord=20, rtol=rtol)
+                perm_res1 = res1[:, perm]
+                self.assertTrue(np.all(perm_res1 == res2), errmsg)
 
 
 if __name__ == '__main__':
     unittest.main()
-
