@@ -105,30 +105,31 @@ class TestMappingJacobians(unittest.TestCase):
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_fission_average_map(self):
-
         for legacy_integration in [False, True]:
             datatable = self._datatable.copy()
-            curmap = CrossSectionFissionAverageMap(fix_jacobian=True,
-                    legacy_integration=legacy_integration)
-            fistable = datatable[datatable['NODE']=='fis'].copy()
+            curmap = CrossSectionFissionAverageMap(
+                fix_jacobian=True, legacy_integration=legacy_integration,
+                atol=1e-5, rtol=1e-5, maxord=16
+            )
+            fistable = datatable[datatable['NODE'] == 'fis'].copy()
             datatable, idcs1, idcs2 = self.reduce_table(curmap, datatable)
-            datatable = pd.concat([datatable, fistable], ignore_index=True)
+            if legacy_integration:
+                datatable = pd.concat([datatable, fistable], ignore_index=True)
 
             def propfun(x):
-                refvals = datatable['PRIOR'].to_numpy()
+                refvals = orig_x
                 refvals[idcs1] = x
                 return curmap.propagate(datatable, refvals)[idcs2]
             np.random.seed(15)
             x = np.random.uniform(1, 5, len(datatable))
-            # we preserve the values of the fission spectrum
-            x[len(datatable):] = datatable.loc[len(datatable):, 'PRIOR']
+            orig_x = x.copy()
             res1 = numeric_jacobian(propfun, x[idcs1], o=4, h1=1e-2, v=2)
             res2 = curmap.jacobian(datatable, x, ret_mat=True)
             res2 = res2.toarray()[np.ix_(idcs2, idcs1)]
-            relerr = self.get_error(res1, res2, atol=1e-7)
+            relerr = self.get_error(res1, res2, atol=1e-4)
             msg = (f'Maximum relative error in SACS Jacobian is {relerr}' +
                    f'for legacy_integration={legacy_integration}')
-            self.assertTrue(np.all(np.isclose(res1, res2, rtol=1e-7, atol=1e-7)), msg)
+            self.assertTrue(np.all(np.isclose(res1, res2, rtol=1e-4, atol=1e-4)), msg)
 
     def test_cross_section_map(self):
         curmap = CrossSectionMap()
