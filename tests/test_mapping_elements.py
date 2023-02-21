@@ -243,6 +243,27 @@ class TestMappingJacobians(unittest.TestCase):
                                 legacy=False, check_norm=False)
         self.assertTrue(self.is_jacobian_correct(inpvec, fisavg, xs, fisvals))
 
+    def test_fission_average_with_permuted_input(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        xs = Selector([0, 1, 2, 3], 9)
+        perm_xs = Selector([3, 2, 1, 0], 9)
+        fisvals = Selector([4, 5, 6, 7, 8], 9)
+        perm_fisvals = Selector([8, 7, 6, 5, 4], 9)
+
+        fisavg = FissionAverage([0, 2, 4, 9], xs,
+                                [0, 1, 3, 5, 9], fisvals,
+                                legacy=False, check_norm=False)
+        perm_fisavg = FissionAverage([9, 4, 2, 0], perm_xs,
+                                     [9, 5, 3, 1, 0], perm_fisvals,
+                                     legacy=False, check_norm=False)
+        xs.assign(inpvec)
+        perm_xs.assign(inpvec)
+        fisvals.assign(inpvec)
+        perm_fisvals.assign(inpvec)
+        jac = fisavg.jacobian().toarray()
+        perm_jac = perm_fisavg.jacobian().toarray()
+        self.assertTrue(np.all(jac == perm_jac))
+
     def test_legacy_fission_average(self):
         inpvec = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
         xsidcs = [0, 1, 2, 3]
