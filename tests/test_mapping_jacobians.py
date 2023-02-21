@@ -166,7 +166,31 @@ class TestMappingJacobians(unittest.TestCase):
         relerr, res1, res2 = self.get_jacobian_testerror(curmap)
         self.assertLess(relerr, 1e-8)
 
+    # permutation tests
+    def test_permutation_invariance_of_cross_section_fission_average_map(self):
+        for legacy_integration in [False, True]:
+            datatable = self._datatable.copy()
+            curmap = CrossSectionFissionAverageMap(
+                fix_jacobian=True, legacy_integration=legacy_integration,
+                atol=1e-5, rtol=1e-5, maxord=10
+            )
+            fistable = datatable[datatable['NODE'] == 'fis'].copy()
+            datatable, idcs1, idcs2 = self.reduce_table(curmap, datatable)
+            if legacy_integration:
+                datatable = pd.concat([datatable, fistable], ignore_index=True)
+            permdt = datatable.reindex(np.random.permutation(datatable.index))
+            np.random.seed(15)
+            x = np.random.uniform(1, 5, len(datatable))
+            # we preserve the values of the fission spectrum
+            x[len(datatable):] = datatable.loc[len(datatable):, 'PRIOR']
+            res1 = curmap.jacobian(datatable, x, ret_mat=True)
+            res2 = curmap.jacobian(permdt, x, ret_mat=True)
+            self.assertTrue(
+                np.allclose(res1.toarray(), res2.toarray()),
+                msg=f'jacobian not invariant under datatable permutation for '
+                    f'legacy_integration: {legacy_integration}'
+            )
+
 
 if __name__ == '__main__':
     unittest.main()
-
