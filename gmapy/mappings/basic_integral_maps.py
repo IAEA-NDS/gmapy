@@ -56,16 +56,27 @@ def basic_integral_propagate(x, y, interp_type='lin-lin',
 
 def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
                                zero_outside=False, **kwargs):
-    xref = x; yref = y
+    sortord = np.argsort(x)
+    xref = np.array(x)[sortord]
+    yref = np.array(y)[sortord]
+    if type(interp_type) != str:
+        interp_type = np.array(interp_type)[sortord]
+
     def propfun(x):
         return basic_propagate(xref, yref, x, interp_type, zero_outside)
+
     def dpropfun(x):
         S = get_basic_sensmat(xref, yref, x, interp_type,
                               zero_outside, ret_mat=True)
         coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
         return (coeffs1, coeffs2)
-    ret = compute_romberg_integral(xref, propfun, dfun=dpropfun, **kwargs)
-    ret = np.array([ret])
+
+    ordered_ret = compute_romberg_integral(
+        xref, propfun, dfun=dpropfun, **kwargs
+    )
+    orig_ret = np.empty(len(ordered_ret))
+    orig_ret[sortord] = ordered_ret
+    ret = np.array([orig_ret])
     return ret
 
 
