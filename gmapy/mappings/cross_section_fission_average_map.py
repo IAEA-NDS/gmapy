@@ -16,9 +16,13 @@ from .mapping_elements import (
 
 class CrossSectionFissionAverageMap:
 
-    def __init__(self, fix_jacobian=True, legacy_integration=True):
+    def __init__(self, fix_jacobian=True, legacy_integration=True,
+                 atol=1e-6, rtol=1e-6, maxord=16):
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
+        self._atol = atol
+        self._rtol = rtol
+        self._maxord = maxord
 
     def is_responsible(self, datatable):
         expmask = (datatable['REAC'].str.match('MT:6-R1:', na=False) &
@@ -64,7 +68,8 @@ class CrossSectionFissionAverageMap:
             scl = get_legacy_to_pointwise_fis_factors(ensfis)
             unnorm_fisobj = raw_fisobj * Const(scl)
             fisint = Integral(
-                unnorm_fisobj, ensfis, 'lin-lin', maxord=16, rtol=1e-6
+                unnorm_fisobj, ensfis, 'lin-lin',
+                atol=self._atol, rtol=self._rtol, maxord=self._maxord
             )
             fisobj = unnorm_fisobj / Replicator(fisint, len(unnorm_fisobj))
 
@@ -87,7 +92,9 @@ class CrossSectionFissionAverageMap:
             curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,
                                        check_norm=False,
                                        legacy=legacy_integration,
-                                       fix_jacobian=fix_jacobian)
+                                       fix_jacobian=fix_jacobian,
+                                       atol=self._atol, rtol=self._rtol,
+                                       maxord=self._maxord)
             outvar = Distributor(curfisavg, idcs2red, len(datatable))
             outvars.append(outvar)
 
