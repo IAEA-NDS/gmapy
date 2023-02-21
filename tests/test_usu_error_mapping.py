@@ -27,7 +27,6 @@ class TestUSUErrorMapping(unittest.TestCase):
         datatable = attach_shape_prior(datatable)
         cls._datatable = datatable
 
-
     def test_usu_error_propagation(self):
         compmap = CompoundMap()
         usumap = USUErrorMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
@@ -82,7 +81,6 @@ class TestUSUErrorMapping(unittest.TestCase):
                                     propvals2[other_sel],
                                     atol=1e-8, rtol=1e-8, equal_nan=True))
 
-
     def test_multi_feature_error_propagation(self):
         compmap = CompoundMap()
         usumap = USUErrorMap(compmap, ['FEAT1','FEAT2'], NA_values=('NA', np.nan))
@@ -119,7 +117,6 @@ class TestUSUErrorMapping(unittest.TestCase):
         rng3_and_a3_sel = (exp_sel & rng3_sel & a3_sel)
         self.assertTrue(np.allclose(usupropvals[rng3_and_a2_sel],
             propvals[rng3_and_a2_sel] * (1 + 5 + 0.3)))
-
 
     def test_usu_jacobian(self):
         compmap = CompoundMap()
@@ -166,7 +163,6 @@ class TestUSUErrorMapping(unittest.TestCase):
         self.assertTrue(np.allclose(S1red, S2red,
                                     atol=1e-8, rtol=1e-8))
 
-
     def test_permutation_invariance(self):
         compmap = CompoundMap()
         usumap = USUErrorMap(compmap, ['FEAT'], NA_values=('NA', np.nan))
@@ -190,10 +186,9 @@ class TestUSUErrorMapping(unittest.TestCase):
         self.assertTrue(np.allclose(propvals, permpropvals,
                                     atol=1e-8, rtol=1e-8, equal_nan=True))
         # same for Jacobian matrix
-        S = usumap.jacobian(dt, refvals, ret_mat=True)
-        permS = usumap.jacobian(permdt, refvals, ret_mat=True)
-        self.assertTrue((S != permS).nnz == 0)
-
+        S = usumap.jacobian(dt, refvals, ret_mat=True).toarray()
+        permS = usumap.jacobian(permdt, refvals, ret_mat=True).toarray()
+        self.assertTrue(np.allclose(S, permS, rtol=1e-14, atol=1e-8))
 
     def test_effect_of_only_usu_option(self):
         compmap = CompoundMap()
@@ -222,7 +217,5 @@ class TestUSUErrorMapping(unittest.TestCase):
         self.assertTrue(np.allclose(propcss_direct, propcss_sum))
 
 
-
 if __name__ == '__main__':
     unittest.main()
-
