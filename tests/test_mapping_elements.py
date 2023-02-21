@@ -96,6 +96,18 @@ class TestMappingElements(unittest.TestCase):
             np.array([14.0])
         )
 
+    def test_integral_with_permutated_input(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6])
+        x = Selector([0, 1, 2], 6)
+        intx = Integral(x, [1, 2, 3], 'lin-lin', maxord=10)
+        perm_x = Selector([2, 1, 0], 6)
+        perm_intx = Integral(perm_x, [3, 2, 1], 'lin-lin', maxord=10)
+        x.assign(inpvec)
+        perm_x.assign(inpvec)
+        intval = intx.evaluate()
+        perm_intval = perm_intx.evaluate()
+        self.assertTrue(np.all(intval == perm_intval))
+
     def test_integral_of_product(self):
         inpvec = np.array([1, 2, 3, 1, 2, 3])
         x = Selector([0, 1, 2], 6)
@@ -188,6 +200,18 @@ class TestMappingJacobians(unittest.TestCase):
         z = x + y
         intz = Integral(z, [1, 2, 3], 'lin-lin', maxord=10)
         self.assertTrue(self.is_jacobian_correct(inpvec, intz, x, y))
+
+    def test_integral_with_permutated_input(self):
+        inpvec = np.array([1, 2, 3, 4, 5, 6])
+        x = Selector([0, 1, 2], 6)
+        intx = Integral(x, [1, 2, 3], 'lin-lin', maxord=10)
+        perm_x = Selector([2, 1, 0], 6)
+        perm_intx = Integral(perm_x, [3, 2, 1], 'lin-lin', maxord=10)
+        x.assign(inpvec)
+        perm_x.assign(inpvec)
+        jac = intx.jacobian().toarray()
+        perm_jac = perm_intx.jacobian().toarray()
+        self.assertTrue(np.all(jac == perm_jac))
 
     def test_integral_of_product(self):
         inpvec = np.array([1, 2, 3, 4, 5, 6])
