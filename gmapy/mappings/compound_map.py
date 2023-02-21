@@ -59,6 +59,8 @@ class CompoundMap:
 
         for curmap in self.maplist:
             curresp = curmap.is_responsible(datatable)
+            if not np.any(curresp):
+                continue
             if np.any(np.logical_and(treated, curresp)):
                 raise ValueError('Several maps claim responsibility for the same rows')
             treated[curresp] = True
@@ -83,8 +85,9 @@ class CompoundMap:
         idmat = csr_matrix((ones, (idcs, idcs)),
                            shape=(numel, numel), dtype=float)
         compSmat = idmat
-        concat = np.concatenate
         for curmap in self.maplist:
+            if not np.any(curmap.is_responsible(datatable)):
+                continue
             curSmat = curmap.jacobian(datatable, refvals, ret_mat=True)
             compSmat = (idmat + curSmat) @ compSmat
 
