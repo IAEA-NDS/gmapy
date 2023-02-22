@@ -10,7 +10,8 @@ from .mapping_elements import (
     Integral,
     FissionAverage,
     Replicator,
-    Distributor
+    Distributor,
+    SumOfDistributors
 )
 
 
@@ -99,7 +100,7 @@ class CrossSectionFissionAverageMap:
             outvars.append(outvar)
 
         inp = SelectorCollection(inpvars)
-        out = sum(outvars)
+        out = SumOfDistributors(outvars)
         inp.assign(refvals)
         if what == 'propagate':
             return out.evaluate()

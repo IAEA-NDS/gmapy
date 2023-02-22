@@ -3,6 +3,7 @@ from .mapping_elements import (
     Selector,
     SelectorCollection,
     Distributor,
+    SumOfDistributors,
     LinearInterpolation
 )
 from .helperfuns import return_matrix_new
@@ -63,7 +64,7 @@ class CrossSectionRatioMap:
             outvars.append(outvar)
 
         inp = SelectorCollection(inpvars)
-        out = sum(outvars)
+        out = SumOfDistributors(outvars)
         inp.assign(refvals)
 
         if what == 'propagate':

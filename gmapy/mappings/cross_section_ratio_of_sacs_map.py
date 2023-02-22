@@ -8,7 +8,8 @@ from .mapping_elements import (
     SelectorCollection,
     Const,
     FissionAverage,
-    Distributor
+    Distributor,
+    SumOfDistributors
 )
 
 
@@ -103,7 +104,7 @@ class CrossSectionRatioOfSacsMap:
             outvars.append(outvar)
 
         inp = SelectorCollection(inpvars)
-        out = sum(outvars)
+        out = SumOfDistributors(outvars)
         inp.assign(refvals)
         if what == 'propagate':
             return out.evaluate()
