@@ -142,9 +142,9 @@ class SelectorCollection:
             obj.assign(arraylike)
 
     def get_indices(self):
-        return np.unique(
+        return np.unique(np.concatenate(list(
             obj.get_indices() for obj in self.__selector_list
-        )
+        )))
 
 
 class Const(MyAlgebra):
@@ -219,9 +219,9 @@ class SumOfDistributors(MyAlgebra):
         self.__distributor_list = listlike
 
     def get_indices(self):
-        return np.unique(
+        return np.unique(np.concatenate(list(
             obj.get_indices() for obj in self.__distributor_list
-        )
+        )))
 
     def evaluate(self):
         super().evaluate()
