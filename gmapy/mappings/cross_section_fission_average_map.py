@@ -17,31 +17,41 @@ from .mapping_elements import (
 
 class CrossSectionFissionAverageMap:
 
-    def __init__(self, fix_jacobian=True, legacy_integration=True,
+    def __init__(self, datatable, fix_jacobian=True,
+                 legacy_integration=True,
                  atol=1e-6, rtol=1e-6, maxord=16):
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
         self._atol = atol
         self._rtol = rtol
         self._maxord = maxord
+        self.__numrows = len(datatable)
+        self.__input, self.__output = self.__prepare(datatable)
 
-    def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:6-R1:', na=False) &
-                   datatable['NODE'].str.match('exp_', na=False))
-        return np.array(expmask, dtype=bool)
+    def is_responsible(self):
+        ret = np.full(self.__numrows, False)
+        if self.__output is not None:
+            idcs = self.__output.get_indices()
+            ret[idcs] = True
+        return ret
 
-    def propagate(self, datatable, refvals):
-        return self.__compute(datatable, refvals, what='propagate')
+    def propagate(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.evaluate()
 
-    def jacobian(self, datatable, refvals, ret_mat=False):
-        Smat = self.__compute(datatable, refvals, what='jacobian')
-        return return_matrix_new(Smat, how='csr' if ret_mat else 'dic')
+    def jacobian(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.jacobian()
 
-    def __compute(self, datatable, refvals, what):
-        assert what in ('propagate', 'jacobian')
+    def __prepare(self, datatable):
         legacy_integration = self._legacy_integration
         fix_jacobian = self._fix_jacobian
-
+        expmask = np.array(
+            datatable['REAC'].str.match('MT:6-R1:', na=False) &
+            datatable['NODE'].str.match('exp_', na=False)
+        )
+        if not np.any(expmask):
+            return None, None
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
 
@@ -50,8 +60,6 @@ class CrossSectionFissionAverageMap:
             raise IndexError('fission spectrum missing')
         priormask = np.logical_or(priormask, is_fis_row)
         priortable = datatable[priormask]
-
-        expmask = self.is_responsible(datatable)
         exptable = datatable[expmask]
         expids = exptable['NODE'].unique()
 
@@ -101,10 +109,4 @@ class CrossSectionFissionAverageMap:
 
         inp = SelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
-        inp.assign(refvals)
-        if what == 'propagate':
-            return out.evaluate()
-        elif what == 'jacobian':
-            return out.jacobian()
-        else:
-            raise ValueError(f'what "{what}" not implemented"')
+        return inp, out

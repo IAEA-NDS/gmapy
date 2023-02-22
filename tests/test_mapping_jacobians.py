@@ -11,7 +11,7 @@ from gmapy.data_management.uncfuns import create_relunc_vector
 from gmapy.mappings.priortools import attach_shape_prior
 from gmapy.mappings.helperfuns import numeric_jacobian
 
-from gmapy.mappings.compound_map import CompoundMap
+from gmapy.mappings.compound_map import CompoundMap, mapclass_with_params
 from gmapy.mappings.cross_section_absolute_ratio_map import CrossSectionAbsoluteRatioMap
 from gmapy.mappings.cross_section_fission_average_map import CrossSectionFissionAverageMap
 from gmapy.mappings.cross_section_map import CrossSectionMap
@@ -30,19 +30,21 @@ class TestMappingJacobians(unittest.TestCase):
         relerr = np.max(np.abs(res1 - res2) / (np.abs(res2) + atol))
         return relerr
 
-    def create_propagate_wrapper(self, curmap, datatable, idcs1, idcs2):
+    def create_propagate_wrapper(self, curmapclass, datatable, idcs1, idcs2):
         """Create propagate wrapper with refvals arg being first."""
         def wrapfun(vals):
             allvals = np.full(len(datatable), 0.)
             allvals[idcs1] = vals
-            return curmap.propagate(datatable, allvals)[idcs2]
+            return curmap.propagate(allvals)[idcs2]
+        curmap = curmapclass(datatable)
         return wrapfun
 
-    def reduce_table(self, curmap, datatable):
+    def reduce_table(self, curmapclass, datatable):
         refvals = np.full(len(datatable), 10)
-        Sdic = curmap.jacobian(datatable, refvals, ret_mat=False)
-        idcs1 = np.unique(Sdic['idcs1'])
-        idcs2 = np.unique(Sdic['idcs2'])
+        curmap = curmapclass(datatable)
+        Smat = curmap.jacobian(refvals).tocoo()
+        idcs1 = np.unique(Smat.col)
+        idcs2 = np.unique(Smat.row)
         if (len(set(idcs1)) + len(set(idcs2)) !=
                 len(set(np.concatenate([idcs1,idcs2])))):
             raise IndexError('idcs1 and idcs2 must be disjoint')
@@ -54,14 +56,15 @@ class TestMappingJacobians(unittest.TestCase):
         idcs2 = np.arange(len(idcs1), len(idcs1)+len(idcs2))
         return curdatatable, idcs1, idcs2
 
-    def get_jacobian_testerror(self, curmap):
-        datatable, idcs1, idcs2 = self.reduce_table(curmap, self._datatable)
-        propfun = self.create_propagate_wrapper(curmap, datatable,
+    def get_jacobian_testerror(self, curmapclass):
+        datatable, idcs1, idcs2 = self.reduce_table(curmapclass, self._datatable)
+        propfun = self.create_propagate_wrapper(curmapclass, datatable,
                                                 idcs1, idcs2)
+        curmap = curmapclass(datatable)
         np.random.seed(15)
         x = np.full(len(idcs1)+len(idcs2), 0.)
         x[idcs1] = np.random.uniform(1, 5, len(idcs1))
-        res2 = curmap.jacobian(datatable, x, ret_mat=True)
+        res2 = curmap.jacobian(x)
         res1 = numeric_jacobian(propfun, x[idcs1], o=4, h1=1e-2, v=2)
         res2 = np.array(res2.todense())
         res2 = res2[np.ix_(idcs2, idcs1)]
@@ -100,31 +103,33 @@ class TestMappingJacobians(unittest.TestCase):
         del(cls._datablocklist)
 
     def test_cross_section_absolute_ratio_map(self):
-        curmap = CrossSectionAbsoluteRatioMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionAbsoluteRatioMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_fission_average_map(self):
         for legacy_integration in [False, True]:
             datatable = self._datatable.copy()
-            curmap = CrossSectionFissionAverageMap(
+            curmapclass = mapclass_with_params(
+                CrossSectionFissionAverageMap,
                 fix_jacobian=True, legacy_integration=legacy_integration,
                 atol=1e-5, rtol=1e-5, maxord=16
             )
             fistable = datatable[datatable['NODE'] == 'fis'].copy()
-            datatable, idcs1, idcs2 = self.reduce_table(curmap, datatable)
+            datatable, idcs1, idcs2 = self.reduce_table(curmapclass, datatable)
+            curmap = curmapclass(datatable)
             if legacy_integration:
                 datatable = pd.concat([datatable, fistable], ignore_index=True)
 
             def propfun(x):
                 refvals = orig_x
                 refvals[idcs1] = x
-                return curmap.propagate(datatable, refvals)[idcs2]
+                return curmap.propagate(refvals)[idcs2]
             np.random.seed(15)
             x = np.random.uniform(1, 5, len(datatable))
             orig_x = x.copy()
             res1 = numeric_jacobian(propfun, x[idcs1], o=4, h1=1e-2, v=2)
-            res2 = curmap.jacobian(datatable, x, ret_mat=True)
+            res2 = curmap.jacobian(x)
             res2 = res2.toarray()[np.ix_(idcs2, idcs1)]
             relerr = self.get_error(res1, res2, atol=1e-4)
             msg = (f'Maximum relative error in SACS Jacobian is {relerr}' +
@@ -132,59 +137,62 @@ class TestMappingJacobians(unittest.TestCase):
             self.assertTrue(np.all(np.isclose(res1, res2, rtol=1e-4, atol=1e-4)), msg)
 
     def test_cross_section_map(self):
-        curmap = CrossSectionMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_ratio_map(self):
-        curmap = CrossSectionRatioMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionRatioMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_ratio_shape_map(self):
-        curmap = CrossSectionRatioShapeMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionRatioShapeMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_shape_map(self):
-        curmap = CrossSectionShapeMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionShapeMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_shape_of_ratio_map(self):
-        curmap = CrossSectionShapeOfRatioMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionShapeOfRatioMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_shape_of_sum_map(self):
-        curmap = CrossSectionShapeOfSumMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionShapeOfSumMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     def test_cross_section_total_map(self):
-        curmap = CrossSectionTotalMap()
-        relerr, res1, res2 = self.get_jacobian_testerror(curmap)
+        curmapclass = CrossSectionTotalMap
+        relerr, res1, res2 = self.get_jacobian_testerror(curmapclass)
         self.assertLess(relerr, 1e-8)
 
     # permutation tests
     def test_permutation_invariance_of_cross_section_fission_average_map(self):
         for legacy_integration in [False, True]:
             datatable = self._datatable.copy()
-            curmap = CrossSectionFissionAverageMap(
+            curmapclass = mapclass_with_params(
+                CrossSectionFissionAverageMap,
                 fix_jacobian=True, legacy_integration=legacy_integration,
                 atol=1e-5, rtol=1e-5, maxord=10
             )
             fistable = datatable[datatable['NODE'] == 'fis'].copy()
-            datatable, idcs1, idcs2 = self.reduce_table(curmap, datatable)
+            datatable, idcs1, idcs2 = self.reduce_table(curmapclass, datatable)
             if legacy_integration:
                 datatable = pd.concat([datatable, fistable], ignore_index=True)
             permdt = datatable.reindex(np.random.permutation(datatable.index))
+            curmap = curmapclass(datatable)
+            perm_curmap = curmapclass(permdt)
             np.random.seed(15)
             x = np.random.uniform(1, 5, len(datatable))
             # we preserve the values of the fission spectrum
             x[len(datatable):] = datatable.loc[len(datatable):, 'PRIOR']
-            res1 = curmap.jacobian(datatable, x, ret_mat=True)
-            res2 = curmap.jacobian(permdt, x, ret_mat=True)
+            res1 = curmap.jacobian(x)
+            res2 = perm_curmap.jacobian(x)
             self.assertTrue(
                 np.allclose(res1.toarray(), res2.toarray()),
                 msg=f'jacobian not invariant under datatable permutation for '

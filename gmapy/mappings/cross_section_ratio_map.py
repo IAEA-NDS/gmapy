@@ -6,29 +6,40 @@ from .mapping_elements import (
     SumOfDistributors,
     LinearInterpolation
 )
-from .helperfuns import return_matrix_new
 
 
 class CrossSectionRatioMap:
 
-    def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:3-R1:[0-9]+-R2:[0-9]+', na=False) &
-                   datatable['NODE'].str.match('exp_', na=False))
-        return np.array(expmask, dtype=bool)
+    def __init__(self, datatable):
+        self.__numrows = len(datatable)
+        self.__input, self.__output = self.__prepare(datatable)
 
-    def propagate(self, datatable, refvals):
-        return self.__compute(datatable, refvals, 'propagate')
+    def is_responsible(self):
+        ret = np.full(self.__numrows, False)
+        if self.__output is not None:
+            idcs = self.__output.get_indices()
+            ret[idcs] = True
+        return ret
 
-    def jacobian(self, datatable, refvals, ret_mat=False):
-        S = self.__compute(datatable, refvals, 'jacobian')
-        return return_matrix_new(S, how='csr' if ret_mat else 'dic')
+    def propagate(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.evaluate()
 
-    def __compute(self, datatable, refvals, what):
+    def jacobian(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.jacobian()
+
+    def __prepare(self, datatable):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
 
         priortable = datatable[priormask]
-        expmask = self.is_responsible(datatable)
+        expmask = np.array(
+            datatable['REAC'].str.match('MT:3-R1:[0-9]+-R2:[0-9]+', na=False) &
+            datatable['NODE'].str.match('exp_', na=False)
+        )
+        if not np.any(expmask):
+            return None, None
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
@@ -65,11 +76,4 @@ class CrossSectionRatioMap:
 
         inp = SelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
-        inp.assign(refvals)
-
-        if what == 'propagate':
-            return out.evaluate()
-        elif what == 'jacobian':
-            return out.jacobian()
-        else:
-            raise ValueError(f'what "{what}" not implemented"')
+        return inp, out

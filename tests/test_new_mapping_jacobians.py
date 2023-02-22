@@ -3,18 +3,20 @@ Testing Jacobians of new mappings beyond legacy GMAP.
 """
 
 import unittest
-import pathlib
 import numpy as np
 import pandas as pd
 
 from gmapy.mappings.helperfuns import numeric_jacobian
-from gmapy.data_management.database_IO import read_legacy_gma_database
-from gmapy.data_management.uncfuns import create_relunc_vector
+from gmapy.mappings.compound_map import mapclass_with_params
 from gmapy.data_management.dataset import Dataset
 from gmapy.data_management.datablock import Datablock
-from gmapy.data_management.tablefuns import (create_prior_table,
-        create_experiment_table)
-from gmapy.mappings.cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
+from gmapy.data_management.tablefuns import (
+    create_prior_table,
+    create_experiment_table
+)
+from gmapy.mappings.cross_section_ratio_of_sacs_map import (
+    CrossSectionRatioOfSacsMap
+)
 
 
 class TestNewMappingJacobians(unittest.TestCase):
@@ -24,19 +26,21 @@ class TestNewMappingJacobians(unittest.TestCase):
         relerr = np.max(np.abs(res1 - res2) / (np.abs(res2) + atol))
         return relerr
 
-    def create_propagate_wrapper(self, curmap, datatable, idcs1, idcs2):
+    def create_propagate_wrapper(self, curmapclass, datatable, idcs1, idcs2):
         """Create propagate wrapper with refvals arg being first."""
         def wrapfun(vals):
             allvals = np.full(len(datatable), 0.)
             allvals[idcs1] = vals
-            return curmap.propagate(datatable, allvals)[idcs2]
+            return curmap.propagate(allvals)[idcs2]
+        curmap = curmapclass(datatable)
         return wrapfun
 
-    def reduce_table(self, curmap, datatable):
+    def reduce_table(self, curmapclass, datatable):
         refvals = np.full(len(datatable), 10)
-        Sdic = curmap.jacobian(datatable, refvals, ret_mat=False)
-        idcs1 = np.unique(Sdic['idcs1'])
-        idcs2 = np.unique(Sdic['idcs2'])
+        curmap = curmapclass(datatable)
+        Smat = curmap.jacobian(refvals).tocoo()
+        idcs1 = np.unique(Smat.col)
+        idcs2 = np.unique(Smat.row)
         if (len(set(idcs1)) + len(set(idcs2)) !=
                 len(set(np.concatenate([idcs1,idcs2])))):
             raise IndexError('idcs1 and idcs2 must be disjoint')
@@ -51,14 +55,15 @@ class TestNewMappingJacobians(unittest.TestCase):
         idcs2 = np.arange(len(idcs1), len(idcs1)+len(idcs2))
         return curdatatable, idcs1, idcs2
 
-    def get_jacobian_testerror(self, curmap, atol=1e-4):
-        datatable, idcs1, idcs2 = self.reduce_table(curmap, self._datatable)
-        propfun = self.create_propagate_wrapper(curmap, datatable,
+    def get_jacobian_testerror(self, curmapclass, atol=1e-4):
+        datatable, idcs1, idcs2 = self.reduce_table(curmapclass, self._datatable)
+        propfun = self.create_propagate_wrapper(curmapclass, datatable,
                                                 idcs1, idcs2)
+        curmap = curmapclass(datatable)
         np.random.seed(15)
         x = np.full(len(idcs1)+len(idcs2), 0.)
         x[idcs1] = np.random.uniform(1, 5, len(idcs1))
-        res2 = curmap.jacobian(datatable, x, ret_mat=True)
+        res2 = curmap.jacobian(x)
         res1 = numeric_jacobian(propfun, x[idcs1], o=4, h1=1e-2, v=2)
         res2 = np.array(res2.todense())
         res2 = res2[np.ix_(idcs2, idcs1)]
@@ -122,8 +127,11 @@ class TestNewMappingJacobians(unittest.TestCase):
         self._datatable = datatable
 
         # do the mapping
-        curmap = CrossSectionRatioOfSacsMap(rtol=1e-05, atol=1e-05, maxord=20)
-        relerr, abserr, res1, res2 = self.get_jacobian_testerror(curmap, atol=1e-4)
+        curmapclass = mapclass_with_params(
+            CrossSectionRatioOfSacsMap,
+            rtol=1e-05, atol=1e-05, maxord=20
+        )
+        relerr, abserr, res1, res2 = self.get_jacobian_testerror(curmapclass, atol=1e-4)
         self.assertTrue(relerr < 1e-4 or abserr < 1e-4)
 
 

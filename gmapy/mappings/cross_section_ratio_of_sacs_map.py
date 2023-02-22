@@ -15,26 +15,29 @@ from .mapping_elements import (
 
 class CrossSectionRatioOfSacsMap:
 
-    def __init__(self, atol=1e-05, rtol=1e-05, maxord=16):
+    def __init__(self, datatable, atol=1e-05, rtol=1e-05, maxord=16):
         self.__atol = atol
         self.__rtol = rtol
         self.__maxord = maxord
+        self.__numrows = len(datatable)
+        self.__input, self.__output = self.__prepare(datatable)
 
-    def is_responsible(self, datatable):
-        expmask = datatable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
-        return np.array(expmask, dtype=bool)
+    def is_responsible(self):
+        ret = np.full(self.__numrows, False)
+        if self.__output is not None:
+            idcs = self.__output.get_indices()
+            ret[idcs] = True
+        return ret
 
-    def propagate(self, datatable, refvals):
-        return self.__compute(datatable, refvals, what='propagate')
+    def propagate(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.evaluate()
 
-    def jacobian(self, datatable, refvals, ret_mat=False):
-        Smat = self.__compute(datatable, refvals, what='jacobian')
-        return return_matrix_new(Smat, 'csr' if ret_mat else 'dic')
+    def jacobian(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.jacobian()
 
-    def __compute(self, datatable, refvals, what):
-        if what not in ('propagate', 'jacobian'):
-            raise ValueError('what must be either "propagate" or "jacobian"')
-
+    def __prepare(self, datatable):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         is_fis_row = datatable['NODE'].str.fullmatch('fis', na=False)
@@ -42,8 +45,9 @@ class CrossSectionRatioOfSacsMap:
             raise IndexError('fission spectrum missing in prior')
         priormask = np.logical_or(priormask, is_fis_row)
         priortable = datatable[priormask]
-
-        expmask = self.is_responsible(datatable)
+        expmask = datatable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
+        if not np.any(expmask):
+            return None, None
         exptable = datatable[expmask]
         expids = exptable['NODE'].unique()
 
@@ -105,10 +109,4 @@ class CrossSectionRatioOfSacsMap:
 
         inp = SelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
-        inp.assign(refvals)
-        if what == 'propagate':
-            return out.evaluate()
-        elif what == 'jacobian':
-            return out.jacobian()
-        else:
-            raise ValueError(f'what "{what}" not implemented"')
+        return inp, out

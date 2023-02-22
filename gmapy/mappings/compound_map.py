@@ -25,31 +25,37 @@ def mapclass_with_params(origclass, *args, **kwargs):
 class CompoundMap:
 
     def __init__(self, fix_sacs_jacobian=True, legacy_integration=False):
-        self.maplist = [
-                CrossSectionMap(),
-                CrossSectionShapeMap(),
-                CrossSectionRatioMap(),
-                CrossSectionRatioShapeMap(),
-                CrossSectionAbsoluteRatioMap(),
-                CrossSectionShapeOfRatioMap(),
-                CrossSectionTotalMap(),
-                CrossSectionShapeOfSumMap(),
-                CrossSectionFissionAverageMap(fix_jacobian=fix_sacs_jacobian,
-                                              legacy_integration=legacy_integration),
-                CrossSectionRatioOfSacsMap(atol=1e-5, rtol=1e-05, maxord=16)
+        self.mapclasslist = [
+                CrossSectionMap,
+                CrossSectionShapeMap,
+                CrossSectionRatioMap,
+                CrossSectionRatioShapeMap,
+                CrossSectionAbsoluteRatioMap,
+                CrossSectionShapeOfRatioMap,
+                CrossSectionTotalMap,
+                CrossSectionShapeOfSumMap,
+                mapclass_with_params(
+                    CrossSectionFissionAverageMap,
+                    fix_jacobian=fix_sacs_jacobian,
+                    legacy_integration=legacy_integration
+                ),
+                mapclass_with_params(
+                    CrossSectionRatioOfSacsMap,
+                    atol=1e-5, rtol=1e-05, maxord=16
+                )
             ]
 
     def is_responsible(self, datatable):
         resp = np.full(len(datatable.index), False, dtype=bool)
-        for curmap in self.maplist:
-            curresp = curmap.is_responsible(datatable)
+        for curclass in self.mapclasslist:
+            curmap = curclass(datatable)
+            curresp = curmap.is_responsible()
             resp_overlap = np.logical_and(resp, curresp)
             if np.any(resp_overlap):
                 print(datatable[resp_overlap])
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
         return resp
-
 
     def propagate(self, datatable, refvals):
         datatable = datatable.sort_index()
@@ -63,20 +69,20 @@ class CompoundMap:
         propvals = np.full(datatable.shape[0], 0.)
         propvals[not_isresp] = refvals[not_isresp]
 
-        for curmap in self.maplist:
-            curresp = curmap.is_responsible(datatable)
+        for curclass in self.mapclasslist:
+            curmap = curclass(datatable)
+            curresp = curmap.is_responsible()
             if not np.any(curresp):
                 continue
             if np.any(np.logical_and(treated, curresp)):
                 raise ValueError('Several maps claim responsibility for the same rows')
             treated[curresp] = True
-            curvals = curmap.propagate(datatable, refvals)
+            curvals = curmap.propagate(refvals)
             if np.any(np.logical_and(propvals!=0., curvals!=0.)):
                 raise ValueError('Several maps contribute to same experimental datapoint')
             propvals += curvals
 
         return propvals
-
 
     def jacobian(self, datatable, refvals, ret_mat=False):
         isexp = datatable['NODE'].str.match('exp_')
@@ -91,10 +97,11 @@ class CompoundMap:
         idmat = csr_matrix((ones, (idcs, idcs)),
                            shape=(numel, numel), dtype=float)
         compSmat = idmat
-        for curmap in self.maplist:
-            if not np.any(curmap.is_responsible(datatable)):
+        for curclass in self.mapclasslist:
+            curmap = curclass(datatable)
+            if not np.any(curmap.is_responsible()):
                 continue
-            curSmat = curmap.jacobian(datatable, refvals, ret_mat=True)
+            curSmat = curmap.jacobian(refvals)
             compSmat = (idmat + curSmat) @ compSmat
 
         if ret_mat:
@@ -102,4 +109,3 @@ class CompoundMap:
         else:
             tmp = coo_matrix(compSmat)
             return {'idcs1': tmp.col, 'idcs2': tmp.row, 'x': tmp.data}
-

@@ -7,25 +7,34 @@ from .mapping_elements import (
     SumOfDistributors,
     LinearInterpolation
 )
-from .helperfuns import return_matrix_new
 
 
 class CrossSectionShapeMap:
 
-    def is_responsible(self, datatable):
-        expmask = (datatable['REAC'].str.match('MT:2-R1:', na=False) &
-                   datatable['NODE'].str.match('exp_', na=False))
-        return np.array(expmask, dtype=bool)
+    def __init__(self, datatable):
+        self.__numrows = len(datatable)
+        self.__input, self.__output = self.__prepare(datatable)
 
-    def propagate(self, datatable, refvals):
-        return self.__compute(datatable, refvals, 'propagate')
+    def is_responsible(self):
+        ret = np.full(self.__numrows, False)
+        if self.__output is not None:
+            idcs = self.__output.get_indices()
+            ret[idcs] = True
+        return ret
 
-    def jacobian(self, datatable, refvals, ret_mat=False):
-        S = self.__compute(datatable, refvals, 'jacobian')
-        return return_matrix_new(S, how='csr' if ret_mat else 'dic')
+    def propagate(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.evaluate()
 
-    def __compute(self, datatable, refvals, what):
-        isresp = self.is_responsible(datatable)
+    def jacobian(self, refvals):
+        self.__input.assign(refvals)
+        return self.__output.jacobian()
+
+    def __prepare(self, datatable):
+        isresp = np.array(datatable['REAC'].str.match('MT:2-R1:', na=False) &
+                          datatable['NODE'].str.match('exp_', na=False))
+        if not np.any(isresp):
+            return None, None
         reacs = datatable.loc[isresp, 'REAC'].unique()
 
         inpvars = []
@@ -66,11 +75,4 @@ class CrossSectionShapeMap:
 
         inp = SelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
-        inp.assign(refvals)
-
-        if what == 'propagate':
-            return out.evaluate()
-        elif what == 'jacobian':
-            return out.jacobian()
-        else:
-            raise ValueError(f'what "{what}" not implemented"')
+        return inp, out
