@@ -126,6 +126,9 @@ class Selector(MyAlgebra):
         self.__values = np.array(arraylike)[self.__idcs]
         self._values_updated = True
 
+    def get_indices(self):
+        return self.__idcs.copy()
+
 
 class SelectorCollection:
 
@@ -137,6 +140,11 @@ class SelectorCollection:
     def assign(self, arraylike):
         for obj in self.__selector_list:
             obj.assign(arraylike)
+
+    def get_indices(self):
+        return np.unique(
+            obj.get_indices() for obj in self.__selector_list
+        )
 
 
 class Const(MyAlgebra):
@@ -196,6 +204,38 @@ class Distributor(MyAlgebra):
     def jacobian(self):
         super().jacobian()
         return matmul(self.__dist_mat, self.__obj.jacobian())
+
+    def get_indices(self):
+        return self.__idcs.copy()
+
+
+class SumOfDistributors(MyAlgebra):
+
+    def __init__(self, listlike):
+        if len(listlike) == 0:
+            raise IndexError('empty list provided')
+        if not all(type(obj) == Distributor for obj in listlike):
+            raise TypeError('only Selector instances allowed in list')
+        self.__distributor_list = listlike
+
+    def get_indices(self):
+        return np.unique(
+            obj.get_indices() for obj in self.__distributor_list
+        )
+
+    def evaluate(self):
+        super().evaluate()
+        res = self.__distributor_list[0].evaluate()
+        for obj in self.__distributor_list[1:]:
+            res += obj.evaluate()
+        return res
+
+    def jacobian(self):
+        super().jacobian()
+        jac = self.__distributor_list[0].jacobian()
+        for obj in self.__distributor_list[1:]:
+            jac += obj.jacobian()
+        return jac
 
 
 class Replicator(MyAlgebra):
