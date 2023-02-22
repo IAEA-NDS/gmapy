@@ -140,9 +140,8 @@ class GMADatabase:
             adj_idcs = orig_idcs[lmres['idcs']]
         self._cache['adj_idcs'] = adj_idcs
 
-        refvals = np.full(len(datatable), np.nan)
+        refvals = datatable.PRIOR.to_numpy()
         refvals[adj_idcs] = lmres['upd_vals']
-
         propvals = propagate_mesh_css(datatable, mapping, refvals,
                                       prop_normfact=False, prop_usu_errors=False)
         self._datatable['POST'] = propvals
