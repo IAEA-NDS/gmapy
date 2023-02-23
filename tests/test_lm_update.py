@@ -14,7 +14,6 @@ from gmapy.gmap import run_gmap_simplified
 from gmapy.data_management.uncfuns import create_relunc_vector
 
 
-
 class TestLevenbergMarquardtUpdate(unittest.TestCase):
 
     @classmethod
@@ -172,6 +171,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         self.assertTrue(np.allclose(refcov, mycov.toarray()))
         # propagate everything
         refvals = np.zeros(len(datatable), dtype='d')
+        refvals[datatable.index] = datatable['PRIOR'].to_numpy()
         refvals[idcs] = postvals
         S = compmap.jacobian(datatable, refvals, ret_mat=True)
         S = S[:, idcs]
@@ -200,7 +200,5 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         self.assertTrue(np.allclose(refuncs, myuncs))
 
 
-
 if __name__ == '__main__':
     unittest.main()
-
