@@ -55,7 +55,8 @@ class CompoundMap:
                 print(datatable[resp_overlap])
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
-        return resp
+        sorted_resp = resp[datatable.index]
+        return sorted_resp
 
     def propagate(self, datatable, refvals):
         datatable = datatable.sort_index()
