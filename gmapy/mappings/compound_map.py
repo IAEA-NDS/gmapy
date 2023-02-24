@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.sparse import csr_matrix
 from .cross_section_map import CrossSectionMap
 from .cross_section_shape_map import CrossSectionShapeMap
 from .cross_section_ratio_map import CrossSectionRatioMap
