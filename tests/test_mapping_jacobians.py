@@ -117,9 +117,9 @@ class TestMappingJacobians(unittest.TestCase):
             )
             fistable = datatable[datatable['NODE'] == 'fis'].copy()
             datatable, idcs1, idcs2 = self.reduce_table(curmapclass, datatable)
-            curmap = curmapclass(datatable)
             if legacy_integration:
                 datatable = pd.concat([datatable, fistable], ignore_index=True)
+            curmap = curmapclass(datatable)
 
             def propfun(x):
                 refvals = orig_x
