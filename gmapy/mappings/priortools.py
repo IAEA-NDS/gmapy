@@ -9,7 +9,6 @@ SHAPE_MT_IDS = (2,4,8,9)
 def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable
-    priortable = datatable[datatable['NODE'].str.match('xsid_', na=False)]
     exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
 
     # obtain all experimental points that are affected by unknown normalization
@@ -21,7 +20,6 @@ def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     exp_groups = shape_exp_df.groupby('NODE', sort=False)
     # augment the prior with the experimental normalization factors
     norm_prior_dic = {'NODE': [], 'PRIOR': [], 'REAC': [], 'ENERGY': []}
-    norm_index_dic = {}
     for cur_exp, cur_exp_df in exp_groups:
         norm_prior_dic['NODE'].append(re.sub('^exp_', 'norm_', cur_exp))
         norm_prior_dic['PRIOR'].append(1.)
@@ -61,12 +59,10 @@ def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     return ext_datatable
 
 
-
 def update_dummy_datapoints(datatable, refvals):
     """Replace values of dummy datapoints by those in refvals."""
     sel = datatable['NODE'].str.fullmatch('exp_90[0-9]', na=False)
     datatable.loc[sel, 'DATA'] = refvals[datatable.loc[sel].index]
-
 
 
 def update_dummy_datapoints2(datablock_list, refvals):
@@ -77,7 +73,6 @@ def update_dummy_datapoints2(datablock_list, refvals):
             if re.match('^90[0-9]$', str(ds['NS'])):
                 ds['CSS'] = refvals[cur_idx:next_idx]
             cur_idx = next_idx
-
 
 
 def remove_dummy_datasets(datablock_list):
@@ -93,7 +88,6 @@ def remove_dummy_datasets(datablock_list):
             dummy_db_idcs.append(db_idx)
     for db_idx in reversed(dummy_db_idcs):
         del datablock_list[db_idx]
-
 
 
 def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp=False,
@@ -129,7 +123,6 @@ def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp
     return propvals
 
 
-
 def calculate_PPP_correction(datatable, mapping, refvals, uncs):
     """Calculate the PPP corrected uncertainties."""
     # calculate PPP correction
@@ -142,4 +135,3 @@ def calculate_PPP_correction(datatable, mapping, refvals, uncs):
     sacs_idx = datatable[is_sacs].index
     effuncs[sacs_idx] = uncs[sacs_idx]
     return effuncs
-

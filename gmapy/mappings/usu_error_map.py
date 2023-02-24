@@ -3,14 +3,12 @@ from sksparse.cholmod import cholesky
 from scipy.sparse import issparse, csr_matrix
 
 
-
 class USUErrorMap:
 
     def __init__(self, compmap, feature_columns, NA_values=('NA', np.isnan)):
         self.compmap = compmap
         self.feature_columns = feature_columns
         self.NA_values = NA_values
-
 
     def is_responsible(self, datatable):
         feat_columns = self.feature_columns
@@ -25,11 +23,9 @@ class USUErrorMap:
                 is_featured_point)
         return np.array(expmask, dtype=bool)
 
-
     def propagate(self, datatable, refvals, only_usu=False):
         propvals = self.__compute(datatable, refvals, 'propagate', only_usu)
         return propvals
-
 
     def jacobian(self, datatable, refvals, only_usu=False):
         num_points = datatable.shape[0]
@@ -37,7 +33,6 @@ class USUErrorMap:
         Smat = csr_matrix((coeffs, (idcs2, idcs1)), dtype=float,
                           shape=(num_points, num_points))
         return Smat
-
 
     def __compute(self, datatable, refvals, what, only_usu=False):
         compmap = self.compmap
@@ -121,13 +116,11 @@ class USUErrorMap:
         loglike_res = (-0.5) * (logdet_res + chisquare_res + num_points*np.log(2*np.pi))
         return loglike_res
 
-
     def grad_loglikelihood(self, datatable, refvals, expvals, covmat):
         grad_logdet_res = self.grad_logdet(datatable, refvals, covmat)
         grad_chisquare_res = self.grad_chisquare(datatable, refvals, expvals, covmat)
         grad_loglike_res = (-0.5) * (grad_logdet_res + grad_chisquare_res)
         return grad_loglike_res
-
 
     def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
         usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
@@ -150,7 +143,6 @@ class USUErrorMap:
                 }
         return usu_aux
 
-
     def _mult_dt_Z_d(self, A_fact, U_fact, S, d):
         z0 = A_fact(d)
         first_term = d.T @ z0
@@ -163,7 +155,6 @@ class USUErrorMap:
         second_term = z1.T @ z2
         return first_term - second_term
 
-
     def _mult_Z_d(self, A_fact, U_fact, S, d):
         first_term = A_fact(d)
         z1 = S.T @ first_term
@@ -172,7 +163,6 @@ class USUErrorMap:
         z2 = zc_fact(z1)
         second_term = A_fact(S @ z2)
         return first_term - second_term
-
 
     def logdet(self, datatable, refvals, covmat):
         usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
@@ -183,7 +173,6 @@ class USUErrorMap:
         Z_fact = cholesky(Z)
         res = expcov_fact.logdet() + usucov_fact.logdet() + Z_fact.logdet()
         return res
-
 
     def chisquare(self, datatable, refvals, expvals, covmat):
         usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
@@ -203,7 +192,6 @@ class USUErrorMap:
         return self._mult_dt_Z_d(expcov_fact,
                                      usucov_fact, Susu, d)
 
-
     def grad_logdet(self, datatable, refvals, covmat):
         usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
         usu_idcs = usu_aux['usu_idcs']
@@ -217,7 +205,6 @@ class USUErrorMap:
         # the derivatives are given by 2*UNC = 2*sqrt(diag(covmat))
         res *= 2*np.sqrt(covmat[usu_idcs,:][:,usu_idcs].diagonal())
         return res
-
 
     def grad_chisquare(self, datatable, refvals, expvals, covmat):
         usu_aux = self._prepare_auxiliary_usu_info(datatable, refvals, covmat)
@@ -237,4 +224,3 @@ class USUErrorMap:
         zvec = Susu.T @ zvec
         zvec *= zvec * 2*np.sqrt(covmat[usu_idcs,:][:,usu_idcs].diagonal())
         return (-zvec)
-
