@@ -21,7 +21,7 @@ def gls_update(mapping, datatable, covmat, retcov=False):
     meas[datatable.index] = datatable['DATA']
 
     preds = mapping.propagate(datatable, refvals)
-    S = mapping.jacobian(datatable, refvals, ret_mat=True)
+    S = mapping.jacobian(datatable, refvals)
 
     not_isobs = np.isnan(meas)
     isobs = np.logical_not(not_isobs)
@@ -131,7 +131,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         num_iter += 1
         # get the predictions and Jacobian matrix
         preds = mapping.propagate(datatable, fullrefvals)
-        S = mapping.jacobian(datatable, fullrefvals, ret_mat=True)
+        S = mapping.jacobian(datatable, fullrefvals)
         # reduce the matrices for the LM solve
         refvals = fullrefvals[isadj]
         preds = preds[isobs]
@@ -255,7 +255,7 @@ def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
     refvals[has_prior] = datatable.loc[has_prior, 'PRIOR'].to_numpy()
     refvals[source_idcs] = postvals
     # calculate and trim sensitivity matrix
-    S = mapping.jacobian(datatable, refvals, ret_mat=True, **mapargs)
+    S = mapping.jacobian(datatable, refvals, **mapargs)
     if idcs is not None:
         S = S[idcs,:]
     if source_idcs is not None:

@@ -40,7 +40,7 @@ def create_posterior_funs(mapping, dt, covmat, fnscale=1, print_res=True):
         refvals = orig_refvals.copy()
         refvals[isadj] = pcur
         preds = mapping.propagate(dt, refvals)[isobs]
-        S = mapping.jacobian(dt, refvals, ret_mat=True)
+        S = mapping.jacobian(dt, refvals)
         S = S[isobs,:][:,isadj]
         res = grad_logposterior(p0, priorcov_fact, S,
                 expvals, expcov_fact, pcur, preds)

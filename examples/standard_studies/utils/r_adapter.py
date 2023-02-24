@@ -17,6 +17,6 @@ def gmapi_propagate(dt, refvals):
 def gmapi_jacobian(dt, refvals):
     refvals = np.array(refvals)
     compmap = CompoundMap()
-    ret = compmap.jacobian(dt, refvals, ret_mat=True)
+    ret = compmap.jacobian(dt, refvals)
     return ret
 

@@ -84,7 +84,7 @@ class CompoundMap:
 
         return propvals
 
-    def jacobian(self, datatable, refvals, ret_mat=False):
+    def jacobian(self, datatable, refvals):
         isexp = datatable['NODE'].str.match('exp_')
         isresp = self.is_responsible(datatable)
         if not np.all(isresp[isexp]):
@@ -104,8 +104,4 @@ class CompoundMap:
             curSmat = curmap.jacobian(refvals)
             compSmat = (idmat + curSmat) @ compSmat
 
-        if ret_mat:
-            return compSmat
-        else:
-            tmp = coo_matrix(compSmat)
-            return {'idcs1': tmp.col, 'idcs2': tmp.row, 'x': tmp.data}
+        return compSmat

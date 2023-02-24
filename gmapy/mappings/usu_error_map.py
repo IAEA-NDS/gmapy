@@ -31,7 +31,7 @@ class USUErrorMap:
         return propvals
 
 
-    def jacobian(self, datatable, refvals, ret_mat=False, only_usu=False):
+    def jacobian(self, datatable, refvals, only_usu=False):
         num_points = datatable.shape[0]
         idcs1, idcs2, coeffs = self.__compute(datatable, refvals, 'jacobian', only_usu)
         Smat = csr_matrix((coeffs, (idcs2, idcs1)), dtype=float,
@@ -60,10 +60,10 @@ class USUErrorMap:
                 propvals = np.full(len(base_propvals), 0., dtype='d')
         elif what == 'jacobian':
             if not only_usu:
-                base_S = compmap.jacobian(datatable, refvals, ret_mat=False)
-                idcs1_list = [base_S['idcs1']]
-                idcs2_list = [base_S['idcs2']]
-                coeffs_list = [base_S['x']]
+                base_S = compmap.jacobian(datatable, refvals).tocoo()
+                idcs1_list = [base_S.col]
+                idcs2_list = [base_S.row]
+                coeffs_list = [base_S.data]
             else:
                 idcs1_list = []
                 idcs2_list = []
@@ -132,7 +132,7 @@ class USUErrorMap:
     def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
         usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
         exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
-        Susu = self.jacobian(datatable, refvals, ret_mat=True, only_usu=False)
+        Susu = self.jacobian(datatable, refvals, only_usu=False)
         Susu = Susu[exp_idcs,:][:,usu_idcs].tocsc()
         # the .tocsc() addition to avoid an efficiency warning
         # during the Cholesky decomposition

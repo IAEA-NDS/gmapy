@@ -64,7 +64,7 @@ class TestRombergIntegralJacobian(unittest.TestCase):
 
     def generate_mydfun(self, xref, yref, interp):
         def mydfun(x):
-            S = get_basic_sensmat(xref, yref, x, interp, ret_mat=True)
+            S = get_basic_sensmat(xref, yref, x, interp)
             coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
             return (coeffs1, coeffs2)
         return mydfun

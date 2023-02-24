@@ -70,7 +70,7 @@ def get_sacs_predictions(datatable, covmat=None):
     if covmat is not None:
         # remove the fission spectrum
         # TODO: (this is hacky and should be changed in the gmapi package)
-        S = compmap.jacobian(tmpdt, refvals, ret_mat=True) 
+        S = compmap.jacobian(tmpdt, refvals)
         mask1 = tmpdt['NODE'].str.match('xsid_') | tmpdt['NODE'].str.match('norm_')
         mask2 = tmpdt['NODE'].str.match('exp_sacs_') 
         S = S[mask2,:]
