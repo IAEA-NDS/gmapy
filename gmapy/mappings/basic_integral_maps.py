@@ -67,7 +67,7 @@ def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
 
     def dpropfun(x):
         S = get_basic_sensmat(xref, yref, x, interp_type,
-                              zero_outside, ret_mat=True)
+                              zero_outside)
         coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
         return (coeffs1, coeffs2)
 
@@ -105,7 +105,7 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
     def sensfun(x):
         x = np.array(x)
         return get_basic_product_sensmats(xlist_ref, ylist_ref, x, interplist,
-                                          zero_outside, ret_mat=True)
+                                          zero_outside)
     def generate_dpropfun(i):
         def cur_dpropfun(x):
             # convert to tuple because ndarrays are
@@ -148,9 +148,9 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
     for i in range(len(xlist)):
         cur_dfun = generate_dpropfun(i)
         cur_Smat =  compute_romberg_integral(xref, propfun,
-                dfun=cur_dfun, **kwargs)
+                                             dfun=cur_dfun, **kwargs)
         curSref = get_basic_sensmat(xlist[i], ylist[i], xref, interplist[i],
-                                    zero_outside, ret_mat=True)
+                                    zero_outside)
         cur_Smat = np.array([cur_Smat]) @ curSref
         Smat_list.append(cur_Smat)
 

@@ -157,7 +157,7 @@ class TestUSUErrorMapping(unittest.TestCase):
             return propvals[exp_sel]
 
         orig_refvals = dt.PRIOR.to_numpy()
-        S1 = usumap.jacobian(dt, orig_refvals, ret_mat=True)
+        S1 = usumap.jacobian(dt, orig_refvals)
         S1red = S1[exp_sel,:][:,usu_sel].toarray()
         S2red = numeric_jacobian(prop_wrap, orig_refvals[usu_sel])
         self.assertTrue(np.allclose(S1red, S2red,
@@ -186,8 +186,8 @@ class TestUSUErrorMapping(unittest.TestCase):
         self.assertTrue(np.allclose(propvals, permpropvals,
                                     atol=1e-8, rtol=1e-8, equal_nan=True))
         # same for Jacobian matrix
-        S = usumap.jacobian(dt, refvals, ret_mat=True).toarray()
-        permS = usumap.jacobian(permdt, refvals, ret_mat=True).toarray()
+        S = usumap.jacobian(dt, refvals).toarray()
+        permS = usumap.jacobian(permdt, refvals).toarray()
         self.assertTrue(np.allclose(S, permS, rtol=1e-14, atol=1e-8))
 
     def test_effect_of_only_usu_option(self):

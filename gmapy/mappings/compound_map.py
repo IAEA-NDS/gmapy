@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix, coo_matrix
 
-from .helperfuns import return_matrix
 from .cross_section_map import CrossSectionMap
 from .cross_section_shape_map import CrossSectionShapeMap
 from .cross_section_ratio_map import CrossSectionRatioMap

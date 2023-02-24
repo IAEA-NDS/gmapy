@@ -1,9 +1,6 @@
 import numpy as np
-import pandas as pd
 from sksparse.cholmod import cholesky
-from .basic_maps import basic_propagate, get_basic_sensmat
-from .helperfuns import return_matrix
-from scipy.sparse import issparse
+from scipy.sparse import issparse, csr_matrix
 
 
 
@@ -37,9 +34,9 @@ class USUErrorMap:
     def jacobian(self, datatable, refvals, ret_mat=False, only_usu=False):
         num_points = datatable.shape[0]
         idcs1, idcs2, coeffs = self.__compute(datatable, refvals, 'jacobian', only_usu)
-        return return_matrix(idcs1, idcs2, coeffs,
-                  dims = (num_points, num_points),
-                  how = 'csr' if ret_mat else 'dic')
+        Smat = csr_matrix((coeffs, (idcs2, idcs1)), dtype=float,
+                          shape=(num_points, num_points))
+        return Smat
 
 
     def __compute(self, datatable, refvals, what, only_usu=False):

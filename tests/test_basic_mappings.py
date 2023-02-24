@@ -210,8 +210,8 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         y = [11, 13, 19]
         xout1 = [0.99]
         xout2 = [10.01]
-        Smat1 = get_basic_sensmat(x, y, xout1, zero_outside=True, ret_mat=True)
-        Smat2 = get_basic_sensmat(x, y, xout2, zero_outside=True, ret_mat=True)
+        Smat1 = get_basic_sensmat(x, y, xout1, zero_outside=True)
+        Smat2 = get_basic_sensmat(x, y, xout2, zero_outside=True)
         self.assertTrue(np.all(Smat1.toarray() == Smat2.toarray()))
 
     def test_mapping_for_some_xout_beyond_mesh_with_zero_outside_true(self):
@@ -219,7 +219,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         y = [4, 9, 8, 20]
         interp = 'lin-log'
         xout = [-2, 5, 7, 15]
-        red_Smat = get_basic_sensmat(x, y, xout[1:3], interp, ret_mat=True)
+        red_Smat = get_basic_sensmat(x, y, xout[1:3], interp)
         test_Smat = get_basic_sensmat(x, y, xout, interp, zero_outside=True)
         self.assertTrue(np.all(test_Smat[1:-1,:].toarray() == red_Smat.toarray()))
         self.assertTrue(np.all(test_Smat[0,:].toarray() == 0.))
@@ -231,7 +231,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         xout = [2, 3, 7, 9]
         myprop = self.create_propagate_wrapper(x, xout, 'lin-lin')
         Sref = numeric_jacobian(myprop, y)
-        Stest = get_basic_sensmat(x, y, xout, 'lin-lin', ret_mat=True).toarray()
+        Stest = get_basic_sensmat(x, y, xout, 'lin-lin').toarray()
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
     def test_log_lin_propagate(self):
@@ -240,7 +240,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         xout = np.exp([2, 3, 7, 9])
         myprop = self.create_propagate_wrapper(x, xout, 'log-lin')
         Sref = numeric_jacobian(myprop, y)
-        Stest = get_basic_sensmat(x, y, xout, 'log-lin', ret_mat=True).toarray()
+        Stest = get_basic_sensmat(x, y, xout, 'log-lin').toarray()
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
     def test_lin_log_sensitivity(self):
@@ -249,7 +249,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         xout = [2, 3, 7, 9]
         myprop = self.create_propagate_wrapper(x, xout, 'lin-log')
         Sref = numeric_jacobian(myprop, y)
-        Stest = get_basic_sensmat(x, y, xout, 'lin-log', ret_mat=True).toarray()
+        Stest = get_basic_sensmat(x, y, xout, 'lin-log').toarray()
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
     def test_log_log_sensitivity(self):
@@ -258,7 +258,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         xout = np.exp([2, 3, 7, 9])
         myprop = self.create_propagate_wrapper(x, xout, 'log-log')
         Sref = numeric_jacobian(myprop, y)
-        Stest = get_basic_sensmat(x, y, xout, 'log-log', ret_mat=True).toarray()
+        Stest = get_basic_sensmat(x, y, xout, 'log-log').toarray()
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
     def test_mixed_sensitivity(self):
@@ -268,7 +268,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         interp_type = ['lin-log', 'lin-lin', 'log-log', 'log-lin', 'log-log', 'lin-lin']
         myprop = self.create_propagate_wrapper(x, xout, interp_type)
         Sref = numeric_jacobian(myprop, y)
-        Stest = get_basic_sensmat(x, y, xout, interp_type, ret_mat=True).toarray()
+        Stest = get_basic_sensmat(x, y, xout, interp_type).toarray()
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
     def test_permuted_sensitivity_calculation(self):
@@ -285,7 +285,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         # compare results
         myprop = self.create_propagate_wrapper(x, xout, interp_type)
         Sref = numeric_jacobian(myprop, y)
-        Stest = get_basic_sensmat(x, y, xout, interp_type, ret_mat=True).toarray()
+        Stest = get_basic_sensmat(x, y, xout, interp_type).toarray()
         maxdiff = np.max(np.abs(Sref-Stest)/np.abs(Sref+1e-8))
         self.assertTrue(np.all(np.isclose(Stest, Sref)))
 
@@ -298,8 +298,8 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         np.random.seed(31)
         perm = np.random.permutation(len(x))
         x2 = x[perm]; y2 = y[perm]; interp_type2 = interp_type[perm]
-        Smat1 = get_basic_sensmat(x, y, xout, interp_type, ret_mat=True).toarray()
-        Smat2 = get_basic_sensmat(x2, y2, xout, interp_type2, ret_mat=True).toarray()
+        Smat1 = get_basic_sensmat(x, y, xout, interp_type).toarray()
+        Smat2 = get_basic_sensmat(x2, y2, xout, interp_type2).toarray()
         res1 = Smat1 @ y
         res2 = Smat2 @ y2
         self.assertTrue(np.all(res1 == res2))
@@ -314,8 +314,8 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         possible_interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
         for curint in possible_interp_types:
             errmsg = f'failed for interpolation type {curint}'
-            Smat1 = get_basic_sensmat(x1, y1, xout, curint, ret_mat=True).toarray()
-            Smat2 = get_basic_sensmat(x2, y2, xout, curint, ret_mat=True).toarray()
+            Smat1 = get_basic_sensmat(x1, y1, xout, curint).toarray()
+            Smat2 = get_basic_sensmat(x2, y2, xout, curint).toarray()
             res1 = Smat1 @ y1
             res2 = Smat2 @ y2
             self.assertTrue(np.all(np.isclose(res1, res2)), msg=errmsg)
@@ -328,7 +328,7 @@ class TestBasicMappingsJacobian(unittest.TestCase):
         for curint in possible_interp_types:
             myprop = self.create_propagate_wrapper(x, xout, curint)
             Sref = numeric_jacobian(myprop, y)
-            Stest = get_basic_sensmat(x, y, xout, curint, ret_mat=True).toarray()
+            Stest = get_basic_sensmat(x, y, xout, curint).toarray()
             self.assertTrue(np.all(np.isclose(Sref, Stest)))
 
 

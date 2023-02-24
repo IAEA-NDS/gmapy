@@ -1,6 +1,5 @@
-import warnings
 import numpy as np
-from .helperfuns import return_matrix, return_matrix_new
+from scipy.sparse import csr_matrix
 
 
 def _interpolate_lin_lin(x1, y1, x2, y2, xout):
@@ -100,7 +99,7 @@ def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
 
 
 def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
-                      zero_outside=False, ret_mat=True):
+                      zero_outside=False):
     """Compute sensitivity matrix for basic mappings."""
     orig_x = np.array(x)
     x = orig_x.copy()
@@ -225,8 +224,9 @@ def get_basic_sensmat(x, y, xout, interp_type='lin-lin',
     if np.any(np.isnan(c)):
         raise ValueError('NaN values encountered in Jacobian matrix')
 
-    return return_matrix(i, j, c, dims=(orig_len_xout, orig_len_x),
-                         how='csr' if ret_mat else 'dic')
+    Smat = csr_matrix((c, (j, i)), shape=(orig_len_xout, orig_len_x),
+                      dtype=float)
+    return Smat
 
 
 def basic_product_propagate(xlist, ylist, xout, interplist,
@@ -242,7 +242,7 @@ def basic_product_propagate(xlist, ylist, xout, interplist,
 
 
 def get_basic_product_sensmats(xlist, ylist, xout, interplist,
-                               zero_outside=False, ret_mat=True, **kwargs):
+                               zero_outside=False, **kwargs):
     """Get a list of Jacobians for each factor in a product of basic maps."""
     if len(xlist) != len(ylist) or len(ylist) != len(interplist):
         raise IndexError('xlist, ylist and interplist must have ' +
@@ -256,7 +256,7 @@ def get_basic_product_sensmats(xlist, ylist, xout, interplist,
     Slist = []
     for i, (x, y, interp) in enumerate(zip(xlist, ylist, interplist)):
         curS = get_basic_sensmat(x, y, xout, interp, zero_outside,
-                                 ret_mat=True, **kwargs)
+                                 **kwargs)
         curfacts = np.prod(proparr[:i,:], axis=0)
         if i+1 < proparr.shape[0]:
             curfacts *= np.prod(proparr[(i+1):,:], axis=0)
@@ -264,6 +264,5 @@ def get_basic_product_sensmats(xlist, ylist, xout, interplist,
         Slist.append(curS)
 
     for i in range(len(Slist)):
-        how = 'csr' if ret_mat else 'dic'
-        Slist[i] = return_matrix_new(Slist[i], how)
+        Slist[i] = Slist[i].tocsr()
     return Slist

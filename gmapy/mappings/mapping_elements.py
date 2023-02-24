@@ -214,7 +214,9 @@ class SumOfDistributors(MyAlgebra):
     def __init__(self, listlike):
         if len(listlike) == 0:
             raise IndexError('empty list provided')
-        if not all(type(obj) == Distributor for obj in listlike):
+        if not all(
+            type(obj) in (Distributor, SumOfDistributors) for obj in listlike
+        ):
             raise TypeError('only Selector instances allowed in list')
         self.__distributor_list = listlike
 
