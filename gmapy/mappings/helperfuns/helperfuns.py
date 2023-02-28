@@ -1,6 +1,13 @@
 import numpy as np
 
 
+def mapclass_with_params(origclass, *args, **kwargs):
+    class WrapperClass(origclass):
+        def __init__(self, datatable):
+            super().__init__(datatable, *args, **kwargs)
+    return WrapperClass
+
+
 def get_legacy_to_pointwise_fis_factors(energies):
     # The fission spectrum values in the legacy GMA database
     # are given as a histogram (piecewise rectangular function)

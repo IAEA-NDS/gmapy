@@ -10,13 +10,7 @@ from .cross_section_total_map import CrossSectionTotalMap
 from .cross_section_shape_of_sum_map import CrossSectionShapeOfSumMap
 from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 from .cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
-
-
-def mapclass_with_params(origclass, *args, **kwargs):
-    class WrapperClass(origclass):
-        def __init__(self, datatable):
-            super().__init__(datatable, *args, **kwargs)
-    return WrapperClass
+from .helperfuns import mapclass_with_params
 
 
 class CompoundMap:

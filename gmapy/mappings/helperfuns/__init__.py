@@ -1,4 +1,5 @@
 from .helperfuns import (
+    mapclass_with_params,
     get_legacy_to_pointwise_fis_factors
 )
 from .numeric_jacobian import numeric_jacobian
