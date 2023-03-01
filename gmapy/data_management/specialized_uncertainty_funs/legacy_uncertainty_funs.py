@@ -268,7 +268,6 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
                         pNC1 = NC1 - 1
                         pNC2 = NC2 - 1
 
-                        AMUFA = FCFC[KKK, pos2]
                         if NC1 > 10:
                             NC1 -= 10
                             pNC1 = NC1 - 1
@@ -294,6 +293,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
                         else:
                             C22 = ENFF2[pNC2] if ENFF2 is not None else 0
 
+                        AMUFA = FCFC[KKK, pos2]
                         Q1 += AMUFA*C11*C22
 
                     covmat[ofs1, ofs2] = Q1
