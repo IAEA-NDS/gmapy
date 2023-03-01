@@ -19,8 +19,14 @@ from ..legacy.data_extraction_functions import update_effDCS_values
 from ..inference import gls_update
 from ..data_management.tablefuns import (create_prior_table, create_experiment_table)
 from ..data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
-from ..mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
-        update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css)
+from ..mappings.priortools import (
+    attach_shape_prior,
+    initialize_shape_prior,
+    update_dummy_datapoints,
+    update_dummy_datapoints2,
+    calculate_PPP_correction,
+    propagate_mesh_css
+)
 from ..mappings.compound_map import CompoundMap
 from ..mappings.priortools import remove_dummy_datasets
 
@@ -87,14 +93,14 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     else:
         raise ValueError('dbtype must be "legacy" or "json"')
 
-
     datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
-    refvals = datatable['PRIOR'].to_numpy()
+    datatable = attach_shape_prior(datatable)
 
+    refvals = datatable['PRIOR'].to_numpy()
     uncs = np.full(len(refvals), np.nan)
     expsel = datatable['NODE'].str.match('exp_').to_numpy()
     uncs[expsel] = create_relunc_vector(new_datablock_list)
-    datatable = attach_shape_prior(datatable, compmap, refvals, uncs)
+    initialize_shape_prior(datatable, compmap, refvals, uncs)
 
     # NOTE: The code enclosed by LEGACY is just there
     #       to create the output as produced by

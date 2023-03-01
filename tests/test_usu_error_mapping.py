@@ -5,7 +5,10 @@ import pandas as pd
 from gmapy.data_management.database_IO import read_legacy_gma_database
 from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
-from gmapy.mappings.priortools import attach_shape_prior
+from gmapy.mappings.priortools import (
+    attach_shape_prior,
+    initialize_shape_prior
+)
 from gmapy.mappings.usu_error_map import USUErrorMap
 from gmapy.mappings.compound_map import CompoundMap
 from gmapy.mappings.helperfuns import numeric_jacobian
@@ -25,6 +28,7 @@ class TestUSUErrorMapping(unittest.TestCase):
         exptable = create_experiment_table(datablock_list)
         datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
         datatable = attach_shape_prior(datatable)
+        initialize_shape_prior(datatable)
         cls._datatable = datatable
 
     def test_usu_error_propagation(self):

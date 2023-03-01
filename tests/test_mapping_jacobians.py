@@ -8,7 +8,10 @@ from gmapy.legacy.conversion_utils import (sanitize_datablock, sanitize_prior)
 from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
 from gmapy.data_management.uncfuns import create_relunc_vector
-from gmapy.mappings.priortools import attach_shape_prior
+from gmapy.mappings.priortools import (
+    attach_shape_prior,
+    initialize_shape_prior
+)
 from gmapy.mappings.helperfuns import numeric_jacobian
 
 from gmapy.mappings.compound_map import CompoundMap, mapclass_with_params
@@ -86,13 +89,14 @@ class TestMappingJacobians(unittest.TestCase):
         priortable = create_prior_table(priorlist)
         exptable = create_experiment_table(datablocklist)
         datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
+        datatable = attach_shape_prior(datatable)
 
         refvals = datatable['PRIOR']
         uncs = np.full(len(refvals), np.nan)
         expsel = datatable['NODE'].str.match('exp_').to_numpy()
         uncs[expsel] = create_relunc_vector(datablocklist)
         compmap = CompoundMap()
-        datatable = attach_shape_prior(datatable, compmap, refvals, uncs)
+        initialize_shape_prior(datatable, compmap, refvals, uncs)
 
         cls._datatable = datatable
         cls._datablocklist = datablocklist

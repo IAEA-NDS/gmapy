@@ -8,8 +8,12 @@ from .data_management.uncfuns import (
         create_prior_covmat)
 from .mappings.compound_map import CompoundMap
 from .inference import lm_update, compute_posterior_covmat
-from .mappings.priortools import (propagate_mesh_css,
-        attach_shape_prior, remove_dummy_datasets)
+from .mappings.priortools import (
+    propagate_mesh_css,
+    attach_shape_prior,
+    initialize_shape_prior,
+    remove_dummy_datasets
+)
 
 
 class GMADatabase:
@@ -38,11 +42,12 @@ class GMADatabase:
         if not mapping:
             mapping = CompoundMap()
         # initialize the normalization errors
+        datatable = attach_shape_prior(datatable)
         refvals = datatable['PRIOR']
         reluncs = np.full(len(refvals), np.nan)
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         reluncs[expsel] = create_relunc_vector(db['datablock_list'])
-        datatable = attach_shape_prior(datatable, mapping, refvals, reluncs)
+        initialize_shape_prior(datatable, mapping, refvals, reluncs)
         # define the state variables of the instance
         self._cache = {}
         self._raw_database = db

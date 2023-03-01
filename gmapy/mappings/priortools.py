@@ -6,7 +6,7 @@ import re
 SHAPE_MT_IDS = (2,4,8,9)
 
 
-def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
+def attach_shape_prior(datatable):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable
     exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
@@ -27,19 +27,27 @@ def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
         norm_prior_dic['ENERGY'].append(0.)
     norm_df = pd.DataFrame.from_dict(norm_prior_dic)
     ext_datatable = pd.concat([datatable, norm_df], axis=0, ignore_index=True)
+    return ext_datatable
 
+
+def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
+    exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
+    mtnums = exptable['REAC'].str.extract('^ *MT:([0-9]+)-', expand=False)
+    mtnums = mtnums.astype('int')
+    is_shape = mtnums.map(lambda x: True if x in SHAPE_MT_IDS else False).to_numpy()
+    shape_exp_df = exptable[is_shape]
+    exp_groups = shape_exp_df.groupby('NODE', sort=False)
     if mapping is None or refvals is None or uncs is None:
         # we don't have any prior estimates to propagate
         # and/or uncertainties of the experiments given
         # so we assume that the normalization factors are one
-        normmask = ext_datatable['NODE'].str.match('^norm_', na=False)
-        ext_datatable.loc[normmask, 'UNC'] = np.inf
-        ext_datatable.loc[normmask, 'PRIOR'] = 1.
+        normmask = datatable['NODE'].str.match('^norm_', na=False)
+        datatable.loc[normmask, 'UNC'] = np.inf
+        datatable.loc[normmask, 'PRIOR'] = 1.
     else:
         # calculate a first estimate of normalization factor
         # using the propagated prior values
-        ext_refvals = np.concatenate([refvals, norm_df['PRIOR'].to_numpy()])
-        propvals = mapping.propagate(ext_datatable, ext_refvals)
+        propvals = mapping.propagate(datatable, refvals)
         for cur_exp, cur_exp_df in exp_groups:
             cur_propvals = propvals[cur_exp_df.index]
             cur_uncs = uncs[cur_exp_df.index]
@@ -52,11 +60,11 @@ def attach_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
             # to obtain experimental values
             cur_expscale = 1. / invexpscale
 
-            normmask = ext_datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
-            ext_datatable.loc[normmask, 'PRIOR'] = cur_expscale
-            ext_datatable.loc[normmask, 'UNC'] = np.inf
+            normmask = datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
+            datatable.loc[normmask, 'PRIOR'] = cur_expscale
+            datatable.loc[normmask, 'UNC'] = np.inf
 
-    return ext_datatable
+    return None
 
 
 def update_dummy_datapoints(datatable, refvals):

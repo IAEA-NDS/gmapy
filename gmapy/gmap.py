@@ -6,9 +6,15 @@ from scipy.sparse import coo_matrix, csr_matrix
 from .inference import gls_update
 from .data_management.tablefuns import (create_prior_table, create_experiment_table)
 from .data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
-from .mappings.priortools import (attach_shape_prior, update_dummy_datapoints,
-        update_dummy_datapoints2, calculate_PPP_correction, propagate_mesh_css,
-        remove_dummy_datasets)
+from .mappings.priortools import (
+    attach_shape_prior,
+    initialize_shape_prior,
+    update_dummy_datapoints,
+    update_dummy_datapoints2,
+    calculate_PPP_correction,
+    propagate_mesh_css,
+    remove_dummy_datasets
+)
 from .mappings.compound_map import CompoundMap
 
 from .data_management.database_IO import (read_legacy_gma_database,
@@ -49,12 +55,13 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
     exptable = create_experiment_table(datablock_list)
 
     datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
-    refvals = datatable['PRIOR'].to_numpy()
+    datatable = attach_shape_prior(datatable)
 
+    refvals = datatable['PRIOR'].to_numpy()
     uncs = np.full(len(refvals), np.nan)
     expsel = datatable['NODE'].str.match('exp_').to_numpy()
     uncs[expsel] = create_relunc_vector(datablock_list)
-    datatable = attach_shape_prior(datatable, compmap, refvals, uncs)
+    initialize_shape_prior(datatable, compmap, refvals, uncs)
 
     MODREP = 0
     expsel = datatable['NODE'].str.match('exp_').to_numpy()

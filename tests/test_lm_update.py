@@ -6,7 +6,11 @@ from scipy.sparse import block_diag, diags
 from gmapy.data_management.tablefuns import (create_prior_table,
         create_experiment_table)
 from gmapy.data_management.uncfuns import create_experimental_covmat
-from gmapy.mappings.priortools import attach_shape_prior, remove_dummy_datasets
+from gmapy.mappings.priortools import (
+    attach_shape_prior,
+    initialize_shape_prior,
+    remove_dummy_datasets
+)
 from gmapy.inference import gls_update, lm_update, compute_posterior_covmat
 from gmapy.data_management.database_IO import read_legacy_gma_database
 from gmapy.mappings.compound_map import CompoundMap
@@ -32,6 +36,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         expcov = create_experimental_covmat(datablock_list)
 
         datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
+        datatable = attach_shape_prior(datatable)
 
         # the following block to prepare all the quantities
         # to call attach_shape_prior
@@ -40,7 +45,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         reluncs = np.full(len(refvals), np.nan)
         reluncs[expsel] = create_relunc_vector(datablock_list)
         compmap = CompoundMap()
-        datatable = attach_shape_prior(datatable, compmap, refvals, reluncs)
+        initialize_shape_prior(datatable, compmap, refvals, reluncs)
 
         shapecov = diags(np.full(len(datatable)-len(priortable)-len(exptable), np.inf), format='csc')
         totcov = block_diag([priorcov, expcov, shapecov], format='csc')
