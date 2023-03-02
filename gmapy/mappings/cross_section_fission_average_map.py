@@ -3,14 +3,14 @@ from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Const,
     Integral,
     FissionAverage,
     Replicator,
     Distributor,
-    SumOfDistributors
+    SumOfDistributors,
+    reuse_or_create_selector
 )
 
 
@@ -18,14 +18,15 @@ class CrossSectionFissionAverageMap:
 
     def __init__(self, datatable, fix_jacobian=True,
                  legacy_integration=True,
-                 atol=1e-6, rtol=1e-6, maxord=16):
+                 atol=1e-6, rtol=1e-6, maxord=16,
+                 selector_list=None):
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
         self._atol = atol
         self._rtol = rtol
         self._maxord = maxord
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable)
+        self.__input, self.__output = self.__prepare(datatable, selector_list)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -42,7 +43,10 @@ class CrossSectionFissionAverageMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         legacy_integration = self._legacy_integration
         fix_jacobian = self._fix_jacobian
         expmask = np.array(
@@ -68,7 +72,9 @@ class CrossSectionFissionAverageMap:
 
         inpvars = []
         outvars = []
-        raw_fisobj = Selector(fistable.index, len(datatable))
+        raw_fisobj = reuse_or_create_selector(
+            fistable.index, len(datatable), selector_list
+        )
         inpvars.append(raw_fisobj)
         if legacy_integration:
             fisobj = raw_fisobj
@@ -94,7 +100,9 @@ class CrossSectionFissionAverageMap:
             idcs1red = priortable_red.index
             idcs2red = exptable_red.index
 
-            xsobj = Selector(idcs1red, len(datatable))
+            xsobj = reuse_or_create_selector(
+                idcs1red, len(datatable), selector_list
+            )
             inpvars.append(xsobj)
 
             curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,

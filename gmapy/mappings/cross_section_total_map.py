@@ -1,18 +1,18 @@
 import numpy as np
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Distributor,
     SumOfDistributors,
-    LinearInterpolation
+    LinearInterpolation,
+    reuse_or_create_selector
 )
 
 
 class CrossSectionTotalMap:
 
-    def __init__(self, datatable):
+    def __init__(self, datatable, selector_list=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable)
+        self.__input, self.__output = self.__prepare(datatable, selector_list)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -29,7 +29,10 @@ class CrossSectionTotalMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
@@ -61,7 +64,10 @@ class CrossSectionTotalMap:
             tar_idcs = exptable_red.index
             tar_en = exptable_red['ENERGY']
 
-            cvars = [Selector(idcs, len(datatable)) for idcs in src_idcs_list]
+            cvars = [
+                reuse_or_create_selector(idcs, len(datatable), selector_list)
+                for idcs in src_idcs_list
+            ]
             inpvars.extend(cvars)
             cvars_int = []
             for cv, en in zip(cvars, src_en_list):

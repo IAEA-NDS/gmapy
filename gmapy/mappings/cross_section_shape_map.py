@@ -1,19 +1,19 @@
 import numpy as np
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Replicator,
     Distributor,
     SumOfDistributors,
-    LinearInterpolation
+    LinearInterpolation,
+    reuse_or_create_selector
 )
 
 
 class CrossSectionShapeMap:
 
-    def __init__(self, datatable):
+    def __init__(self, datatable, selector_list=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable)
+        self.__input, self.__output = self.__prepare(datatable, selector_list)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -30,7 +30,10 @@ class CrossSectionShapeMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         isresp = np.array(datatable['REAC'].str.match('MT:2-R1:', na=False) &
                           datatable['NODE'].str.match('exp_', na=False))
         if not np.any(isresp):
@@ -48,7 +51,9 @@ class CrossSectionShapeMap:
             ens1 = priortable_red['ENERGY']
             idcs1red = priortable_red.index
 
-            inpvar = Selector(idcs1red, len(datatable))
+            inpvar = reuse_or_create_selector(
+                idcs1red, len(datatable), selector_list
+            )
             inpvars.append(inpvar)
             # loop over the datasets
             dataset_ids = exptable_red['NODE'].unique()
@@ -61,7 +66,7 @@ class CrossSectionShapeMap:
                     raise IndexError('There are ' + str(len(norm_index)) +
                         ' normalization factors in prior for dataset ' + str(dataset_id))
 
-                norm_fact = Selector(norm_index, len(datatable))
+                norm_fact = reuse_or_create_selector(norm_index, len(datatable))
                 inpvars.append(norm_fact)
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']

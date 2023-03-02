@@ -3,23 +3,24 @@ from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Const,
     FissionAverage,
     Distributor,
-    SumOfDistributors
+    SumOfDistributors,
+    reuse_or_create_selector
 )
 
 
 class CrossSectionRatioOfSacsMap:
 
-    def __init__(self, datatable, atol=1e-05, rtol=1e-05, maxord=16):
+    def __init__(self, datatable, atol=1e-05, rtol=1e-05,
+                 maxord=16, selector_list=None):
         self.__atol = atol
         self.__rtol = rtol
         self.__maxord = maxord
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable)
+        self.__input, self.__output = self.__prepare(datatable, selector_list)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -36,7 +37,10 @@ class CrossSectionRatioOfSacsMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         is_fis_row = datatable['NODE'].str.fullmatch('fis', na=False)
@@ -56,7 +60,9 @@ class CrossSectionRatioOfSacsMap:
 
         inpvars = []
         outvars = []
-        raw_fisobj = Selector(fistable.index, len(datatable))
+        raw_fisobj = reuse_or_create_selector(
+            fistable.index, len(datatable), selector_list
+        )
         inpvars.append(raw_fisobj)
 
         scl = get_legacy_to_pointwise_fis_factors(ensfis)
@@ -88,8 +94,12 @@ class CrossSectionRatioOfSacsMap:
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
 
-            xsobj1 = Selector(idcs1red, len(datatable))
-            xsobj2 = Selector(idcs2red, len(datatable))
+            xsobj1 = reuse_or_create_selector(
+                idcs1red, len(datatable), selector_list
+            )
+            xsobj2 = reuse_or_create_selector(
+                idcs2red, len(datatable), selector_list
+            )
             inpvars.append(xsobj1)
             inpvars.append(xsobj2)
 

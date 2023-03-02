@@ -1,18 +1,18 @@
 import numpy as np
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Distributor,
     SumOfDistributors,
-    LinearInterpolation
+    LinearInterpolation,
+    reuse_or_create_selector
 )
 
 
 class CrossSectionMap:
 
-    def __init__(self, datatable):
+    def __init__(self, datatable, selector_list=None):
         self.__numrows = len(datatable)
-        inp, out = self.__prepare(datatable)
+        inp, out = self.__prepare(datatable, selector_list)
         self.__input = inp
         self.__output = out
 
@@ -31,7 +31,10 @@ class CrossSectionMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
@@ -53,7 +56,9 @@ class CrossSectionMap:
             ens2 = exptable_red['ENERGY']
             idcs2red = exptable_red.index
 
-            inpvar = Selector(idcs1red, len(datatable))
+            inpvar = reuse_or_create_selector(
+                idcs1red, len(datatable), selector_list
+            )
             intres = LinearInterpolation(inpvar, ens1, ens2, zero_outside=True)
             outvar = Distributor(intres, idcs2red, len(datatable))
             inpvars.append(inpvar)

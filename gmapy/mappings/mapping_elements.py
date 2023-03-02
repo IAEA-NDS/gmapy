@@ -33,6 +33,18 @@ def elem_mul(x, y):
     else:
         return x.multiply(y)
 
+# Another convenience function that allows
+# to reuse Selectors (see below) if they
+# have already been defined
+
+
+def reuse_or_create_selector(idcs, size, selector_list=None):
+    if selector_list is not None:
+        for cursel in selector_list:
+            curidcs = cursel.get_indices()
+            if np.all(idcs == curidcs):
+                return cursel
+    return Selector(idcs, size)
 
 # the following classes are the building
 # blocks to construct mathematical expressions
@@ -145,6 +157,9 @@ class SelectorCollection:
         return np.unique(np.concatenate(list(
             obj.get_indices() for obj in self.__selector_list
         )))
+
+    def get_selectors(self):
+        return self.__selector_list
 
 
 class Const(MyAlgebra):

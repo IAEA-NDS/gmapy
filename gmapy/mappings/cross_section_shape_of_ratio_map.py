@@ -1,19 +1,19 @@
 import numpy as np
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Replicator,
     Distributor,
     SumOfDistributors,
-    LinearInterpolation
+    LinearInterpolation,
+    reuse_or_create_selector
 )
 
 
 class CrossSectionShapeOfRatioMap:
 
-    def __init__(self, datatable):
+    def __init__(self, datatable, selector_list=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable)
+        self.__input, self.__output = self.__prepare(datatable, selector_list)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -30,7 +30,10 @@ class CrossSectionShapeOfRatioMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priormask = np.logical_or(priormask, datatable['NODE'].str.match('norm_', na=False))
@@ -71,9 +74,15 @@ class CrossSectionShapeOfRatioMap:
             src_en2 = priortable_red2['ENERGY']
             src_en3 = priortable_red3['ENERGY']
 
-            inpvar1 = Selector(src_idcs1, len(datatable))
-            inpvar2 = Selector(src_idcs2, len(datatable))
-            inpvar3 = Selector(src_idcs3, len(datatable))
+            inpvar1 = reuse_or_create_selector(
+                src_idcs1, len(datatable), selector_list
+            )
+            inpvar2 = reuse_or_create_selector(
+                src_idcs2, len(datatable), selector_list
+            )
+            inpvar3 = reuse_or_create_selector(
+                src_idcs3, len(datatable), selector_list
+            )
             inpvars.extend([inpvar1, inpvar2, inpvar3])
 
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
@@ -88,7 +97,9 @@ class CrossSectionShapeOfRatioMap:
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
-                norm_fact = Selector(norm_index, len(datatable))
+                norm_fact = reuse_or_create_selector(
+                    norm_index, len(datatable), selector_list
+                )
                 inpvars.append(norm_fact)
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))
 

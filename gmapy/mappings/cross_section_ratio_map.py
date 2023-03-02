@@ -1,18 +1,18 @@
 import numpy as np
 from .mapping_elements import (
-    Selector,
     SelectorCollection,
     Distributor,
     SumOfDistributors,
-    LinearInterpolation
+    LinearInterpolation,
+    reuse_or_create_selector
 )
 
 
 class CrossSectionRatioMap:
 
-    def __init__(self, datatable):
+    def __init__(self, datatable, selector_list=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable)
+        self.__input, self.__output = self.__prepare(datatable, selector_list)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -29,7 +29,10 @@ class CrossSectionRatioMap:
         self.__input.assign(refvals)
         return self.__output.jacobian()
 
-    def __prepare(self, datatable):
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def __prepare(self, datatable, selector_list):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
 
@@ -65,8 +68,12 @@ class CrossSectionRatioMap:
             tar_idcs = exptable_red.index
             tar_en = exptable_red['ENERGY']
 
-            inpvar1 = Selector(src_idcs1, len(datatable))
-            inpvar2 = Selector(src_idcs2, len(datatable))
+            inpvar1 = reuse_or_create_selector(
+                src_idcs1, len(datatable), selector_list
+            )
+            inpvar2 = reuse_or_create_selector(
+                src_idcs2, len(datatable), selector_list
+            )
             inpvar1_int = LinearInterpolation(inpvar1, src_en1, tar_en)
             inpvar2_int = LinearInterpolation(inpvar2, src_en2, tar_en)
             tmpres = inpvar1_int / inpvar2_int
