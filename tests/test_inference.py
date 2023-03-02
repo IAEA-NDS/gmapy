@@ -53,8 +53,8 @@ class TestInference(unittest.TestCase):
         perm_datatable = datatable.loc[perm].copy()
         comp_map = CompoundMap()
         refvals = datatable['PRIOR'].to_numpy()
-        preds1 = comp_map.propagate(datatable, refvals)
-        preds2 = comp_map.propagate(perm_datatable, refvals)
+        preds1 = comp_map.propagate(refvals, datatable)
+        preds2 = comp_map.propagate(refvals, perm_datatable)
         self.assertTrue(np.all(preds1 == preds2))
 
     def test_jacobian_permutation_invariance(self):
@@ -64,8 +64,8 @@ class TestInference(unittest.TestCase):
         perm_datatable = datatable.loc[perm].copy()
         comp_map = CompoundMap(legacy_integration=True)
         refvals = datatable['PRIOR'].to_numpy()
-        S1 = comp_map.jacobian(datatable, refvals)
-        S2 = comp_map.jacobian(perm_datatable, refvals)
+        S1 = comp_map.jacobian(refvals, datatable)
+        S2 = comp_map.jacobian(refvals, perm_datatable)
         self.assertTrue(np.all(S1.todense() == S2.todense()))
 
     def test_inference_permutation_invariance(self):

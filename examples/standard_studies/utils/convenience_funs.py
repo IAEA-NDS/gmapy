@@ -66,11 +66,11 @@ def get_sacs_predictions(datatable, covmat=None):
     # propagate 
     compmap = CompoundMap(fix_sacs_jacobian=True, legacy_integration=False)
     refvals = tmpdt['POST'].to_numpy()
-    preds = compmap.propagate(tmpdt, refvals)
+    preds = compmap.propagate(refvals, tmpdt)
     if covmat is not None:
         # remove the fission spectrum
         # TODO: (this is hacky and should be changed in the gmapi package)
-        S = compmap.jacobian(tmpdt, refvals)
+        S = compmap.jacobian(refvals, tmpdt)
         mask1 = tmpdt['NODE'].str.match('xsid_') | tmpdt['NODE'].str.match('norm_')
         mask2 = tmpdt['NODE'].str.match('exp_sacs_') 
         S = S[mask2,:]

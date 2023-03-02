@@ -47,7 +47,7 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     else:
         # calculate a first estimate of normalization factor
         # using the propagated prior values
-        propvals = mapping.propagate(datatable, refvals)
+        propvals = mapping.propagate(refvals, datatable)
         for cur_exp, cur_exp_df in exp_groups:
             cur_propvals = propvals[cur_exp_df.index]
             cur_uncs = uncs[cur_exp_df.index]
@@ -115,7 +115,7 @@ def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp
         usuvals = refvals[usu_selidx]
         refvals[usu_selidx] = 0.
     # calculate PPP correction
-    propvals = mapping.propagate(datatable, refvals)
+    propvals = mapping.propagate(refvals, datatable)
     if not prop_normfact:
         propvals[norm_selidx] = normvals
     if not prop_usu_errors:

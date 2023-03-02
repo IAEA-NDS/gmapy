@@ -133,7 +133,7 @@ def run_gmap(dbfile='data.gma', resfile='gma.res', plotfile='plot.dta',
     while True:
 
         refvals = datatable['PRIOR'].to_numpy()
-        propvals = compmap.propagate(datatable, refvals)
+        propvals = compmap.propagate(refvals, datatable)
         update_dummy_datapoints(datatable, propvals)
         # We also need to update the datablock list
         # because we are preparing the code to do the

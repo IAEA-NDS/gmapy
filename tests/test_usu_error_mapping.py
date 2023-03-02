@@ -58,9 +58,9 @@ class TestUSUErrorMapping(unittest.TestCase):
         refvals2 = refvals1.copy()
         refvals2[rng1_usu_sel] = 0.1
         refvals2[rng2_usu_sel] = -0.2
-        propvals = compmap.propagate(dt, dt['PRIOR'].to_numpy())
-        propvals1 = usumap.propagate(dt, refvals1)
-        propvals2 = usumap.propagate(dt, refvals2)
+        propvals = compmap.propagate(dt['PRIOR'].to_numpy(), dt)
+        propvals1 = usumap.propagate(refvals1, dt)
+        propvals2 = usumap.propagate(refvals2, dt)
         # we expect the standard compound mapping and
         # USU mapping propagation to yield identical results
         # if the USU errors are set to zero
@@ -101,7 +101,7 @@ class TestUSUErrorMapping(unittest.TestCase):
         usu_sel = dt.NODE.str.match('usu_', na=False)
         exp_sel = dt.NODE.str.match('exp_', na=False)
         refvals = dt.PRIOR.to_numpy()
-        propvals = compmap.propagate(dt, refvals)
+        propvals = compmap.propagate(refvals, dt)
         rng1_sel = dt.ENERGY < 2
         rng3_sel = dt.ENERGY > 7
         a2_sel = dt.ENERGY < 4
@@ -110,7 +110,7 @@ class TestUSUErrorMapping(unittest.TestCase):
         dt.loc[rng3_sel, 'FEAT1'] = 'RNG3'
         dt.loc[a2_sel, 'FEAT2'] = 'A2'
         dt.loc[a3_sel, 'FEAT2'] = 'A3'
-        usupropvals = usumap.propagate(dt, refvals)
+        usupropvals = usumap.propagate(refvals, dt)
 
         rng1_and_a2_sel = (exp_sel & rng1_sel & a2_sel)
         self.assertTrue(np.allclose(usupropvals[rng1_and_a2_sel],
@@ -157,11 +157,11 @@ class TestUSUErrorMapping(unittest.TestCase):
         def prop_wrap(x):
             refvals = dt.PRIOR.to_numpy()
             refvals[usu_sel] = x
-            propvals = usumap.propagate(dt, refvals)
+            propvals = usumap.propagate(refvals, dt)
             return propvals[exp_sel]
 
         orig_refvals = dt.PRIOR.to_numpy()
-        S1 = usumap.jacobian(dt, orig_refvals)
+        S1 = usumap.jacobian(orig_refvals, dt)
         S1red = S1[exp_sel,:][:,usu_sel].toarray()
         S2red = numeric_jacobian(prop_wrap, orig_refvals[usu_sel])
         self.assertTrue(np.allclose(S1red, S2red,
@@ -185,13 +185,13 @@ class TestUSUErrorMapping(unittest.TestCase):
 
         refvals = dt.PRIOR.to_numpy()
         permdt = dt.reindex(np.random.permutation(dt.index))
-        propvals = usumap.propagate(dt, refvals)
-        permpropvals = usumap.propagate(permdt, refvals)
+        propvals = usumap.propagate(refvals, dt)
+        permpropvals = usumap.propagate(refvals, permdt)
         self.assertTrue(np.allclose(propvals, permpropvals,
                                     atol=1e-8, rtol=1e-8, equal_nan=True))
         # same for Jacobian matrix
-        S = usumap.jacobian(dt, refvals).toarray()
-        permS = usumap.jacobian(permdt, refvals).toarray()
+        S = usumap.jacobian(refvals, dt).toarray()
+        permS = usumap.jacobian(refvals, permdt).toarray()
         self.assertTrue(np.allclose(S, permS, rtol=1e-14, atol=1e-8))
 
     def test_effect_of_only_usu_option(self):
@@ -213,9 +213,9 @@ class TestUSUErrorMapping(unittest.TestCase):
         refvals1 = orig_dt.PRIOR.to_numpy()
         refvals2 = usu_dt.PRIOR.to_numpy()
         # propagation
-        propcss1 = compmap.propagate(orig_dt, refvals1)
-        propcss2 = usumap.propagate(usu_dt, refvals2, only_usu=True)
-        propcss_direct = usumap.propagate(usu_dt, refvals2, only_usu=False)
+        propcss1 = compmap.propagate(refvals1, orig_dt)
+        propcss2 = usumap.propagate(refvals2, usu_dt, only_usu=True)
+        propcss_direct = usumap.propagate(refvals2, usu_dt, only_usu=False)
         propcss_direct = propcss_direct[:len(propcss1)]
         propcss_sum = propcss1 + propcss2[:len(propcss1)]
         self.assertTrue(np.allclose(propcss_direct, propcss_sum))

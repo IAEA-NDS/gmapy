@@ -23,11 +23,11 @@ class USUErrorMap:
                 is_featured_point)
         return np.array(expmask, dtype=bool)
 
-    def propagate(self, datatable, refvals, only_usu=False):
+    def propagate(self, refvals, datatable=None, only_usu=False):
         propvals = self.__compute(datatable, refvals, 'propagate', only_usu)
         return propvals
 
-    def jacobian(self, datatable, refvals, only_usu=False):
+    def jacobian(self, refvals, datatable=None, only_usu=False):
         num_points = datatable.shape[0]
         idcs1, idcs2, coeffs = self.__compute(datatable, refvals, 'jacobian', only_usu)
         Smat = csr_matrix((coeffs, (idcs2, idcs1)), dtype=float,
@@ -47,7 +47,7 @@ class USUErrorMap:
         # if only_usu is false, we also include the mapping component
         # associated with contribution of other (i.e. non-USU)
         # quantities to the prediction of experimental datasets
-        base_propvals = compmap.propagate(datatable, refvals)
+        base_propvals = compmap.propagate(refvals, datatable)
         if what == 'propagate':
             if not only_usu:
                 propvals = base_propvals.copy()
@@ -55,7 +55,7 @@ class USUErrorMap:
                 propvals = np.full(len(base_propvals), 0., dtype='d')
         elif what == 'jacobian':
             if not only_usu:
-                base_S = compmap.jacobian(datatable, refvals).tocoo()
+                base_S = compmap.jacobian(refvals, datatable).tocoo()
                 idcs1_list = [base_S.col]
                 idcs2_list = [base_S.row]
                 coeffs_list = [base_S.data]
@@ -125,7 +125,7 @@ class USUErrorMap:
     def _prepare_auxiliary_usu_info(self, datatable, refvals, covmat):
         usu_idcs = datatable.index[datatable.NODE.str.match('usu_')]
         exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
-        Susu = self.jacobian(datatable, refvals, only_usu=False)
+        Susu = self.jacobian(refvals, datatable, only_usu=False)
         Susu = Susu[exp_idcs,:][:,usu_idcs].tocsc()
         # the .tocsc() addition to avoid an efficiency warning
         # during the Cholesky decomposition
@@ -185,7 +185,7 @@ class USUErrorMap:
         # calculate the difference between predictions and experiments
         # (we force the USU error to be zero; however, should this be a user choice?)
         refvals[usu_idcs] = 0.
-        preds = self.propagate(datatable, refvals)
+        preds = self.propagate(refvals, datatable)
         preds = preds[exp_idcs]
         real_expvals = expvals[exp_idcs]
         d = real_expvals - preds
@@ -216,7 +216,7 @@ class USUErrorMap:
         # calculate the difference between predictions and experiments
         # (we force the USU error to be zero; however, should this be a user choice?)
         refvals[usu_idcs] = 0.
-        preds = self.propagate(datatable, refvals)
+        preds = self.propagate(refvals, datatable)
         preds = preds[exp_idcs]
         real_expvals = expvals[exp_idcs]
         d = real_expvals - preds

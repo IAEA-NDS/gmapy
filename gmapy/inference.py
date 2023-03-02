@@ -20,8 +20,8 @@ def gls_update(mapping, datatable, covmat, retcov=False):
     meas = np.full(len(datatable), 0.)
     meas[datatable.index] = datatable['DATA']
 
-    preds = mapping.propagate(datatable, refvals)
-    S = mapping.jacobian(datatable, refvals)
+    preds = mapping.propagate(refvals, datatable)
+    S = mapping.jacobian(refvals, datatable)
 
     not_isobs = np.isnan(meas)
     isobs = np.logical_not(not_isobs)
@@ -130,8 +130,8 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         # termination condition at end of loop
         num_iter += 1
         # get the predictions and Jacobian matrix
-        preds = mapping.propagate(datatable, fullrefvals)
-        S = mapping.jacobian(datatable, fullrefvals)
+        preds = mapping.propagate(fullrefvals, datatable)
+        S = mapping.jacobian(fullrefvals, datatable)
         # reduce the matrices for the LM solve
         refvals = fullrefvals[isadj]
         preds = preds[isobs]
@@ -148,7 +148,7 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         expected_propcss = preds + S @ (postvals - refvals)
         new_fullrefvals = fullrefvals.copy()
         new_fullrefvals[isadj] = postvals
-        real_propcss = mapping.propagate(datatable, new_fullrefvals)
+        real_propcss = mapping.propagate(new_fullrefvals, datatable)
         real_propcss = real_propcss[isobs]
         # calculate negative log likelihoods associated with
         # current parameter set and proposed one according to either
@@ -255,7 +255,7 @@ def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
     refvals[has_prior] = datatable.loc[has_prior, 'PRIOR'].to_numpy()
     refvals[source_idcs] = postvals
     # calculate and trim sensitivity matrix
-    S = mapping.jacobian(datatable, refvals, **mapargs)
+    S = mapping.jacobian(refvals, datatable, **mapargs)
     if idcs is not None:
         S = S[idcs,:]
     if source_idcs is not None:

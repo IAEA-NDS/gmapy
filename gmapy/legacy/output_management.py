@@ -510,7 +510,7 @@ def write_iteration_info(APR, datablock_list, gauss,
     isexp = datatable['NODE'].str.match('exp_')
     expvals = datatable[isexp]['DATA'].to_numpy()
     effDCS = extract_effDCS_values(datablock_list)
-    propvals = mapping.propagate(datatable, priorvals)[isexp]
+    propvals = mapping.propagate(priorvals, datatable)[isexp]
     DQQQ = effDCS * expvals * 0.01
     AMvec = (expvals - propvals)/DQQQ
 

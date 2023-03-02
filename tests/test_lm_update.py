@@ -178,7 +178,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         refvals = np.zeros(len(datatable), dtype='d')
         refvals[datatable.index] = datatable['PRIOR'].to_numpy()
         refvals[idcs] = postvals
-        S = compmap.jacobian(datatable, refvals)
+        S = compmap.jacobian(refvals, datatable)
         S = S[:, idcs]
         refcov = S @ refcov @ S.T
         mycov = compute_posterior_covmat(compmap, datatable, postvals, invcov,

@@ -15,7 +15,8 @@ from .helperfuns import mapclass_with_params
 
 class CompoundMap:
 
-    def __init__(self, fix_sacs_jacobian=True, legacy_integration=False):
+    def __init__(self, datatable=None, fix_sacs_jacobian=True,
+                 legacy_integration=False):
         self.mapclasslist = [
                 CrossSectionMap,
                 CrossSectionShapeMap,
@@ -35,64 +36,55 @@ class CompoundMap:
                     atol=1e-5, rtol=1e-05, maxord=16
                 )
             ]
+        self.maplist = None
+        if datatable is not None:
+            self.instantiate_maps(datatable)
 
-    def is_responsible(self, datatable):
+    def instantiate_maps(self, datatable=None):
+        if datatable is None:
+            if self.maplist is None:
+                raise TypeError('neither map list initialized nor datatable provided')
+            return
+        self.maplist = []
+        self._dim = len(datatable)
         resp = np.full(len(datatable.index), False, dtype=bool)
-        for curclass in self.mapclasslist:
-            curmap = curclass(datatable)
-            curresp = curmap.is_responsible()
-            resp_overlap = np.logical_and(resp, curresp)
-            if np.any(resp_overlap):
-                print(datatable[resp_overlap])
-                raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
-            resp = np.logical_or(resp, curresp)
-        sorted_resp = resp[datatable.index]
-        return sorted_resp
-
-    def propagate(self, datatable, refvals):
-        datatable = datatable.sort_index()
-        isresp = self.is_responsible(datatable)
-        isexp = datatable['NODE'].str.match('exp_')
-        not_isresp = np.logical_not(isresp)
-        if not np.all(isresp[isexp]):
-            raise TypeError('No known link from prior to some experimental data points')
-
-        treated = np.full(datatable.shape[0], False)
-        propvals = np.full(datatable.shape[0], 0.)
-        propvals[not_isresp] = refvals[not_isresp]
-
         for curclass in self.mapclasslist:
             curmap = curclass(datatable)
             curresp = curmap.is_responsible()
             if not np.any(curresp):
                 continue
-            if np.any(np.logical_and(treated, curresp)):
-                raise ValueError('Several maps claim responsibility for the same rows')
-            treated[curresp] = True
-            curvals = curmap.propagate(refvals)
-            if np.any(np.logical_and(propvals!=0., curvals!=0.)):
-                raise ValueError('Several maps contribute to same experimental datapoint')
-            propvals += curvals
+            self.maplist.append(curmap)
+            if np.any(np.logical_and(curresp, resp)):
+                raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
+            resp = np.logical_or(resp, curresp)
 
+    def is_responsible(self, datatable=None):
+        self.instantiate_maps(datatable)
+        resp = self.maplist[0].is_responsible()
+        for curmap in self.maplist[1:]:
+            curresp = curmap.is_responsible()
+            resp = np.logical_or(resp, curresp)
+        return resp
+
+    def propagate(self, refvals, datatable=None):
+        self.instantiate_maps(datatable)
+        isresp = self.is_responsible()
+        not_isresp = np.logical_not(isresp)
+        propvals = np.full(datatable.shape[0], 0.)
+        propvals[not_isresp] = refvals[not_isresp]
+        for curmap in self.maplist:
+            propvals += curmap.propagate(refvals)
         return propvals
 
-    def jacobian(self, datatable, refvals):
-        isexp = datatable['NODE'].str.match('exp_')
-        isresp = self.is_responsible(datatable)
-        if not np.all(isresp[isexp]):
-            raise TypeError('No known link from prior to some experimental data points')
-
-        numel = len(datatable)
-        idcs = np.arange(len(datatable))
-
-        ones = np.full(len(datatable), 1., dtype=float)
+    def jacobian(self, refvals, datatable=None):
+        self.instantiate_maps(datatable)
+        numel = self._dim
+        idcs = np.arange(numel)
+        ones = np.full(numel, 1., dtype=float)
         idmat = csr_matrix((ones, (idcs, idcs)),
                            shape=(numel, numel), dtype=float)
         compSmat = idmat
-        for curclass in self.mapclasslist:
-            curmap = curclass(datatable)
-            if not np.any(curmap.is_responsible()):
-                continue
+        for curmap in self.maplist:
             curSmat = curmap.jacobian(refvals)
             compSmat = (idmat + curSmat) @ compSmat
 

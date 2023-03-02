@@ -10,13 +10,13 @@ import pandas as pd
 def gmapi_propagate(dt, refvals):
     refvals = np.array(refvals)
     compmap = CompoundMap()
-    ret = compmap.propagate(dt, refvals)
+    ret = compmap.propagate(refvals, dt)
     return ret
 
 
 def gmapi_jacobian(dt, refvals):
     refvals = np.array(refvals)
     compmap = CompoundMap()
-    ret = compmap.jacobian(dt, refvals)
+    ret = compmap.jacobian(refvals, dt)
     return ret
 

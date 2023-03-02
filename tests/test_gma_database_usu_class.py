@@ -48,7 +48,7 @@ class TestGMADatabaseUSU(unittest.TestCase):
         # this function applies the log determinant lemma
         res1 = mapping.logdet(datatable, refvals, covmat)
         # without determinant lemma
-        Susu = mapping.jacobian(datatable, refvals, only_usu=True)
+        Susu = mapping.jacobian(refvals, datatable, only_usu=True)
         exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
         alt_covmat = covmat + Susu @ covmat @ Susu.T
         alt_covmat = alt_covmat[exp_idcs,:][:,exp_idcs]
@@ -71,12 +71,12 @@ class TestGMADatabaseUSU(unittest.TestCase):
         expvals = datatable.DATA.to_numpy()
         res1 = mapping.chisquare(datatable, refvals, expvals, covmat)
         # direct computation
-        Susu = mapping.jacobian(datatable, refvals, only_usu=True)
+        Susu = mapping.jacobian(refvals, datatable, only_usu=True)
         exp_idcs = datatable.index[datatable.NODE.str.match('exp_')]
         alt_covmat = covmat + Susu @ covmat @ Susu.T
         alt_covmat = alt_covmat[exp_idcs,:][:,exp_idcs]
         alt_covmat_fact = cholesky(alt_covmat.tocsc())
-        propcss = mapping.propagate(datatable, refvals, only_usu=False)
+        propcss = mapping.propagate(refvals, datatable, only_usu=False)
         d = (expvals-propcss)[exp_idcs]
         res2 = d.T @ alt_covmat_fact(d)
         self.assertTrue(np.allclose(res1, res2))
