@@ -142,6 +142,41 @@ class InputSelector(MyAlgebra):
         return self.__idcs.copy()
 
 
+class Selector(MyAlgebra):
+
+    def __init__(self, inpobj, idcs):
+        super().__init__()
+        if not isinstance(inpobj, MyAlgebra):
+            raise TypeError('please provide instance derived from MyAlgebra')
+        self.__inpobj = inpobj
+        self.__idcs = np.array(idcs)
+
+    def __len__(self):
+        return len(self.__idcs)
+
+    def islinear(self):
+        return True
+
+    def evaluate(self):
+        super().evaluate()
+        allvals = self.__inpobj.evaluate()
+        return allvals[self.__idcs]
+
+    def jacobian(self):
+        super().jacobian()
+        src_size = len(self.__inpobj)
+        tar_size = len(self.__idcs)
+        coeffs = np.ones(tar_size)
+        tar_idcs = np.arange(tar_size)
+        outerS = csr_matrix(
+            (coeffs, (tar_idcs, self.__idcs)),
+            shape=(tar_size, src_size), dtype=float
+        )
+        innerS = self.__inpobj.jacobian()
+        S = matmul(outerS,  innerS)
+        return S
+
+
 class InputSelectorCollection:
 
     def __init__(self, listlike):
