@@ -55,8 +55,8 @@ class TestNewMappingJacobians(unittest.TestCase):
         idcs2 = np.arange(len(idcs1), len(idcs1)+len(idcs2))
         return curdatatable, idcs1, idcs2
 
-    def get_jacobian_testerror(self, curmapclass, atol=1e-4):
-        datatable, idcs1, idcs2 = self.reduce_table(curmapclass, self._datatable)
+    def get_jacobian_testerror(self, datatable, curmapclass, atol=1e-4):
+        datatable, idcs1, idcs2 = self.reduce_table(curmapclass, datatable)
         propfun = self.create_propagate_wrapper(curmapclass, datatable,
                                                 idcs1, idcs2)
         curmap = curmapclass(datatable)
@@ -74,7 +74,7 @@ class TestNewMappingJacobians(unittest.TestCase):
         abserr = np.max(np.abs(res1-res2))
         return (relerr, abserr, res1, res2)
 
-    def test_cross_section_ratio_of_sacs_map(self):
+    def create_ratio_of_sacs_datatable(self):
         # create a dataset with a ratio of sacs measurement (MT 10)
         ds1 = Dataset()
         ds1.define_quantity(10, [1, 2])
@@ -123,15 +123,21 @@ class TestNewMappingJacobians(unittest.TestCase):
         # create the tables
         priortable = create_prior_table(prior_list)
         exptable = create_experiment_table(datablock_list)
-        datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
-        self._datatable = datatable
+        datatable = pd.concat(
+            [priortable, exptable], axis=0, ignore_index=True
+        )
+        return datatable
 
+    def test_cross_section_ratio_of_sacs_map(self):
+        datatable = self.create_ratio_of_sacs_datatable()
         # do the mapping
         curmapclass = mapclass_with_params(
             CrossSectionRatioOfSacsMap,
             rtol=1e-05, atol=1e-05, maxord=20
         )
-        relerr, abserr, res1, res2 = self.get_jacobian_testerror(curmapclass, atol=1e-4)
+        relerr, abserr, res1, res2 = self.get_jacobian_testerror(
+            datatable, curmapclass, atol=1e-4
+        )
         self.assertTrue(relerr < 1e-4 or abserr < 1e-4)
 
 
