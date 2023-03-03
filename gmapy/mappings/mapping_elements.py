@@ -232,7 +232,7 @@ class SumOfDistributors(MyAlgebra):
         if not all(
             type(obj) in (Distributor, SumOfDistributors) for obj in listlike
         ):
-            raise TypeError('only Selector instances allowed in list')
+            raise TypeError('only Distributor instances allowed in list')
         self.__distributor_list = listlike
 
     def get_indices(self):
@@ -253,6 +253,9 @@ class SumOfDistributors(MyAlgebra):
         for obj in self.__distributor_list[1:]:
             jac += obj.jacobian()
         return jac
+
+    def get_distributors(self):
+        return self.__distributor_list
 
 
 class Replicator(MyAlgebra):
