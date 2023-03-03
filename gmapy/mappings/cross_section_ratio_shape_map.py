@@ -1,11 +1,11 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Replicator,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -68,10 +68,10 @@ class CrossSectionRatioShapeMap:
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             datasets = exptable_red['NODE'].unique()
 
-            inpvar1 = reuse_or_create_selector(
+            inpvar1 = reuse_or_create_input_selector(
                 src_idcs1, len(datatable), selector_list
             )
-            inpvar2 = reuse_or_create_selector(
+            inpvar2 = reuse_or_create_input_selector(
                 src_idcs2, len(datatable), selector_list
             )
             inpvars.extend([inpvar1, inpvar2])
@@ -90,13 +90,13 @@ class CrossSectionRatioShapeMap:
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
-                norm_fact = reuse_or_create_selector(norm_index, len(datatable))
+                norm_fact = reuse_or_create_input_selector(norm_index, len(datatable))
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))
                 mult_res = ratio * norm_fact_rep
                 outvar = Distributor(mult_res, tar_idcs, len(datatable))
                 inpvars.append(norm_fact)
                 outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

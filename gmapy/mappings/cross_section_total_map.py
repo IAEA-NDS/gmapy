@@ -1,10 +1,10 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -65,7 +65,7 @@ class CrossSectionTotalMap:
             tar_en = exptable_red['ENERGY']
 
             cvars = [
-                reuse_or_create_selector(idcs, len(datatable), selector_list)
+                reuse_or_create_input_selector(idcs, len(datatable), selector_list)
                 for idcs in src_idcs_list
             ]
             inpvars.extend(cvars)
@@ -77,6 +77,6 @@ class CrossSectionTotalMap:
             outvar = Distributor(tmpres, tar_idcs, len(datatable))
             outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

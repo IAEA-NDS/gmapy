@@ -3,14 +3,14 @@ from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Const,
     Integral,
     FissionAverage,
     Replicator,
     Distributor,
     SumOfDistributors,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -72,7 +72,7 @@ class CrossSectionFissionAverageMap:
 
         inpvars = []
         outvars = []
-        raw_fisobj = reuse_or_create_selector(
+        raw_fisobj = reuse_or_create_input_selector(
             fistable.index, len(datatable), selector_list
         )
         inpvars.append(raw_fisobj)
@@ -100,7 +100,7 @@ class CrossSectionFissionAverageMap:
             idcs1red = priortable_red.index
             idcs2red = exptable_red.index
 
-            xsobj = reuse_or_create_selector(
+            xsobj = reuse_or_create_input_selector(
                 idcs1red, len(datatable), selector_list
             )
             inpvars.append(xsobj)
@@ -114,6 +114,6 @@ class CrossSectionFissionAverageMap:
             outvar = Distributor(curfisavg, idcs2red, len(datatable))
             outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

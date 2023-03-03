@@ -34,17 +34,17 @@ def elem_mul(x, y):
         return x.multiply(y)
 
 # Another convenience function that allows
-# to reuse Selectors (see below) if they
+# to reuse InputSelectors (see below) if they
 # have already been defined
 
 
-def reuse_or_create_selector(idcs, size, selector_list=None):
+def reuse_or_create_input_selector(idcs, size, selector_list=None):
     if selector_list is not None:
         for cursel in selector_list:
             curidcs = cursel.get_indices()
             if np.all(idcs == curidcs):
                 return cursel
-    return Selector(idcs, size)
+    return InputSelector(idcs, size)
 
 # the following classes are the building
 # blocks to construct mathematical expressions
@@ -102,7 +102,7 @@ class MyAlgebra:
         return self._jacobian_updated
 
 
-class Selector(MyAlgebra):
+class InputSelector(MyAlgebra):
 
     def __init__(self, idcs, size):
         super().__init__()
@@ -142,11 +142,11 @@ class Selector(MyAlgebra):
         return self.__idcs.copy()
 
 
-class SelectorCollection:
+class InputSelectorCollection:
 
     def __init__(self, listlike):
-        if not all(type(obj) == Selector for obj in listlike):
-            raise TypeError('only Selector instances allowed in list')
+        if not all(type(obj) == InputSelector for obj in listlike):
+            raise TypeError('only InputSelector instances allowed in list')
         self.__selector_list = listlike
 
     def assign(self, arraylike):

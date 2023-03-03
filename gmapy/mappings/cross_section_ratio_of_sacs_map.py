@@ -3,12 +3,12 @@ from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Const,
     FissionAverage,
     Distributor,
     SumOfDistributors,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -60,7 +60,7 @@ class CrossSectionRatioOfSacsMap:
 
         inpvars = []
         outvars = []
-        raw_fisobj = reuse_or_create_selector(
+        raw_fisobj = reuse_or_create_input_selector(
             fistable.index, len(datatable), selector_list
         )
         inpvars.append(raw_fisobj)
@@ -94,10 +94,10 @@ class CrossSectionRatioOfSacsMap:
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
 
-            xsobj1 = reuse_or_create_selector(
+            xsobj1 = reuse_or_create_input_selector(
                 idcs1red, len(datatable), selector_list
             )
-            xsobj2 = reuse_or_create_selector(
+            xsobj2 = reuse_or_create_input_selector(
                 idcs2red, len(datatable), selector_list
             )
             inpvars.append(xsobj1)
@@ -116,6 +116,6 @@ class CrossSectionRatioOfSacsMap:
             outvar = Distributor(fisavg_ratio, idcs_exp_red, len(datatable))
             outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

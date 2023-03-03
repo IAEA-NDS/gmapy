@@ -1,11 +1,11 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Replicator,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -74,13 +74,13 @@ class CrossSectionShapeOfRatioMap:
             src_en2 = priortable_red2['ENERGY']
             src_en3 = priortable_red3['ENERGY']
 
-            inpvar1 = reuse_or_create_selector(
+            inpvar1 = reuse_or_create_input_selector(
                 src_idcs1, len(datatable), selector_list
             )
-            inpvar2 = reuse_or_create_selector(
+            inpvar2 = reuse_or_create_input_selector(
                 src_idcs2, len(datatable), selector_list
             )
-            inpvar3 = reuse_or_create_selector(
+            inpvar3 = reuse_or_create_input_selector(
                 src_idcs3, len(datatable), selector_list
             )
             inpvars.extend([inpvar1, inpvar2, inpvar3])
@@ -97,7 +97,7 @@ class CrossSectionShapeOfRatioMap:
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
-                norm_fact = reuse_or_create_selector(
+                norm_fact = reuse_or_create_input_selector(
                     norm_index, len(datatable), selector_list
                 )
                 inpvars.append(norm_fact)
@@ -110,6 +110,6 @@ class CrossSectionShapeOfRatioMap:
                 outvar = Distributor(tmpres, tar_idcs, len(datatable))
                 outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

@@ -1,11 +1,11 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Replicator,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -64,7 +64,7 @@ class CrossSectionShapeOfSumMap:
             src_en_list = [pt['ENERGY'] for pt in priortable_reds]
 
             cvars = [
-                reuse_or_create_selector(idcs, len(datatable), selector_list)
+                reuse_or_create_input_selector(idcs, len(datatable), selector_list)
                 for idcs in src_idcs_list
             ]
             inpvars.extend(cvars)
@@ -82,7 +82,7 @@ class CrossSectionShapeOfSumMap:
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
-                norm_fact = reuse_or_create_selector(
+                norm_fact = reuse_or_create_input_selector(
                     norm_index, len(datatable), selector_list
                 )
                 inpvars.append(norm_fact)
@@ -96,6 +96,6 @@ class CrossSectionShapeOfSumMap:
                 outvar = Distributor(tmpres, tar_idcs, len(datatable))
                 outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

@@ -1,11 +1,11 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Replicator,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -51,7 +51,7 @@ class CrossSectionShapeMap:
             ens1 = priortable_red['ENERGY']
             idcs1red = priortable_red.index
 
-            inpvar = reuse_or_create_selector(
+            inpvar = reuse_or_create_input_selector(
                 idcs1red, len(datatable), selector_list
             )
             inpvars.append(inpvar)
@@ -66,7 +66,7 @@ class CrossSectionShapeMap:
                     raise IndexError('There are ' + str(len(norm_index)) +
                         ' normalization factors in prior for dataset ' + str(dataset_id))
 
-                norm_fact = reuse_or_create_selector(norm_index, len(datatable))
+                norm_fact = reuse_or_create_input_selector(norm_index, len(datatable))
                 inpvars.append(norm_fact)
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']
@@ -78,6 +78,6 @@ class CrossSectionShapeMap:
                 outvar = Distributor(prod, idcs2red, len(datatable))
                 outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

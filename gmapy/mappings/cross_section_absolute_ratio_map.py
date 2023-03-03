@@ -1,10 +1,10 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -76,9 +76,15 @@ class CrossSectionAbsoluteRatioMap:
             tar_idcs = exptable_red.index
             tar_en = exptable_red['ENERGY']
 
-            inpvar1 = reuse_or_create_selector(src_idcs1, len(datatable), selector_list)
-            inpvar2 = reuse_or_create_selector(src_idcs2, len(datatable), selector_list)
-            inpvar3 = reuse_or_create_selector(src_idcs3, len(datatable), selector_list)
+            inpvar1 = reuse_or_create_input_selector(
+                src_idcs1, len(datatable), selector_list
+            )
+            inpvar2 = reuse_or_create_input_selector(
+                src_idcs2, len(datatable), selector_list
+            )
+            inpvar3 = reuse_or_create_input_selector(
+                src_idcs3, len(datatable), selector_list
+            )
             inpvar1_int = LinearInterpolation(inpvar1, src_en1, tar_en)
             inpvar2_int = LinearInterpolation(inpvar2, src_en2, tar_en)
             inpvar3_int = LinearInterpolation(inpvar3, src_en3, tar_en)
@@ -88,6 +94,6 @@ class CrossSectionAbsoluteRatioMap:
             inpvars.extend([inpvar1, inpvar2, inpvar3])
             outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out

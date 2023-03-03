@@ -1,10 +1,10 @@
 import numpy as np
 from .mapping_elements import (
-    SelectorCollection,
+    InputSelectorCollection,
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_selector
+    reuse_or_create_input_selector
 )
 
 
@@ -68,10 +68,10 @@ class CrossSectionRatioMap:
             tar_idcs = exptable_red.index
             tar_en = exptable_red['ENERGY']
 
-            inpvar1 = reuse_or_create_selector(
+            inpvar1 = reuse_or_create_input_selector(
                 src_idcs1, len(datatable), selector_list
             )
-            inpvar2 = reuse_or_create_selector(
+            inpvar2 = reuse_or_create_input_selector(
                 src_idcs2, len(datatable), selector_list
             )
             inpvar1_int = LinearInterpolation(inpvar1, src_en1, tar_en)
@@ -81,6 +81,6 @@ class CrossSectionRatioMap:
             inpvars.extend([inpvar1, inpvar2])
             outvars.append(outvar)
 
-        inp = SelectorCollection(inpvars)
+        inp = InputSelectorCollection(inpvars)
         out = SumOfDistributors(outvars)
         return inp, out
