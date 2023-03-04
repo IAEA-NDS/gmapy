@@ -274,14 +274,11 @@ class Distributor(MyAlgebra):
 
 class SumOfDistributors(MyAlgebra):
 
-    def __init__(self, listlike):
-        if len(listlike) == 0:
-            raise IndexError('empty list provided')
-        if not all(
-            type(obj) in (Distributor, SumOfDistributors) for obj in listlike
-        ):
-            raise TypeError('only Distributor instances allowed in list')
-        self.__distributor_list = listlike
+    def __init__(self, listlike=None):
+        if listlike is None:
+            listlike = []
+        self.__distributor_list = []
+        self.add_distributors(listlike)
 
     def get_indices(self):
         return np.unique(np.concatenate(list(
@@ -309,6 +306,13 @@ class SumOfDistributors(MyAlgebra):
 
     def get_distributors(self):
         return self.__distributor_list
+
+    def add_distributors(self, listlike):
+        if not all(
+            type(obj) in (Distributor, SumOfDistributors) for obj in listlike
+        ):
+            raise TypeError('only Distributor instances allowed in list')
+        self.__distributor_list.extend(listlike)
 
 
 class Replicator(MyAlgebra):
