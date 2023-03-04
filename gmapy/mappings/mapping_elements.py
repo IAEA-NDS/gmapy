@@ -42,8 +42,9 @@ def reuse_or_create_input_selector(idcs, size, selector_list=None):
     if selector_list is not None:
         for cursel in selector_list:
             curidcs = cursel.get_indices()
-            if np.all(idcs == curidcs):
-                return cursel
+            if len(idcs) == len(curidcs):
+                if np.all(idcs == curidcs):
+                    return cursel
     return InputSelector(idcs, size)
 
 # the following classes are the building
