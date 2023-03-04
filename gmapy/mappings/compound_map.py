@@ -10,6 +10,7 @@ from .cross_section_total_map import CrossSectionTotalMap
 from .cross_section_shape_of_sum_map import CrossSectionShapeOfSumMap
 from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 from .cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
+from .mapping_elements import InputSelectorCollection, SumOfDistributors
 from .helperfuns import mapclass_with_params
 
 
@@ -36,56 +37,58 @@ class CompoundMap:
                     atol=1e-5, rtol=1e-05, maxord=16
                 )
             ]
-        self.maplist = None
+        self.__input = None
+        self.__output = None
         if datatable is not None:
             self.instantiate_maps(datatable)
 
     def instantiate_maps(self, datatable=None):
         if datatable is None:
-            if self.maplist is None:
+            if self.__input is None or self.__output is None:
                 raise TypeError('neither map list initialized nor datatable provided')
             return
-        self.maplist = []
         self._dim = len(datatable)
         resp = np.full(len(datatable.index), False, dtype=bool)
+        selcol = InputSelectorCollection()
+        distsum = SumOfDistributors()
         for curclass in self.mapclasslist:
-            curmap = curclass(datatable)
+            curmap = curclass(datatable, selector_list=selcol.get_selectors())
             curresp = curmap.is_responsible()
             if not np.any(curresp):
                 continue
-            self.maplist.append(curmap)
             if np.any(np.logical_and(curresp, resp)):
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
+            selcol.add_selectors(curmap.get_selectors())
+            distsum.add_distributors(curmap.get_distributors())
+        self.__input = selcol
+        self.__output = distsum
+        self.__size = len(self.__output)
 
     def is_responsible(self, datatable=None):
         self.instantiate_maps(datatable)
-        resp = self.maplist[0].is_responsible()
-        for curmap in self.maplist[1:]:
-            curresp = curmap.is_responsible()
-            resp = np.logical_or(resp, curresp)
-        return resp
+        ret = np.full(self.__size, False)
+        idcs = self.__output.get_indices()
+        ret[idcs] = True
+        return ret
 
     def propagate(self, refvals, datatable=None):
         self.instantiate_maps(datatable)
         isresp = self.is_responsible()
-        not_isresp = np.logical_not(isresp)
-        propvals = np.full(datatable.shape[0], 0.)
-        propvals[not_isresp] = refvals[not_isresp]
-        for curmap in self.maplist:
-            propvals += curmap.propagate(refvals)
+        self.__input.assign(refvals)
+        propvals = refvals.copy()
+        propvals[isresp] = self.__output.evaluate()[isresp]
         return propvals
 
     def jacobian(self, refvals, datatable=None):
         self.instantiate_maps(datatable)
-        numel = self._dim
-        idcs = np.arange(numel)
-        ones = np.full(numel, 1., dtype=float)
-        idmat = csr_matrix((ones, (idcs, idcs)),
+        self.__input.assign(refvals)
+        isresp = self.is_responsible()
+        not_isresp = np.logical_not(isresp)
+        nonresp_idcs = np.where(not_isresp)[0]
+        numel = self.__size
+        ones = np.full(len(nonresp_idcs), 1., dtype=float)
+        idmat = csr_matrix((ones, (nonresp_idcs, nonresp_idcs)),
                            shape=(numel, numel), dtype=float)
-        compSmat = idmat
-        for curmap in self.maplist:
-            curSmat = curmap.jacobian(refvals)
-            compSmat = (idmat + curSmat) @ compSmat
-
-        return compSmat
+        Smat = idmat + self.__output.jacobian()
+        return Smat
