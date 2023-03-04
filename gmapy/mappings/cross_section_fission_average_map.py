@@ -46,6 +46,9 @@ class CrossSectionFissionAverageMap:
     def get_selectors(self):
         return self.__input.get_selectors()
 
+    def get_distributors(self):
+        return self.__output.get_distributors()
+
     def __prepare(self, datatable, selector_list):
         legacy_integration = self._legacy_integration
         fix_jacobian = self._fix_jacobian

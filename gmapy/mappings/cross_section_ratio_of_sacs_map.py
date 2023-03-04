@@ -40,6 +40,9 @@ class CrossSectionRatioOfSacsMap:
     def get_selectors(self):
         return self.__input.get_selectors()
 
+    def get_distributors(self):
+        return self.__output.get_distributors()
+
     def __prepare(self, datatable, selector_list):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
