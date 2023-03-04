@@ -5,6 +5,7 @@ Testing Jacobians of new mappings beyond legacy GMAP.
 import unittest
 import numpy as np
 import pandas as pd
+import pathlib
 
 from gmapy.mappings.helperfuns import numeric_jacobian
 from gmapy.mappings.compound_map import mapclass_with_params
@@ -14,12 +15,27 @@ from gmapy.data_management.tablefuns import (
     create_prior_table,
     create_experiment_table
 )
+from gmapy.mappings.compound_map import CompoundMap
 from gmapy.mappings.cross_section_ratio_of_sacs_map import (
     CrossSectionRatioOfSacsMap
 )
+from gmapy import GMADatabase
 
 
 class TestNewMappingJacobians(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        dbpath = (pathlib.Path(__file__).parent / 'testdata' /
+                  'data-2017-08-14.gma').resolve().as_posix()
+        gmadb = GMADatabase(dbpath)
+        datatable = gmadb.get_datatable()
+        cls._base_datatable = datatable
+        cls._gmadb = gmadb
+
+    @classmethod
+    def tearDownClass(cls):
+        del(cls._base_datatable)
 
     # helper functions for the tests
     def get_error(self, res1, res2, atol=1e-4):
@@ -35,10 +51,11 @@ class TestNewMappingJacobians(unittest.TestCase):
         curmap = curmapclass(datatable)
         return wrapfun
 
-    def reduce_table(self, curmapclass, datatable):
+    def reduce_table(self, curmapclass, datatable, jacargs=None):
+        jacargs = jacargs if jacargs is not None else {}
         refvals = np.full(len(datatable), 10)
         curmap = curmapclass(datatable)
-        Smat = curmap.jacobian(refvals).tocoo()
+        Smat = curmap.jacobian(refvals, **jacargs).tocoo()
         idcs1 = np.unique(Smat.col)
         idcs2 = np.unique(Smat.row)
         if (len(set(idcs1)) + len(set(idcs2)) !=
@@ -55,15 +72,18 @@ class TestNewMappingJacobians(unittest.TestCase):
         idcs2 = np.arange(len(idcs1), len(idcs1)+len(idcs2))
         return curdatatable, idcs1, idcs2
 
-    def get_jacobian_testerror(self, datatable, curmapclass, atol=1e-4):
-        datatable, idcs1, idcs2 = self.reduce_table(curmapclass, datatable)
+    def get_jacobian_testerror(self, datatable, curmapclass, atol=1e-4,
+                               jacargs=None):
+        jacargs = jacargs if jacargs is not None else {}
+        datatable, idcs1, idcs2 = self.reduce_table(
+            curmapclass, datatable, jacargs=jacargs)
         propfun = self.create_propagate_wrapper(curmapclass, datatable,
                                                 idcs1, idcs2)
         curmap = curmapclass(datatable)
         np.random.seed(15)
         x = np.full(len(idcs1)+len(idcs2), 0.)
         x[idcs1] = np.random.uniform(1, 5, len(idcs1))
-        res2 = curmap.jacobian(x)
+        res2 = curmap.jacobian(x, **jacargs)
         res1 = numeric_jacobian(propfun, x[idcs1], o=4, h1=1e-2, v=2)
         res2 = np.array(res2.todense())
         res2 = res2[np.ix_(idcs2, idcs1)]
@@ -128,6 +148,23 @@ class TestNewMappingJacobians(unittest.TestCase):
         )
         return datatable
 
+    def create_relative_error_map_datatable(self):
+        dt = self._base_datatable.copy()
+        isexp = dt['NODE'].str.match('(exp|norm)_').to_numpy()
+        not_isexp = np.logical_not(isexp)
+        is_desired_exp = dt['NODE'].str.match('(exp|norm)_(8050|1022)').to_numpy()
+        sel = np.logical_or(not_isexp, is_desired_exp)
+        dt = dt.loc[sel].copy()
+        groupidx_df = dt.groupby('NODE').cumcount().to_frame(name='PTIDX')
+        dt = pd.concat([dt, groupidx_df], axis=1)
+        # create the relative errors dataframe
+        relerr_dt = dt[dt['NODE'].str.match('exp_')][['NODE', 'PTIDX']].copy()
+        relerr_dt['NODE'] = relerr_dt['NODE'].str.replace('exp_', 'relerr_', regex=False)
+        relerr_dt['PRIOR'] = np.linspace(1, 10, len(relerr_dt))
+        # combine the two
+        dt = pd.concat([dt, relerr_dt], axis=0, ignore_index=True)
+        return dt
+
     def test_cross_section_ratio_of_sacs_map(self):
         datatable = self.create_ratio_of_sacs_datatable()
         # do the mapping
@@ -139,6 +176,13 @@ class TestNewMappingJacobians(unittest.TestCase):
             datatable, curmapclass, atol=1e-4
         )
         self.assertTrue(relerr < 1e-4 or abserr < 1e-4)
+
+    def test_relative_error_map(self):
+        datatable = self.create_relative_error_map_datatable()
+        relerr, abserr, res1, res2 = self.get_jacobian_testerror(
+            datatable, CompoundMap, jacargs={'with_id': False}
+        )
+        self.assertTrue(relerr < 1e-8 or abserr < 1e-8)
 
 
 if __name__ == '__main__':
