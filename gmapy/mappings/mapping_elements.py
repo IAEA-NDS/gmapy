@@ -180,10 +180,11 @@ class Selector(MyAlgebra):
 
 class InputSelectorCollection:
 
-    def __init__(self, listlike):
-        if not all(type(obj) == InputSelector for obj in listlike):
-            raise TypeError('only InputSelector instances allowed in list')
-        self.__selector_list = listlike
+    def __init__(self, listlike=None):
+        if listlike is None:
+            listlike = []
+        self.__selector_list = []
+        self.add_selectors(listlike)
 
     def assign(self, arraylike):
         for obj in self.__selector_list:
@@ -196,6 +197,17 @@ class InputSelectorCollection:
 
     def get_selectors(self):
         return self.__selector_list
+
+    def add_selectors(self, listlike=None):
+        if listlike is None:
+            return
+        if not all(type(obj) == InputSelector for obj in listlike):
+            raise TypeError('only InputSelector instances allowed in list')
+        if self.__selector_list is None:
+            breakpoint()
+        sels = self.__selector_list + listlike
+        uniq_sels = list({id(cursel): cursel for cursel in sels}.values())
+        self.__selector_list = uniq_sels
 
 
 class Const(MyAlgebra):
