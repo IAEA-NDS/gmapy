@@ -288,6 +288,11 @@ class SumOfDistributors(MyAlgebra):
             obj.get_indices() for obj in self.__distributor_list
         )))
 
+    def __len__(self):
+        if len(self.__distributor_list) == 0:
+            raise IndexError('empty list of distributors')
+        return len(self.__distributor_list[0])
+
     def evaluate(self):
         super().evaluate()
         res = self.__distributor_list[0].evaluate()
