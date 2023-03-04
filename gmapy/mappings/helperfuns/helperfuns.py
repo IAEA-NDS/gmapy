@@ -1,9 +1,10 @@
 import numpy as np
 
 
-def mapclass_with_params(origclass, *args, **kwargs):
+def mapclass_with_params(origclass, **kwargs):
     class WrapperClass(origclass):
-        def __init__(self, datatable):
+        def __init__(self, datatable, *args, **kwargs2):
+            kwargs2.update(kwargs)
             super().__init__(datatable, *args, **kwargs)
     return WrapperClass
 
