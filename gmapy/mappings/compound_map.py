@@ -55,8 +55,6 @@ class CompoundMap:
         for curclass in self.mapclasslist:
             curmap = curclass(datatable, selector_list=selcol.get_selectors())
             curresp = curmap.is_responsible()
-            if not np.any(curresp):
-                continue
             if np.any(np.logical_and(curresp, resp)):
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
