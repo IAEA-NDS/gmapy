@@ -77,3 +77,19 @@ class RelativeErrorMap:
         inp = relerrors
         out = abserrors_dist
         return inp, out
+
+
+def attach_relative_error_df(datatable):
+    dt = datatable.copy()
+    dt.sort_index()
+    groupidx_df = dt.groupby('NODE').cumcount().to_frame(name='PTIDX')
+    dt = pd.concat([dt, groupidx_df], axis=1)
+    # create the relative errors dataframe
+    isexp = dt['NODE'].str.match('exp_')
+    relerr_dt = dt[isexp][['NODE', 'PTIDX', 'REAC', 'ENERGY']].copy()
+    relerr_dt['NODE'] = relerr_dt['NODE'].str.replace('exp_', 'relerr_',
+                                                      regex=False)
+    relerr_dt['PRIOR'] = np.full(len(relerr_dt), 0.)
+    # combine the two
+    dt = pd.concat([dt, relerr_dt], axis=0, ignore_index=True)
+    return dt
