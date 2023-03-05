@@ -67,4 +67,3 @@ class DatablockList(object):
             return self.datablock_list
         else:
             raise ValueError('ret_type must be dict or Datablock')
-

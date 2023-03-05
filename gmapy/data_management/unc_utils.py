@@ -17,7 +17,6 @@ def scale_covmat(covmat, sclvec):
     return newcovmat
 
 
-
 def cov2cor(covmat):
     invuncs = 1. / np.sqrt(covmat.diagonal())
     cormat = scale_covmat(covmat, invuncs)
@@ -25,11 +24,9 @@ def cov2cor(covmat):
     return cormat
 
 
-
 def cor2cov(cormat, uncs):
     covmat = scale_covmat(cormat, uncs)
     return covmat
-
 
 
 def calculate_ppp_factors(datasets, css):
@@ -46,7 +43,6 @@ def calculate_ppp_factors(datasets, css):
         else:
             factors.extend(newcss/origcss)
     return factors
-
 
 
 def fix_cormat(cormat):

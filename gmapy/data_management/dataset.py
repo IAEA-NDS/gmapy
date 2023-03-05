@@ -149,4 +149,3 @@ class Dataset(object):
 
     def get_energies(self):
         return tuple(self.dataset_dic['E'])
-

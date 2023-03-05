@@ -147,5 +147,3 @@ def compute_romberg_integral(x, fun, maxord=4, atol=1e-8, rtol=1e-5, dfun=None):
         return est_intval
     else:
         return dT
-
-

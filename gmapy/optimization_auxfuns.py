@@ -24,12 +24,12 @@ def create_posterior_funs(mapping, dt, covmat, fnscale=1, print_res=True):
     expvals = dt.loc[isobs, 'DATA'].to_numpy()
     priorcov_fact = cholesky(priorcov.asformat('csc'))
     expcov_fact = cholesky(expcov.asformat('csc'))
-    orig_refvals = dt['PRIOR'].to_numpy() 
+    orig_refvals = dt['PRIOR'].to_numpy()
 
     def this_logposterior(pcur):
         refvals = orig_refvals.copy()
         refvals[isadj] = pcur
-        preds = mapping.propagate(refvals, dt)[isobs] 
+        preds = mapping.propagate(refvals, dt)[isobs]
         res = logposterior(p0, priorcov_fact, expvals,
                 expcov_fact, pcur, preds)
         if print_res:
@@ -53,7 +53,7 @@ def create_posterior_funs(mapping, dt, covmat, fnscale=1, print_res=True):
 
 def logposterior(p0, priorcov_fact, expvals, expcov_fact, pcur, preds):
     pd = pcur - p0
-    d = expvals - preds 
+    d = expvals - preds
     res = d.T @ expcov_fact(d) + pd.T @ priorcov_fact(pd)
     return (-0.5*res)
 
@@ -63,4 +63,3 @@ def grad_logposterior(p0, priorcov_fact, S, expvals, expcov_fact, pcur, preds):
     d = expvals - preds
     res = S.T @ expcov_fact(d) + priorcov_fact(pd)
     return res
-

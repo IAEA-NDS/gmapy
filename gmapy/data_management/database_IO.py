@@ -2,6 +2,7 @@ import json
 from ..legacy.database_reading import read_gma_database as read_legacy_gma_database_basic
 from ..legacy.conversion_utils import sanitize_datablock, sanitize_prior
 
+
 def read_legacy_gma_database(dbfile):
     format_dic = {}
     db_dic = read_legacy_gma_database_basic(dbfile, format_dic=format_dic)
@@ -27,4 +28,3 @@ def read_gma_database(dbfile):
     else:
         db = read_legacy_gma_database(dbfile)
     return db
-

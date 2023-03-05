@@ -1,14 +1,15 @@
 import numpy as np
 from scipy.sparse import block_diag, csr_matrix, diags
-from collections import OrderedDict
-from .unc_utils import (scale_covmat, cov2cor, calculate_ppp_factors,
-        fix_cormat)
-
+from .unc_utils import (
+    scale_covmat,
+    cov2cor,
+    calculate_ppp_factors,
+    fix_cormat
+)
 from .specialized_uncertainty_funs import (
-        legacy_uncertainty_funs as legacy_uncfuns,
-        simple_uncertainty_funs as simple_uncfuns
-    )
-
+    legacy_uncertainty_funs as legacy_uncfuns,
+    simple_uncertainty_funs as simple_uncfuns
+)
 
 
 def get_method(blocktype, method):
@@ -22,7 +23,6 @@ def get_method(blocktype, method):
     return special_method
 
 
-
 def create_relunc_vector(datablock_list):
     relunc_list = []
     for datablock in datablock_list:
@@ -32,11 +32,9 @@ def create_relunc_vector(datablock_list):
     return np.concatenate(relunc_list)
 
 
-
 def create_relative_datablock_covmat(datablock):
     curfun = get_method(datablock['type'], 'create_relative_datablock_covmat')
     return curfun(datablock)
-
 
 
 def create_experimental_covmat(datablock_list, propcss=None,
@@ -87,7 +85,6 @@ def create_experimental_covmat(datablock_list, propcss=None,
 
     covmat = block_diag(covmat_list, format='csr')
     return covmat
-
 
 
 def create_prior_covmat(prior_list):

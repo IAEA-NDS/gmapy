@@ -120,4 +120,3 @@ def run_gmap_simplified(prior_list=None, datablock_list=None,
     datatable['RELPOSTUNC'] = datatable['POSTUNC'].to_numpy() / datatable['POST'].to_numpy()
     return {'table': datatable, 'postcov': upd_covmat, 'idcs': prior_idcs,
             'priorcov': covmat}
-

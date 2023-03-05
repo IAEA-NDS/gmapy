@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 #     Numerical Jacobian using Richardson extrapolation
 #     Jay Kahn - University of Rochester, November 19, 2012
 #     f - function to take derivative over
@@ -57,7 +56,6 @@ def richardson(f, x0, o, h1, v, *control):
     return g
 
 
-
 #     Jacobian running as shell of Richardson. Ends up with matrix
 #     whose rows are derivatives with respect to different elements
 #     of x and columns are derivatives of different elements of f(x).
@@ -82,4 +80,3 @@ def numeric_jacobian(f, x0, o=4, h1=0.01, v=2, *control):
             i=i+1
         j=j+1
     return J.T
-

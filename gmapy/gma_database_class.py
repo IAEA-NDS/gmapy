@@ -2,10 +2,14 @@ import pandas as pd
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix, block_diag, diags
 from .data_management.database_IO import read_gma_database
-from .data_management.tablefuns import create_prior_table, create_experiment_table
+from .data_management.tablefuns import (
+    create_prior_table,
+    create_experiment_table
+)
 from .data_management.uncfuns import (
-        create_relunc_vector, create_experimental_covmat,
-        create_prior_covmat)
+    create_relunc_vector, create_experimental_covmat,
+    create_prior_covmat
+)
 from .data_management.unc_utils import scale_covmat
 from .mappings.compound_map import CompoundMap
 from .mappings.relative_error_map import attach_relative_error_df
@@ -25,23 +29,28 @@ class GMADatabase:
                  use_relative_errors=False, abserr_nugget=1e-4):
         if dbfile is not None:
             if prior_list is not None or datablock_list is not None:
-                raise ValueError('you must not provide the prior_list or ' +
-                        'datablock_list argument if the dbfile argument ' +
-                        'is specified.')
+                raise ValueError(
+                    'you must not provide the prior_list or ' +
+                    'datablock_list argument if the dbfile argument ' +
+                    'is specified.'
+                )
             db = read_gma_database(dbfile)
         elif prior_list is not None and datablock_list is not None:
             db = {'prior_list': prior_list, 'datablock_list': datablock_list}
         else:
-            raise ValueError('you must provide the prior_list and ' +
-                    'datablock_list argument if the dbfile argument ' +
-                    'is missing.')
+            raise ValueError(
+                'you must provide the prior_list and ' +
+                'datablock_list argument if the dbfile argument ' +
+                'is missing.'
+            )
 
         if remove_dummy:
             remove_dummy_datasets(db['datablock_list'])
 
         priortable = create_prior_table(db['prior_list'])
         exptable = create_experiment_table(db['datablock_list'])
-        datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
+        datatable = pd.concat([priortable, exptable],
+                              axis=0, ignore_index=True)
         if not mapping:
             mapping = CompoundMap()
         # initialize the normalization errors
@@ -64,7 +73,6 @@ class GMADatabase:
             fix_covmat=fix_covmat, use_relative_errors=use_relative_errors,
             abserr_nugget=abserr_nugget
         )
-
 
     def _initialize_uncertainty_info(self, fix_covmat, use_relative_errors,
                                      abserr_nugget):
@@ -91,7 +99,7 @@ class GMADatabase:
         if use_relative_errors:
             isexp = datatable['NODE'].str.match('exp_')
             expvals = datatable.loc[isexp, 'DATA'].to_numpy()
-            abscov_diag = expcov.diagonal() * np.square(expvals * abserr_nugget)
+            abscov_diag = expcov.diagonal() * np.square(expvals*abserr_nugget)
             absexpcov = diags(abscov_diag, format='csr')
             covmat = block_diag(
                 [priorcov, absexpcov, normcov, expcov], format='csr', dtype='d'
@@ -125,7 +133,6 @@ class GMADatabase:
         self._datatable = datatable
         self._covmat = covmat
 
-
     def _update_covmat(self):
         datatable = self._datatable
         covmat = self._covmat
@@ -150,11 +157,12 @@ class GMADatabase:
         row_idcs = np.concatenate([static_row_idcs, changed_idcs])
         col_idcs = np.concatenate([static_col_idcs, changed_idcs])
         elems = np.concatenate([static_cov.data, new_priorvars])
-        covmat = csr_matrix((elems, (row_idcs, col_idcs)),
-                shape=(len(datatable), len(datatable)), dtype='d')
+        covmat = csr_matrix(
+            (elems, (row_idcs, col_idcs)),
+            shape=(len(datatable), len(datatable)), dtype='d'
+        )
         self._covmat = covmat
         self._cache['uncertainties'] = uncs
-
 
     def evaluate(self, remove_idcs=None, ret_uncs=True, **kwargs):
         mapping = self._mapping
@@ -164,14 +172,15 @@ class GMADatabase:
         if remove_idcs is not None:
             keep_mask = np.full(len(self._datatable), True)
             keep_mask[remove_idcs] = False
-            datatable, covmat, orig_idcs = \
-                    self._remove_data_internal(self._datatable,
-                            self._covmat, remove_idcs)
+            datatable, covmat, orig_idcs = self._remove_data_internal(
+                self._datatable, self._covmat, remove_idcs
+            )
             startvals = kwargs.get('startvals', None)
             startvals = startvals[keep_mask] if startvals is not None else None
             kwargs['startvals'] = startvals
 
-        lmres = lm_update(mapping, datatable, covmat, ret_invcov=True, **kwargs)
+        lmres = lm_update(mapping, datatable, covmat,
+                          ret_invcov=True, **kwargs)
         self._cache['lmb'] = lmres['lmb']
         self._cache['last_rejected'] = lmres['last_rejected']
         self._cache['converged'] = lmres['converged']
@@ -186,8 +195,10 @@ class GMADatabase:
 
         refvals = datatable.PRIOR.to_numpy()
         refvals[adj_idcs] = lmres['upd_vals']
-        propvals = propagate_mesh_css(datatable, mapping, refvals,
-                                      prop_normfact=False, prop_usu_errors=False)
+        propvals = propagate_mesh_css(
+            datatable, mapping, refvals, prop_normfact=False,
+            prop_usu_errors=False
+        )
         self._datatable['POST'] = propvals
 
         if ret_uncs:
@@ -196,14 +207,13 @@ class GMADatabase:
 
         return propvals
 
-
     def get_postvals(self, testdf, **mapargs):
-        workdf = pd.concat([self._datatable, testdf], axis=0, ignore_index=True)
+        workdf = pd.concat([self._datatable, testdf], axis=0,
+                           ignore_index=True)
         refvals = workdf.POST.to_numpy()
         propvals = propagate_mesh_css(workdf, self._mapping, refvals, **mapargs)
         propvals = propvals[len(self._datatable):len(self._datatable)+len(testdf)]
         return propvals
-
 
     def get_postcov(self, testdf=None, idcs=None, unc_only=False):
         if testdf is not None and idcs is not None:
@@ -216,7 +226,6 @@ class GMADatabase:
         return compute_posterior_covmat(self._mapping, workdf,
                 self._cache['upd_vals'], self._cache['upd_invcov'],
                 source_idcs=self._cache['adj_idcs'], idcs=idcs, unc_only=unc_only)
-
 
     def _remove_data_internal(self, datatable, covmat, idcs):
         self._cache = {}
@@ -233,16 +242,13 @@ class GMADatabase:
         covmat = covmat[inv_remove_mask,:]
         return datatable, covmat, orig_idcs
 
-
     def remove_data(self, idcs):
         res = self._remove_data_internal(self._datatable, self._covmat, idcs)
         self._datatable, self._covmat, _  = res
         return None
 
-
     def get_datatable(self):
         return self._datatable.copy()
-
 
     def set_datatable(self, datatable):
         if len(datatable) != self._covmat.shape[0]:
@@ -255,10 +261,8 @@ class GMADatabase:
         self._cache = {'uncertainties': self._cache['uncertainties'] }
         self._update_covmat()
 
-
     def get_covmat(self):
         return self._covmat.copy()
-
 
     def set_covmat(self, covmat):
         if len(covmat.shape) != 2:
@@ -299,4 +303,3 @@ class GMADatabase:
 
     def get_mapping(self):
         return self._mapping
-

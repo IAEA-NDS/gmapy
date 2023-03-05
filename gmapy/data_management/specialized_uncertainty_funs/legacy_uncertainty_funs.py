@@ -3,7 +3,6 @@ from ...mappings.priortools import SHAPE_MT_IDS
 from ..unc_utils import calculate_ppp_factors, cov2cor, cor2cov
 
 
-
 # this function is here to reproduce
 # a bug in GMAP Fortran in the PPP correction
 def relcov_to_wrong_cor(relcovmat, datasets, css):
@@ -38,7 +37,6 @@ def relcov_to_wrong_cor(relcovmat, datasets, css):
     return cormat
 
 
-
 def create_dataset_relunc_vector(dataset):
     XNORU = 0.
     if dataset['MT'] not in SHAPE_MT_IDS:
@@ -57,7 +55,6 @@ def create_dataset_relunc_vector(dataset):
     return curDCS
 
 
-
 def create_relunc_vector(datablock):
     DCS_list = []
     dataset_list = datablock['datasets']
@@ -66,7 +63,6 @@ def create_relunc_vector(datablock):
         DCS_list.append(curDCS)
     DCS = np.concatenate(DCS_list)
     return DCS
-
 
 
 def create_relative_dataset_covmat(dataset):
@@ -122,7 +118,6 @@ def create_relative_dataset_covmat(dataset):
 
         covmat[KS, KS] = uncs[KS]*uncs[KS]
     return covmat
-
 
 
 def create_relative_datablock_covmat(datablock, shouldfix=True):
@@ -302,4 +297,3 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
                 covmat[ofs1, ofs1] = uncs[ofs1]*uncs[ofs1]
 
     return covmat
-

@@ -9,7 +9,6 @@ from .mappings.priortools import propagate_mesh_css
 from .data_management.uncfuns import scale_covmat
 
 
-
 def gls_update(mapping, datatable, covmat, retcov=False):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
@@ -66,7 +65,6 @@ def gls_update(mapping, datatable, covmat, retcov=False):
 
     return {'upd_vals': postvals, 'upd_covmat': post_covmat,
             'idcs': np.sort(datatable.index[isadj])}
-
 
 
 def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
@@ -246,7 +244,6 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     return res
 
 
-
 def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
         source_idcs, idcs=None,  unc_only=False, **mapargs):
     # calculate the refvals
@@ -270,4 +267,3 @@ def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
     else:
         postcov = S @ cov_times_St
         return postcov
-

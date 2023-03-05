@@ -3,7 +3,6 @@ import pandas as pd
 from collections import OrderedDict
 
 
-
 def create_prior_table(prior_list):
     curid = 0
     df = []
@@ -59,7 +58,6 @@ def create_prior_table(prior_list):
     return df
 
 
-
 def create_experiment_table(datablock_list):
     """Extract experiment dataframe from datablock list."""
     df_list = []
@@ -86,4 +84,3 @@ def create_experiment_table(datablock_list):
     cols = ['NODE', 'REAC', 'ENERGY', 'DATA', 'DB_IDX', 'DS_IDX', 'AUTHOR', 'PUBREF']
     expdf = expdf.reindex(columns = cols)
     return expdf
-

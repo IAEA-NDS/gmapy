@@ -67,7 +67,6 @@ class GMADatabaseUSU(GMADatabase):
         self._mapping = USUErrorMap(self._base_mapping, feature_columns,
                                     NA_values=NA_values)
 
-
     def set_usu_couplings(self, coupling_column):
         dt = self._datatable
         if coupling_column not in dt.columns:
@@ -98,7 +97,6 @@ class GMADatabaseUSU(GMADatabase):
         S = spsp.csr_matrix((vals, (row_idcs, col_idcs)))
         self._usu_coupling_mapping = S
         self._usu_coupling_column = coupling_column
-
 
     def evaluate(self, remove_idcs=None, adjust_usu=True,
             outer_iter=50, inner_iter=1, atol=1e-6, rtol=1e-6, print_status=False, **lm_options):
@@ -177,7 +175,6 @@ class GMADatabaseUSU(GMADatabase):
                      'of this run will be used as starting values for '
                      'the next run.')
 
-
     def determine_usu_uncertainties(self, refvals=None):
         if self._usu_coupling_column is None:
             raise IndexError('no uncertainty coupling specified! ' +
@@ -207,4 +204,3 @@ class GMADatabaseUSU(GMADatabase):
             dt.loc[cur_usu_idcs, 'UNC'] = np.sqrt(cur_var)
             covmat[cur_usu_idcs, cur_usu_idcs] = cur_var
             self._cache['uncertainties'] = dt['UNC'].to_numpy()
-
