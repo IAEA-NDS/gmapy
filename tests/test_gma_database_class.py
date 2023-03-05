@@ -14,6 +14,7 @@ class TestGMADatabase(unittest.TestCase):
     def setUpClass(cls):
         dbpath = (pathlib.Path(__file__).parent / 'testdata' /
                 'data-2017-07-26.gma').resolve().as_posix()
+        cls._dbpath = dbpath
         cls._gmadb = GMADatabase(dbpath)
 
     def test_datapoints_removal(self):
@@ -57,6 +58,60 @@ class TestGMADatabase(unittest.TestCase):
         not_fis_idcs = np.logical_not(redtbl.NODE == 'fis')
         # equal_nan is True because of fission spectrum
         self.assertTrue(np.all(res1[not_fis_idcs] == res2[not_fis_idcs]))
+
+    def test_evaluation_equivalence_ppp_relative_errors(self):
+        print('\n\n#######################################################')
+        print('Starting test to check relative error / PPP equivalence\n\n')
+        gmadb1 = GMADatabase(self._dbpath, use_relative_errors=False)
+        gmadb2 = GMADatabase(self._dbpath, use_relative_errors=True)
+        atol = 1e-6
+        rtol = 1e-6
+        maxiter = 10
+        gmadb1.evaluate(correct_ppp=True, must_converge=False,
+                        maxiter=maxiter, atol=atol, rtol=rtol,
+                        print_status=True)
+        print('\n\nRunning LM algorithm with explicit relative error definition\n\n')
+        gmadb2.evaluate(correct_ppp=False, must_converge=True,
+                        maxiter=maxiter, atol=atol, rtol=rtol,
+                        print_status=True)
+        dt1 = gmadb1.get_datatable()
+        dt2 = gmadb2.get_datatable()
+        red_dt2 = dt2[~dt2['NODE'].str.match('relerr_')]
+        postvals1 = dt1['POST']
+        postvals2 = red_dt2['POST']
+        # NOTE: 20% maximum difference is a lot but this is what we
+        #       get if we optimize exactly instead of doing ad-hoc PPP
+        self.assertTrue(np.allclose(postvals1, postvals2, rtol=2e-1))
+
+    def test_abserr_nugget_has_negligible_impact_on_evaluation(self):
+        print('\n\n#######################################################')
+        print('Starting test to assess negligible impact of abserr_nugget\n')
+        nuggets = [1e-4, 1e-5, 1e-6]
+        gmadbs = [
+            GMADatabase(self._dbpath, use_relative_errors=True,
+                        abserr_nugget=nugget) for nugget in nuggets
+        ]
+        atol = 1e-6
+        rtol = 1e-6
+        maxiter = 30
+        for nugget, gmadb in zip(nuggets, gmadbs):
+            print(f'\n\nRunning LM algorithm with abserr_nugget={nugget}\n\n')
+            gmadb.evaluate(correct_ppp=False, must_converge=True,
+                           maxiter=maxiter, atol=atol, rtol=rtol,
+                           print_status=True)
+        dts = [gmadb.get_datatable() for gmadb in gmadbs]
+        postvals = [dt['POST'].to_numpy() for dt in dts]
+        # paranoid checking
+        self.assertFalse(np.all(postvals[0] == postvals[1]))
+        self.assertFalse(np.all(postvals[0] == postvals[2]))
+        self.assertFalse(np.all(postvals[1] == postvals[2]))
+        # now the real checks
+        self.assertTrue(np.allclose(postvals[0], postvals[1],
+                                    rtol=1e-5, atol=1e-8))
+        self.assertTrue(np.allclose(postvals[0], postvals[2],
+                                    rtol=1e-5, atol=1e-8))
+        self.assertTrue(np.allclose(postvals[1], postvals[2],
+                                    rtol=1e-5, atol=1e-8))
 
     def test_covmat_passed_by_copy(self):
         gmadb = deepcopy(self._gmadb)
