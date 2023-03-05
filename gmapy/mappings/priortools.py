@@ -23,7 +23,7 @@ def attach_shape_prior(datatable):
     for cur_exp, cur_exp_df in exp_groups:
         norm_prior_dic['NODE'].append(re.sub('^exp_', 'norm_', cur_exp))
         norm_prior_dic['PRIOR'].append(1.)
-        norm_prior_dic['REAC'].append('NA')
+        norm_prior_dic['REAC'].append(cur_exp_df['REAC'].iloc[0])
         norm_prior_dic['ENERGY'].append(0.)
     norm_df = pd.DataFrame.from_dict(norm_prior_dic)
     ext_datatable = pd.concat([datatable, norm_df], axis=0, ignore_index=True)
@@ -99,7 +99,7 @@ def remove_dummy_datasets(datablock_list):
 
 
 def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp=False,
-                       prop_usu_errors=False):
+                       prop_usu_errors=False, prop_relerr=False):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # to obtain the cross section. Otherwise, we
@@ -114,12 +114,19 @@ def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp
         usu_selidx = datatable[datatable['NODE'].str.match('usu_', na=False)].index
         usuvals = refvals[usu_selidx]
         refvals[usu_selidx] = 0.
+    # or relative error components
+    if not prop_relerr:
+        relerr_selidx = datatable[datatable['NODE'].str.match('relerr_', na=False)].index
+        relerrvals = refvals[relerr_selidx]
+        refvals[relerr_selidx] = 0.
     # calculate PPP correction
     propvals = mapping.propagate(refvals, datatable)
     if not prop_normfact:
         propvals[norm_selidx] = normvals
     if not prop_usu_errors:
         propvals[usu_selidx] = usuvals
+    if not prop_relerr:
+        propvals[relerr_selidx] = relerrvals
     # the substitution of propagated values by experimental ones
     # for MT6 (SACS) is there to facilitate the PPP correction
     # as done by Fortran GMAP, which does not apply it to MT6.
