@@ -4,8 +4,7 @@ import numpy as np
 
 def create_relunc_vector(datablock):
     relcovmat = create_relative_datablock_covmat(datablock)
-    return relcovmat.diagonal()
-
+    return np.sqrt(relcovmat.diagonal())
 
 
 def create_relative_datablock_covmat(datablock):
