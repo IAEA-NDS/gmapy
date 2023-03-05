@@ -6,7 +6,9 @@ from .data_management.tablefuns import create_prior_table, create_experiment_tab
 from .data_management.uncfuns import (
         create_relunc_vector, create_experimental_covmat,
         create_prior_covmat)
+from .data_management.unc_utils import scale_covmat
 from .mappings.compound_map import CompoundMap
+from .mappings.relative_error_map import attach_relative_error_df
 from .inference import lm_update, compute_posterior_covmat
 from .mappings.priortools import (
     propagate_mesh_css,
@@ -19,7 +21,8 @@ from .mappings.priortools import (
 class GMADatabase:
 
     def __init__(self, dbfile=None, prior_list=None, datablock_list=None,
-                 remove_dummy=True, mapping=None, fix_covmat=True):
+                 remove_dummy=True, mapping=None, fix_covmat=True,
+                 use_relative_errors=False, abserr_nugget=1e-4):
         if dbfile is not None:
             if prior_list is not None or datablock_list is not None:
                 raise ValueError('you must not provide the prior_list or ' +
@@ -48,20 +51,28 @@ class GMADatabase:
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         reluncs[expsel] = create_relunc_vector(db['datablock_list'])
         initialize_shape_prior(datatable, mapping, refvals, reluncs)
+        # convert absolute experimental errors to relative ones if desired
+        if use_relative_errors:
+            datatable = attach_relative_error_df(datatable)
         # define the state variables of the instance
         self._cache = {}
         self._raw_database = db
         self._datatable = datatable
         self._covmat = None
         self._mapping = mapping
-        self._initialize_uncertainty_info(fix_covmat=fix_covmat)
+        self._initialize_uncertainty_info(
+            fix_covmat=fix_covmat, use_relative_errors=use_relative_errors,
+            abserr_nugget=abserr_nugget
+        )
 
 
-    def _initialize_uncertainty_info(self, fix_covmat):
+    def _initialize_uncertainty_info(self, fix_covmat, use_relative_errors,
+                                     abserr_nugget):
         datatable = self._datatable
         db = self._raw_database
         datatable.sort_index(inplace=True)
-        priorsel = datatable['NODE'].str.match('^fis$|^xsid_', na=False).to_numpy()
+        priorsel = datatable['NODE'].str.match('^fis$|^xsid_|^relerr_',
+                                               na=False).to_numpy()
         normsel = datatable['NODE'].str.match('norm_', na=False).to_numpy()
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         all_sel = np.logical_or(expsel, np.logical_or(normsel, priorsel))
@@ -71,23 +82,51 @@ class GMADatabase:
         # assemble covariance matrix
         priorcov = create_prior_covmat(db['prior_list'])
         expcov = create_experimental_covmat(db['datablock_list'],
-                                            fix_covmat=fix_covmat)
+                                            fix_covmat=fix_covmat,
+                                            relative=use_relative_errors)
         # we know the order because attach_shape_prior attaches
         # the normalization errors at the end of datatable
         normuncs = datatable.loc[normsel, 'UNC'].to_numpy()
         normcov = diags(np.square(normuncs), dtype='d')
-        covmat = block_diag([priorcov, expcov, normcov], format='csr',
-                            dtype='d')
+        if use_relative_errors:
+            isexp = datatable['NODE'].str.match('exp_')
+            expvals = datatable.loc[isexp, 'DATA'].to_numpy()
+            abscov_diag = expcov.diagonal() * np.square(expvals * abserr_nugget)
+            absexpcov = diags(abscov_diag, format='csr')
+            covmat = block_diag(
+                [priorcov, absexpcov, normcov, expcov], format='csr', dtype='d'
+            )
+            # special case MT:6 (SACS)
+            # in legacy GMA the SACS uncertainties are kept as absolute
+            # even if PPP correction is enabled
+            is_mt6_exp = (datatable['NODE'].str.match('exp_') &
+                          datatable['REAC'].str.match('MT:6-'))
+            is_mt6_relerr = (datatable['NODE'].str.match('relerr_') &
+                             datatable['REAC'].str.match('MT:6-'))
+            expvals_mt6 = datatable.loc[is_mt6_exp, 'DATA'].to_numpy()
+            relcov_mt6 = covmat[np.ix_(is_mt6_relerr, is_mt6_relerr)]
+            abscov_mt6 = scale_covmat(relcov_mt6, expvals_mt6)
+            covmat = covmat.tolil()
+            covmat[np.ix_(is_mt6_exp, is_mt6_exp)] = abscov_mt6
+            # remove the relative SACS errors
+            # (because now converted to absolute ones)
+            not_mt6_relerr = np.logical_not(is_mt6_relerr)
+            datatable = datatable.loc[not_mt6_relerr].reset_index()
+            covmat = covmat[np.ix_(not_mt6_relerr, not_mt6_relerr)]
+            covmat = covmat.tocsr()
+        else:
+            covmat = block_diag(
+                [priorcov, expcov, normcov], format='csr', dtype='d'
+            )
         # update uncertainties in datatable
         datatable['UNC'] = np.sqrt(covmat.diagonal())
-        # update class state
-        self._covmat = covmat
-        # self._datatable = ... not necessary because inplace change
         self._cache['uncertainties'] = datatable.UNC.to_numpy()
+        # update class state
+        self._datatable = datatable
+        self._covmat = covmat
 
 
     def _update_covmat(self):
-        db = self._raw_database
         datatable = self._datatable
         covmat = self._covmat
         datatable.sort_index(inplace=True)
