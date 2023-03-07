@@ -203,8 +203,6 @@ class InputSelectorCollection:
             return
         if not all(type(obj) == InputSelector for obj in listlike):
             raise TypeError('only InputSelector instances allowed in list')
-        if self.__selector_list is None:
-            breakpoint()
         sels = self.__selector_list + listlike
         uniq_sels = list({id(cursel): cursel for cursel in sels}.values())
         self.__selector_list = uniq_sels
