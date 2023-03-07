@@ -99,7 +99,9 @@ class CrossSectionRatioShapeMap:
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
-                norm_fact = reuse_or_create_input_selector(norm_index, len(datatable))
+                norm_fact = reuse_or_create_input_selector(
+                    norm_index, len(datatable), selector_list
+                )
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))
                 mult_res = ratio * norm_fact_rep
                 outvar = Distributor(mult_res, tar_idcs, len(datatable))
