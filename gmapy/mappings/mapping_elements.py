@@ -199,13 +199,15 @@ class InputSelectorCollection:
         return self.__selector_list
 
     def add_selectors(self, listlike=None):
-        if listlike is None:
-            return
-        if not all(type(obj) == InputSelector for obj in listlike):
-            raise TypeError('only InputSelector instances allowed in list')
-        sels = self.__selector_list + listlike
-        uniq_sels = list({id(cursel): cursel for cursel in sels}.values())
-        self.__selector_list = uniq_sels
+        for sel in listlike:
+            self.add_selector(sel)
+
+    def add_selector(self, selector):
+        if type(selector) != InputSelector:
+            raise TypeError('only InputSelector instance allowed')
+        selids = {id(sel) for sel in self.__selector_list}
+        if id(selector) not in selids:
+            self.__selector_list.append(selector)
 
     def define_selector(self, idcs, size):
         for sel in self.__selector_list:
@@ -289,9 +291,12 @@ class SumOfDistributors(MyAlgebra):
         self.add_distributors(listlike)
 
     def get_indices(self):
-        return np.unique(np.concatenate(list(
-            obj.get_indices() for obj in self.__distributor_list
-        )))
+        if len(self.__distributor_list) > 0:
+            return np.unique(np.concatenate(list(
+                obj.get_indices() for obj in self.__distributor_list
+            )))
+        else:
+            return np.empty(0, dtype=int)
 
     def __len__(self):
         if len(self.__distributor_list) == 0:
@@ -316,11 +321,14 @@ class SumOfDistributors(MyAlgebra):
         return self.__distributor_list
 
     def add_distributors(self, listlike):
-        if not all(
-            type(obj) in (Distributor, SumOfDistributors) for obj in listlike
-        ):
-            raise TypeError('only Distributor instances allowed in list')
-        self.__distributor_list.extend(listlike)
+        for dist in listlike:
+            self.add_distributor(dist)
+
+    def add_distributor(self, distributor):
+        if type(distributor) not in (Distributor, SumOfDistributors):
+            raise TypeError('only Distributor and SumOfDistributor instance ' +
+                            'allowed as argument')
+        self.__distributor_list.append(distributor)
 
 
 class Replicator(MyAlgebra):
