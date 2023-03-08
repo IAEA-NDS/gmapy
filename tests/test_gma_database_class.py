@@ -105,6 +105,11 @@ class TestGMADatabase(unittest.TestCase):
         self.assertFalse(np.all(postvals[0] == postvals[1]))
         self.assertFalse(np.all(postvals[0] == postvals[2]))
         self.assertFalse(np.all(postvals[1] == postvals[2]))
+        # check that relative errors were indeed updated
+        is_relerr = dts[0]['NODE'].str.match('relerr_').to_numpy()
+        self.assertFalse(np.all(postvals[0][is_relerr] == 0.))
+        self.assertFalse(np.all(postvals[1][is_relerr] == 0.))
+        self.assertFalse(np.all(postvals[2][is_relerr] == 0.))
         # now the real checks
         self.assertTrue(np.allclose(postvals[0], postvals[1],
                                     rtol=1e-5, atol=1e-8))
