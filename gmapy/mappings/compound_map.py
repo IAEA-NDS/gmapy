@@ -58,7 +58,6 @@ class CompoundMap:
             if np.any(np.logical_and(curresp, resp)):
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
-            selcol.add_selectors(curmap.get_selectors())
             distsum.add_distributors(curmap.get_distributors())
         # add the relative error map
         relerrmap = RelativeErrorMap(datatable, distsum, selcol=selcol)
