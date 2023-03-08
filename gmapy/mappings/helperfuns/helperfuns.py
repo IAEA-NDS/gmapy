@@ -5,7 +5,7 @@ def mapclass_with_params(origclass, **kwargs):
     class WrapperClass(origclass):
         def __init__(self, datatable, *args, **kwargs2):
             kwargs2.update(kwargs)
-            super().__init__(datatable, *args, **kwargs)
+            super().__init__(datatable, *args, **kwargs2)
     return WrapperClass
 
 
