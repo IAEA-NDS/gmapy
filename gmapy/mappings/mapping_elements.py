@@ -207,6 +207,16 @@ class InputSelectorCollection:
         uniq_sels = list({id(cursel): cursel for cursel in sels}.values())
         self.__selector_list = uniq_sels
 
+    def define_selector(self, idcs, size):
+        for sel in self.__selector_list:
+            refidcs = sel.get_indices()
+            if len(idcs) == len(refidcs):
+                if np.all(idcs == refidcs):
+                    return sel
+        newsel = InputSelector(idcs, size)
+        self.__selector_list.append(newsel)
+        return newsel
+
 
 class Const(MyAlgebra):
 
