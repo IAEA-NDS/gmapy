@@ -9,19 +9,20 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors,
 )
+from .priortools import prepare_prior_and_exptable
 
 
 class CrossSectionRatioOfSacsMap:
 
     def __init__(self, datatable, atol=1e-05, rtol=1e-05,
-                 maxord=16, selcol=None, distsum=None):
+                 maxord=16, selcol=None, distsum=None, reduce=False):
         self.__atol = atol
         self.__rtol = rtol
         self.__maxord = maxord
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        self.__input, self.__output = self.__prepare(datatable, selcol)
+        self.__input, self.__output = self.__prepare(datatable, selcol, reduce)
         if distsum is not None:
             distsum.add_distributors(self.__output.get_distributors())
 
@@ -46,29 +47,32 @@ class CrossSectionRatioOfSacsMap:
     def get_distributors(self):
         return self.__output.get_distributors()
 
-    def __prepare(self, datatable, selcol):
-        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
-                     datatable['NODE'].str.match('xsid_', na=False))
-        is_fis_row = datatable['NODE'].str.fullmatch('fis', na=False)
+    def __prepare(self, datatable, selcol, reduce):
+        priortable, exptable, src_len, tar_len = \
+            prepare_prior_and_exptable(datatable, reduce)
+
+        priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
+                     priortable['NODE'].str.match('xsid_', na=False))
+        is_fis_row = priortable['NODE'].str.fullmatch('fis', na=False)
         if not is_fis_row.any():
             raise IndexError('fission spectrum missing in prior')
         priormask = np.logical_or(priormask, is_fis_row)
-        priortable = datatable[priormask]
-        expmask = datatable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
+        priortable = priortable[priormask]
+        expmask = exptable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
 
         inp = InputSelectorCollection()
         out = SumOfDistributors()
         if not np.any(expmask):
             return inp, out
 
-        exptable = datatable[expmask]
+        exptable = exptable[expmask]
         expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
 
-        raw_fisobj = selcol.define_selector(fistable.index, len(datatable))
+        raw_fisobj = selcol.define_selector(fistable.index, src_len)
         inp.add_selector(raw_fisobj)
 
         scl = get_legacy_to_pointwise_fis_factors(ensfis)
@@ -100,8 +104,8 @@ class CrossSectionRatioOfSacsMap:
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
 
-            xsobj1 = selcol.define_selector(idcs1red, len(datatable))
-            xsobj2 = selcol.define_selector(idcs2red, len(datatable))
+            xsobj1 = selcol.define_selector(idcs1red, src_len)
+            xsobj2 = selcol.define_selector(idcs2red, src_len)
             inp.add_selector(xsobj1)
             inp.add_selector(xsobj2)
 
@@ -115,7 +119,7 @@ class CrossSectionRatioOfSacsMap:
             )
             fisavg_ratio = fisavg1 / fisavg2
 
-            outvar = Distributor(fisavg_ratio, idcs_exp_red, len(datatable))
+            outvar = Distributor(fisavg_ratio, idcs_exp_red, tar_len)
             out.add_distributor(outvar)
 
         return inp, out

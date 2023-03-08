@@ -6,6 +6,22 @@ import re
 SHAPE_MT_IDS = (2,4,8,9)
 
 
+def prepare_prior_and_exptable(datatable, reduce):
+    expmask = datatable['NODE'].str.match('exp_')
+    priortable = datatable.loc[~expmask]
+    exptable = datatable.loc[expmask]
+    if not reduce:
+        src_len = len(datatable)
+        tar_len = len(datatable)
+    else:
+        datatable = datatable.sort_index(inplace=False)
+        priortable = priortable.reset_index(drop=True)
+        exptable = exptable.reset_index(drop=True)
+        src_len = len(priortable)
+        tar_len = len(exptable)
+    return priortable, exptable, src_len, tar_len
+
+
 def attach_shape_prior(datatable):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable

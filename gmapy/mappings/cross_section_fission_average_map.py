@@ -11,6 +11,7 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors,
 )
+from .priortools import prepare_prior_and_exptable
 
 
 class CrossSectionFissionAverageMap:
@@ -18,7 +19,7 @@ class CrossSectionFissionAverageMap:
     def __init__(self, datatable, fix_jacobian=True,
                  legacy_integration=True,
                  atol=1e-6, rtol=1e-6, maxord=16,
-                 selcol=None, distsum=None):
+                 selcol=None, distsum=None, reduce=False):
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
         self._atol = atol
@@ -27,7 +28,7 @@ class CrossSectionFissionAverageMap:
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        self.__input, self.__output = self.__prepare(datatable, selcol)
+        self.__input, self.__output = self.__prepare(datatable, selcol, reduce)
         if distsum is not None:
             distsum.add_distributors(self.__output.get_distributors())
 
@@ -52,12 +53,15 @@ class CrossSectionFissionAverageMap:
     def get_distributors(self):
         return self.__output.get_distributors()
 
-    def __prepare(self, datatable, selcol):
+    def __prepare(self, datatable, selcol, reduce):
+        priortable, exptable, src_len, tar_len = \
+            prepare_prior_and_exptable(datatable, reduce)
+
         legacy_integration = self._legacy_integration
         fix_jacobian = self._fix_jacobian
         expmask = np.array(
-            datatable['REAC'].str.match('MT:6-R1:', na=False) &
-            datatable['NODE'].str.match('exp_', na=False)
+            exptable['REAC'].str.match('MT:6-R1:', na=False) &
+            exptable['NODE'].str.match('exp_', na=False)
         )
 
         inp = InputSelectorCollection()
@@ -65,22 +69,22 @@ class CrossSectionFissionAverageMap:
         if not np.any(expmask):
             return inp, out
 
-        priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
-                     datatable['NODE'].str.match('xsid_', na=False))
+        priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
+                     priortable['NODE'].str.match('xsid_', na=False))
 
-        is_fis_row = datatable['NODE'].str.fullmatch('fis', na=False)
+        is_fis_row = priortable['NODE'].str.fullmatch('fis', na=False)
         if not is_fis_row.any():
             raise IndexError('fission spectrum missing')
         priormask = np.logical_or(priormask, is_fis_row)
-        priortable = datatable[priormask]
-        exptable = datatable[expmask]
+        priortable = priortable[priormask]
+        exptable = exptable[expmask]
         expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
 
-        raw_fisobj = selcol.define_selector(fistable.index, len(datatable))
+        raw_fisobj = selcol.define_selector(fistable.index, src_len)
         inp.add_selector(raw_fisobj)
         if legacy_integration:
             fisobj = raw_fisobj
@@ -106,7 +110,7 @@ class CrossSectionFissionAverageMap:
             idcs1red = priortable_red.index
             idcs2red = exptable_red.index
 
-            xsobj = selcol.define_selector(idcs1red, len(datatable))
+            xsobj = selcol.define_selector(idcs1red, src_len)
             inp.add_selector(xsobj)
 
             curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,
@@ -115,7 +119,7 @@ class CrossSectionFissionAverageMap:
                                        fix_jacobian=fix_jacobian,
                                        atol=self._atol, rtol=self._rtol,
                                        maxord=self._maxord)
-            outvar = Distributor(curfisavg, idcs2red, len(datatable))
+            outvar = Distributor(curfisavg, idcs2red, tar_len)
             out.add_distributor(outvar)
 
         return inp, out

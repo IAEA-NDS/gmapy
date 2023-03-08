@@ -91,6 +91,22 @@ class TestGMADatabase(unittest.TestCase):
             GMADatabase(self._dbpath, use_relative_errors=True,
                         abserr_nugget=nugget) for nugget in nuggets
         ]
+
+        import time
+        d = gmadbs[0].get_datatable()
+        x = d['PRIOR'].to_numpy()
+        m = gmadbs[0].get_mapping()
+        m.is_responsible(d)
+        s1 = time.time()
+        m.propagate(x)
+        s2 = time.time()
+        print(s2-s1)
+        s3 = time.time()
+        m.jacobian(x)
+        s4 = time.time()
+        print(s4-s3)
+        breakpoint() # debug
+
         atol = 1e-6
         rtol = 1e-6
         maxiter = 30

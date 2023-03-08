@@ -51,18 +51,20 @@ class GMADatabase:
         exptable = create_experiment_table(db['datablock_list'])
         datatable = pd.concat([priortable, exptable],
                               axis=0, ignore_index=True)
-        if not mapping:
-            mapping = CompoundMap()
         # initialize the normalization errors
         datatable = attach_shape_prior(datatable)
         refvals = datatable['PRIOR']
         reluncs = np.full(len(refvals), np.nan)
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         reluncs[expsel] = create_relunc_vector(db['datablock_list'])
+
+        if not mapping:
+            mapping = CompoundMap()
         initialize_shape_prior(datatable, mapping, refvals, reluncs)
         # convert absolute experimental errors to relative ones if desired
         if use_relative_errors:
             datatable = attach_relative_error_df(datatable)
+            mapping = CompoundMap()
         # define the state variables of the instance
         self._cache = {}
         self._raw_database = db

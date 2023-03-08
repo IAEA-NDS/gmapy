@@ -6,11 +6,13 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors
 )
+from .priortools import prepare_prior_and_exptable
 
 
 class RelativeErrorMap:
 
-    def __init__(self, datatable, distributor_like, selcol=None, distsum=None):
+    def __init__(self, datatable, distributor_like,
+                 selcol=None, distsum=None, reduce=False):
         if type(distributor_like) not in (Distributor, SumOfDistributors):
             raise TypeError('distributor_like must be of class Distributor '
                             'or class SumOfDistributors')
@@ -18,7 +20,7 @@ class RelativeErrorMap:
         if selcol is None:
             selcol = InputSelectorCollection()
         self.__input, self.__output = self.__prepare(
-            datatable, distributor_like, selcol
+            datatable, distributor_like, selcol, reduce
         )
         if distsum is not None:
             distsum.add_distributors(self.__output.get_distributors())
@@ -44,11 +46,14 @@ class RelativeErrorMap:
     def get_distributors(self):
         return self.__output.get_distributors()
 
-    def __prepare(self, datatable, distributor_like, selcol):
-        priormask = datatable['NODE'].str.match('relerr_', na=False)
-        priortable = datatable[priormask]
-        expmask = datatable['NODE'].str.match('exp_', na=False)
-        exptable = datatable[expmask]
+    def __prepare(self, datatable, distributor_like, selcol, reduce):
+        priortable, exptable, src_len, tar_len = \
+            prepare_prior_and_exptable(datatable, reduce)
+
+        priormask = priortable['NODE'].str.match('relerr_', na=False)
+        priortable = priortable[priormask]
+        expmask = exptable['NODE'].str.match('exp_', na=False)
+        exptable = exptable[expmask]
 
         inp = InputSelectorCollection()
         out = SumOfDistributors()
@@ -77,10 +82,10 @@ class RelativeErrorMap:
             aux_dists = [distributor_like]
         aux_distsum = SumOfDistributors(aux_dists)
 
-        relerrors = selcol.define_selector(source_indices, len(datatable))
+        relerrors = selcol.define_selector(source_indices, src_len)
         expquants = Selector(aux_distsum, target_indices)
         abserrors = relerrors * expquants
-        abserrors_dist = Distributor(abserrors, target_indices, len(datatable))
+        abserrors_dist = Distributor(abserrors, target_indices, tar_len)
 
         inp.add_selector(relerrors)
         out.add_distributor(abserrors_dist)

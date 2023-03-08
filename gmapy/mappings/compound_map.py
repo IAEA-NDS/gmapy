@@ -67,6 +67,12 @@ class CompoundMap:
         self.__output = distsum
         self.__size = len(self.__output)
 
+    def get_selectors(self):
+        return self.__input.get_selectors()
+
+    def get_distributors(self):
+        return self.__output.get_distributors()
+
     def is_responsible(self, datatable=None):
         self.instantiate_maps(datatable)
         ret = np.full(self.__size, False)
