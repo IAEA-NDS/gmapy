@@ -4,7 +4,6 @@ from .mapping_elements import (
     InputSelectorCollection,
     Selector,
     Distributor,
-    reuse_or_create_input_selector
 )
 
 
@@ -14,7 +13,6 @@ class RelativeErrorMap:
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        selcol = selcol.get_selectors()
         inp, out = self.__prepare(
             datatable, distributor_like, selcol
         )
@@ -71,9 +69,7 @@ class RelativeErrorMap:
         source_indices = mapdf2['index'].to_numpy()
         target_indices = mapdf1.loc[list(mapdf2.index), 'index'].to_numpy()
         # construct the selectors
-        relerrors = reuse_or_create_input_selector(
-            source_indices, len(datatable), selector_list
-        )
+        relerrors = selcol.define_selector(source_indices, len(datatable))
         expquants = Selector(distributor_like, target_indices)
         abserrors = relerrors * expquants
         abserrors_dist = Distributor(abserrors, target_indices, len(datatable))

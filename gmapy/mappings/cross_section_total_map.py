@@ -4,7 +4,6 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_input_selector
 )
 
 
@@ -14,7 +13,6 @@ class CrossSectionTotalMap:
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        selcol = selcol.get_selectors()
         self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
@@ -77,7 +75,7 @@ class CrossSectionTotalMap:
             tar_en = exptable_red['ENERGY']
 
             cvars = [
-                reuse_or_create_input_selector(idcs, len(datatable), selcol)
+                selcol.define_selector(idcs, len(datatable))
                 for idcs in src_idcs_list
             ]
             inpvars.extend(cvars)

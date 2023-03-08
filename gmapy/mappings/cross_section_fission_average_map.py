@@ -10,7 +10,6 @@ from .mapping_elements import (
     Replicator,
     Distributor,
     SumOfDistributors,
-    reuse_or_create_input_selector
 )
 
 
@@ -28,7 +27,6 @@ class CrossSectionFissionAverageMap:
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        selcol = selcol.get_selectors()
         self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
@@ -84,9 +82,7 @@ class CrossSectionFissionAverageMap:
 
         inpvars = []
         outvars = []
-        raw_fisobj = reuse_or_create_input_selector(
-            fistable.index, len(datatable), selcol
-        )
+        raw_fisobj = selcol.define_selector(fistable.index, len(datatable))
         inpvars.append(raw_fisobj)
         if legacy_integration:
             fisobj = raw_fisobj
@@ -112,9 +108,7 @@ class CrossSectionFissionAverageMap:
             idcs1red = priortable_red.index
             idcs2red = exptable_red.index
 
-            xsobj = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selcol
-            )
+            xsobj = selcol.define_selector(idcs1red, len(datatable))
             inpvars.append(xsobj)
 
             curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,

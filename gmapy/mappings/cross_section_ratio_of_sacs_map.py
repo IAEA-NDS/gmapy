@@ -8,7 +8,6 @@ from .mapping_elements import (
     FissionAverage,
     Distributor,
     SumOfDistributors,
-    reuse_or_create_input_selector
 )
 
 
@@ -22,7 +21,6 @@ class CrossSectionRatioOfSacsMap:
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        selcol = selcol.get_selectors()
         self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
@@ -72,9 +70,7 @@ class CrossSectionRatioOfSacsMap:
 
         inpvars = []
         outvars = []
-        raw_fisobj = reuse_or_create_input_selector(
-            fistable.index, len(datatable), selcol
-        )
+        raw_fisobj = selcol.define_selector(fistable.index, len(datatable))
         inpvars.append(raw_fisobj)
 
         scl = get_legacy_to_pointwise_fis_factors(ensfis)
@@ -106,12 +102,8 @@ class CrossSectionRatioOfSacsMap:
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
 
-            xsobj1 = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selcol
-            )
-            xsobj2 = reuse_or_create_input_selector(
-                idcs2red, len(datatable), selcol
-            )
+            xsobj1 = selcol.define_selector(idcs1red, len(datatable))
+            xsobj2 = selcol.define_selector(idcs2red, len(datatable))
             inpvars.append(xsobj1)
             inpvars.append(xsobj2)
 

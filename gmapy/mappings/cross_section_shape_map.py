@@ -5,7 +5,6 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors,
     LinearInterpolation,
-    reuse_or_create_input_selector
 )
 
 
@@ -15,7 +14,6 @@ class CrossSectionShapeMap:
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        selcol = selcol.get_selectors()
         self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
@@ -63,9 +61,7 @@ class CrossSectionShapeMap:
             ens1 = priortable_red['ENERGY']
             idcs1red = priortable_red.index
 
-            inpvar = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selcol
-            )
+            inpvar = selcol.define_selector(idcs1red, len(datatable))
             inpvars.append(inpvar)
             # loop over the datasets
             dataset_ids = exptable_red['NODE'].unique()
@@ -78,7 +74,7 @@ class CrossSectionShapeMap:
                     raise IndexError('There are ' + str(len(norm_index)) +
                         ' normalization factors in prior for dataset ' + str(dataset_id))
 
-                norm_fact = reuse_or_create_input_selector(norm_index, len(datatable))
+                norm_fact = selcol.define_selector(norm_index, len(datatable))
                 inpvars.append(norm_fact)
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']
