@@ -31,16 +31,10 @@ class CrossSectionTotalMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
@@ -50,13 +44,14 @@ class CrossSectionTotalMap:
             datatable['REAC'].str.match('MT:5(-R[0-9]+:[0-9]+)+', na=False) &
             datatable['NODE'].str.match('exp_', na=False)
         )
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
-        inpvars = []
-        outvars = []
         for curreac in reacs:
             # obtian the involved reactions
             reac_groups = curreac.split('-')[1:]
@@ -78,15 +73,13 @@ class CrossSectionTotalMap:
                 selcol.define_selector(idcs, len(datatable))
                 for idcs in src_idcs_list
             ]
-            inpvars.extend(cvars)
+            inp.add_selectors(cvars)
             cvars_int = []
             for cv, en in zip(cvars, src_en_list):
                 cvars_int.append(LinearInterpolation(cv, en, tar_en))
 
             tmpres = sum(cvars_int)
             outvar = Distributor(tmpres, tar_idcs, len(datatable))
-            outvars.append(outvar)
+            out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out

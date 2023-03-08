@@ -32,26 +32,21 @@ class CrossSectionShapeMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         isresp = np.array(datatable['REAC'].str.match('MT:2-R1:', na=False) &
                           datatable['NODE'].str.match('exp_', na=False))
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(isresp):
-            return None, None
+            return inp, out
         reacs = datatable.loc[isresp, 'REAC'].unique()
 
-        inpvars = []
-        outvars = []
         for curreac in reacs:
             priormask = ((datatable['REAC'].str.fullmatch(curreac.replace('MT:2','MT:1'), na=False)) &
                          datatable['NODE'].str.match('xsid_', na=False))
@@ -62,7 +57,7 @@ class CrossSectionShapeMap:
             idcs1red = priortable_red.index
 
             inpvar = selcol.define_selector(idcs1red, len(datatable))
-            inpvars.append(inpvar)
+            inp.add_selector(inpvar)
             # loop over the datasets
             dataset_ids = exptable_red['NODE'].unique()
             for dataset_id in dataset_ids:
@@ -75,7 +70,7 @@ class CrossSectionShapeMap:
                         ' normalization factors in prior for dataset ' + str(dataset_id))
 
                 norm_fact = selcol.define_selector(norm_index, len(datatable))
-                inpvars.append(norm_fact)
+                inp.add_selector(norm_fact)
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']
                 idcs2red = exptable_ds.index
@@ -84,8 +79,6 @@ class CrossSectionShapeMap:
                 inpvar_int = LinearInterpolation(inpvar, ens1, ens2)
                 prod = norm_fact_rep * inpvar_int
                 outvar = Distributor(prod, idcs2red, len(datatable))
-                outvars.append(outvar)
+                out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out

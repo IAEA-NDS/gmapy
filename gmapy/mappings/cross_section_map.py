@@ -33,16 +33,10 @@ class CrossSectionMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
@@ -50,13 +44,15 @@ class CrossSectionMap:
         priortable = datatable[priormask]
         expmask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                    datatable['NODE'].str.match('exp_', na=False))
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
+
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
-        inpvars = []
-        outvars = []
         for curreac in reacs:
             priortable_red = priortable[priortable['REAC'].str.fullmatch(curreac, na=False)]
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
@@ -69,9 +65,7 @@ class CrossSectionMap:
             inpvar = selcol.define_selector(idcs1red, len(datatable))
             intres = LinearInterpolation(inpvar, ens1, ens2, zero_outside=True)
             outvar = Distributor(intres, idcs2red, len(datatable))
-            inpvars.append(inpvar)
-            outvars.append(outvar)
+            inp.add_selector(inpvar)
+            out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out

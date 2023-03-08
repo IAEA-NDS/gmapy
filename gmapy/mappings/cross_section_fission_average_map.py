@@ -45,16 +45,10 @@ class CrossSectionFissionAverageMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         legacy_integration = self._legacy_integration
@@ -63,8 +57,12 @@ class CrossSectionFissionAverageMap:
             datatable['REAC'].str.match('MT:6-R1:', na=False) &
             datatable['NODE'].str.match('exp_', na=False)
         )
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
+
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
 
@@ -80,10 +78,8 @@ class CrossSectionFissionAverageMap:
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
 
-        inpvars = []
-        outvars = []
         raw_fisobj = selcol.define_selector(fistable.index, len(datatable))
-        inpvars.append(raw_fisobj)
+        inp.add_selector(raw_fisobj)
         if legacy_integration:
             fisobj = raw_fisobj
         if not legacy_integration:
@@ -109,7 +105,7 @@ class CrossSectionFissionAverageMap:
             idcs2red = exptable_red.index
 
             xsobj = selcol.define_selector(idcs1red, len(datatable))
-            inpvars.append(xsobj)
+            inp.add_selector(xsobj)
 
             curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,
                                        check_norm=False,
@@ -118,8 +114,6 @@ class CrossSectionFissionAverageMap:
                                        atol=self._atol, rtol=self._rtol,
                                        maxord=self._maxord)
             outvar = Distributor(curfisavg, idcs2red, len(datatable))
-            outvars.append(outvar)
+            out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out

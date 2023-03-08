@@ -32,16 +32,10 @@ class CrossSectionShapeOfRatioMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
@@ -52,13 +46,14 @@ class CrossSectionShapeOfRatioMap:
             datatable['REAC'].str.match('MT:9-R1:[0-9]+-R2:[0-9]+-R3:[0-9]+', na=False) &
             datatable['NODE'].str.match('exp_', na=False)
         )
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
-        inpvars = []
-        outvars = []
         for curreac in reacs:
             # obtain the involved reactions
             string_groups = curreac.split('-')
@@ -87,7 +82,7 @@ class CrossSectionShapeOfRatioMap:
             inpvar1 = selcol.define_selector(src_idcs1, len(datatable))
             inpvar2 = selcol.define_selector(src_idcs2, len(datatable))
             inpvar3 = selcol.define_selector(src_idcs3, len(datatable))
-            inpvars.extend([inpvar1, inpvar2, inpvar3])
+            inp.add_selectors([inpvar1, inpvar2, inpvar3])
 
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             datasets = exptable_red['NODE'].unique()
@@ -102,7 +97,7 @@ class CrossSectionShapeOfRatioMap:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
                 norm_fact = selcol.define_selector(norm_index, len(datatable))
-                inpvars.append(norm_fact)
+                inp.add_selector(norm_fact)
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))
 
                 inpvar1_int = LinearInterpolation(inpvar1, src_en1, tar_en)
@@ -110,8 +105,6 @@ class CrossSectionShapeOfRatioMap:
                 inpvar3_int = LinearInterpolation(inpvar3, src_en3, tar_en)
                 tmpres = norm_fact_rep * inpvar1_int / (inpvar2_int + inpvar3_int)
                 outvar = Distributor(tmpres, tar_idcs, len(datatable))
-                outvars.append(outvar)
+                out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out

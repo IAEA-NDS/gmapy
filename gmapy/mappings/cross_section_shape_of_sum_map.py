@@ -32,16 +32,10 @@ class CrossSectionShapeOfSumMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
@@ -52,13 +46,14 @@ class CrossSectionShapeOfSumMap:
             datatable['REAC'].str.match('MT:8(-R[0-9]+:[0-9]+)+', na=False) &
             datatable['NODE'].str.match('exp_', na=False)
         )
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
 
-        inpvars = []
-        outvars = []
         for curreac in reacs:
             # obtian the involved reactions
             reac_groups = curreac.split('-')[1:]
@@ -77,7 +72,7 @@ class CrossSectionShapeOfSumMap:
                 selcol.define_selector(idcs, len(datatable))
                 for idcs in src_idcs_list
             ]
-            inpvars.extend(cvars)
+            inp.add_selectors(cvars)
 
             # retrieve relevant rows in exptable
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
@@ -93,7 +88,7 @@ class CrossSectionShapeOfSumMap:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
                 norm_fact = selcol.define_selector(norm_index, len(datatable))
-                inpvars.append(norm_fact)
+                inp.add_selector(norm_fact)
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))
 
                 cvars_int = []
@@ -102,8 +97,6 @@ class CrossSectionShapeOfSumMap:
 
                 tmpres = sum(cvars_int) * norm_fact_rep
                 outvar = Distributor(tmpres, tar_idcs, len(datatable))
-                outvars.append(outvar)
+                out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out

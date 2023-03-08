@@ -37,24 +37,22 @@ class RelativeErrorMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return [self.__input]
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return [self.__output]
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, distributor_like, selcol):
         priormask = datatable['NODE'].str.match('relerr_', na=False)
-        if not np.any(priormask):
-            return None, None
         priortable = datatable[priormask]
         expmask = datatable['NODE'].str.match('exp_', na=False)
         exptable = datatable[expmask]
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
+        if len(priortable) == 0 or len(exptable) == 0:
+            return inp, out
+
         # determine the source and target indices of the mapping
         expids = exptable['NODE'].str.extract(r'exp_([0-9]+)$')
         ptidx = exptable['PTIDX']
@@ -82,8 +80,8 @@ class RelativeErrorMap:
         abserrors = relerrors * expquants
         abserrors_dist = Distributor(abserrors, target_indices, len(datatable))
 
-        inp = relerrors
-        out = abserrors_dist
+        inp.add_selector(relerrors)
+        out.add_distributor(abserrors_dist)
         return inp, out
 
 

@@ -31,16 +31,10 @@ class CrossSectionRatioMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
@@ -51,13 +45,14 @@ class CrossSectionRatioMap:
             datatable['REAC'].str.match('MT:3-R1:[0-9]+-R2:[0-9]+', na=False) &
             datatable['NODE'].str.match('exp_', na=False)
         )
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
+
         exptable = datatable[expmask]
         reacs = exptable['REAC'].unique()
-
-        inpvars = []
-        outvars = []
         for curreac in reacs:
             # obtian the involved reactions
             string_groups = curreac.split('-')
@@ -84,9 +79,7 @@ class CrossSectionRatioMap:
             inpvar2_int = LinearInterpolation(inpvar2, src_en2, tar_en)
             tmpres = inpvar1_int / inpvar2_int
             outvar = Distributor(tmpres, tar_idcs, len(datatable))
-            inpvars.extend([inpvar1, inpvar2])
-            outvars.append(outvar)
+            inp.add_selectors([inpvar1, inpvar2])
+            out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out
