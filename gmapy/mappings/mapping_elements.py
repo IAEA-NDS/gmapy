@@ -244,7 +244,7 @@ class Const(MyAlgebra):
 
 class Distributor(MyAlgebra):
 
-    def __init__(self, obj, idcs, size):
+    def __init__(self, obj, idcs, size, cache=True):
         super().__init__()
         if len(obj) != len(idcs):
             raise ValueError('size mismatch')
@@ -261,6 +261,9 @@ class Distributor(MyAlgebra):
             (coeffs, (tar_idcs, src_idcs)),
             shape=(self.__size, src_len), dtype=float
         )
+        self.__cache = cache
+        self.__last_propvals = None
+        self.__last_jacobian = None
 
     def __len__(self):
         return self.__size
@@ -269,14 +272,23 @@ class Distributor(MyAlgebra):
         return True
 
     def evaluate(self):
-        super().evaluate()
         res = np.zeros(self.__size, dtype=float)
-        res[self.__idcs] = self.__obj.evaluate()
+        if self.__cache and not self.values_updated():
+            res[self.__idcs] += self.__last_propvals
+            return res
+        super().evaluate()
+        nonzero_res = self.__obj.evaluate()
+        self.__last_propvals = nonzero_res
+        res[self.__idcs] += nonzero_res
         return res
 
     def jacobian(self):
+        if self.__cache and not self.jacobian_updated():
+            return self.__last_jacobian
         super().jacobian()
-        return matmul(self.__dist_mat, self.__obj.jacobian())
+        jac = matmul(self.__dist_mat, self.__obj.jacobian())
+        self.__last_jacobian = jac
+        return jac
 
     def get_indices(self):
         return self.__idcs.copy()
