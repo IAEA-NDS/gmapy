@@ -18,7 +18,7 @@ from .helperfuns import mapclass_with_params
 class CompoundMap:
 
     def __init__(self, datatable=None, fix_sacs_jacobian=True,
-                 legacy_integration=False):
+                 legacy_integration=False, reduce=False):
         self.mapclasslist = [
                 CrossSectionMap,
                 CrossSectionShapeMap,
@@ -38,12 +38,13 @@ class CompoundMap:
                     atol=1e-5, rtol=1e-05, maxord=16
                 )
             ]
+        self.__reduce = reduce
         self.__input = None
         self.__output = None
         if datatable is not None:
-            self.instantiate_maps(datatable)
+            self.instantiate_maps(datatable, reduce)
 
-    def instantiate_maps(self, datatable=None):
+    def instantiate_maps(self, datatable=None, reduce=False):
         if datatable is None:
             if self.__input is None or self.__output is None:
                 raise TypeError('neither map list initialized nor datatable provided')
@@ -53,14 +54,15 @@ class CompoundMap:
         selcol = InputSelectorCollection()
         distsum = SumOfDistributors()
         for curclass in self.mapclasslist:
-            curmap = curclass(datatable, selcol=selcol, distsum=distsum)
+            curmap = curclass(datatable, selcol=selcol, distsum=distsum,
+                              reduce=reduce)
             curresp = curmap.is_responsible()
             if np.any(np.logical_and(curresp, resp)):
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
         # add the relative error map
         relerrmap = RelativeErrorMap(
-            datatable, distsum, selcol=selcol, distsum=distsum
+            datatable, distsum, selcol=selcol, distsum=distsum, reduce=reduce
         )
         # save everything for later
         self.__input = selcol
@@ -84,16 +86,20 @@ class CompoundMap:
         self.instantiate_maps(datatable)
         isresp = self.is_responsible()
         self.__input.assign(refvals)
-        propvals = refvals.copy()
-        propvals[isresp] = self.__output.evaluate()[isresp]
-        return propvals
+        outvals = self.__output.evaluate()
+        if not self.__reduce:
+            propvals = refvals.copy()
+            propvals[isresp] = outvals[isresp]
+            return propvals
+        else:
+            return outvals
 
     def jacobian(self, refvals, datatable=None, with_id=True):
         self.instantiate_maps(datatable)
         self.__input.assign(refvals)
-        numel = self.__size
         Smat = self.__output.jacobian()
-        if with_id:
+        if with_id and not self.__reduce:
+            numel = self.__size
             ones = np.full(numel, 1., dtype=float)
             idcs = np.arange(numel)
             idmat = csr_matrix((ones, (idcs, idcs)),
