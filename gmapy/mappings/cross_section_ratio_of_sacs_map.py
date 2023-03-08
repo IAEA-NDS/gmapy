@@ -39,16 +39,10 @@ class CrossSectionRatioOfSacsMap:
         return self.__output.jacobian()
 
     def get_selectors(self):
-        if self.__input is not None:
-            return self.__input.get_selectors()
-        else:
-            return []
+        return self.__input.get_selectors()
 
     def get_distributors(self):
-        if self.__output is not None:
-            return self.__output.get_distributors()
-        else:
-            return []
+        return self.__output.get_distributors()
 
     def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
@@ -59,8 +53,12 @@ class CrossSectionRatioOfSacsMap:
         priormask = np.logical_or(priormask, is_fis_row)
         priortable = datatable[priormask]
         expmask = datatable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
+
+        inp = InputSelectorCollection()
+        out = SumOfDistributors()
         if not np.any(expmask):
-            return None, None
+            return inp, out
+
         exptable = datatable[expmask]
         expids = exptable['NODE'].unique()
 
@@ -68,10 +66,8 @@ class CrossSectionRatioOfSacsMap:
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
 
-        inpvars = []
-        outvars = []
         raw_fisobj = selcol.define_selector(fistable.index, len(datatable))
-        inpvars.append(raw_fisobj)
+        inp.add_selector(raw_fisobj)
 
         scl = get_legacy_to_pointwise_fis_factors(ensfis)
         unnorm_fisobj = raw_fisobj * Const(scl)
@@ -104,8 +100,8 @@ class CrossSectionRatioOfSacsMap:
 
             xsobj1 = selcol.define_selector(idcs1red, len(datatable))
             xsobj2 = selcol.define_selector(idcs2red, len(datatable))
-            inpvars.append(xsobj1)
-            inpvars.append(xsobj2)
+            inp.add_selector(xsobj1)
+            inp.add_selector(xsobj2)
 
             fisavg1 = FissionAverage(
                 ens1, xsobj1, ensfis, unnorm_fisobj, check_norm=False,
@@ -118,8 +114,6 @@ class CrossSectionRatioOfSacsMap:
             fisavg_ratio = fisavg1 / fisavg2
 
             outvar = Distributor(fisavg_ratio, idcs_exp_red, len(datatable))
-            outvars.append(outvar)
+            out.add_distributor(outvar)
 
-        inp = InputSelectorCollection(inpvars)
-        out = SumOfDistributors(outvars)
         return inp, out
