@@ -9,10 +9,10 @@ from .mapping_elements import (
 
 class RelativeErrorMap:
 
-    def __init__(self, datatable, distributor_like, selector_list=None):
+    def __init__(self, datatable, distributor_like, selcol=None):
         self.__numrows = len(datatable)
         inp, out = self.__prepare(
-            datatable, distributor_like, selector_list
+            datatable, distributor_like, selcol
         )
         self.__input = inp
         self.__output = out
@@ -44,7 +44,7 @@ class RelativeErrorMap:
         else:
             return []
 
-    def __prepare(self, datatable, distributor_like, selector_list):
+    def __prepare(self, datatable, distributor_like, selcol):
         priormask = datatable['NODE'].str.match('relerr_', na=False)
         if not np.any(priormask):
             return None, None

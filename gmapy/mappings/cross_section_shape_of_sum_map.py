@@ -11,9 +11,9 @@ from .mapping_elements import (
 
 class CrossSectionShapeOfSumMap:
 
-    def __init__(self, datatable, selector_list=None):
+    def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -42,7 +42,7 @@ class CrossSectionShapeOfSumMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priormask = np.logical_or(priormask, datatable['NODE'].str.match('norm_', na=False))
@@ -73,7 +73,7 @@ class CrossSectionShapeOfSumMap:
             src_en_list = [pt['ENERGY'] for pt in priortable_reds]
 
             cvars = [
-                reuse_or_create_input_selector(idcs, len(datatable), selector_list)
+                reuse_or_create_input_selector(idcs, len(datatable), selcol)
                 for idcs in src_idcs_list
             ]
             inpvars.extend(cvars)
@@ -92,7 +92,7 @@ class CrossSectionShapeOfSumMap:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
                 norm_fact = reuse_or_create_input_selector(
-                    norm_index, len(datatable), selector_list
+                    norm_index, len(datatable), selcol
                 )
                 inpvars.append(norm_fact)
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))

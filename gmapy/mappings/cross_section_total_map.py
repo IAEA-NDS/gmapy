@@ -10,9 +10,9 @@ from .mapping_elements import (
 
 class CrossSectionTotalMap:
 
-    def __init__(self, datatable, selector_list=None):
+    def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -41,7 +41,7 @@ class CrossSectionTotalMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
@@ -74,7 +74,7 @@ class CrossSectionTotalMap:
             tar_en = exptable_red['ENERGY']
 
             cvars = [
-                reuse_or_create_input_selector(idcs, len(datatable), selector_list)
+                reuse_or_create_input_selector(idcs, len(datatable), selcol)
                 for idcs in src_idcs_list
             ]
             inpvars.extend(cvars)

@@ -53,7 +53,7 @@ class CompoundMap:
         selcol = InputSelectorCollection()
         distsum = SumOfDistributors()
         for curclass in self.mapclasslist:
-            curmap = curclass(datatable, selector_list=selcol.get_selectors())
+            curmap = curclass(datatable, selcol=selcol.get_selectors())
             curresp = curmap.is_responsible()
             if np.any(np.logical_and(curresp, resp)):
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
@@ -62,7 +62,7 @@ class CompoundMap:
             distsum.add_distributors(curmap.get_distributors())
         # add the relative error map
         relerrmap = RelativeErrorMap(datatable, distsum,
-                                     selector_list=selcol.get_selectors())
+                                     selcol=selcol.get_selectors())
         relerr_sels = relerrmap.get_selectors()
         if len(relerr_sels) > 0:
             selcol.add_selectors(relerr_sels)

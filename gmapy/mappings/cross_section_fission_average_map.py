@@ -19,14 +19,14 @@ class CrossSectionFissionAverageMap:
     def __init__(self, datatable, fix_jacobian=True,
                  legacy_integration=True,
                  atol=1e-6, rtol=1e-6, maxord=16,
-                 selector_list=None):
+                 selcol=None):
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
         self._atol = atol
         self._rtol = rtol
         self._maxord = maxord
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -55,7 +55,7 @@ class CrossSectionFissionAverageMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         legacy_integration = self._legacy_integration
         fix_jacobian = self._fix_jacobian
         expmask = np.array(
@@ -82,7 +82,7 @@ class CrossSectionFissionAverageMap:
         inpvars = []
         outvars = []
         raw_fisobj = reuse_or_create_input_selector(
-            fistable.index, len(datatable), selector_list
+            fistable.index, len(datatable), selcol
         )
         inpvars.append(raw_fisobj)
         if legacy_integration:
@@ -110,7 +110,7 @@ class CrossSectionFissionAverageMap:
             idcs2red = exptable_red.index
 
             xsobj = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selector_list
+                idcs1red, len(datatable), selcol
             )
             inpvars.append(xsobj)
 

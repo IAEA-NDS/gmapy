@@ -11,9 +11,9 @@ from .mapping_elements import (
 
 class CrossSectionShapeMap:
 
-    def __init__(self, datatable, selector_list=None):
+    def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -42,7 +42,7 @@ class CrossSectionShapeMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         isresp = np.array(datatable['REAC'].str.match('MT:2-R1:', na=False) &
                           datatable['NODE'].str.match('exp_', na=False))
         if not np.any(isresp):
@@ -61,7 +61,7 @@ class CrossSectionShapeMap:
             idcs1red = priortable_red.index
 
             inpvar = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selector_list
+                idcs1red, len(datatable), selcol
             )
             inpvars.append(inpvar)
             # loop over the datasets

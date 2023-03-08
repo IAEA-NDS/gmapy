@@ -15,12 +15,12 @@ from .mapping_elements import (
 class CrossSectionRatioOfSacsMap:
 
     def __init__(self, datatable, atol=1e-05, rtol=1e-05,
-                 maxord=16, selector_list=None):
+                 maxord=16, selcol=None):
         self.__atol = atol
         self.__rtol = rtol
         self.__maxord = maxord
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -49,7 +49,7 @@ class CrossSectionRatioOfSacsMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         is_fis_row = datatable['NODE'].str.fullmatch('fis', na=False)
@@ -70,7 +70,7 @@ class CrossSectionRatioOfSacsMap:
         inpvars = []
         outvars = []
         raw_fisobj = reuse_or_create_input_selector(
-            fistable.index, len(datatable), selector_list
+            fistable.index, len(datatable), selcol
         )
         inpvars.append(raw_fisobj)
 
@@ -104,10 +104,10 @@ class CrossSectionRatioOfSacsMap:
             idcs_exp_red = exptable_red.index
 
             xsobj1 = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selector_list
+                idcs1red, len(datatable), selcol
             )
             xsobj2 = reuse_or_create_input_selector(
-                idcs2red, len(datatable), selector_list
+                idcs2red, len(datatable), selcol
             )
             inpvars.append(xsobj1)
             inpvars.append(xsobj2)

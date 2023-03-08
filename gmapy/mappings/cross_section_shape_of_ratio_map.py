@@ -11,9 +11,9 @@ from .mapping_elements import (
 
 class CrossSectionShapeOfRatioMap:
 
-    def __init__(self, datatable, selector_list=None):
+    def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -42,7 +42,7 @@ class CrossSectionShapeOfRatioMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priormask = np.logical_or(priormask, datatable['NODE'].str.match('norm_', na=False))
@@ -84,13 +84,13 @@ class CrossSectionShapeOfRatioMap:
             src_en3 = priortable_red3['ENERGY']
 
             inpvar1 = reuse_or_create_input_selector(
-                src_idcs1, len(datatable), selector_list
+                src_idcs1, len(datatable), selcol
             )
             inpvar2 = reuse_or_create_input_selector(
-                src_idcs2, len(datatable), selector_list
+                src_idcs2, len(datatable), selcol
             )
             inpvar3 = reuse_or_create_input_selector(
-                src_idcs3, len(datatable), selector_list
+                src_idcs3, len(datatable), selcol
             )
             inpvars.extend([inpvar1, inpvar2, inpvar3])
 
@@ -107,7 +107,7 @@ class CrossSectionShapeOfRatioMap:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
                 norm_fact = reuse_or_create_input_selector(
-                    norm_index, len(datatable), selector_list
+                    norm_index, len(datatable), selcol
                 )
                 inpvars.append(norm_fact)
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))

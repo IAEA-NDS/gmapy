@@ -10,9 +10,9 @@ from .mapping_elements import (
 
 class CrossSectionMap:
 
-    def __init__(self, datatable, selector_list=None):
+    def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
-        inp, out = self.__prepare(datatable, selector_list)
+        inp, out = self.__prepare(datatable, selcol)
         self.__input = inp
         self.__output = out
 
@@ -43,7 +43,7 @@ class CrossSectionMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
@@ -66,7 +66,7 @@ class CrossSectionMap:
             idcs2red = exptable_red.index
 
             inpvar = reuse_or_create_input_selector(
-                idcs1red, len(datatable), selector_list
+                idcs1red, len(datatable), selcol
             )
             intres = LinearInterpolation(inpvar, ens1, ens2, zero_outside=True)
             outvar = Distributor(intres, idcs2red, len(datatable))

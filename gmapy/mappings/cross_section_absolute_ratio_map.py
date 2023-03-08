@@ -10,9 +10,9 @@ from .mapping_elements import (
 
 class CrossSectionAbsoluteRatioMap:
 
-    def __init__(self, datatable, selector_list=None):
+    def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
-        self.__input, self.__output = self.__prepare(datatable, selector_list)
+        self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -41,7 +41,7 @@ class CrossSectionAbsoluteRatioMap:
         else:
             return []
 
-    def __prepare(self, datatable, selector_list):
+    def __prepare(self, datatable, selcol):
         priormask = (datatable['REAC'].str.match('MT:1-R1:', na=False) &
                      datatable['NODE'].str.match('xsid_', na=False))
         priortable = datatable[priormask]
@@ -86,13 +86,13 @@ class CrossSectionAbsoluteRatioMap:
             tar_en = exptable_red['ENERGY']
 
             inpvar1 = reuse_or_create_input_selector(
-                src_idcs1, len(datatable), selector_list
+                src_idcs1, len(datatable), selcol
             )
             inpvar2 = reuse_or_create_input_selector(
-                src_idcs2, len(datatable), selector_list
+                src_idcs2, len(datatable), selcol
             )
             inpvar3 = reuse_or_create_input_selector(
-                src_idcs3, len(datatable), selector_list
+                src_idcs3, len(datatable), selcol
             )
             inpvar1_int = LinearInterpolation(inpvar1, src_en1, tar_en)
             inpvar2_int = LinearInterpolation(inpvar2, src_en2, tar_en)
