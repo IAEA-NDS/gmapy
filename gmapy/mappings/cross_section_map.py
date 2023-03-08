@@ -12,6 +12,9 @@ class CrossSectionMap:
 
     def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
+        if selcol is None:
+            selcol = InputSelectorCollection()
+        selcol = selcol.get_selectors()
         inp, out = self.__prepare(datatable, selcol)
         self.__input = inp
         self.__output = out

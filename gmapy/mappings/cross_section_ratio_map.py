@@ -12,6 +12,9 @@ class CrossSectionRatioMap:
 
     def __init__(self, datatable, selcol=None):
         self.__numrows = len(datatable)
+        if selcol is None:
+            selcol = InputSelectorCollection()
+        selcol = selcol.get_selectors()
         self.__input, self.__output = self.__prepare(datatable, selcol)
 
     def is_responsible(self):

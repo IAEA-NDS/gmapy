@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from .mapping_elements import (
+    InputSelectorCollection,
     Selector,
     Distributor,
     reuse_or_create_input_selector
@@ -11,6 +12,9 @@ class RelativeErrorMap:
 
     def __init__(self, datatable, distributor_like, selcol=None):
         self.__numrows = len(datatable)
+        if selcol is None:
+            selcol = InputSelectorCollection()
+        selcol = selcol.get_selectors()
         inp, out = self.__prepare(
             datatable, distributor_like, selcol
         )
