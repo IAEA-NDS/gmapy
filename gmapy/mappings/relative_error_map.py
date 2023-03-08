@@ -4,20 +4,22 @@ from .mapping_elements import (
     InputSelectorCollection,
     Selector,
     Distributor,
+    SumOfDistributors
 )
 
 
 class RelativeErrorMap:
 
     def __init__(self, datatable, distributor_like, selcol=None):
+        if type(distributor_like) not in (Distributor, SumOfDistributors):
+            raise TypeError('distributor_like must be of class Distributor '
+                            'or class SumOfDistributors')
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        inp, out = self.__prepare(
+        self.__input, self.__output = self.__prepare(
             datatable, distributor_like, selcol
         )
-        self.__input = inp
-        self.__output = out
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
@@ -69,8 +71,14 @@ class RelativeErrorMap:
         source_indices = mapdf2['index'].to_numpy()
         target_indices = mapdf1.loc[list(mapdf2.index), 'index'].to_numpy()
         # construct the selectors
+        if type(distributor_like) == SumOfDistributors:
+            aux_dists = distributor_like.get_distributors()
+        else:
+            aux_dists = [distributor_like]
+        aux_distsum = SumOfDistributors(aux_dists)
+
         relerrors = selcol.define_selector(source_indices, len(datatable))
-        expquants = Selector(distributor_like, target_indices)
+        expquants = Selector(aux_distsum, target_indices)
         abserrors = relerrors * expquants
         abserrors_dist = Distributor(abserrors, target_indices, len(datatable))
 

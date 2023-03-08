@@ -61,11 +61,7 @@ class CompoundMap:
             distsum.add_distributors(curmap.get_distributors())
         # add the relative error map
         relerrmap = RelativeErrorMap(datatable, distsum, selcol=selcol)
-        relerr_sels = relerrmap.get_selectors()
-        if len(relerr_sels) > 0:
-            selcol.add_selectors(relerr_sels)
-            relerr_dists = relerrmap.get_distributors()
-            distsum = SumOfDistributors([distsum] + relerr_dists)
+        distsum.add_distributors(relerrmap.get_distributors())
         # save everything for later
         self.__input = selcol
         self.__output = distsum
