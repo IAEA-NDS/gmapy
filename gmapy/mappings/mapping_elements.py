@@ -285,9 +285,11 @@ class Distributor(MyAlgebra):
 class SumOfDistributors(MyAlgebra):
 
     def __init__(self, listlike=None):
+        super().__init__()
         if listlike is None:
             listlike = []
         self.__distributor_list = []
+        self._obj_list = self.__distributor_list
         self.add_distributors(listlike)
 
     def get_indices(self):
