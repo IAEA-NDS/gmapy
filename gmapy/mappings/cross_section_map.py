@@ -9,13 +9,15 @@ from .mapping_elements import (
 
 class CrossSectionMap:
 
-    def __init__(self, datatable, selcol=None):
+    def __init__(self, datatable, selcol=None, distsum=None):
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
         inp, out = self.__prepare(datatable, selcol)
         self.__input = inp
         self.__output = out
+        if distsum is not None:
+            distsum.add_distributors(self.__output.get_distributors())
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)

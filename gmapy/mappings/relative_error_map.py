@@ -10,7 +10,7 @@ from .mapping_elements import (
 
 class RelativeErrorMap:
 
-    def __init__(self, datatable, distributor_like, selcol=None):
+    def __init__(self, datatable, distributor_like, selcol=None, distsum=None):
         if type(distributor_like) not in (Distributor, SumOfDistributors):
             raise TypeError('distributor_like must be of class Distributor '
                             'or class SumOfDistributors')
@@ -20,6 +20,8 @@ class RelativeErrorMap:
         self.__input, self.__output = self.__prepare(
             datatable, distributor_like, selcol
         )
+        if distsum is not None:
+            distsum.add_distributors(self.__output.get_distributors())
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)

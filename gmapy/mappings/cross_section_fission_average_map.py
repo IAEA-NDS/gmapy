@@ -18,7 +18,7 @@ class CrossSectionFissionAverageMap:
     def __init__(self, datatable, fix_jacobian=True,
                  legacy_integration=True,
                  atol=1e-6, rtol=1e-6, maxord=16,
-                 selcol=None):
+                 selcol=None, distsum=None):
         self._fix_jacobian = fix_jacobian
         self._legacy_integration = legacy_integration
         self._atol = atol
@@ -28,6 +28,8 @@ class CrossSectionFissionAverageMap:
         if selcol is None:
             selcol = InputSelectorCollection()
         self.__input, self.__output = self.__prepare(datatable, selcol)
+        if distsum is not None:
+            distsum.add_distributors(self.__output.get_distributors())
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)

@@ -14,7 +14,7 @@ from .mapping_elements import (
 class CrossSectionRatioOfSacsMap:
 
     def __init__(self, datatable, atol=1e-05, rtol=1e-05,
-                 maxord=16, selcol=None):
+                 maxord=16, selcol=None, distsum=None):
         self.__atol = atol
         self.__rtol = rtol
         self.__maxord = maxord
@@ -22,6 +22,8 @@ class CrossSectionRatioOfSacsMap:
         if selcol is None:
             selcol = InputSelectorCollection()
         self.__input, self.__output = self.__prepare(datatable, selcol)
+        if distsum is not None:
+            distsum.add_distributors(self.__output.get_distributors())
 
     def is_responsible(self):
         ret = np.full(self.__numrows, False)
