@@ -137,8 +137,11 @@ class InputSelector(MyAlgebra):
     def assign(self, arraylike):
         if len(arraylike) != self.__size:
             raise IndexError('wrong length of vector')
-        self.__values = np.array(arraylike)[self.__idcs]
-        self._signal_changes()
+        newvals = np.array(arraylike)[self.__idcs]
+        if (self.__values is None
+                or np.any(newvals != self.__values)):
+            self.__values = newvals
+            self._signal_changes()
 
     def get_indices(self):
         return self.__idcs.copy()
