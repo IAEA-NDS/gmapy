@@ -33,20 +33,6 @@ def elem_mul(x, y):
     else:
         return x.multiply(y)
 
-# Another convenience function that allows
-# to reuse InputSelectors (see below) if they
-# have already been defined
-
-
-def reuse_or_create_input_selector(idcs, size, selector_list=None):
-    if selector_list is not None:
-        for cursel in selector_list:
-            curidcs = cursel.get_indices()
-            if len(idcs) == len(curidcs):
-                if np.all(idcs == curidcs):
-                    return cursel
-    return InputSelector(idcs, size)
-
 # the following classes are the building
 # blocks to construct mathematical expressions
 # enabling the automated computation of derivatives
