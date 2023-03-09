@@ -43,7 +43,7 @@ class MyAlgebra:
     def __init__(self):
         self._values_updated = True
         self._jacobian_updated = True
-        self._obj_list = []
+        self._ancestors = []
         self._descendants = []
 
     def __add__(self, other):
@@ -74,15 +74,15 @@ class MyAlgebra:
         self._descendants.append(descendant)
 
     def _add_ancestors(self, ancestors):
-        self._obj_list.extend(ancestors)
+        self._ancestors.extend(ancestors)
 
     def _get_ancestors(self):
-        return self._obj_list
+        return self._ancestors
 
     def _signal_changes(self):
         self._values_updated = True
         if self.islinear():
-            if any(obj.jacobian_updated() for obj in self._obj_list):
+            if any(obj.jacobian_updated() for obj in self._ancestors):
                 self._jacobian_updated = True
         else:
             self._jacobian_updated = True
