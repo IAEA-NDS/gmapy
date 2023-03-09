@@ -18,7 +18,8 @@ from .helperfuns import mapclass_with_params
 class CompoundMap:
 
     def __init__(self, datatable=None, fix_sacs_jacobian=True,
-                 legacy_integration=False, reduce=False):
+                 legacy_integration=False, reduce=False,
+                 atol=1e-8, rtol=1e-5, maxord=16):
         self.mapclasslist = [
                 CrossSectionMap,
                 CrossSectionShapeMap,
@@ -31,11 +32,12 @@ class CompoundMap:
                 mapclass_with_params(
                     CrossSectionFissionAverageMap,
                     fix_jacobian=fix_sacs_jacobian,
-                    legacy_integration=legacy_integration
+                    legacy_integration=legacy_integration,
+                    atol=atol, rtol=rtol, maxord=maxord
                 ),
                 mapclass_with_params(
                     CrossSectionRatioOfSacsMap,
-                    atol=1e-5, rtol=1e-05, maxord=16
+                    atol=atol, rtol=rtol, maxord=maxord
                 )
             ]
         self.__reduce = reduce
