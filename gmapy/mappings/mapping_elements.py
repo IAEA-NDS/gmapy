@@ -58,6 +58,7 @@ class MyAlgebra:
         self._values_updated = True
         self._jacobian_updated = True
         self._obj_list = []
+        self._descendants = []
 
     def __add__(self, other):
         return Addition(self, other)
@@ -83,23 +84,23 @@ class MyAlgebra:
     def jacobian(self):
         self._jacobian_updated = False
 
+    def _add_descendant(self, descendant):
+        self._descendants.append(descendant)
+
+    def _signal_changes(self):
+        self._values_updated = True
+        if self.islinear():
+            if any(obj.jacobian_updated() for obj in self._obj_list):
+                self._jacobian_updated = True
+        else:
+            self._jacobian_updated = True
+        for desc in self._descendants:
+            desc._signal_changes()
+
     def values_updated(self):
-        self._values_updated = (
-            self._values_updated or
-            any(obj.values_updated() for obj in self._obj_list)
-        )
         return self._values_updated
 
     def jacobian_updated(self):
-        self._jacobian_updated = (
-            self._jacobian_updated or
-            any(obj.jacobian_updated() for obj in self._obj_list)
-        )
-        if not self.islinear():
-            self._jacobian_updated = (
-                self._jacobian_updated or
-                self.values_updated()
-            )
         return self._jacobian_updated
 
 
@@ -137,7 +138,7 @@ class InputSelector(MyAlgebra):
         if len(arraylike) != self.__size:
             raise IndexError('wrong length of vector')
         self.__values = np.array(arraylike)[self.__idcs]
-        self._values_updated = True
+        self._signal_changes()
 
     def get_indices(self):
         return self.__idcs.copy()
@@ -149,6 +150,7 @@ class Selector(MyAlgebra):
         super().__init__()
         if not isinstance(inpobj, MyAlgebra):
             raise TypeError('please provide instance derived from MyAlgebra')
+        inpobj._add_descendant(self)
         self.__inpobj = inpobj
         self._obj_list = [inpobj]
         self.__idcs = np.array(idcs)
@@ -249,6 +251,7 @@ class Distributor(MyAlgebra):
         super().__init__()
         if len(obj) != len(idcs):
             raise ValueError('size mismatch')
+        obj._add_descendant(self)
         self.__idcs = np.array(idcs)
         self.__size = size
         self.__obj = obj
@@ -344,12 +347,14 @@ class SumOfDistributors(MyAlgebra):
             raise TypeError('only Distributor and SumOfDistributor instance ' +
                             'allowed as argument')
         self.__distributor_list.append(distributor)
+        distributor._add_descendant(self)
 
 
 class Replicator(MyAlgebra):
 
     def __init__(self, obj, num):
         super().__init__()
+        obj._add_descendant(self)
         self.__num = num
         self.__obj = obj
         self._obj_list = [obj]
@@ -380,6 +385,8 @@ class Addition(MyAlgebra):
         super().__init__()
         if len(obj1) != len(obj2):
             raise ValueError('length mismatch')
+        obj1._add_descendant(self)
+        obj2._add_descendant(self)
         self.__obj1 = obj1
         self.__obj2 = obj2
         self._obj_list = [obj1, obj2]
@@ -405,6 +412,8 @@ class Multiplication(MyAlgebra):
         super().__init__()
         if len(obj1) != len(obj2):
             raise ValueError('length mismatch')
+        obj1._add_descendant(self)
+        obj2._add_descendant(self)
         self.__obj1 = obj1
         self.__obj2 = obj2
         self._obj_list = [obj1, obj2]
@@ -431,6 +440,8 @@ class Division(MyAlgebra):
         super().__init__()
         if len(obj1) != len(obj2):
             raise ValueError('length mismatch')
+        obj1._add_descendant(self)
+        obj2._add_descendant(self)
         self.__obj1 = obj1
         self.__obj2 = obj2
         self._obj_list = [obj1, obj2]
@@ -457,6 +468,7 @@ class LinearInterpolation(MyAlgebra):
         super().__init__()
         if len(obj) != len(src_x):
             raise ValueError('length mismatch')
+        obj._add_descendant(self)
         self.__obj = obj
         self._obj_list = [obj]
         yzeros = np.zeros(len(src_x), dtype=float)
@@ -485,6 +497,7 @@ class Integral(MyAlgebra):
         super().__init__()
         if not isinstance(obj, MyAlgebra):
             raise TypeError('obj must be of class MyAlgebra')
+        obj._add_descendant(self)
         self.__obj = obj
         self._obj_list = [obj]
         self.__xvals = np.array(xvals)
@@ -537,6 +550,8 @@ class IntegralOfProduct(MyAlgebra):
         if len(interplist) != len(obj_list):
             raise IndexError('length of interp_list must equal ' +
                              'length of obj_list')
+        for obj in obj_list:
+            obj._add_descendant(self)
         self._obj_list = obj_list
         self.__xlist = [np.array(xv) for xv in xlist]
         self.__interplist = interplist
@@ -587,8 +602,9 @@ class LegacyFissionAverage(MyAlgebra):
             raise TypeError('xsobj must be of class MyAlgebra')
         if not isinstance(fisobj, MyAlgebra):
             raise TypeError('fisobj must be of class MyAlgebra')
-        self.__xsobj = xsobj
+        xsobj._add_descendant(self)
         self._obj_list = [xsobj]
+        self.__xsobj = xsobj
         self.__en = en
         self.__fisobj = fisobj
         self.__fisen = fisen
@@ -654,6 +670,7 @@ class FissionAverage(MyAlgebra):
                 zero_outside=True, atol=self.__atol, rtol=self.__rtol,
                 maxord=self.__maxord
             )
+        self.__fisavg._add_descendant(self)
         self._obj_list = [self.__fisavg]
         self.__check_norm = check_norm
         self.__legacy = legacy
