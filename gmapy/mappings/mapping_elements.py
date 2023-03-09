@@ -150,6 +150,7 @@ class Selector(MyAlgebra):
         if not isinstance(inpobj, MyAlgebra):
             raise TypeError('please provide instance derived from MyAlgebra')
         self.__inpobj = inpobj
+        self._obj_list = [inpobj]
         self.__idcs = np.array(idcs)
 
     def __len__(self):
