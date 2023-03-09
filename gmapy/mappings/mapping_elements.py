@@ -87,6 +87,12 @@ class MyAlgebra:
     def _add_descendant(self, descendant):
         self._descendants.append(descendant)
 
+    def _add_ancestors(self, ancestors):
+        self._obj_list.extend(ancestors)
+
+    def _get_ancestors(self):
+        return self._obj_list
+
     def _signal_changes(self):
         self._values_updated = True
         if self.islinear():
@@ -154,8 +160,8 @@ class Selector(MyAlgebra):
         if not isinstance(inpobj, MyAlgebra):
             raise TypeError('please provide instance derived from MyAlgebra')
         inpobj._add_descendant(self)
+        self._add_ancestors([inpobj])
         self.__inpobj = inpobj
-        self._obj_list = [inpobj]
         self.__idcs = np.array(idcs)
 
     def __len__(self):
@@ -255,10 +261,10 @@ class Distributor(MyAlgebra):
         if len(obj) != len(idcs):
             raise ValueError('size mismatch')
         obj._add_descendant(self)
+        self._add_ancestors([obj])
         self.__idcs = np.array(idcs)
         self.__size = size
         self.__obj = obj
-        self._obj_list = [obj]
         # construct distribution matrix
         src_len = len(self.__obj)
         src_idcs = np.arange(src_len)
@@ -305,11 +311,9 @@ class SumOfDistributors(MyAlgebra):
 
     def __init__(self, listlike=None):
         super().__init__()
-        if listlike is None:
-            listlike = []
         self.__distributor_list = []
-        self._obj_list = self.__distributor_list
-        self.add_distributors(listlike)
+        if listlike is not None:
+            self.add_distributors(listlike)
 
     def get_indices(self):
         if len(self.__distributor_list) > 0:
@@ -351,6 +355,7 @@ class SumOfDistributors(MyAlgebra):
                             'allowed as argument')
         self.__distributor_list.append(distributor)
         distributor._add_descendant(self)
+        self._add_ancestors([distributor])
 
 
 class Replicator(MyAlgebra):
@@ -358,9 +363,9 @@ class Replicator(MyAlgebra):
     def __init__(self, obj, num):
         super().__init__()
         obj._add_descendant(self)
+        self._add_ancestors([obj])
         self.__num = num
         self.__obj = obj
-        self._obj_list = [obj]
 
     def __len__(self):
         return len(self.__obj) * self.__num
@@ -390,9 +395,9 @@ class Addition(MyAlgebra):
             raise ValueError('length mismatch')
         obj1._add_descendant(self)
         obj2._add_descendant(self)
+        self._add_ancestors([obj1, obj2])
         self.__obj1 = obj1
         self.__obj2 = obj2
-        self._obj_list = [obj1, obj2]
 
     def __len__(self):
         return len(self.__obj1)
@@ -417,9 +422,9 @@ class Multiplication(MyAlgebra):
             raise ValueError('length mismatch')
         obj1._add_descendant(self)
         obj2._add_descendant(self)
+        self._add_ancestors([obj1, obj2])
         self.__obj1 = obj1
         self.__obj2 = obj2
-        self._obj_list = [obj1, obj2]
 
     def __len__(self):
         return len(self.__obj1)
@@ -445,9 +450,9 @@ class Division(MyAlgebra):
             raise ValueError('length mismatch')
         obj1._add_descendant(self)
         obj2._add_descendant(self)
+        self._add_ancestors([obj1, obj2])
         self.__obj1 = obj1
         self.__obj2 = obj2
-        self._obj_list = [obj1, obj2]
 
     def __len__(self):
         return len(self.__obj1)
@@ -472,8 +477,8 @@ class LinearInterpolation(MyAlgebra):
         if len(obj) != len(src_x):
             raise ValueError('length mismatch')
         obj._add_descendant(self)
+        self._add_ancestors([obj])
         self.__obj = obj
-        self._obj_list = [obj]
         yzeros = np.zeros(len(src_x), dtype=float)
         self.__jacobian = get_basic_sensmat(
             src_x, yzeros, tar_x, 'lin-lin', zero_outside
@@ -501,8 +506,8 @@ class Integral(MyAlgebra):
         if not isinstance(obj, MyAlgebra):
             raise TypeError('obj must be of class MyAlgebra')
         obj._add_descendant(self)
+        self._add_ancestors([obj])
         self.__obj = obj
-        self._obj_list = [obj]
         self.__xvals = np.array(xvals)
         self.__interp_type = interp_type
         self.__kwargs = kwargs
@@ -555,7 +560,7 @@ class IntegralOfProduct(MyAlgebra):
                              'length of obj_list')
         for obj in obj_list:
             obj._add_descendant(self)
-        self._obj_list = obj_list
+            self._add_ancestors([obj])
         self.__xlist = [np.array(xv) for xv in xlist]
         self.__interplist = interplist
         self.__zero_outside = zero_outside
@@ -571,7 +576,7 @@ class IntegralOfProduct(MyAlgebra):
         if self.__cache and not self.values_updated():
             return self.__last_result.copy()
         super().evaluate()
-        ylist = [obj.evaluate() for obj in self._obj_list]
+        ylist = [obj.evaluate() for obj in self._get_ancestors()]
         self.__last_result = basic_integral_of_product_propagate(
             self.__xlist, ylist, self.__interplist,
             self.__zero_outside, **self.__kwargs
@@ -582,13 +587,14 @@ class IntegralOfProduct(MyAlgebra):
         if self.__cache and not self.jacobian_updated():
             return self.__last_jacobian.copy()
         super().jacobian()
-        ylist = [obj.evaluate() for obj in self._obj_list]
+        ancestors = self._get_ancestors()
+        ylist = [obj.evaluate() for obj in ancestors]
         outer_jacs = get_basic_integral_of_product_sensmats(
             self.__xlist, ylist, self.__interplist,
             self.__zero_outside, **self.__kwargs
         )
         outer_jacs = [csr_matrix(mat) for mat in outer_jacs]
-        inner_jacs = [obj.jacobian() for obj in self._obj_list]
+        inner_jacs = [obj.jacobian() for obj in ancestors]
         jac = 0.
         for outer_jac, inner_jac in zip(outer_jacs, inner_jacs):
             jac += matmul(outer_jac, inner_jac)
@@ -606,7 +612,7 @@ class LegacyFissionAverage(MyAlgebra):
         if not isinstance(fisobj, MyAlgebra):
             raise TypeError('fisobj must be of class MyAlgebra')
         xsobj._add_descendant(self)
-        self._obj_list = [xsobj]
+        self._add_ancestors([xsobj])
         self.__xsobj = xsobj
         self.__en = en
         self.__fisobj = fisobj
@@ -674,7 +680,7 @@ class FissionAverage(MyAlgebra):
                 maxord=self.__maxord
             )
         self.__fisavg._add_descendant(self)
-        self._obj_list = [self.__fisavg]
+        self._add_ancestors([self.__fisavg])
         self.__check_norm = check_norm
         self.__legacy = legacy
 
