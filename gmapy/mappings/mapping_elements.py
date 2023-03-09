@@ -79,15 +79,15 @@ class MyAlgebra:
     def _get_ancestors(self):
         return self._ancestors
 
-    def _signal_changes(self):
+    def _signal_changes(self, ancestor=None):
         self._values_updated = True
         if self.islinear():
-            if any(obj.jacobian_updated() for obj in self._ancestors):
+            if ancestor is not None and ancestor.jacobian_updated():
                 self._jacobian_updated = True
         else:
             self._jacobian_updated = True
         for desc in self._descendants:
-            desc._signal_changes()
+            desc._signal_changes(ancestor=self)
 
     def values_updated(self):
         return self._values_updated
