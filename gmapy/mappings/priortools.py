@@ -6,7 +6,7 @@ import re
 SHAPE_MT_IDS = (2,4,8,9)
 
 
-def prepare_prior_and_exptable(datatable, reduce):
+def prepare_prior_and_exptable(datatable, reduce, reset_index=True):
     expmask = datatable['NODE'].str.match('exp_')
     priortable = datatable.loc[~expmask]
     exptable = datatable.loc[expmask]
@@ -15,8 +15,9 @@ def prepare_prior_and_exptable(datatable, reduce):
         tar_len = len(datatable)
     else:
         datatable = datatable.sort_index(inplace=False)
-        priortable = priortable.reset_index(drop=True)
-        exptable = exptable.reset_index(drop=True)
+        if reset_index:
+            priortable = priortable.reset_index(drop=True)
+            exptable = exptable.reset_index(drop=True)
         src_len = len(priortable)
         tar_len = len(exptable)
     return priortable, exptable, src_len, tar_len
