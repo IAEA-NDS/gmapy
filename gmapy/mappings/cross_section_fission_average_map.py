@@ -78,7 +78,6 @@ class CrossSectionFissionAverageMap:
         priormask = np.logical_or(priormask, is_fis_row)
         priortable = priortable[priormask]
         exptable = exptable[expmask]
-        expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
@@ -97,18 +96,13 @@ class CrossSectionFissionAverageMap:
             )
             fisobj = unnorm_fisobj / Replicator(fisint, len(unnorm_fisobj))
 
-        for curexp in expids:
-            exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
-            if len(exptable_red) != 1:
-                raise IndexError('None or more than one rows associated with a ' +
-                        'fission average, which must not happen!')
-            curreac = exptable_red['REAC'].values[0]
+        reacs = exptable['REAC'].unique()
+        for curreac in reacs:
             preac = curreac.replace('MT:6-', 'MT:1-')
             priortable_red = priortable[priortable['REAC'].str.fullmatch(preac, na=False)]
             # abbreviate some variables
             ens1 = priortable_red['ENERGY'].to_numpy()
             idcs1red = priortable_red.index
-            idcs2red = exptable_red.index
 
             xsobj = selcol.define_selector(idcs1red, src_len)
             inp.add_selector(xsobj)
@@ -119,7 +113,11 @@ class CrossSectionFissionAverageMap:
                                        fix_jacobian=fix_jacobian,
                                        atol=self._atol, rtol=self._rtol,
                                        maxord=self._maxord)
-            outvar = Distributor(curfisavg, idcs2red, tar_len)
+
+            exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
+            rep_curfisavg = Replicator(curfisavg, len(exptable_red))
+            idcs2red = exptable_red.index
+            outvar = Distributor(rep_curfisavg, idcs2red, tar_len)
             out.add_distributor(outvar)
 
         return inp, out
