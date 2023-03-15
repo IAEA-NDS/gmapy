@@ -2,57 +2,6 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 
-def _interpolate_lin_lin(x1, y1, x2, y2, xout):
-    return (y1*(x2-xout) + y2*(xout-x1)) / (x2-x1)
-
-
-def _interpolate_log_lin(x1, y1, x2, y2, xout):
-    log_x1 = np.log(x1)
-    log_x2 = np.log(x2)
-    log_xd = log_x2 - log_x1
-    log_xout = np.log(xout)
-    return (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
-
-
-def _interpolate_lin_log(x1, y1, x2, y2, xout):
-    if y1 <= 0 or y2 <= 0:
-        raise ValueError('attempted to take logarithm of negative value')
-    xd = x2 - x1
-    log_y1 = np.log(y1)
-    log_y2 = np.log(y2)
-    return np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
-
-
-def _interpolate_log_log(x1, y1, x2, y2, xout):
-    log_x1 = np.log(x1)
-    log_x2 = np.log(x2)
-    log_y1 = np.log(y1)
-    log_y2 = np.log(y2)
-    log_xd = log_x2 - log_x1
-    log_xout = np.log(xout)
-    return np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
-
-
-def _interpolate1d(x1, y1, x2, y2, xout, interp_type, zero_outside):
-    if (xout < x1 or xout > x2):
-        if zero_outside:
-            return 0.
-        else:
-            raise ValueError(f'xout={xout} outside interval '
-                             f'from x1={x1} to x2={x2}')
-    if interp_type == 'lin-lin':
-        interpfun = _interpolate_lin_lin
-    elif interp_type == 'lin-log':
-        interpfun = _interpolate_lin_log
-    elif interp_type == 'log-lin':
-        interpfun = _interpolate_log_lin
-    elif interp_type == 'log-log':
-        interpfun = _interpolate_log_log
-    else:
-        raise TypeError('unsupported interpolation type {interp_type}')
-    return interpfun(x1, y1, x2, y2, xout)
-
-
 def _findintervals(xmesh, xvals):
     n = len(xmesh)
     tmp = np.searchsorted(xmesh, xvals, side='left')
@@ -61,6 +10,37 @@ def _findintervals(xmesh, xvals):
     idcs2 = np.array(tmp)
     idcs1 = idcs2 - 1
     return idcs1, idcs2
+
+
+def _vectorized_interpolate1d(xvec, yvec, xout, interp_type):
+    idcs1, idcs2 = _findintervals(xvec, xout)
+    x1 = xvec[idcs1]
+    y1 = yvec[idcs1]
+    x2 = xvec[idcs2]
+    y2 = yvec[idcs2]
+    if interp_type == 'lin-lin':
+        return (y1*(x2-xout) + y2*(xout-x1)) / (x2-x1)
+    elif interp_type == 'log-lin':
+        log_x1 = np.log(x1)
+        log_x2 = np.log(x2)
+        log_xd = log_x2 - log_x1
+        log_xout = np.log(xout)
+        return (y1*(log_x2-log_xout) + y2*(log_xout-log_x1)) / log_xd
+    elif interp_type == 'lin-log':
+        xd = x2 - x1
+        log_y1 = np.log(y1)
+        log_y2 = np.log(y2)
+        return np.exp((log_y1*(x2-xout) + log_y2*(xout-x1)) / xd)
+    elif interp_type == 'log-log':
+        log_x1 = np.log(x1)
+        log_x2 = np.log(x2)
+        log_y1 = np.log(y1)
+        log_y2 = np.log(y2)
+        log_xd = log_x2 - log_x1
+        log_xout = np.log(xout)
+        return np.exp((log_y1*(log_x2-log_xout) + log_y2*(log_xout-log_x1)) / log_xd)
+    else:
+        raise ValueError('invalid interpolation type')
 
 
 def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
@@ -79,22 +59,31 @@ def basic_propagate(x, y, xout, interp_type='lin-lin', zero_outside=False):
     myord = np.argsort(x)
     x = x[myord]
     y = y[myord]
-    if isinstance(interp_type, str):
-        interp_type = np.full(len(x), interp_type, dtype='<U7')
-    interp_type = np.array(interp_type)[myord]
+    is_single_interp_type = type(interp_type) == str
+
+    is_inside = np.logical_and(xout >= x[0], xout <= x[-1])
+    if not zero_outside and not np.all(is_inside):
+        raise ValueError('some x-values outside range covered by mesh')
 
     idcs1, idcs2 = _findintervals(x, xout)
-    x1v = x[idcs1]
-    x2v = x[idcs2]
-    y1v = y[idcs1]
-    y2v = y[idcs2]
-    ityp = interp_type[idcs1]
-
-    interp_yout = np.array(tuple(
-            _interpolate1d(x1, y1, x2, y2, xout, inttype, zero_outside)
-            for x1, y1, x2, y2, xout, inttype
-            in zip(x1v, y1v, x2v, y2v, xout, ityp)
-        ))
+    interp_yout = np.zeros(len(xout), dtype=float)
+    if is_single_interp_type:
+        if np.any(is_inside):
+            xout_ins = xout[is_inside]
+            interp_yout[is_inside] = \
+                _vectorized_interpolate1d(x, y, xout_ins, interp_type)
+    else:
+        interp_type = np.array(interp_type, copy=False)[myord]
+        ityp = interp_type[idcs1]
+        interp_types = ['lin-lin', 'lin-log', 'log-lin', 'log-log']
+        for curinterp in interp_types:
+            is_curinterp = (ityp == curinterp)
+            is_selected = np.logical_and(is_curinterp, is_inside)
+            if not np.any(is_selected):
+                continue
+            curxout = xout[is_selected]
+            interp_yout[is_selected] = \
+                _vectorized_interpolate1d(x, y, curxout, curinterp)
     return interp_yout
 
 
