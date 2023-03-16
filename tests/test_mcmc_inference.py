@@ -10,7 +10,6 @@ from gmapy.mcmc_inference import (
     gmap_mh_inference
 )
 from gmapy.mappings.compound_map import CompoundMap
-from gmapy.inference import lm_update
 from gmapy.gma_database_class import GMADatabase
 from gmapy.mappings.priortools import prepare_prior_and_exptable
 from gmapy.mappings.helperfuns import numeric_jacobian
@@ -185,9 +184,9 @@ class TestMCMCInference(unittest.TestCase):
         post = Posterior(priorvals, priorcov, m, expvals, expcov)
         propfun = post.generate_proposal_fun(priorvals, scale=1.)
         postcov = post.approximate_covmat(priorvals).toarray()
-        
+
         num_samples = 10000
-        samples = np.zeros((priorvals.size, num_samples), dtype=float) 
+        samples = np.zeros((priorvals.size, num_samples), dtype=float)
         for i in range(num_samples):
             samples[:,i:i+1] = propfun(priorvals)
         samplecov = np.cov(samples)
