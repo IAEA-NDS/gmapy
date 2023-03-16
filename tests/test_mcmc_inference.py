@@ -13,6 +13,7 @@ from gmapy.mappings.compound_map import CompoundMap
 from gmapy.inference import lm_update
 from gmapy.gma_database_class import GMADatabase
 from gmapy.mappings.priortools import prepare_prior_and_exptable
+from gmapy.mappings.helperfuns import numeric_jacobian
 
 
 class TestMCMCInference(unittest.TestCase):
@@ -111,6 +112,26 @@ class TestMCMCInference(unittest.TestCase):
         # test result
         testres = post.logpdf(xvec)
         self.assertTrue(np.isclose(testres, refres))
+
+    def test_gradient_of_posterior_logpdf(self):
+        priorvals, priorcov, mockmap, expvals, expcov = \
+            self.create_mock_data()
+        post = Posterior(priorvals, priorcov, mockmap, expvals, expcov)
+        xref = priorvals + np.array([1, 2, 3]).reshape(-1, 1)
+        testres = post.grad_logpdf(xref)
+        refres = numeric_jacobian(post.logpdf, np.squeeze(xref))
+        self.assertTrue(np.allclose(testres, refres.T))
+
+    def test_gradient_of_posterior_logpdf_with_zero_priorunc(self):
+        priorvals, priorcov, mockmap, expvals, expcov = \
+            self.create_mock_data()
+        priorcov[1, :] = 0.
+        priorcov[:, 1] = 0.
+        post = Posterior(priorvals, priorcov, mockmap, expvals, expcov)
+        xref = priorvals.copy() + np.array([1, 0, 3]).reshape(-1, 1)
+        testres = post.grad_logpdf(xref)
+        refres = numeric_jacobian(post.logpdf, np.squeeze(xref))
+        self.assertTrue(np.allclose(testres, refres.T))
 
     def test_covmat_of_proposal_distribution(self):
         np.random.seed(299792)
