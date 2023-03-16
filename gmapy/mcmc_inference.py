@@ -31,7 +31,7 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
             print('reject')
         samples[:, i:i+1] = curvals
         logprob_hist[i] = cur_logprob
-    
+
     # remove burnin samples and thin the chain
     samples = samples[:, num_burn::thin_step]
     logprob_hist = logprob_hist[num_burn::thin_step]
@@ -83,12 +83,39 @@ class Posterior:
         # likelihood contribution
         m = self.__mapping
         ef = self.__expfact
-        propx = np.hstack([m.propagate(x[:,i]).reshape(-1,1) 
+        propx = np.hstack([m.propagate(x[:,i]).reshape(-1,1)
                           for i in range(x.shape[1])])
         d2 = self.__expvals - propx
         d2_perm = ef.apply_P(d2)
         z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
-        return float(-0.5 * (z1.T @ z1 + z2.T @ z2))
+        prior_res = np.sum(np.square(z1), axis=0)
+        like_res = np.sum(np.square(z2), axis=0)
+        res = -0.5 * (prior_res + like_res)
+        return res
+
+    def grad_logpdf(self, x):
+        x = x.copy()
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
+        if x.shape[1] != 1:
+            raise ValueError('x must be a vector and not a matrix')
+        adj = self.__adj
+        nonadj = self.__nonadj
+        # gradient of prior contribution
+        pf = self.__priorfact
+        d1 = x[adj] - self.__priorvals[adj]
+        z1r = pf(d1)
+        z1 = np.zeros(self.__priorvals.shape, dtype=float)
+        z1[adj] = (-z1r)
+        # gradient of likelihood contribution
+        m = self.__mapping
+        ef = self.__expfact
+        propx = m.propagate(x).reshape(-1, 1)
+        d2 = self.__expvals - propx
+        S = m.jacobian(x)
+        z2 = S.T @ ef(d2)
+        z2[nonadj] = 0.
+        return z1+z2
 
     def generate_proposal_fun(self, xref, scale=1.):
         def proposal(x):
