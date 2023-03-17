@@ -2,6 +2,7 @@ import numpy as np
 from sksparse.cholmod import cholesky
 import scipy.sparse as sps 
 from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
+from statsmodels.tsa.stattools import acf
 from .mappings.compound_map import CompoundMap
 from .mappings.priortools import prepare_prior_and_exptable
 from .inference import lm_update
@@ -50,6 +51,16 @@ def compute_acceptance_rate(samples):
     num_samples = samples.shape[1]
     num_reject = np.sum(np.sum(samples[:, 1:] - samples[:, :-1], axis=0) == 0)
     return 1 - num_reject / num_samples
+
+
+def compute_effective_sample_size(arr):
+    n = len(arr)
+    acfvec = acf(arr, nlags=n, fft=True)
+    sums = 0
+    for k in range(1, len(acfvec)):
+        sums = sums + (n-k)*acfvec[k]/n
+
+    return n/(1+2*sums)
 
 
 class Posterior:
