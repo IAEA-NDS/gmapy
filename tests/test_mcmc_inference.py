@@ -22,11 +22,13 @@ class TestMCMCInference(unittest.TestCase):
         dbpath = (pathlib.Path(__file__).parent / 'testdata' /
                 'data-2017-07-26.gma').resolve().as_posix()
         gmadb = GMADatabase(dbpath)
+        cls.__gmadb = gmadb
         cls.__datatable = gmadb.get_datatable()
         cls.__covmat = gmadb.get_covmat()
 
     @classmethod
     def tearDownClass(cls):
+        del cls.__gmadb
         del cls.__datatable
         del cls.__covmat
 
@@ -171,22 +173,19 @@ class TestMCMCInference(unittest.TestCase):
 
     def test_covmat_of_propposal_distribution_using_gma_database(self):
         np.random.seed(299794)
-        dt = self.__datatable
-        covmat = self.__covmat
-        priordt, expdt, _, _ = prepare_prior_and_exptable(
-            dt, True, reset_index=False
-        )
-        prior_idcs = priordt.index
-        exp_idcs = expdt.index
+        # retrieve relevant data structures
+        gmadb = self.__gmadb
+        dt = gmadb.get_datatable()
         m = CompoundMap(dt, reduce=True)
-        priorvals = dt.loc[prior_idcs, 'PRIOR'].to_numpy(copy=True)
-        expvals = dt.loc[exp_idcs, 'DATA'].to_numpy(copy=True)
-        priorcov = covmat[np.ix_(prior_idcs, prior_idcs)]
-        expcov = covmat[np.ix_(exp_idcs, exp_idcs)]
+        priorvals = gmadb.get_priorvals()
+        expvals = gmadb.get_expvals()
+        priorcov = gmadb.get_priorcov()
+        expcov = gmadb.get_expcov()
+        # prepare MH prerequisites
         post = Posterior(priorvals, priorcov, m, expvals, expcov)
         propfun = post.generate_proposal_fun(priorvals, scale=1.)
         postcov = post.approximate_covmat(priorvals).toarray()
-
+        # do the sampling
         num_samples = 10000
         samples = np.zeros((priorvals.size, num_samples), dtype=float)
         for i in range(num_samples):
@@ -225,18 +224,14 @@ class TestMCMCInference(unittest.TestCase):
         self.assertTrue(np.all(samplecov[postcov == 0] == 0))
 
     def test_post_logpdf_method(self):
-        dt = self.__datatable
-        covmat = self.__covmat
-        priordt, expdt, _, _ = prepare_prior_and_exptable(
-            dt, True, reset_index=False
-        )
-        prior_idcs = priordt.index
-        exp_idcs = expdt.index
+        gmadb = self.__gmadb
+        dt = gmadb.get_datatable()
+        covmat = gmadb.get_covmat()
         m = CompoundMap(dt, reduce=True)
-        priorvals = dt.loc[prior_idcs, 'PRIOR'].to_numpy(copy=True)
-        expvals = dt.loc[exp_idcs, 'DATA'].to_numpy(copy=True)
-        priorcov = covmat[np.ix_(prior_idcs, prior_idcs)]
-        expcov = covmat[np.ix_(exp_idcs, exp_idcs)]
+        priorvals = gmadb.get_priorvals()
+        expvals = gmadb.get_expvals()
+        priorcov = gmadb.get_priorcov()
+        expcov = gmadb.get_expcov()
         post = Posterior(priorvals, priorcov, m, expvals, expcov)
         testres = post.logpdf(priorvals)
         invexpcov = sps.linalg.inv(expcov)
