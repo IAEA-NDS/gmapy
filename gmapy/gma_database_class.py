@@ -209,6 +209,37 @@ class GMADatabase:
 
         return propvals
 
+    def get_prior_idcs(self):
+        dt = self._datatable
+        priordt = dt.loc[~dt['NODE'].str.match('exp_')]
+        prior_idcs = np.array(priordt.index, copy=True)
+        return prior_idcs
+
+    def get_exp_idcs(self):
+        dt = self._datatable
+        expdt = dt.loc[dt['NODE'].str.match('exp_')]
+        exp_idcs = np.array(expdt.index, copy=True)
+        return exp_idcs
+
+    def get_priorvals(self):
+        prior_idcs = self.get_prior_idcs()
+        return self._datatable.loc[prior_idcs, 'PRIOR'].to_numpy()
+
+    def get_priorcov(self):
+        prior_idcs = self.get_prior_idcs()
+        priorcov = self._covmat[prior_idcs,:][:,prior_idcs]
+        return priorcov
+
+    def get_expvals(self):
+        exp_idcs = self.get_exp_idcs()
+        expvals = self._datatable.loc[exp_idcs, 'DATA'].to_numpy()
+        return expvals
+
+    def get_expcov(self):
+        exp_idcs = self.get_exp_idcs()
+        expcov = self._covmat[exp_idcs,:][:,exp_idcs]
+        return expcov
+
     def get_postvals(self, testdf, **mapargs):
         workdf = pd.concat([self._datatable, testdf], axis=0,
                            ignore_index=True)
@@ -284,7 +315,7 @@ class GMADatabase:
 
     def add_data(self, new_datatable, new_covmat):
         if (len(new_covmat.shape) != 2 or
-            new_covmat.shape[0] != new_covmat.shape[1]):
+                new_covmat.shape[0] != new_covmat.shape[1]):
             raise ValueError('expect square matrix')
         if len(new_datatable) != new_covmat.shape[0]:
             raise ValueError('datatable and covariance matrix must have compatible dimensions')
