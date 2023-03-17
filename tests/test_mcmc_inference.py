@@ -117,6 +117,7 @@ class TestMCMCInference(unittest.TestCase):
             self.create_mock_data()
         post = Posterior(priorvals, priorcov, mockmap, expvals, expcov)
         xref = priorvals + np.array([1, 2, 3]).reshape(-1, 1)
+        post.set_squeeze(False)
         testres = post.grad_logpdf(xref)
         refres = numeric_jacobian(post.logpdf, np.squeeze(xref))
         self.assertTrue(np.allclose(testres, refres.T))
@@ -127,6 +128,7 @@ class TestMCMCInference(unittest.TestCase):
         priorcov[1, :] = 0.
         priorcov[:, 1] = 0.
         post = Posterior(priorvals, priorcov, mockmap, expvals, expcov)
+        post.set_squeeze(False)
         xref = priorvals.copy() + np.array([1, 0, 3]).reshape(-1, 1)
         testres = post.grad_logpdf(xref)
         refres = numeric_jacobian(post.logpdf, np.squeeze(xref))

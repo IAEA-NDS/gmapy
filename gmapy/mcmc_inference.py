@@ -67,6 +67,10 @@ class Posterior:
         self.__mapping = mapping
         self.__expvals = expvals.reshape(-1, 1)
         self.__expfact = cholesky(expcov)
+        self.__apply_squeeze = True
+
+    def set_squeeze(self, flag):
+        self.__apply_squeeze = flag
 
     def logpdf(self, x):
         x = x.copy()
@@ -91,6 +95,8 @@ class Posterior:
         prior_res = np.sum(np.square(z1), axis=0)
         like_res = np.sum(np.square(z2), axis=0)
         res = -0.5 * (prior_res + like_res)
+        if self.__apply_squeeze:
+            res = np.squeeze(res)
         return res
 
     def grad_logpdf(self, x):
@@ -115,7 +121,10 @@ class Posterior:
         S = m.jacobian(x)
         z2 = S.T @ ef(d2)
         z2[nonadj] = 0.
-        return z1+z2
+        res = z1 + z2
+        if self.__apply_squeeze:
+            res = np.squeeze(z1+z2)
+        return res
 
     def generate_proposal_fun(self, xref, scale=1.):
         def proposal(x):
