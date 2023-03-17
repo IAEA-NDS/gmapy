@@ -127,9 +127,9 @@ class Posterior:
         # gradient of likelihood contribution
         m = self.__mapping
         ef = self.__expfact
-        propx = m.propagate(x).reshape(-1, 1)
+        propx = m.propagate(x.flatten()).reshape(-1, 1)
         d2 = self.__expvals - propx
-        S = m.jacobian(x)
+        S = m.jacobian(x.flatten())
         z2 = S.T @ ef(d2)
         z2[nonadj] = 0.
         res = z1 + z2
