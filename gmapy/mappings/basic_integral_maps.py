@@ -71,38 +71,54 @@ def _integrate_lin_lin_sensmat(x, y):
 
 def basic_integral_propagate(x, y, interp_type='lin-lin',
                              zero_outside=False, **kwargs):
-    xref = x; yref = y
-    def propfun(x):
-        return basic_propagate(xref, yref, x, interp_type, zero_outside)
-    ret = compute_romberg_integral(xref, propfun, **kwargs)
-    ret = np.array(ret, float)
-    return ret
+    if np.all(interp_type == 'lin-lin'):
+        p = np.argsort(x)
+        x = np.array(x)[p]
+        y = np.array(y)[p]
+        ret = _integrate_lin_lin(x, y)
+        return np.array(ret, float)
+    else:
+        xref = x; yref = y
+        def propfun(x):
+            return basic_propagate(xref, yref, x, interp_type, zero_outside)
+        ret = compute_romberg_integral(xref, propfun, **kwargs)
+        ret = np.array(ret, float)
+        return ret
 
 
 def get_basic_integral_sensmat(x, y, interp_type='lin-lin',
                                zero_outside=False, **kwargs):
-    sortord = np.argsort(x)
-    xref = np.array(x)[sortord]
-    yref = np.array(y)[sortord]
-    if type(interp_type) != str:
-        interp_type = np.array(interp_type)[sortord]
+    if np.all(interp_type == 'lin-lin'):
+        p = np.argsort(x)
+        x = np.array(x)[p]
+        y = np.array(y)[p]
+        pret = _integrate_lin_lin_sensmat(x, y)
+        ret = np.empty((1, len(x)), dtype=float)
+        ret[0, p] = pret
+        return ret
+    else:
+        sortord = np.argsort(x)
+        xref = np.array(x)[sortord]
+        yref = np.array(y)[sortord]
+        if type(interp_type) != str:
+            interp_type = np.array(interp_type)[sortord]
 
-    def propfun(x):
-        return basic_propagate(xref, yref, x, interp_type, zero_outside)
+        def propfun(x):
+            return basic_propagate(xref, yref, x, interp_type, zero_outside)
 
-    def dpropfun(x):
-        S = get_basic_sensmat(xref, yref, x, interp_type,
-                              zero_outside)
-        coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
-        return (coeffs1, coeffs2)
+        def dpropfun(x):
+            S = get_basic_sensmat(xref, yref, x, interp_type,
+                                  zero_outside)
+            coeffs1, coeffs2 = extract_partial_derivatives(S, xref, x)
+            return (coeffs1, coeffs2)
 
-    ordered_ret = compute_romberg_integral(
-        xref, propfun, dfun=dpropfun, **kwargs
-    )
-    orig_ret = np.empty(len(ordered_ret))
-    orig_ret[sortord] = ordered_ret
-    ret = np.array([orig_ret])
-    return ret
+        ordered_ret = compute_romberg_integral(
+            xref, propfun, dfun=dpropfun, **kwargs
+        )
+        orig_ret = np.empty(len(ordered_ret))
+        orig_ret[sortord] = ordered_ret
+        ret = np.array([orig_ret])
+        return ret
 
 
 def basic_integral_of_product_propagate(xlist, ylist, interplist,
