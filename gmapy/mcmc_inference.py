@@ -174,7 +174,7 @@ class Posterior:
 
 
 def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
-                      startvals=None, num_burn=0, thin_step=1):
+                      startvals=None, num_burn=0, thin_step=1, int_rtol=1e-4):
     if not np.all(datatable.index == np.sort(datatable.index)):
         raise IndexError('index of datatable must be sorted')
     # prepare the relevant objects, e.g., prior values and prior covariance matrix
@@ -190,7 +190,7 @@ def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
         raise ValueError('observed data must have non-zero uncertainty')
     if startvals is None:
         print('Determine initial values for MCMC chain...')
-        mapping = CompoundMap(datatable, rtol=1e-4, reduce=False)
+        mapping = CompoundMap(datatable, rtol=int_rtol, reduce=False)
         lmres = lm_update(mapping, datatable, covmat, print_status=True) 
         startvals = np.empty(len(datatable), dtype=float)
         startvals[prior_idcs] = priorvals
@@ -201,7 +201,7 @@ def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
             raise IndexError('startvals must be of same length as datatable')
         startvals = startvals[prior_idcs]
     # intialize objects to sample and to obtain values from log posterior pdf
-    mapping = CompoundMap(datatable, rtol=1e-4, reduce=True)
+    mapping = CompoundMap(datatable, rtol=int_rtol, reduce=True)
     post = Posterior(priorvals, priorcov, mapping, expvals, expcov)
     propfun = post.generate_proposal_fun(startvals, scale=prop_scaling)
 
