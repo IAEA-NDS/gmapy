@@ -13,32 +13,32 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
     startvals = startvals.reshape(-1, 1)
     dim = startvals.shape[0]
     num_total = num_samples + num_burn
-    samples = np.zeros((dim, num_total), dtype=float)
-    logprob_hist = np.zeros(num_total, dtype=float)
+    samples = np.zeros((dim, num_samples), dtype=float)
+    logprob_hist = np.zeros(num_samples, dtype=float)
     curvals = startvals
     cur_logprob = log_probdens(curvals)
-    samples[:, 0:1] = curvals
-    logprob_hist[0] = cur_logprob
-    for i in range(1, num_total):
+    num_acc = 0
+    i = -num_burn
+    j = 0
+    while i < num_samples:
+        j += 1
         candidate = proposal(curvals)
         cand_logprob = log_probdens(candidate)
         log_alpha = cand_logprob - cur_logprob
         log_u = np.log(np.random.uniform())
         if log_u < log_alpha:
-            print('--------> accept')
             curvals = candidate
             cur_logprob = cand_logprob
-        else:
-            print('reject')
-        samples[:, i:i+1] = curvals
-        logprob_hist[i] = cur_logprob
-
-    # remove burnin samples and thin the chain
-    samples = samples[:, num_burn::thin_step]
-    logprob_hist = logprob_hist[num_burn::thin_step]
-
-    accept_rate = compute_acceptance_rate(samples)
-    print(f'acceptance rate: {accept_rate}')
+            if i >= 0:
+                num_acc += 1
+        if j >= thin_step:
+            if i >= 0:
+                samples[:, i:i+1] = curvals
+                logprob_hist[i] = cur_logprob
+            j = 0
+            i += 1
+            print(f'Obtained sample number {i}')
+    accept_rate = num_acc / (num_samples*thin_step)
     result = {
         'samples': samples,
         'accept_rate': accept_rate,
