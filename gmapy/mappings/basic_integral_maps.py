@@ -69,6 +69,102 @@ def _integrate_lin_lin_sensmat(x, y):
     return sens
 
 
+def _integrate_product_lin_lin(xa, ya, xb, yb, zero_outside=True):
+    xmin = max(min(xa), min(xb))
+    xmax = min(max(xa), max(xb))
+    xm = np.unique(np.concatenate([xa, xb]))
+    xm = xm[np.logical_and(xm >= xmin, xm <= xmax)]
+    x1 = xm[:-1]
+    x2 = xm[1:]
+    yam = basic_propagate(xa, ya, xm, 'lin-lin', zero_outside)
+    ybm = basic_propagate(xb, yb, xm, 'lin-lin', zero_outside)
+    ya1 = yam[:-1]
+    ya2 = yam[1:]
+    yb1 = ybm[:-1]
+    yb2 = ybm[1:]
+    d = x2 - x1
+    ca1 = (x2*ya1 - x1*ya2) / d
+    ca2 = (-1*ya1 + 1*ya2) / d
+    cb1 = (x2*yb1 - x1*yb2) / d
+    cb2 = (-1*yb1 + 1*yb2) / d
+    xp1 = x1.copy()
+    xp2 = x2.copy()
+    p1 = ca1*cb1*(xp2-xp1)
+    xp1 *= x1
+    xp2 *= x2
+    p2 = (ca2*cb1 + ca1*cb2)*(xp2 - xp1)/2
+    xp1 *= x1
+    xp2 *= x2
+    p3 = ca2*cb2*(xp2 - xp1)/3
+    return np.sum(p1 + p2 + p3)
+
+
+def _integrate_product_lin_lin_sensmats(xa, ya, xb, yb, zero_outside=True):
+    xmin = max(min(xa), min(xb))
+    xmax = min(max(xa), max(xb))
+    xm = np.unique(np.concatenate([xa, xb]))
+    xm = xm[np.logical_and(xm >= xmin, xm <= xmax)]
+    x1 = xm[:-1]
+    x2 = xm[1:]
+    yam = basic_propagate(xa, ya, xm, 'lin-lin', zero_outside)
+    ybm = basic_propagate(xb, yb, xm, 'lin-lin', zero_outside)
+    ya1 = yam[:-1]
+    ya2 = yam[1:]
+    yb1 = ybm[:-1]
+    yb2 = ybm[1:]
+    d = x2 - x1
+    ca1 = (x2*ya1 - x1*ya2) / d
+    ca11 = x2 / d
+    ca12 = -x1 / d
+    ca2 = (-1*ya1 + 1*ya2) / d
+    ca21 = -1 / d
+    ca22 = 1 / d
+    cb1 = (x2*yb1 - x1*yb2) / d
+    cb11 = x2 / d
+    cb12 = -x1 / d
+    cb2 = (-1*yb1 + 1*yb2) / d
+    cb21 = -1 / d
+    cb22 = 1 / d
+    xp1 = x1.copy()
+    xp2 = x2.copy()
+    dp = xp2 - xp1
+    # p1 = ca1*cb1*(xp2-xp1)
+    p1a1 = ca11 * cb1 * dp
+    p1a2 = ca12 * cb1 * dp
+    p1b1 = ca1 * cb11 * dp
+    p1b2 = ca1 * cb12 * dp
+    xp1 *= x1
+    xp2 *= x2
+    dp = (xp2 - xp1) / 2
+    # p2 = (ca2*cb1 + ca1*cb2) * dp
+    p2a1 = (ca21*cb1 + ca11*cb2) * dp
+    p2a2 = (ca22*cb1 + ca12*cb2) * dp
+    p2b1 = (ca2*cb11 + ca1*cb21) * dp
+    p2b2 = (ca2*cb12 + ca1*cb22) * dp
+    xp1 *= x1
+    xp2 *= x2
+    dp = (xp2 - xp1) / 3
+    # p3 = ca2*cb2*dp
+    p3a1 = ca21*cb2*dp
+    p3a2 = ca22*cb2*dp
+    p3b1 = ca2*cb21*dp
+    p3b2 = ca2*cb22*dp
+    # assemble everything to the two gradients
+    pa = np.zeros(len(xm), dtype=float)
+    pa[:-1] += p1a1 + p2a1 + p3a1
+    pa[1:] += p1a2 + p2a2 + p3a2
+    pb = np.zeros(len(xm), dtype=float)
+    pb[:-1] += p1b1 + p2b1 + p3b1
+    pb[1:] += p1b2 + p2b2 + p3b2
+    # get Jacobian to original mesh
+    # by applying chain rule
+    Sa = get_basic_sensmat(xa, ya, xm, 'lin-lin', zero_outside)
+    Sb = get_basic_sensmat(xb, yb, xm, 'lin-lin', zero_outside)
+    pa = (pa @ Sa).reshape(1,-1)
+    pb = (pb @ Sb).reshape(1,-1)
+    return [pa, pb]
+
+
 def basic_integral_propagate(x, y, interp_type='lin-lin',
                              zero_outside=False, **kwargs):
     if np.all(interp_type == 'lin-lin'):
