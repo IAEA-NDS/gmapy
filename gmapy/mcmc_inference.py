@@ -6,6 +6,7 @@ from statsmodels.tsa.stattools import acf
 from .mappings.compound_map import CompoundMap
 from .mappings.priortools import prepare_prior_and_exptable
 from .inference import lm_update
+from multiprocessing import Process, Pipe
 
 
 def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
@@ -45,6 +46,35 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
         'logprob_hist': logprob_hist
     }
     return result
+
+
+def symmetric_mh_worker(con, mh_args, mh_kwargs):
+    mh_res = symmetric_mh_algo(*mh_args, **mh_kwargs)
+    con.send(mh_res)
+    con.close()
+
+
+def parallel_symmetric_mh_algo(num_workers, startvals, log_probdens, proposal, num_samples,
+                               num_burn=0, thin_step=1, print_info=False):
+    mh_args = (startvals, log_probdens, proposal, num_samples)
+    mh_kwargs = {'num_burn': num_burn, 'thin_step': thin_step}
+    pipe_parents = []
+    pipe_children = []
+    procs = []
+    for i in range(num_workers):
+        pipe_parent, pipe_child = Pipe()
+        pipe_parents.append(pipe_parent)
+        pipe_children.append(pipe_child)
+        proc = Process(target=symmetric_mh_worker,
+                       args=(pipe_child, mh_args, mh_kwargs))
+        proc.start()
+        procs.append(proc)
+
+    mh_res_list = []
+    for pipe_parent, proc in zip(pipe_parents, procs):
+        mh_res_list.append(pipe_parent.recv())
+        proc.join()
+    return mh_res_list
 
 
 def compute_acceptance_rate(samples):
