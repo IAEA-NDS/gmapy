@@ -44,6 +44,31 @@ def extract_partial_derivatives(S, xmesh, xout):
     return coeff1, coeff2
 
 
+def _integrate_lin_lin(x, y):
+    x1 = x[:-1]
+    x2 = x[1:]
+    y1 = y[:-1]
+    y2 = y[1:]
+    part1 = x2*y1 - x1*y2
+    part2 = 0.5*(x2*x2 - x1*x1) * (y2-y1)/(x2-x1)
+    return np.sum(part1 + part2)
+
+
+def _integrate_lin_lin_sensmat(x, y):
+    x1 = x[:-1]
+    x2 = x[1:]
+    y1 = y[:-1]
+    y2 = y[1:]
+    sens = np.zeros(len(x), dtype=float)
+    h = 0.5 * (x2*x2 - x1*x1) / (x2-x1)
+    sens1 = x2 - h
+    sens2 = h - x1
+    sens = np.zeros(len(x), dtype=float)
+    sens[:-1] += sens1
+    sens[1:] += sens2
+    return sens
+
+
 def basic_integral_propagate(x, y, interp_type='lin-lin',
                              zero_outside=False, **kwargs):
     xref = x; yref = y
