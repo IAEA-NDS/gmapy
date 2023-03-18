@@ -37,6 +37,34 @@ class TestBasicIntegralOfProductMapping(unittest.TestCase):
         ref_res = compute_romberg_integral(ref_x, propfun, maxord=20, rtol=1e-6)
         self.assertTrue(np.all(np.isclose(test_res, ref_res, rtol=1e-6)))
 
+    def test_basic_integral_of_product_propagte_with_two_lin_lin_mappings(self):
+        # x1 = np.array([1, 3, 8, 14])
+        # y1 = np.array([7, 2, 9, 16])
+        x1 = np.array([4.1, 5.7, 6.9])
+        y1 = np.array([11, 9, 11])
+        interp1 = 'lin-lin'
+        # x2 = np.array([4, 5.5, 6.9])
+        # y2 = np.array([11, 22, 3])
+        x2 = np.array([4, 5.5, 6.9])
+        y2 = np.array([11, 13, 11])
+        interp2 = 'lin-lin'
+        xlist = [x1, x2]
+        ylist = [y1, y2]
+        interplist = [interp1, interp2]
+        test_res = basic_integral_of_product_propagate(
+            xlist, ylist, interplist, zero_outside=True
+        )
+        def propfun(x):
+            r1 = basic_propagate(x1, y1, x, interp1, zero_outside=True)
+            r2 = basic_propagate(x2, y2, x, interp2, zero_outside=True)
+            return r1*r2
+        min_x = max([min(x1), min(x2)])
+        max_x = min([max(x1), max(x2)])
+        ref_x = np.unique(np.concatenate([x1, x2]))
+        ref_x = ref_x[np.logical_and(ref_x >= min_x, ref_x <= max_x)]
+        ref_res = compute_romberg_integral(ref_x, propfun, maxord=20, rtol=1e-6)
+        self.assertTrue(np.all(np.isclose(test_res, ref_res, rtol=1e-6)))
+
     def test_basic_integral_of_product_propagate_with_permutated_input(self):
         np.random.seed(17)
         x1 = np.array([1, 3, 8, 14])
@@ -107,6 +135,34 @@ class TestBasicIntegralOfProductJacobian(unittest.TestCase):
         self.assertTrue(np.all(np.isclose(test_res[0], ref_res[0], rtol=1e-5)))
         self.assertTrue(np.all(np.isclose(test_res[1], ref_res[1], rtol=1e-5)))
         self.assertTrue(np.all(np.isclose(test_res[2], ref_res[2], rtol=1e-5)))
+
+    def test_basic_integral_of_product_sensmat_with_two_lin_lin_mappings(self):
+        x1 = np.array([1, 3, 8, 14])
+        y1 = np.array([7, 2, 9, 16])
+        interp1 = 'lin-lin'
+        x2 = np.array([4, 5.5, 6.9, 9])
+        y2 = np.array([11, 22, 3, 29])
+        interp2 = 'lin-lin'
+        xlist = [x1, x2]
+        ylist = [y1, y2]
+        interplist = [interp1, interp2]
+        def generate_propfun(curi):
+            def propfun(x):
+                curylist = ylist.copy()
+                curylist[curi] = x
+                ret = basic_integral_of_product_propagate(xlist, curylist,
+                        interplist, zero_outside=True, maxord=18, rtol=1e-4)
+                return ret
+            return propfun
+
+        ref_res = []
+        ref_res.append(numeric_jacobian(generate_propfun(0), ylist[0]) )
+        ref_res.append(numeric_jacobian(generate_propfun(1), ylist[1]) )
+        test_res = get_basic_integral_of_product_sensmats(xlist, ylist,
+                interplist, zero_outside=True, maxord=18, rtol=1e-6)
+
+        self.assertTrue(np.all(np.isclose(test_res[0], ref_res[0], rtol=1e-5)))
+        self.assertTrue(np.all(np.isclose(test_res[1], ref_res[1], rtol=1e-5)))
 
     def test_basic_integral_of_product_sensmats_with_permuted_input(self):
         np.random.seed(17)
