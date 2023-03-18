@@ -103,6 +103,14 @@ class InputSelector(MyAlgebra):
         self.__idcs = np.array(idcs)
         self.__size = size
         self.__values = None
+        # pre-compute jacobian
+        tar_size = len(self.__idcs)
+        coeffs = np.ones(tar_size)
+        tar_idcs = np.arange(tar_size)
+        self.__jacmat = csr_matrix(
+            (coeffs, (tar_idcs, self.__idcs)),
+            shape=(tar_size, self.__size), dtype=float
+        )
 
     def __len__(self):
         return len(self.__idcs)
@@ -118,13 +126,7 @@ class InputSelector(MyAlgebra):
 
     def jacobian(self):
         super().jacobian()
-        tar_size = len(self.__idcs)
-        coeffs = np.ones(tar_size)
-        tar_idcs = np.arange(tar_size)
-        return csr_matrix(
-            (coeffs, (tar_idcs, self.__idcs)),
-            shape=(tar_size, self.__size), dtype=float
-        )
+        return self.__jacmat
 
     def assign(self, arraylike):
         if len(arraylike) != self.__size:
