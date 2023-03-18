@@ -204,7 +204,8 @@ class Posterior:
 
 
 def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
-                      startvals=None, num_burn=0, thin_step=1, int_rtol=1e-4):
+                      startvals=None, num_burn=0, thin_step=1, int_rtol=1e-4,
+                      num_workers=1):
     if not np.all(datatable.index == np.sort(datatable.index)):
         raise IndexError('index of datatable must be sorted')
     # prepare the relevant objects, e.g., prior values and prior covariance matrix
@@ -236,7 +237,12 @@ def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
     propfun = post.generate_proposal_fun(startvals, scale=prop_scaling)
 
     print('Construct the MCMC chain...')
-    mh_res = symmetric_mh_algo(startvals, post.logpdf, propfun,
-                               num_samples=num_samples, num_burn=num_burn,
-                               thin_step=thin_step, print_info=True)
-    return mh_res
+    mh_args = (startvals, post.logpdf, propfun)
+    mh_kwargs = {'num_samples': num_samples, 'num_burn': num_burn,
+                 'thin_step': thin_step}
+    if num_workers == 1:
+        mh_res = symmetric_mh_algo(*mh_args, **mh_kwargs)
+        return mh_res
+    else:
+        mh_res_list = parallel_symmetric_mh_algo(num_workers, *mh_args, **mh_kwargs)
+        return mh_res_list
