@@ -7,6 +7,7 @@ from .mappings.compound_map import CompoundMap
 from .mappings.priortools import prepare_prior_and_exptable
 from .inference import lm_update
 from multiprocessing import Process, Pipe
+import time
 
 
 def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
@@ -16,6 +17,7 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
     num_total = num_samples + num_burn
     samples = np.zeros((dim, num_samples), dtype=float)
     logprob_hist = np.zeros(num_samples, dtype=float)
+    start_time = time.time()
     curvals = startvals
     cur_logprob = log_probdens(curvals)
     num_acc = 0
@@ -39,11 +41,16 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
             j = 0
             i += 1
             print(f'Obtained sample number {i}')
+    end_time = time.time()
+    elapsed_time = end_time - start_time
     accept_rate = num_acc / (num_samples*thin_step)
     result = {
         'samples': samples,
         'accept_rate': accept_rate,
-        'logprob_hist': logprob_hist
+        'logprob_hist': logprob_hist,
+        'elapsed_time': elapsed_time,
+        'num_burn': num_burn,
+        'thin_step': thin_step
     }
     return result
 
