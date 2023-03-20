@@ -11,7 +11,9 @@ import time
 
 
 def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
-                      num_burn=0, thin_step=1, print_info=False):
+                      num_burn=0, thin_step=1, seed=None, print_info=False):
+    if seed is not None:
+        np.random.seed(seed)
     startvals = startvals.reshape(-1, 1)
     dim = startvals.shape[0]
     num_total = num_samples + num_burn
@@ -50,7 +52,8 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
         'logprob_hist': logprob_hist,
         'elapsed_time': elapsed_time,
         'num_burn': num_burn,
-        'thin_step': thin_step
+        'thin_step': thin_step,
+        'seed': seed
     }
     return result
 
@@ -62,13 +65,18 @@ def symmetric_mh_worker(con, mh_args, mh_kwargs):
 
 
 def parallel_symmetric_mh_algo(num_workers, startvals, log_probdens, proposal, num_samples,
-                               num_burn=0, thin_step=1, print_info=False):
+                               num_burn=0, thin_step=1, seeds=None, print_info=False):
+    if seeds is None:
+        seeds = np.random.randint(low=0, high=65535, size=num_workers)
+    elif len(seeds) != num_workers:
+        raise ValueError('number of seed values must equal num_workers')
     mh_args = (startvals, log_probdens, proposal, num_samples)
     mh_kwargs = {'num_burn': num_burn, 'thin_step': thin_step}
     pipe_parents = []
     pipe_children = []
     procs = []
-    for i in range(num_workers):
+    for i, seed in zip(range(num_workers), seeds):
+        mh_kwargs['seed'] = seed
         pipe_parent, pipe_child = Pipe()
         pipe_parents.append(pipe_parent)
         pipe_children.append(pipe_child)
@@ -223,7 +231,7 @@ class Posterior:
 
 def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
                       startvals=None, num_burn=0, thin_step=1, int_rtol=1e-4,
-                      num_workers=1):
+                      relative_exp_errors=False, num_workers=1):
     if not np.all(datatable.index == np.sort(datatable.index)):
         raise IndexError('index of datatable must be sorted')
     # prepare the relevant objects, e.g., prior values and prior covariance matrix
@@ -251,7 +259,8 @@ def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
         startvals = startvals[prior_idcs]
     # intialize objects to sample and to obtain values from log posterior pdf
     mapping = CompoundMap(datatable, rtol=int_rtol, reduce=True)
-    post = Posterior(priorvals, priorcov, mapping, expvals, expcov)
+    post = Posterior(priorvals, priorcov, mapping, expvals, expcov,
+                     relative_exp_errors=relative_exp_errors)
     propfun = post.generate_proposal_fun(startvals, scale=prop_scaling)
 
     print('Construct the MCMC chain...')
@@ -260,7 +269,7 @@ def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
                  'thin_step': thin_step}
     if num_workers == 1:
         mh_res = symmetric_mh_algo(*mh_args, **mh_kwargs)
-        return mh_res
+        return [mh_res]
     else:
         mh_res_list = parallel_symmetric_mh_algo(num_workers, *mh_args, **mh_kwargs)
         return mh_res_list
