@@ -102,7 +102,8 @@ def compute_effective_sample_size(arr):
 
 class Posterior:
 
-    def __init__(self, priorvals, priorcov, mapping, expvals, expcov):
+    def __init__(self, priorvals, priorcov, mapping, expvals, expcov,
+                 squeeze = True, relative_exp_errors=False):
         self.__priorvals = priorvals.reshape(-1, 1)
         adjustable = priorcov.diagonal() != 0.
         priorcov = priorcov.tocsr()[adjustable,:].tocsc()[:,adjustable]
@@ -115,10 +116,14 @@ class Posterior:
         self.__mapping = mapping
         self.__expvals = expvals.reshape(-1, 1)
         self.__expfact = cholesky(expcov)
-        self.__apply_squeeze = True
+        self.__relative_exp_errors = relative_exp_errors
+        self.__apply_squeeze = squeeze
 
     def set_squeeze(self, flag):
         self.__apply_squeeze = flag
+
+    def set_relative_exp_errors(self, flag):
+        self.__relative_exp_errors = flag
 
     def logpdf(self, x):
         x = x.copy()
@@ -138,6 +143,8 @@ class Posterior:
         propx = np.hstack([m.propagate(x[:,i]).reshape(-1,1)
                           for i in range(x.shape[1])])
         d2 = self.__expvals - propx
+        if self.__relative_exp_errors:
+            d2 = d2 / propx * self.__expvals
         d2_perm = ef.apply_P(d2)
         z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
         prior_res = np.sum(np.square(z1), axis=0)
@@ -148,6 +155,10 @@ class Posterior:
         return res
 
     def grad_logpdf(self, x):
+        if self.__relative_exp_errors:
+            raise NotImplementedError(
+                'gradient for relative experimental errors not implemented'
+            )
         x = x.copy()
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
