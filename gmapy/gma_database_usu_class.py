@@ -105,8 +105,9 @@ class GMADatabaseUSU(GMADatabase):
         self._usu_coupling_mapping = S
         self._usu_coupling_column = coupling_column
 
-    def evaluate(self, remove_idcs=None, adjust_usu=True,
-            outer_iter=50, inner_iter=1, atol=1e-6, rtol=1e-6, print_status=False, **lm_options):
+    def evaluate(self, remove_idcs=None, ret_uncs=True, adjust_usu=True,
+                 outer_iter=50, inner_iter=1, atol=1e-6, rtol=1e-6,
+                 print_status=False, **lm_options):
         if adjust_usu and remove_idcs is not None:
             raise ValueError('dynamic removal of experimental data ' +
                             'and USU adjustment not allowed at the same time')
@@ -134,7 +135,8 @@ class GMADatabaseUSU(GMADatabase):
                 print(f'##############################')
                 print(f'Outer iteration nr. {i}')
                 print('Estimate posterior values and associated uncertainties...')
-            super().evaluate(remove_idcs, **lm_options)
+            super().evaluate(remove_idcs, ret_uncs=False, calc_invcov=False,
+                             **lm_options)
             # for convergence diagnostics
             new_postvals = self._datatable['POST'].to_numpy()
             # keep track of the step size control parameter
@@ -172,6 +174,10 @@ class GMADatabaseUSU(GMADatabase):
             old_postvals = new_postvals.copy()
             if adjust_usu:
                 old_usu_uncs = new_usu_uncs.copy()
+
+        lm_options['maxiter'] = 1
+        super().evaluate(remove_idcs, ret_uncs=ret_uncs, calc_invcov=True,
+                         **lm_options)
 
         if not converged:
             warn(f'The estimates did not converge within the desired accuracy. '
