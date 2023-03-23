@@ -3,7 +3,6 @@ import numpy as np
 from .mappings.usu_error_map import USUErrorMap
 from .gma_database_class import GMADatabase
 import scipy.sparse as spsp
-from scipy.optimize import minimize
 from warnings import warn
 
 
