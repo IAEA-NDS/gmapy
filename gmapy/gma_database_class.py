@@ -166,7 +166,8 @@ class GMADatabase:
         self._covmat = covmat
         self._cache['uncertainties'] = uncs
 
-    def evaluate(self, remove_idcs=None, ret_uncs=True, **kwargs):
+    def evaluate(self, remove_idcs=None, ret_uncs=True, calc_invcov=True,
+                 **kwargs):
         mapping = self._mapping
         if remove_idcs is None:
             datatable = self._datatable
@@ -180,14 +181,18 @@ class GMADatabase:
             startvals = kwargs.get('startvals', None)
             startvals = startvals[keep_mask] if startvals is not None else None
             kwargs['startvals'] = startvals
+        if not calc_invcov:
+            ret_uncs = False
+        kwargs['ret_invcov'] = calc_invcov
 
-        lmres = lm_update(mapping, datatable, covmat,
-                          ret_invcov=True, **kwargs)
+        lmres = lm_update(mapping, datatable, covmat, **kwargs)
         self._cache['lmb'] = lmres['lmb']
         self._cache['last_rejected'] = lmres['last_rejected']
         self._cache['converged'] = lmres['converged']
         self._cache['upd_vals'] = lmres['upd_vals']
-        self._cache['upd_invcov']= lmres['upd_invcov']
+        if calc_invcov:
+            self._cache['upd_invcov'] = lmres['upd_invcov']
+
         if remove_idcs is None:
             adj_idcs = lmres['idcs']
         else:
