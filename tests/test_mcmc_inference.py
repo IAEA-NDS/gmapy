@@ -249,7 +249,7 @@ class TestMCMCInference(unittest.TestCase):
         mh_res = gmap_mh_inference(datatable, covmat, 200, 0.05, num_burn=100)
         # TODO: something better to test than acceptance rate
         #       that does not take too long?
-        self.assertTrue(mh_res['accept_rate'] > 0.2)
+        self.assertTrue(mh_res[0]['accept_rate'] > 0.2)
 
 
 if __name__ == '__main__':
