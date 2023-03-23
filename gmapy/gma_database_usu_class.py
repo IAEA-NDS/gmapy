@@ -9,8 +9,15 @@ from warnings import warn
 
 class GMADatabaseUSU(GMADatabase):
 
-    def __init__(self, dbfile, remove_dummy=True, mapping=None):
-        super().__init__(dbfile, remove_dummy=remove_dummy, mapping=mapping)
+    def __init__(self, dbfile=None, prior_list=None, datablock_list=None,
+                 remove_dummy=True, mapping=None, fix_covmat=True,
+                 use_relative_errors=False, abserr_nugget=1e-4):
+        super().__init__(dbfile=dbfile, prior_list=prior_list,
+                         datablock_list=datablock_list,
+                         remove_dummy=remove_dummy, mapping=mapping,
+                         fix_covmat=fix_covmat,
+                         use_relative_errors=use_relative_errors,
+                         abserr_nugget=abserr_nugget)
         self._base_mapping = self._mapping
         self._usu_coupling_column = None
         self._usu_coupling_mapping = None
