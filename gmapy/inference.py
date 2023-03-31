@@ -244,6 +244,70 @@ def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
     return res
 
 
+def new_lm_update(dist_obj, startvals=None, maxiter=10,
+                  atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
+                  must_converge=True, no_reject=False):
+    if startvals is None:
+        startvals = dist_obj.get_priorvals()
+    cur_vals = startvals
+    cur_loglike = dist_obj.logpdf(cur_vals)
+    for num_iter in range(maxiter):
+        prop_vals = dist_obj.approximate_postmode(cur_vals, lmb=lmb)
+        # calculate expected and real improvement and use the ratio
+        # as criterion to determine the adjustment of the damping term
+        expected_loglike = dist_obj.approximate_logpdf(cur_vals, prop_vals)
+        proposed_loglike = dist_obj.logpdf(prop_vals)
+        expected_improvement = expected_loglike - cur_loglike
+        real_improvement = proposed_loglike - cur_loglike
+        rho = (expected_improvement+1e-8) / (real_improvement+1e-8)
+        accepted = real_improvement > 0 or no_reject
+        if print_status:
+            print('###############')
+            print('cur_negloglike: ' + str(cur_loglike))
+            print('exp_negloglike: ' + str(expected_loglike))
+            print('real_negloglike: ' + str(proposed_loglike))
+            print('exp_improvement: ' + str(expected_improvement))
+            print('real_improvement: ' + str(real_improvement))
+            print('lambda used: ' + str(lmb))
+            print('rho: ' + str(rho))
+            print('accepted: ' + str(accepted))
+        converged = False
+        if accepted:
+            # auxiliary quantities for convergence criterion
+            absdiff = prop_vals - cur_vals
+            reldiff = np.abs(absdiff) / (atol + np.abs(cur_vals))
+            maxreldiff = np.max(reldiff)
+            if print_status:
+                print('maximal relative parameter change: ' + str(maxreldiff))
+            converged = np.all(absdiff < (atol + rtol*cur_vals))
+        # rescale lambda according to improvement
+        if real_improvement < 0:
+            lmb *= 97
+        elif rho > 0.75:
+            lmb /= 3.
+        elif rho < 0.25:
+            lmb *= 2.
+        if accepted:
+            cur_vals = prop_vals
+            cur_loglike = proposed_loglike
+        if converged:
+            break
+
+    if not converged:
+        if must_converge:
+            raise ValueError('LM algorithm did not converge!')
+        else:
+            warnings.warn('LM algorithm did not converge.')
+
+    ret = {
+        'upd_vals': cur_vals,
+        'lmb': lmb,
+        'last_rejected': not accepted,
+        'converged': converged
+    }
+    return ret
+
+
 def compute_posterior_covmat(mapping, datatable, postvals, invcovmat,
         source_idcs, idcs=None,  unc_only=False, **mapargs):
     # calculate the refvals
