@@ -205,7 +205,6 @@ class TestGMADatabaseUSU(unittest.TestCase):
         dt['usu_coupling'] = energy_group
         gmadb.set_datatable(dt)
         gmadb.set_usu_couplings('usu_coupling')
-        #gmadb.determine_usu_uncertainties()
         gmadb.evaluate(print_status=True, adjust_usu=True, rtol=1e-6, atol=1e-6)
         self.assertTrue(gmadb._cache['converged'])
 
