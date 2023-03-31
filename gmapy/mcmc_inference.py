@@ -1,7 +1,7 @@
 import numpy as np
 from sksparse.cholmod import cholesky
-import scipy.sparse as sps 
-from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
+import scipy.sparse as sps
+from scipy.sparse import csr_matrix, csc_matrix, coo_matrix, identity
 from statsmodels.tsa.stattools import acf
 from .mappings.compound_map import CompoundMap
 from .mappings.priortools import prepare_prior_and_exptable
@@ -133,34 +133,15 @@ class Posterior:
     def set_relative_exp_errors(self, flag):
         self.__relative_exp_errors = flag
 
+    def get_priorvals(self):
+        return self.__priorvals.flatten()
+
+    def update_expcov(self, new_expcov):
+        new_expcov = csr_matrix(new_expcov)
+        self.__expfact = cholesky(new_expcov)
+
     def logpdf(self, x):
-        x = x.copy()
-        if len(x.shape) == 1:
-            x = x.reshape(-1, 1)
-        adj = self.__adj
-        nonadj = self.__nonadj
-        x[nonadj] = self.__priorvals[nonadj]
-        # prior contribution
-        pf = self.__priorfact
-        d1 = x[adj] - self.__priorvals[adj]
-        d1_perm = pf.apply_P(d1)
-        z1 = pf.solve_L(d1_perm, use_LDLt_decomposition=False)
-        # likelihood contribution
-        m = self.__mapping
-        ef = self.__expfact
-        propx = np.hstack([m.propagate(x[:,i]).reshape(-1,1)
-                          for i in range(x.shape[1])])
-        d2 = self.__expvals - propx
-        if self.__relative_exp_errors:
-            d2 = d2 / propx * self.__expvals
-        d2_perm = ef.apply_P(d2)
-        z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
-        prior_res = np.sum(np.square(z1), axis=0)
-        like_res = np.sum(np.square(z2), axis=0)
-        res = -0.5 * (prior_res + like_res)
-        if self.__apply_squeeze:
-            res = np.squeeze(res)
-        return res
+        return self._logpdf(x)
 
     def grad_logpdf(self, x):
         if self.__relative_exp_errors:
@@ -213,20 +194,86 @@ class Posterior:
         del S
         return proposal
 
-    def approximate_covmat(self, xref):
-        xref = xref.flatten()
-        adj = self.__adj
-        adjidcs = self.__adj_idcs
-        size = self.__size
-        S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
+    def approximate_logpdf(self, xref, x):
+        return self._logpdf(x, xref=xref)
+
+    def approximate_postmode(self, xref, lmb=0.):
         pf = self.__priorfact
         ef = self.__expfact
+        priorvals = self.__priorvals
+        expvals = self.__expvals
+        S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
+        xref = xref.copy()
+        xref[self.__nonadj] = priorvals.flatten()[self.__nonadj]
+        inv_post_cov = self._approximate_invpostcov(xref, S)
+        dampmat = lmb * identity(inv_post_cov.shape[0],
+                                 dtype=float, format='csr')
+        inv_post_cov += dampmat
+        adj_xref = xref.reshape(-1, 1)[self.__adj]
+        preds = self.__mapping.propagate(xref).reshape(-1, 1)
+        d1 = expvals - preds
+        d2 = priorvals[self.__adj, :] - adj_xref
+        zvec = S.T @ ef(d1) + pf(d2)
+        postvals = adj_xref
+        postvals += sps.linalg.spsolve(inv_post_cov, zvec).reshape(-1, 1)
+        xref[self.__adj] = postvals.flatten()
+        return xref
+
+    def approximate_postcov(self, xref):
+        xref = xref.flatten()
+        adjidcs = self.__adj_idcs
+        size = self.__size
         tmp = coo_matrix(sps.linalg.inv(
-            (S.T @ ef(S.tocsc()) + pf.inv()).tocsc())
-        )
+            self._approximate_invpostcov(xref)
+        ))
         postcov = csr_matrix((tmp.data, (adjidcs[tmp.row], adjidcs[tmp.col])),
                              dtype=float, shape=(size, size))
         return postcov
+
+    def _logpdf(self, x, xref=None):
+        x = x.copy()
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
+        adj = self.__adj
+        nonadj = self.__nonadj
+        x[nonadj] = self.__priorvals[nonadj]
+        # prior contribution
+        pf = self.__priorfact
+        d1 = x[adj] - self.__priorvals[adj]
+        d1_perm = pf.apply_P(d1)
+        z1 = pf.solve_L(d1_perm, use_LDLt_decomposition=False)
+        # likelihood contribution
+        m = self.__mapping
+        ef = self.__expfact
+        if xref is None:
+            propx = np.hstack([m.propagate(x[:,i]).reshape(-1,1)
+                              for i in range(x.shape[1])])
+        else:
+            xref = xref.reshape(-1, 1)
+            xref[nonadj, :] = self.__priorvals[nonadj, :]
+            yref = m.propagate(xref.flatten()).reshape(-1, 1)
+            S = m.jacobian(xref.flatten())
+            propx = yref + S @ (x - xref)
+        d2 = self.__expvals - propx
+        if self.__relative_exp_errors:
+            d2 = d2 / propx * self.__expvals
+        d2_perm = ef.apply_P(d2)
+        z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
+        prior_res = np.sum(np.square(z1), axis=0)
+        like_res = np.sum(np.square(z2), axis=0)
+        res = -0.5 * (prior_res + like_res)
+        if self.__apply_squeeze:
+            res = np.squeeze(res)
+        return res
+
+    def _approximate_invpostcov(self, xref, S=None):
+        xref = xref.flatten()
+        pf = self.__priorfact
+        ef = self.__expfact
+        if S is None:
+            S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
+        invpostcov = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
+        return invpostcov
 
 
 def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,

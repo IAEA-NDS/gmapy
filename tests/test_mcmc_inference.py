@@ -165,7 +165,7 @@ class TestMCMCInference(unittest.TestCase):
         scale_fact = 1. 
         propfun = post.generate_proposal_fun(xref, scale=scale_fact)
         # reference calculation
-        postcov = post.approximate_covmat(xref)
+        postcov = post.approximate_postcov(xref)
         samples = propfun(np.zeros((priorvals.size, 10000), dtype=float))
         samplecov = np.cov(samples)
         self.assertTrue(np.allclose(postcov.toarray(), samplecov,
@@ -184,7 +184,7 @@ class TestMCMCInference(unittest.TestCase):
         # prepare MH prerequisites
         post = Posterior(priorvals, priorcov, m, expvals, expcov)
         propfun = post.generate_proposal_fun(priorvals, scale=1.)
-        postcov = post.approximate_covmat(priorvals).toarray()
+        postcov = post.approximate_postcov(priorvals).toarray()
         # do the sampling
         num_samples = 10000
         samples = np.zeros((priorvals.size, num_samples), dtype=float)
@@ -218,7 +218,7 @@ class TestMCMCInference(unittest.TestCase):
         xref = np.full(priorvals.shape, 0.) 
         propfun = post.generate_proposal_fun(xref)
         samples = propfun(np.zeros((xref.shape[0], 10000)))
-        postcov = post.approximate_covmat(xref).toarray()
+        postcov = post.approximate_postcov(xref).toarray()
         samplecov = np.cov(samples)
         self.assertTrue(np.allclose(postcov, samplecov, atol=1.))
         self.assertTrue(np.all(samplecov[postcov == 0] == 0))
