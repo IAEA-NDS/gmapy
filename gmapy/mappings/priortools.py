@@ -23,6 +23,26 @@ def prepare_prior_and_exptable(datatable, reduce, reset_index=True):
     return priortable, exptable, src_len, tar_len
 
 
+def prepare_prior_and_likelihood_quantities(datatable, covmat):
+    priortable, exptable, _, _ = prepare_prior_and_exptable(
+        datatable, reduce=True, reset_index=False
+    )
+    priorvals = priortable['PRIOR'].to_numpy(copy=True)
+    expvals = exptable['DATA'].to_numpy(copy=True)
+    priorcov = covmat[:, priortable.index][priortable.index, :]
+    expcov = covmat[:, exptable.index][exptable.index, :]
+    priortable = priortable.reset_index(drop=True)
+    exptable = exptable.reset_index(drop=True)
+    return {
+        'priortable': priortable,
+        'exptable': exptable,
+        'priorvals': priorvals,
+        'priorcov': priorcov,
+        'expvals': expvals,
+        'expcov': expcov,
+    }
+
+
 def attach_shape_prior(datatable):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable
