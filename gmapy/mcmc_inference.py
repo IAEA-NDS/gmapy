@@ -1,10 +1,12 @@
 import numpy as np
 from sksparse.cholmod import cholesky
 import scipy.sparse as sps
-from scipy.sparse import csr_matrix, csc_matrix, coo_matrix, identity
+from scipy.sparse import csr_matrix, coo_matrix, identity
 from statsmodels.tsa.stattools import acf
 from .mappings.compound_map import CompoundMap
-from .mappings.priortools import prepare_prior_and_exptable
+from .mappings.priortools import (
+    apply_mask
+)
 from .inference import lm_update
 from multiprocessing import Process, Pipe
 import time
@@ -111,7 +113,8 @@ def compute_effective_sample_size(arr):
 class Posterior:
 
     def __init__(self, priorvals, priorcov, mapping, expvals, expcov,
-                 squeeze = True, relative_exp_errors=False):
+                 squeeze=True, relative_exp_errors=False,
+                 source_mask=None, target_mask=None):
         self.__priorvals = priorvals.reshape(-1, 1)
         adjustable = priorcov.diagonal() != 0.
         priorcov = priorcov.tocsr()[adjustable,:].tocsc()[:,adjustable]
@@ -126,6 +129,8 @@ class Posterior:
         self.__expfact = cholesky(expcov)
         self.__relative_exp_errors = relative_exp_errors
         self.__apply_squeeze = squeeze
+        self.__source_mask = source_mask
+        self.__target_mask = target_mask
 
     def set_squeeze(self, flag):
         self.__apply_squeeze = flag
@@ -248,19 +253,36 @@ class Posterior:
         if xref is None:
             propx = np.hstack([m.propagate(x[:,i]).reshape(-1,1)
                               for i in range(x.shape[1])])
+            d2 = self.__expvals - propx
+            if self.__relative_exp_errors:
+                x2 = x.copy()
+                apply_mask(x2, self.__source_mask)
+                propx2 = np.hstack([m.propagate(x2[:,i]).reshape(-1,1)
+                                   for i in range(x2.shape[1])])
+                apply_mask(propx2, self.__target_mask)
+                scl = propx2 / self.__expvals
+                d2 /= scl
         else:
             xref = xref.reshape(-1, 1)
             xref[nonadj, :] = self.__priorvals[nonadj, :]
             yref = m.propagate(xref.flatten()).reshape(-1, 1)
             S = m.jacobian(xref.flatten())
             propx = yref + S @ (x - xref)
-        d2 = self.__expvals - propx
-        if self.__relative_exp_errors:
-            d2 = d2 / propx * self.__expvals
+            d2 = self.__expvals - propx
+            if self.__relative_exp_errors:
+                x2 = x.copy()
+                apply_mask(x2, self.__source_mask)
+                propx2 = yref + S @ (x2 - xref)
+                scl = propx2 / self.__expvals
+                d2 /= scl
         d2_perm = ef.apply_P(d2)
         z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
         prior_res = np.sum(np.square(z1), axis=0)
+        prior_res += pf.logdet() + np.pi*len(d1)
         like_res = np.sum(np.square(z2), axis=0)
+        like_res += ef.logdet() + np.pi*len(d2)
+        if self.__relative_exp_errors:
+            like_res += 2*np.sum(np.log(np.abs(scl)))
         res = -0.5 * (prior_res + like_res)
         if self.__apply_squeeze:
             res = np.squeeze(res)
