@@ -115,43 +115,71 @@ def remove_dummy_datasets(datablock_list):
         del datablock_list[db_idx]
 
 
-def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False, mt6_exp=False,
-                       prop_usu_errors=False, prop_relerr=False):
+def create_propagate_source_mask(
+    datatable, prop_normfact=False, prop_usu_errors=False
+):
+    idcs_list = []
+    vals_list = []
+    if not prop_normfact:
+        norm_selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
+        idcs_list.append(norm_selidx)
+        vals_list.append(np.full(len(norm_selidx), 1.))
+    if not prop_usu_errors:
+        usu_selidx = datatable[datatable['NODE'].str.match('usu_', na=False)].index
+        idcs_list.append(usu_selidx)
+        vals_list.append(np.full(len(usu_selidx), 0.))
+    if len(idcs_list) > 0:
+        idcs = np.concatenate(idcs_list)
+        vals = np.concatenate(vals_list)
+    else:
+        idcs = np.empty(0, dtype=int)
+        vals = np.empty(0, dtype=float)
+    return idcs, vals
+
+
+def create_propagate_target_mask(datatable, mt6_exp=False):
+    idcs_list = []
+    vals_list = []
+    if mt6_exp:
+        dt = datatable
+        mt6_idcs = dt.index[(dt.NODE.str.match('exp_') &
+                            dt.REAC.str.match('MT:6-R1:'))]
+        mt6_vals = datatable.loc[mt6_idcs, 'DATA'].to_numpy(copy=True)
+        idcs_list.append(mt6_idcs)
+        vals_list.append(mt6_vals)
+    if len(idcs_list) > 0:
+        idcs = np.concatenate(idcs_list)
+        vals = np.concatenate(vals_list)
+    else:
+        idcs = np.empty(0, dtype=int)
+        vals = np.empty(0, dtype=float)
+    return idcs, vals
+
+
+def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False,
+                       mt6_exp=False, prop_usu_errors=False, prop_relerr=False):
     refvals = refvals.copy()
     # set temporarily normalization factors to 1.
     # to obtain the cross section. Otherwise, we
     # would obtain the cross section renormalized
     # with the experimental normalization factor
-    if not prop_normfact:
-        norm_selidx = datatable[datatable['NODE'].str.match('norm_', na=False)].index
-        normvals = refvals[norm_selidx]
-        refvals[norm_selidx] = 1.
-    # or renomalized by the usu errors...
-    if not prop_usu_errors:
-        usu_selidx = datatable[datatable['NODE'].str.match('usu_', na=False)].index
-        usuvals = refvals[usu_selidx]
-        refvals[usu_selidx] = 0.
-    # or relative error components
-    if not prop_relerr:
-        relerr_selidx = datatable[datatable['NODE'].str.match('relerr_', na=False)].index
-        relerrvals = refvals[relerr_selidx]
-        refvals[relerr_selidx] = 0.
-    # calculate PPP correction
-    propvals = mapping.propagate(refvals, datatable)
-    if not prop_normfact:
-        propvals[norm_selidx] = normvals
-    if not prop_usu_errors:
-        propvals[usu_selidx] = usuvals
-    if not prop_relerr:
-        propvals[relerr_selidx] = relerrvals
+    source_idcs, source_vals = create_propagate_source_mask(
+        datatable, prop_normfact=prop_normfact, prop_usu_errors=prop_usu_errors
+    )
     # the substitution of propagated values by experimental ones
     # for MT6 (SACS) is there to facilitate the PPP correction
     # as done by Fortran GMAP, which does not apply it to MT6.
-    if mt6_exp:
-        dt = datatable
-        mt6_idcs = dt.index[(dt.NODE.str.match('exp_') &
-                            dt.REAC.str.match('MT:6-R1:'))]
-        propvals[mt6_idcs] = datatable.loc[mt6_idcs, 'DATA']
+    target_idcs, target_vals = create_propagate_target_mask(
+        datatable, mt6_exp=mt6_exp
+    )
+    if len(source_idcs) > 0:
+        save_vals = refvals[source_idcs]
+        refvals[source_idcs] = source_vals
+    propvals = mapping.propagate(refvals, datatable)
+    if len(source_idcs) > 0:
+        propvals[source_idcs] = save_vals
+    if len(target_idcs) > 0:
+        propvals[target_idcs] = target_vals
     return propvals
 
 
