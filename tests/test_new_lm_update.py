@@ -8,7 +8,7 @@ from gmapy.data_management.tablefuns import (
     create_experiment_table)
 from gmapy.data_management.uncfuns import create_experimental_covmat
 from gmapy.mappings.priortools import (
-    prepare_prior_and_exptable,
+    prepare_prior_and_likelihood_quantities,
     attach_shape_prior,
     initialize_shape_prior,
     remove_dummy_datasets
@@ -61,24 +61,20 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
     def test_new_lm_update_equivalent_lm_update(self):
         datatable = self._datatable
         totcov = self._totcov
-        priortable, exptable, _, _ = prepare_prior_and_exptable(
-            datatable, True, reset_index=False
-        )
-        prior_idcs = np.array(priortable.index)
-        prior_idcs_map = {j: i for i, j in enumerate(prior_idcs)}
-        priorvals = priortable['PRIOR'].to_numpy(copy=True)
-        expvals = exptable['DATA'].to_numpy(copy=True)
-        priorcov = totcov[:, priortable.index][priortable.index, :]
-        expcov = totcov[:, exptable.index][exptable.index, :]
+        quants = prepare_prior_and_likelihood_quantities(datatable, totcov)
+        priorvals = quants['priorvals']
+        priorcov = quants['priorcov']
+        expvals = quants['expvals']
+        expcov = quants['expcov']
+        adjidcs = priorcov.diagonal() != 0
         compmap1 = CompoundMap()
         compmap2 = CompoundMap(datatable, reduce=True)
         postdist = Posterior(priorvals, priorcov, compmap2, expvals, expcov) 
         r1 = lm_update(
             compmap1, datatable, totcov, retcov=False, print_status=True
         )
-        real_idcs = np.array([prior_idcs_map[idcs] for idcs in r1['idcs']])
         res1 = priorvals.copy()
-        res1[real_idcs] = r1['upd_vals']
+        res1[adjidcs] = r1['upd_vals']
         print('\n\n----------------------------------------\n\n')
         r2 = new_lm_update(postdist, print_status=True)
         res2 = r2['upd_vals']
