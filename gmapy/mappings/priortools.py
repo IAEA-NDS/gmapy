@@ -176,6 +176,18 @@ def create_propagate_target_mask(datatable, mt6_exp=False):
     return {'idcs': idcs, 'vals': vals}
 
 
+def apply_mask(arr, mask):
+    if mask is None:
+        return arr
+    idcs = mask['idcs']
+    vals = mask['vals']
+    if len(arr.shape) == 1:
+        arr[idcs] = vals
+    elif len(arr.shape) == 2:
+        arr[idcs, :] = vals.reshape(-1, 1)
+    return arr
+
+
 def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False,
                        mt6_exp=False, prop_usu_errors=False, prop_relerr=False):
     refvals = refvals.copy()
@@ -186,24 +198,17 @@ def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False,
     source_mask = create_propagate_source_mask(
         datatable, prop_normfact=prop_normfact, prop_usu_errors=prop_usu_errors
     )
-    source_idcs = source_mask['idcs']
-    source_vals = source_mask['vals']
     # the substitution of propagated values by experimental ones
     # for MT6 (SACS) is there to facilitate the PPP correction
     # as done by Fortran GMAP, which does not apply it to MT6.
     target_mask = create_propagate_target_mask(
         datatable, mt6_exp=mt6_exp
     )
-    target_idcs = target_mask['idcs']
-    target_vals = target_mask['vals']
-    if len(source_idcs) > 0:
-        save_vals = refvals[source_idcs]
-        refvals[source_idcs] = source_vals
+    save_vals = refvals[source_mask['idcs']]
+    apply_mask(refvals, source_mask)
     propvals = mapping.propagate(refvals, datatable)
-    if len(source_idcs) > 0:
-        propvals[source_idcs] = save_vals
-    if len(target_idcs) > 0:
-        propvals[target_idcs] = target_vals
+    apply_mask(propvals, target_mask)
+    propvals[source_mask['idcs']] = save_vals
     return propvals
 
 
