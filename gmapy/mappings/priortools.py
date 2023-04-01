@@ -154,7 +154,7 @@ def create_propagate_source_mask(
     else:
         idcs = np.empty(0, dtype=int)
         vals = np.empty(0, dtype=float)
-    return idcs, vals
+    return {'idcs': idcs, 'vals': vals}
 
 
 def create_propagate_target_mask(datatable, mt6_exp=False):
@@ -173,7 +173,7 @@ def create_propagate_target_mask(datatable, mt6_exp=False):
     else:
         idcs = np.empty(0, dtype=int)
         vals = np.empty(0, dtype=float)
-    return idcs, vals
+    return {'idcs': idcs, 'vals': vals}
 
 
 def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False,
@@ -183,15 +183,19 @@ def propagate_mesh_css(datatable, mapping, refvals, prop_normfact=False,
     # to obtain the cross section. Otherwise, we
     # would obtain the cross section renormalized
     # with the experimental normalization factor
-    source_idcs, source_vals = create_propagate_source_mask(
+    source_mask = create_propagate_source_mask(
         datatable, prop_normfact=prop_normfact, prop_usu_errors=prop_usu_errors
     )
+    source_idcs = source_mask['idcs']
+    source_vals = source_mask['vals']
     # the substitution of propagated values by experimental ones
     # for MT6 (SACS) is there to facilitate the PPP correction
     # as done by Fortran GMAP, which does not apply it to MT6.
-    target_idcs, target_vals = create_propagate_target_mask(
+    target_mask = create_propagate_target_mask(
         datatable, mt6_exp=mt6_exp
     )
+    target_idcs = target_mask['idcs']
+    target_vals = target_mask['vals']
     if len(source_idcs) > 0:
         save_vals = refvals[source_idcs]
         refvals[source_idcs] = source_vals
