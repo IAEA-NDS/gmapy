@@ -171,11 +171,28 @@ class Posterior:
             d2 = self.__expvals - propx
             z2 = S.T @ ef(d2)
         else:
-            d2 = np.square(self.__expvals) / propx - self.__expvals
-            outer_jac = (np.square(self.__expvals / propx))
-            z2 = S.T @ (outer_jac * ef(d2))
+            x2 = x.copy()
+            apply_mask(x2, self.__source_mask)
+            propx2 = m.propagate(x2.flatten()).reshape(-1, 1)
+            apply_mask(propx2,  self.__target_mask)
+            d2 = (self.__expvals - propx) * self.__expvals / propx2
+            outer_jac1 = self.__expvals / propx2
+            outer_jac2 = (self.__expvals - propx)
+            outer_jac2 *= self.__expvals / np.square(propx2)
+            if self.__target_mask is not None:
+                outer_jac2[self.__target_mask['idcs']] = 0.
+            S2 = m.jacobian(x.flatten())
+            inv_expcov_times_d2 = ef(d2)
+            z2a = S.T @ (outer_jac1 * inv_expcov_times_d2)
+            z2b = S2.T @ (outer_jac2 * inv_expcov_times_d2)
             # account for change in determinant
-            z2 -= S.T @ (1/propx).reshape(-1, 1)
+            outer_jac_det = (1/propx2).reshape(-1, 1)
+            if self.__target_mask is not None:
+                outer_jac_det[self.__target_mask['idcs']] = 0.
+            z2b -= S2.T @ outer_jac_det
+            if self.__source_mask is not None:
+                z2b[self.__source_mask['idcs']] = 0.
+            z2 = z2a + z2b
 
         z2[nonadj] = 0.
         res = z1 + z2
