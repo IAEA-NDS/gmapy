@@ -71,12 +71,12 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
         compmap2 = CompoundMap(datatable, reduce=True)
         postdist = Posterior(priorvals, priorcov, compmap2, expvals, expcov) 
         r1 = lm_update(
-            compmap1, datatable, totcov, retcov=False, print_status=True
+            compmap1, datatable, totcov, retcov=False, print_status=True, lmb=1
         )
         res1 = priorvals.copy()
         res1[adjidcs] = r1['upd_vals']
         print('\n\n----------------------------------------\n\n')
-        r2 = new_lm_update(postdist, print_status=True)
+        r2 = new_lm_update(postdist, print_status=True, lmb=1.)
         res2 = r2['upd_vals']
         self.assertTrue(np.allclose(res1, res2, atol=1e-12, rtol=1e-12))
 
