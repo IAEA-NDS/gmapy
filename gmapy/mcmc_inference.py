@@ -321,7 +321,9 @@ class Posterior:
         d2_perm = ef.apply_P(d2)
         z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
         prior_res = np.sum(np.square(z1), axis=0)
-        prior_res += pf.logdet() + np.pi*len(d1)
+        t = pf.D()
+        prior_logdet = np.sum(np.log(t[~np.isposinf(t)]))
+        prior_res += prior_logdet + np.pi*len(d1)
         like_res = np.sum(np.square(z2), axis=0)
         like_res += ef.logdet() + np.pi*len(d2)
         if self.__relative_exp_errors:
