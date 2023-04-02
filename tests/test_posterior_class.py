@@ -1,5 +1,6 @@
 import unittest
 from gmapy.mcmc_inference import Posterior
+from gmapy.mappings.helperfuns import numeric_jacobian
 import numpy as np
 import scipy.sparse as sps
 
@@ -8,12 +9,12 @@ class TestPosteriorClass(unittest.TestCase):
 
     def create_mock_quantities(self):
         saved_state = np.random.get_state()
-        np.random.seed(42)
-        priorvals = np.random.rand(10)
+        np.random.seed(44)
+        priorvals = np.random.rand(10) + 5
         tmp = np.random.rand(10, 10)
         priorcov = tmp.T @ tmp
         priorcov = sps.csr_matrix(priorcov)
-        expvals = np.random.rand(20)
+        expvals = np.random.rand(20) + 10
         tmp = np.random.rand(20, 20)
         expcov = tmp.T @ tmp
         expcov = sps.csr_matrix(expcov)
@@ -141,6 +142,74 @@ class TestPosteriorClass(unittest.TestCase):
             priorvals, priorcov, mock_map_lin, expvals, expcov, testx
         )
         self.assertTrue(np.isclose(test_logpdf, ref_logpdf))
+
+    def test_correct_computation_of_grad_logpdf(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        postdist = Posterior(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            squeeze=False
+        )
+        testx = np.random.rand(len(priorvals))
+        ref_grad = np.squeeze(numeric_jacobian(postdist.logpdf, testx))
+        test_grad = np.squeeze(postdist.grad_logpdf(testx))
+        self.assertTrue(np.allclose(test_grad, ref_grad))
+
+    def test_correct_computation_of_grad_logpdf_with_ppp(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        postdist = Posterior(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True, squeeze=False
+        )
+        expvals = mock_map.propagate(priorvals)
+        expvals += np.random.rand(len(expvals)) / 10
+        testx = priorvals.copy()
+        ref_grad = np.squeeze(numeric_jacobian(postdist.logpdf, testx))
+        test_grad = np.squeeze(postdist.grad_logpdf(testx))
+        self.assertTrue(np.allclose(test_grad, ref_grad))
+
+    def test_analytic_chisquare_derivative_with_ppp(self):
+        np.random.seed(88)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+
+        def my_chisquare(x):
+            d = (expvals - x) * expvals / x
+            d = d.reshape(-1, 1)
+            res = d.T @ np.linalg.inv(expcov.toarray()) @ d
+            return res.flatten()
+
+        def my_grad_chisquare(x):
+            d = (expvals - x) * expvals / x
+            d = d.reshape(-1, 1)
+            outer_jac = (np.square(expvals / x)).reshape(-1, 1)
+            return -2 * outer_jac * (np.linalg.inv(expcov.toarray()) @ d)
+        propvals = expvals + np.random.rand(len(expvals))
+        my_grad = my_grad_chisquare(propvals).flatten()
+        your_grad = numeric_jacobian(my_chisquare, propvals).flatten()
+        self.assertTrue(np.allclose(my_grad, your_grad))
+
+    def test_analytic_logdet_derivative_with_ppp(self):
+        np.random.seed(88)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+
+        def my_logdet(x):
+            scl = x / expvals
+            sclmat = scl.reshape(-1, 1) * scl.reshape(1, -1)
+            scl_expcov = sclmat * expcov.toarray()
+            logdet = np.linalg.slogdet(scl_expcov)[1]
+            return np.array([logdet])
+
+        def my_grad_logdet(x):
+            return 2 / x
+        propvals = expvals + np.random.rand(len(expvals))
+        my_grad = my_grad_logdet(propvals).flatten()
+        your_grad = numeric_jacobian(my_logdet, propvals).flatten()
+        self.assertTrue(np.allclose(my_grad, your_grad))
 
 
 if __name__ == '__main__':
