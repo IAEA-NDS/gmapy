@@ -171,6 +171,30 @@ class TestPosteriorClass(unittest.TestCase):
         test_grad = np.squeeze(postdist.grad_logpdf(testx))
         self.assertTrue(np.allclose(test_grad, ref_grad))
 
+    def test_correct_computation_of_grad_logpdf_with_ppp_and_mask(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        src_mask = {
+            'idcs': np.array([1, 4, 7]),
+            'vals': priorvals[np.array([1, 4, 7])]
+        }
+        tar_mask = {
+            'idcs': np.array([1, 12, 17]),
+            'vals': expvals[[1, 12, 17]]
+        }
+        postdist = Posterior(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True, squeeze=False,
+            source_mask=src_mask, target_mask=tar_mask
+        )
+        expvals = mock_map.propagate(priorvals)
+        expvals += np.random.rand(len(expvals)) / 10
+        testx = priorvals.copy()
+        ref_grad = np.squeeze(numeric_jacobian(postdist.logpdf, testx))
+        test_grad = np.squeeze(postdist.grad_logpdf(testx))
+        self.assertTrue(np.allclose(test_grad, ref_grad))
+
     def test_analytic_chisquare_derivative_with_ppp(self):
         np.random.seed(88)
         priorvals, priorcov, mock_map, expvals, expcov = \
@@ -187,6 +211,7 @@ class TestPosteriorClass(unittest.TestCase):
             d = d.reshape(-1, 1)
             outer_jac = (np.square(expvals / x)).reshape(-1, 1)
             return -2 * outer_jac * (np.linalg.inv(expcov.toarray()) @ d)
+
         propvals = expvals + np.random.rand(len(expvals))
         my_grad = my_grad_chisquare(propvals).flatten()
         your_grad = numeric_jacobian(my_chisquare, propvals).flatten()
@@ -206,6 +231,7 @@ class TestPosteriorClass(unittest.TestCase):
 
         def my_grad_logdet(x):
             return 2 / x
+
         propvals = expvals + np.random.rand(len(expvals))
         my_grad = my_grad_logdet(propvals).flatten()
         your_grad = numeric_jacobian(my_logdet, propvals).flatten()
