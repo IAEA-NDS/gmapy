@@ -246,23 +246,26 @@ class Posterior:
         return self._logpdf(x, xref=xref)
 
     def approximate_postmode(self, xref, lmb=0.):
-        pf = self.__priorfact
-        ef = self.__expfact
         priorvals = self.__priorvals
-        expvals = self.__expvals
+        propx2 = self._get_propx2(xref)
         S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
+        # calculate the inverse posterior covariance matrix
+        if not self.__relative_exp_errors:
+            S2 = S
+        else:
+            S2 = S.T.multiply(propx2).tocsr()
         xref = xref.copy()
         xref[self.__nonadj] = priorvals.flatten()[self.__nonadj]
-        inv_post_cov = self._approximate_invpostcov(xref, S)
+        inv_post_cov = self._approximate_invpostcov(xref, S2)
         dampmat = lmb * identity(inv_post_cov.shape[0],
                                  dtype=float, format='csr')
         inv_post_cov += dampmat
-        adj_xref = xref.reshape(-1, 1)[self.__adj]
-        preds = self.__mapping.propagate(xref).reshape(-1, 1)
-        d1 = expvals - preds
-        d2 = priorvals[self.__adj, :] - adj_xref
-        zvec = S.T @ ef(d1) + pf(d2)
-        postvals = adj_xref
+        # calculate the gradient of the difference in
+        # the experimental chisquare value
+        # self._prop_exp_pred_diff_derivative(
+        zvec = self.grad_logpdf(xref)
+        zvec = zvec[self.__adj]
+        postvals = xref.reshape(-1, 1)[self.__adj]
         postvals += sps.linalg.spsolve(inv_post_cov, zvec).reshape(-1, 1)
         xref[self.__adj] = postvals.flatten()
         return xref
