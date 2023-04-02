@@ -148,6 +148,44 @@ class Posterior:
     def logpdf(self, x):
         return self._logpdf(x)
 
+    def _get_propx(self, x):
+        return self.__mapping.propagate(x.flatten()).reshape(-1, 1)
+
+    def _get_propx2(self, x):
+        m = self.__mapping
+        x2 = x.copy()
+        apply_mask(x2, self.__source_mask)
+        propx2 = m.propagate(x2.flatten()).reshape(-1, 1)
+        apply_mask(propx2,  self.__target_mask)
+        return propx2
+
+    def _get_d2(self, propx, propx2):
+        return (self.__expvals - propx) * self.__expvals / propx2
+
+    def _prop_exp_pred_diff_derivative(self, x, S, propx, propx2):
+        if not self.__relative_exp_errors:
+            return S
+        else:
+            outer_jac1 = self.__expvals / propx2
+            outer_jac2 = (self.__expvals - propx)
+            outer_jac2 *= self.__expvals / np.square(propx2)
+            if self.__target_mask is not None:
+                outer_jac2[self.__target_mask['idcs']] = 0.
+            z2a = S.T.multiply(outer_jac1.T).tocsr()
+            z2b = S.T.multiply(outer_jac2.T).tocsr()
+            if self.__source_mask is not None:
+                z2b[self.__source_mask['idcs']] = 0.
+            return z2a + z2b
+
+    def _prop_logdet_derivative(self, x, S, propx2):
+        outer_jac_det = (1/propx2).reshape(-1, 1)
+        if self.__target_mask is not None:
+            outer_jac_det[self.__target_mask['idcs']] = 0.
+        res = S.T @ (-outer_jac_det)
+        if self.__source_mask is not None:
+            res[self.__source_mask['idcs']] = 0.
+        return res
+
     def grad_logpdf(self, x):
         x = x.copy()
         if len(x.shape) == 1:
@@ -171,28 +209,12 @@ class Posterior:
             d2 = self.__expvals - propx
             z2 = S.T @ ef(d2)
         else:
-            x2 = x.copy()
-            apply_mask(x2, self.__source_mask)
-            propx2 = m.propagate(x2.flatten()).reshape(-1, 1)
-            apply_mask(propx2,  self.__target_mask)
-            d2 = (self.__expvals - propx) * self.__expvals / propx2
-            outer_jac1 = self.__expvals / propx2
-            outer_jac2 = (self.__expvals - propx)
-            outer_jac2 *= self.__expvals / np.square(propx2)
-            if self.__target_mask is not None:
-                outer_jac2[self.__target_mask['idcs']] = 0.
-            S2 = m.jacobian(x.flatten())
+            propx2 = self._get_propx2(x)
+            d2 = self._get_d2(propx, propx2)
             inv_expcov_times_d2 = ef(d2)
-            z2a = S.T @ (outer_jac1 * inv_expcov_times_d2)
-            z2b = S2.T @ (outer_jac2 * inv_expcov_times_d2)
-            # account for change in determinant
-            outer_jac_det = (1/propx2).reshape(-1, 1)
-            if self.__target_mask is not None:
-                outer_jac_det[self.__target_mask['idcs']] = 0.
-            z2b -= S2.T @ outer_jac_det
-            if self.__source_mask is not None:
-                z2b[self.__source_mask['idcs']] = 0.
-            z2 = z2a + z2b
+            d2deriv = self._prop_exp_pred_diff_derivative(x, S, propx, propx2)
+            z2 = d2deriv @ inv_expcov_times_d2
+            z2 += self._prop_logdet_derivative(x, S, propx2)
 
         z2[nonadj] = 0.
         res = z1 + z2
