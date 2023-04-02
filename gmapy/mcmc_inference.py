@@ -149,10 +149,6 @@ class Posterior:
         return self._logpdf(x)
 
     def grad_logpdf(self, x):
-        if self.__relative_exp_errors:
-            raise NotImplementedError(
-                'gradient for relative experimental errors not implemented'
-            )
         x = x.copy()
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
@@ -170,13 +166,21 @@ class Posterior:
         m = self.__mapping
         ef = self.__expfact
         propx = m.propagate(x.flatten()).reshape(-1, 1)
-        d2 = self.__expvals - propx
         S = m.jacobian(x.flatten())
-        z2 = S.T @ ef(d2)
+        if not self.__relative_exp_errors:
+            d2 = self.__expvals - propx
+            z2 = S.T @ ef(d2)
+        else:
+            d2 = np.square(self.__expvals) / propx - self.__expvals
+            outer_jac = (np.square(self.__expvals / propx))
+            z2 = S.T @ (outer_jac * ef(d2))
+            # account for change in determinant
+            z2 -= S.T @ (1/propx).reshape(-1, 1)
+
         z2[nonadj] = 0.
         res = z1 + z2
         if self.__apply_squeeze:
-            res = np.squeeze(z1+z2)
+            res = np.squeeze(res)
         return res
 
     def generate_proposal_fun(self, xref, scale=1.):
