@@ -163,19 +163,16 @@ class Posterior:
         return (self.__expvals - propx) * self.__expvals / propx2
 
     def _exp_pred_diff_jacobian(self, x, S, propx, propx2):
-        if not self.__relative_exp_errors:
-            return S
-        else:
-            outer_jac1 = self.__expvals / propx2
-            outer_jac2 = (self.__expvals - propx)
-            outer_jac2 *= self.__expvals / np.square(propx2)
-            if self.__target_mask is not None:
-                outer_jac2[self.__target_mask['idcs']] = 0.
-            z2a = S.T.multiply(outer_jac1.T).tocsr()
-            z2b = S.T.multiply(outer_jac2.T).tocsr()
-            if self.__source_mask is not None:
-                z2b[self.__source_mask['idcs']] = 0.
-            return -(z2a + z2b).T
+        outer_jac1 = self.__expvals / propx2
+        outer_jac2 = (self.__expvals - propx)
+        outer_jac2 *= self.__expvals / np.square(propx2)
+        if self.__target_mask is not None:
+            outer_jac2[self.__target_mask['idcs']] = 0.
+        z2a = S.T.multiply(outer_jac1.T).tocsr()
+        z2b = S.T.multiply(outer_jac2.T).tocsr()
+        if self.__source_mask is not None:
+            z2b[self.__source_mask['idcs']] = 0.
+        return -(z2a + z2b).T
 
     def _likelihood_logdet_jacobian(self, x, S, propx2):
         outer_jac_det = (2/propx2).reshape(-1, 1)
