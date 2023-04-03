@@ -195,6 +195,41 @@ class TestPosteriorClass(unittest.TestCase):
         test_grad = np.squeeze(postdist.grad_logpdf(testx))
         self.assertTrue(np.allclose(test_grad, ref_grad))
 
+    def test_correct_computation_jacobian_of_difference(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        src_mask = {
+            'idcs': np.array([1, 4, 7]),
+            'vals': priorvals[np.array([1, 4, 7])]
+        }
+        tar_mask = {
+            'idcs': np.array([1, 12, 17]),
+            'vals': expvals[[1, 12, 17]]
+        }
+        postdist = Posterior(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True, squeeze=False,
+            source_mask=src_mask, target_mask=tar_mask
+        )
+
+        def compute_difference(x):
+            propx = postdist._get_propx(x)
+            propx2 = postdist._get_propx2(x)
+            d = postdist._get_d2(propx, propx2)
+            return d.flatten()
+
+        testx = priorvals.copy()
+        ref_grad = np.squeeze(numeric_jacobian(compute_difference, testx))
+
+        S = mock_map.jacobian(testx)
+        propx = postdist._get_propx(testx)
+        propx2 = postdist._get_propx2(testx)
+        test_grad = postdist._prop_exp_pred_diff_derivative(
+            testx, S, propx, propx2
+        ).toarray().T
+        self.assertTrue(np.allclose(-test_grad, ref_grad))
+
     def test_analytic_chisquare_derivative_with_ppp(self):
         np.random.seed(88)
         priorvals, priorcov, mock_map, expvals, expcov = \
