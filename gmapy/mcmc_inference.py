@@ -178,13 +178,13 @@ class Posterior:
             return -(z2a + z2b).T
 
     def _prop_logdet_derivative(self, x, S, propx2):
-        outer_jac_det = (1/propx2).reshape(-1, 1)
+        outer_jac_det = (2/propx2).reshape(-1, 1)
         if self.__target_mask is not None:
             outer_jac_det[self.__target_mask['idcs']] = 0.
-        res = S.T @ (-outer_jac_det)
+        res = S.T @ outer_jac_det
         if self.__source_mask is not None:
             res[self.__source_mask['idcs']] = 0.
-        return res
+        return res.T
 
     def grad_logpdf(self, x):
         x = x.copy()
@@ -214,7 +214,7 @@ class Posterior:
             inv_expcov_times_d2 = ef(d2)
             d2deriv = self._exp_pred_diff_jacobian(x, S, propx, propx2)
             z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv)).T
-            z2 += self._prop_logdet_derivative(x, S, propx2)
+            z2 -= 0.5 * self._prop_logdet_derivative(x, S, propx2).T
 
         z2[nonadj] = 0.
         res = z1 + z2
