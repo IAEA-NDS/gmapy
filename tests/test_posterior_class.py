@@ -261,7 +261,7 @@ class TestPosteriorClass(unittest.TestCase):
 
         S = mock_map.jacobian(testx)
         propx2 = postdist._get_propx2(testx)
-        test_grad = postdist._prop_logdet_derivative(
+        test_grad = postdist._likelihood_logdet_jacobian(
             testx, S, propx2
         )
         self.assertTrue(np.allclose(test_grad, ref_grad))

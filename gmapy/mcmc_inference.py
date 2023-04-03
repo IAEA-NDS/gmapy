@@ -177,7 +177,7 @@ class Posterior:
                 z2b[self.__source_mask['idcs']] = 0.
             return -(z2a + z2b).T
 
-    def _prop_logdet_derivative(self, x, S, propx2):
+    def _likelihood_logdet_jacobian(self, x, S, propx2):
         outer_jac_det = (2/propx2).reshape(-1, 1)
         if self.__target_mask is not None:
             outer_jac_det[self.__target_mask['idcs']] = 0.
@@ -214,7 +214,7 @@ class Posterior:
             inv_expcov_times_d2 = ef(d2)
             d2deriv = self._exp_pred_diff_jacobian(x, S, propx, propx2)
             z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv)).T
-            z2 -= 0.5 * self._prop_logdet_derivative(x, S, propx2).T
+            z2 -= 0.5 * self._likelihood_logdet_jacobian(x, S, propx2).T
 
         z2[nonadj] = 0.
         res = z1 + z2
