@@ -183,6 +183,22 @@ class Posterior:
             res[self.__source_mask['idcs']] = 0.
         return res.T
 
+    def _likelihood_logdet_approximate_hessian(self, S, propx2):
+        outer_2nd_deriv = (-2/np.square(propx2)).flatten()
+        if self.__target_mask is not None:
+            outer_2nd_deriv[self.__target_mask['idcs']] = 0.
+        s = len(outer_2nd_deriv)
+        U = sps.spdiags(outer_2nd_deriv, diags=0, m=s, n=s)
+        if self.__source_mask is not None:
+            ridcs = self.__source_mask['idcs']
+            mask = np.full(S.shape[1], True)
+            mask[ridcs] = False
+            kidcs = np.where(mask)[0]
+            R = csr_matrix(([1.]*len(kidcs), (kidcs, kidcs)),
+                           shape=(S.shape[1], S.shape[1]))
+            S = S @ R
+        return S.T @ U @ S
+
     def grad_logpdf(self, x):
         x = x.copy()
         if len(x.shape) == 1:
