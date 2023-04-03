@@ -245,14 +245,15 @@ class Posterior:
 
     def approximate_postmode(self, xref, lmb=0.):
         priorvals = self.__priorvals
-        S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
         # calculate the inverse posterior covariance matrix
+        S = self.__mapping.jacobian(xref)
         if not self.__relative_exp_errors:
             d_jac = -S
         else:
             propx = self._get_propx(xref)
             propx2 = self._get_propx2(xref)
             d_jac = self._exp_pred_diff_jacobian(xref, S, propx, propx2)
+        d_jac = d_jac.tocsc()[:, self.__adj]
 
         xref = xref.copy()
         xref[self.__nonadj] = priorvals.flatten()[self.__nonadj]
