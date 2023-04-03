@@ -264,6 +264,42 @@ class TestPosteriorClass(unittest.TestCase):
         test_grad = postdist._likelihood_logdet_jacobian(S, propx2)
         self.assertTrue(np.allclose(test_grad, ref_grad))
 
+    def test_correct_computation_approximate_hessian_of_logdet(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        src_mask = {
+            'idcs': np.array([1, 4, 7]),
+            'vals': priorvals[np.array([1, 4, 7])]
+        }
+        tar_mask = {
+            'idcs': np.array([1, 12, 17]),
+            'vals': expvals[[1, 12, 17]]
+        }
+        yref = mock_map.propagate(priorvals)
+        S = mock_map.jacobian(priorvals)
+        lin_mockmap = self.MockMapLinear(yref, S, priorvals)
+        postdist = Posterior(
+            priorvals, priorcov, lin_mockmap, expvals, expcov,
+            relative_exp_errors=True, squeeze=False,
+            source_mask=src_mask, target_mask=tar_mask
+        )
+
+        def logdet_jacobian(x):
+            S = lin_mockmap.jacobian(x)
+            propx2 = postdist._get_propx2(x)
+            ret = postdist._likelihood_logdet_jacobian(S, propx2)
+            return ret.flatten()
+
+        testx = priorvals.copy()
+        ref_hessian = numeric_jacobian(logdet_jacobian, testx)
+
+        S = mock_map.jacobian(testx)
+        propx2 = postdist._get_propx2(testx)
+        test_hessian = \
+            postdist._likelihood_logdet_approximate_hessian(S, propx2)
+        self.assertTrue(np.allclose(test_hessian.toarray(), ref_hessian))
+
     def test_analytic_chisquare_derivative_with_ppp(self):
         np.random.seed(88)
         priorvals, priorcov, mock_map, expvals, expcov = \
