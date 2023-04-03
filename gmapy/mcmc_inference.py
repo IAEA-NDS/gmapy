@@ -199,7 +199,7 @@ class Posterior:
         d1 = x[adj] - self.__priorvals[adj]
         z1r = pf(d1)
         z1 = np.zeros(self.__priorvals.shape, dtype=float)
-        z1[adj] = (-z1r)
+        z1[adj, :] = (-z1r)
         # gradient of likelihood contribution
         m = self.__mapping
         ef = self.__expfact
@@ -213,10 +213,11 @@ class Posterior:
             d2 = self._get_d2(propx, propx2)
             inv_expcov_times_d2 = ef(d2)
             d2deriv = self._exp_pred_diff_jacobian(x, S, propx, propx2)
-            z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv)).T
-            z2 -= 0.5 * self._likelihood_logdet_jacobian(x, S, propx2).T
+            z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv))
+            z2 -= 0.5 * self._likelihood_logdet_jacobian(x, S, propx2)
+            z2 = z2.T
 
-        z2[nonadj] = 0.
+        z2[nonadj, :] = 0.
         res = z1 + z2
         if self.__apply_squeeze:
             res = np.squeeze(res)
