@@ -225,10 +225,10 @@ class TestPosteriorClass(unittest.TestCase):
         S = mock_map.jacobian(testx)
         propx = postdist._get_propx(testx)
         propx2 = postdist._get_propx2(testx)
-        test_grad = postdist._prop_exp_pred_diff_derivative(
+        test_grad = postdist._exp_pred_diff_jacobian(
             testx, S, propx, propx2
-        ).toarray().T
-        self.assertTrue(np.allclose(-test_grad, ref_grad))
+        ).toarray()
+        self.assertTrue(np.allclose(test_grad, ref_grad))
 
     def test_analytic_chisquare_derivative_with_ppp(self):
         np.random.seed(88)

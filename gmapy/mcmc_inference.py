@@ -162,7 +162,7 @@ class Posterior:
     def _get_d2(self, propx, propx2):
         return (self.__expvals - propx) * self.__expvals / propx2
 
-    def _prop_exp_pred_diff_derivative(self, x, S, propx, propx2):
+    def _exp_pred_diff_jacobian(self, x, S, propx, propx2):
         if not self.__relative_exp_errors:
             return S
         else:
@@ -175,7 +175,7 @@ class Posterior:
             z2b = S.T.multiply(outer_jac2.T).tocsr()
             if self.__source_mask is not None:
                 z2b[self.__source_mask['idcs']] = 0.
-            return z2a + z2b
+            return -(z2a + z2b).T
 
     def _prop_logdet_derivative(self, x, S, propx2):
         outer_jac_det = (1/propx2).reshape(-1, 1)
@@ -212,8 +212,8 @@ class Posterior:
             propx2 = self._get_propx2(x)
             d2 = self._get_d2(propx, propx2)
             inv_expcov_times_d2 = ef(d2)
-            d2deriv = self._prop_exp_pred_diff_derivative(x, S, propx, propx2)
-            z2 = d2deriv @ inv_expcov_times_d2
+            d2deriv = self._exp_pred_diff_jacobian(x, S, propx, propx2)
+            z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv)).T
             z2 += self._prop_logdet_derivative(x, S, propx2)
 
         z2[nonadj] = 0.
@@ -262,7 +262,6 @@ class Posterior:
         inv_post_cov += dampmat
         # calculate the gradient of the difference in
         # the experimental chisquare value
-        # self._prop_exp_pred_diff_derivative(
         zvec = self.grad_logpdf(xref)
         zvec = zvec[self.__adj]
         postvals = xref.reshape(-1, 1)[self.__adj]
