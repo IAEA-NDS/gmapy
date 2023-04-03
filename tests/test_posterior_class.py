@@ -230,6 +230,42 @@ class TestPosteriorClass(unittest.TestCase):
         ).toarray()
         self.assertTrue(np.allclose(test_grad, ref_grad))
 
+    def test_correct_computation_jacobian_of_logdet(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        src_mask = {
+            'idcs': np.array([1, 4, 7]),
+            'vals': priorvals[np.array([1, 4, 7])]
+        }
+        tar_mask = {
+            'idcs': np.array([1, 12, 17]),
+            'vals': expvals[[1, 12, 17]]
+        }
+        postdist = Posterior(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True, squeeze=False,
+            source_mask=src_mask, target_mask=tar_mask
+        )
+
+        def compute_logdet(x):
+            propx2 = postdist._get_propx2(x)
+            mycov = expcov.toarray()
+            scl = propx2.flatten() / expvals.flatten()
+            mycov *= scl.reshape(-1, 1) * scl.reshape(1, -1)
+            ret = np.array([np.linalg.slogdet(mycov)[1]])
+            return ret
+
+        testx = priorvals.copy()
+        ref_grad = np.squeeze(numeric_jacobian(compute_logdet, testx))
+
+        S = mock_map.jacobian(testx)
+        propx2 = postdist._get_propx2(testx)
+        test_grad = postdist._prop_logdet_derivative(
+            testx, S, propx2
+        )
+        self.assertTrue(np.allclose(test_grad, ref_grad))
+
     def test_analytic_chisquare_derivative_with_ppp(self):
         np.random.seed(88)
         priorvals, priorcov, mock_map, expvals, expcov = \
