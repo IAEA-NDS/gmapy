@@ -174,6 +174,12 @@ class Posterior:
             z2b[self.__source_mask['idcs']] = 0.
         return -(z2a + z2b).T
 
+    def _likelihood_logdet(self, propx2):
+        res = self.__expfact.logdet()
+        scl = propx2 / self.__expvals
+        res += 2*np.sum(np.log(np.abs(scl)))
+        return res
+
     def _likelihood_logdet_jacobian(self, S, propx2):
         outer_jac_det = (2/propx2).reshape(-1, 1)
         if self.__target_mask is not None:
@@ -343,10 +349,11 @@ class Posterior:
         t = pf.D()
         prior_logdet = np.sum(np.log(t[~np.isposinf(t)]))
         prior_res += prior_logdet + np.pi*len(d1)
-        like_res = np.sum(np.square(z2), axis=0)
-        like_res += ef.logdet() + np.pi*len(d2)
+        like_res = np.sum(np.square(z2), axis=0) + np.pi*len(d2)
         if self.__relative_exp_errors:
-            like_res += 2*np.sum(np.log(np.abs(scl)))
+            like_res += self._likelihood_logdet(propx2)
+        else:
+            like_res += ef.logdet()
         res = -0.5 * (prior_res + like_res)
         if self.__apply_squeeze:
             res = np.squeeze(res)
