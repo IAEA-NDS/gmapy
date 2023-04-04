@@ -36,11 +36,12 @@ class TestPosteriorClass(unittest.TestCase):
     class MockMapLinear:
 
         def __init__(self, yref, S, xref):
-            self.yref = yref
+            self.yref = yref.reshape(-1, 1)
             self.S = S
-            self.xref = xref
+            self.xref = xref.reshape(-1, 1)
 
         def propagate(self, x):
+            x = x.reshape(-1, 1)
             return self.yref + self.S @ (x - self.xref)
 
         def jacobian(self, x):
@@ -49,11 +50,14 @@ class TestPosteriorClass(unittest.TestCase):
     def compute_reference_logpdf(
         self, priorvals, priorcov, mapping, expvals, expcov, x
     ):
+        x = x.reshape(-1, 1)
+        priorvals = priorvals.reshape(-1, 1)
+        expvals = expvals.reshape(-1, 1)
         if sps.issparse(priorcov):
             priorcov = priorcov.toarray()
         if sps.issparse(expcov):
             expcov = expcov.toarray()
-        preds = mapping.propagate(x)
+        preds = mapping.propagate(x.flatten()).reshape(-1, 1)
         d1 = x - priorvals
         d2 = expvals - preds
         inv_priorcov = np.linalg.inv(priorcov)
@@ -69,7 +73,7 @@ class TestPosteriorClass(unittest.TestCase):
         prior_like = -0.5 * (chisqr_prior + log_normconst1)
         exp_like = -0.5 * (chisqr_exp + log_normconst2)
         ret = prior_like + exp_like
-        return ret
+        return ret.flatten()
 
     def test_correct_computation_of_logpdf(self):
         np.random.seed(47)
@@ -120,28 +124,84 @@ class TestPosteriorClass(unittest.TestCase):
         )
         self.assertTrue(np.isclose(test_logpdf, ref_logpdf))
 
-    def test_correct_computation_of_approximate_logpdf_with_ppp(self):
-        np.random.seed(49)
+    def test_correct_computation_of_approximate_logpdf_variant(self):
+        np.random.seed(50)
         priorvals, priorcov, mock_map, expvals, expcov = \
             self.create_mock_quantities()
-        postdist = Posterior(
-            priorvals, priorcov, mock_map, expvals, expcov,
-            relative_exp_errors=True
-        )
-        refx = np.random.rand(len(priorvals))
         testx = np.random.rand(len(priorvals))
-        test_logpdf = postdist.approximate_logpdf(refx, testx)
+        refx = np.random.rand(len(priorvals))
         yref = mock_map.propagate(refx)
         S = mock_map.jacobian(refx)
         mock_map_lin = self.MockMapLinear(yref, S, refx)
-        ypred = mock_map_lin.propagate(testx)
-        scl = ypred.reshape(-1, 1) / expvals.reshape(-1, 1)
-        sclmat = scl.reshape(-1, 1) * scl.reshape(1, -1)
-        expcov = expcov.toarray() * sclmat
-        ref_logpdf = self.compute_reference_logpdf(
-            priorvals, priorcov, mock_map_lin, expvals, expcov, testx
+        postdist_lin = Posterior(
+            priorvals, priorcov, mock_map_lin, expvals, expcov
         )
-        self.assertTrue(np.isclose(test_logpdf, ref_logpdf))
+        logpdf_ref = postdist_lin.logpdf(refx).reshape(1, 1)
+        J = postdist_lin.grad_logpdf(refx).reshape(1, -1)
+        H = np.squeeze(numeric_jacobian(postdist_lin.grad_logpdf, refx))
+        d = testx.reshape(-1, 1) - refx.reshape(-1, 1)
+        ref_approx_logpdf = logpdf_ref + J @ d + 0.5 * d.T @ H @ d
+        test_approx_logpdf = postdist_lin.approximate_logpdf(refx, testx)
+        test_approx_logpdf2 = postdist_lin.logpdf(testx)
+        self.assertTrue(np.isclose(test_approx_logpdf, test_approx_logpdf2))
+        self.assertTrue(np.isclose(test_approx_logpdf, ref_approx_logpdf))
+
+    def test_correct_computation_of_approximate_logpdf_with_ppp(self):
+        np.random.seed(58)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        testx = np.random.rand(len(priorvals))
+        refx = np.random.rand(len(priorvals))
+        yref = mock_map.propagate(refx)
+        S = mock_map.jacobian(refx)
+        mock_map_lin = self.MockMapLinear(yref, S, refx)
+        postdist_lin = Posterior(
+            priorvals, priorcov, mock_map_lin, expvals, expcov,
+            relative_exp_errors=True
+        )
+        # check the logdet part
+        postdist_lin._debug_only_likelihood_logdet = True
+        test_approx_logpdf = postdist_lin.approximate_logpdf(refx, testx)
+        logpdf_ref = postdist_lin.logpdf(refx).reshape(1, 1)
+        J = postdist_lin.grad_logpdf(refx).reshape(1, -1)
+        H = np.squeeze(numeric_jacobian(postdist_lin.grad_logpdf, refx))
+        d = testx.reshape(-1, 1) - refx.reshape(-1, 1)
+        ref_approx_logpdf = logpdf_ref + J @ d + 0.5 * d.T @ H @ d
+        self.assertTrue(np.isclose(test_approx_logpdf, ref_approx_logpdf))
+        # check the chisquare part
+        postdist_lin._debug_only_likelihood_logdet = False
+        postdist_lin._debug_only_likelihood_chisquare = True
+        test_approx_logpdf = postdist_lin.approximate_logpdf(refx, testx)
+        propx_ref = postdist_lin._get_propx(refx)
+        propx2_ref = postdist_lin._get_propx2(refx)
+        J = postdist_lin._exp_pred_diff_jacobian(S, propx_ref, propx2_ref)
+        d_ref = postdist_lin._get_d2(propx_ref, propx2_ref)
+        new_mockmap_lin = self.MockMapLinear(d_ref, J, refx)
+        zerovals = np.zeros(expvals.shape, dtype=float)
+        new_postdist_lin = Posterior(
+            priorvals, priorcov, new_mockmap_lin, zerovals, expcov,
+            relative_exp_errors=False
+        )
+        new_postdist_lin._debug_only_likelihood_chisquare = True
+        ref_approx_logpdf = new_postdist_lin.logpdf(testx)
+        self.assertTrue(np.isclose(test_approx_logpdf, ref_approx_logpdf))
+
+    def test_correct_computation_of_approximate_postcov(self):
+        np.random.seed(50)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        refx = np.random.rand(len(priorvals))
+        yref = mock_map.propagate(refx)
+        S = mock_map.jacobian(refx)
+        mock_map_lin = self.MockMapLinear(yref, S, refx)
+        postdist_lin = Posterior(
+            priorvals, priorcov, mock_map_lin, expvals, expcov
+        )
+        H = np.squeeze(numeric_jacobian(postdist_lin.grad_logpdf, refx))
+        testx = np.random.rand(len(priorvals))
+        ref_covmat = -np.linalg.inv(H)
+        test_covmat = postdist_lin.approximate_postcov(testx).toarray()
+        self.assertTrue(np.allclose(ref_covmat, test_covmat))
 
     def test_correct_computation_of_grad_logpdf(self):
         np.random.seed(49)
@@ -225,9 +285,8 @@ class TestPosteriorClass(unittest.TestCase):
         S = mock_map.jacobian(testx)
         propx = postdist._get_propx(testx)
         propx2 = postdist._get_propx2(testx)
-        test_grad = postdist._exp_pred_diff_jacobian(
-            testx, S, propx, propx2
-        ).toarray()
+        test_grad = \
+            postdist._exp_pred_diff_jacobian(S, propx, propx2).toarray()
         self.assertTrue(np.allclose(test_grad, ref_grad))
 
     def test_correct_computation_jacobian_of_logdet(self):
