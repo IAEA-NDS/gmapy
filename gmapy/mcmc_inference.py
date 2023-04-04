@@ -131,6 +131,9 @@ class Posterior:
         self.__apply_squeeze = squeeze
         self.__source_mask = source_mask
         self.__target_mask = target_mask
+        # for debugging
+        self._debug_only_likelihood_logdet = False
+        self._debug_only_likelihood_chisquare = False
 
     def set_squeeze(self, flag):
         self.__apply_squeeze = flag
@@ -162,7 +165,7 @@ class Posterior:
     def _get_d2(self, propx, propx2):
         return (self.__expvals - propx) * self.__expvals / propx2
 
-    def _exp_pred_diff_jacobian(self, x, S, propx, propx2):
+    def _exp_pred_diff_jacobian(self, S, propx, propx2):
         outer_jac1 = self.__expvals / propx2
         outer_jac2 = (self.__expvals - propx)
         outer_jac2 *= self.__expvals / np.square(propx2)
@@ -205,6 +208,13 @@ class Posterior:
             S = S @ R
         return S.T @ U @ S
 
+    def _likelihood_logdet_taylorapprox(self, x, logdet_ref, xref, propx2, S):
+        T1 = self._likelihood_logdet_jacobian(S, propx2)
+        T2 = self._likelihood_logdet_approximate_hessian(S, propx2)
+        d = x.reshape(-1, 1) - xref.reshape(-1, 1)
+        ypred = logdet_ref + T1 @ d + 0.5 * d.T @ T2 @ d
+        return ypred
+
     def grad_logpdf(self, x):
         x = x.copy()
         if len(x.shape) == 1:
@@ -227,12 +237,20 @@ class Posterior:
         if not self.__relative_exp_errors:
             d2 = self.__expvals - propx
             z2 = S.T @ ef(d2)
+            if self._debug_only_likelihood_chisquare:
+                z2[nonadj, :] = 0.
+                return -2*z2.flatten()
         else:
             propx2 = self._get_propx2(x)
             d2 = self._get_d2(propx, propx2)
             inv_expcov_times_d2 = ef(d2)
-            d2deriv = self._exp_pred_diff_jacobian(x, S, propx, propx2)
+            d2deriv = self._exp_pred_diff_jacobian(S, propx, propx2)
             z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv))
+            if self._debug_only_likelihood_chisquare:
+                z2[:, nonadj] = 0.
+                return -2*z2.flatten()
+            if self._debug_only_likelihood_logdet:
+                return self._likelihood_logdet_jacobian(S, propx2).flatten()
             z2 -= 0.5 * self._likelihood_logdet_jacobian(S, propx2)
             z2 = z2.T
 
@@ -274,7 +292,7 @@ class Posterior:
         else:
             propx = self._get_propx(xref)
             propx2 = self._get_propx2(xref)
-            d_jac = self._exp_pred_diff_jacobian(xref, S, propx, propx2)
+            d_jac = self._exp_pred_diff_jacobian(S, propx, propx2)
         d_jac = d_jac.tocsc()[:, self.__adj]
 
         xref = xref.copy()
@@ -333,16 +351,22 @@ class Posterior:
         else:
             xref = xref.reshape(-1, 1)
             xref[nonadj, :] = self.__priorvals[nonadj, :]
-            yref = m.propagate(xref.flatten()).reshape(-1, 1)
             S = m.jacobian(xref.flatten())
-            propx = yref + S @ (x - xref)
-            d2 = self.__expvals - propx
-            if self.__relative_exp_errors:
+            if not self.__relative_exp_errors:
+                yref = m.propagate(xref.flatten()).reshape(-1, 1)
+                propx = yref + S @ (x - xref)
+                d2 = self.__expvals - propx
+            else:
+                propx_ref = m.propagate(xref.flatten()).reshape(-1, 1)
+                x2ref = xref.copy()
+                apply_mask(x2ref, self.__source_mask)
+                propx2_ref = m.propagate(x2ref.flatten()).reshape(-1, 1)
+                apply_mask(propx2_ref, self.__target_mask)
+                d2ref = self._get_d2(propx_ref, propx2_ref)
+                J = self._exp_pred_diff_jacobian(S, propx_ref, propx2_ref)
                 x2 = x.copy()
                 apply_mask(x2, self.__source_mask)
-                propx2 = yref + S @ (x2 - xref)
-                scl = propx2 / self.__expvals
-                d2 /= scl
+                d2 = d2ref + J @ (x2 - x2ref)
         d2_perm = ef.apply_P(d2)
         z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
         prior_res = np.sum(np.square(z1), axis=0)
@@ -350,10 +374,25 @@ class Posterior:
         prior_logdet = np.sum(np.log(t[~np.isposinf(t)]))
         prior_res += prior_logdet + np.pi*len(d1)
         like_res = np.sum(np.square(z2), axis=0) + np.pi*len(d2)
+
+        if self._debug_only_likelihood_chisquare:
+            return like_res
+
         if self.__relative_exp_errors:
-            like_res += self._likelihood_logdet(propx2)
+            if xref is None:
+                like_logdet = self._likelihood_logdet(propx2)
+            else:
+                logdet_ref = self._likelihood_logdet(propx2_ref)
+                like_logdet = self._likelihood_logdet_taylorapprox(
+                    x2, logdet_ref, x2ref, propx2_ref, S
+                ).reshape(1)
         else:
-            like_res += ef.logdet()
+            like_logdet = ef.logdet()
+
+        if self._debug_only_likelihood_logdet:
+            return like_logdet
+
+        like_res += like_logdet
         res = -0.5 * (prior_res + like_res)
         if self.__apply_squeeze:
             res = np.squeeze(res)
