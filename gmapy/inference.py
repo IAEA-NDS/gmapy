@@ -274,7 +274,7 @@ def new_lm_update(dist_obj, startvals=None, maxiter=10,
         converged = False
         if accepted:
             # auxiliary quantities for convergence criterion
-            absdiff = prop_vals - cur_vals
+            absdiff = np.abs(prop_vals - cur_vals)
             reldiff = np.abs(absdiff) / (atol + np.abs(cur_vals))
             maxreldiff = np.max(reldiff)
             if print_status:
