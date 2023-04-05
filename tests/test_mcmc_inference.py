@@ -6,9 +6,9 @@ import scipy.sparse as sps
 from scipy.stats import norm, uniform, shapiro, ks_2samp
 from gmapy.mcmc_inference import (
     symmetric_mh_algo,
-    Posterior,
     gmap_mh_inference
 )
+from gmapy.posterior import Posterior
 from gmapy.mappings.compound_map import CompoundMap
 from gmapy.gma_database_class import GMADatabase
 from gmapy.mappings.priortools import prepare_prior_and_exptable

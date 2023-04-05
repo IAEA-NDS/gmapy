@@ -19,10 +19,10 @@ from gmapy.inference import (
     lm_update,
     new_lm_update,
 )
-from gmapy.mcmc_inference import Posterior
 from gmapy.data_management.database_IO import read_legacy_gma_database
 from gmapy.mappings.compound_map import CompoundMap
 from gmapy.data_management.uncfuns import create_relunc_vector
+from gmapy.posterior import Posterior
 
 
 class TestNewLevenbergMarquardtUpdate(unittest.TestCase):

@@ -1,5 +1,5 @@
 import unittest
-from gmapy.mcmc_inference import Posterior
+from gmapy.posterior import Posterior
 from gmapy.mappings.helperfuns import numeric_jacobian
 import numpy as np
 import scipy.sparse as sps
