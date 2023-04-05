@@ -11,7 +11,9 @@ from gmapy.mappings.priortools import (
     prepare_prior_and_likelihood_quantities,
     attach_shape_prior,
     initialize_shape_prior,
-    remove_dummy_datasets
+    remove_dummy_datasets,
+    create_propagate_source_mask,
+    create_propagate_target_mask
 )
 from gmapy.inference import (
     lm_update,
@@ -69,7 +71,7 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
         adjidcs = priorcov.diagonal() != 0
         compmap1 = CompoundMap()
         compmap2 = CompoundMap(datatable, reduce=True)
-        postdist = Posterior(priorvals, priorcov, compmap2, expvals, expcov) 
+        postdist = Posterior(priorvals, priorcov, compmap2, expvals, expcov)
         r1 = lm_update(
             compmap1, datatable, totcov, retcov=False, print_status=True, lmb=1
         )
@@ -79,6 +81,30 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
         r2 = new_lm_update(postdist, print_status=True, lmb=1.)
         res2 = r2['upd_vals']
         self.assertTrue(np.allclose(res1, res2, atol=1e-12, rtol=1e-12))
+
+    def test_new_lm_update_convergence_with_ppp(self):
+        datatable = self._datatable
+        totcov = self._totcov
+        quants = prepare_prior_and_likelihood_quantities(datatable, totcov)
+        priortable = quants['priortable']
+        exptable = quants['exptable']
+        priorvals = quants['priorvals']
+        priorcov = quants['priorcov']
+        expvals = quants['expvals']
+        expcov = quants['expcov']
+        compmap = CompoundMap(datatable, reduce=True)
+        source_mask = create_propagate_source_mask(priortable)
+        target_mask = create_propagate_target_mask(exptable, mt6_exp=True)
+        postdist = Posterior(
+            priorvals, priorcov, compmap, expvals, expcov,
+            relative_exp_errors=True, source_mask=source_mask,
+            target_mask=target_mask
+        )
+        res = new_lm_update(postdist, print_status=True, maxiter=100,
+                            must_converge=True, lmb=1., rtol=1e-6, atol=1e-6)
+        best = res['upd_vals'].flatten()
+        grad = postdist.grad_logpdf(best).flatten()
+        self.assertTrue(np.all(np.abs(grad) < 1e-4))
 
 
 if __name__ == '__main__':
