@@ -11,7 +11,7 @@ from gmapy.mappings.priortools import (
     initialize_shape_prior,
     remove_dummy_datasets
 )
-from gmapy.inference import gls_update, lm_update, compute_posterior_covmat
+from gmapy.inference import gls_update, superseded_lm_update, compute_posterior_covmat
 from gmapy.data_management.database_IO import read_legacy_gma_database
 from gmapy.mappings.compound_map import CompoundMap
 from gmapy.gmap import run_gmap_simplified
@@ -58,7 +58,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         totcov = self._totcov
         compmap = CompoundMap()
         res1 = gls_update(compmap, datatable, totcov, retcov=False)
-        res2 = lm_update(compmap, datatable, totcov, retcov=False,
+        res2 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-16, maxiter=1, print_status=True, must_converge=False)
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
@@ -70,7 +70,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         compmap = CompoundMap()
         # setting lmb to such a small value renders the
         # LM update steps equivalent to the GLS update
-        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+        res1 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-50, maxiter=1, print_status=True, correct_ppp=True,
                 must_converge=False)
         # due to different convention of counting we must set
@@ -90,7 +90,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         compmap = CompoundMap()
         # setting lmb to such a small value renders the
         # LM update steps equivalent to the GLS update
-        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+        res1 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-50, maxiter=3, print_status=True, correct_ppp=False,
                 must_converge=False, no_reject=True)
         # due to different convention of counting we must set
@@ -110,7 +110,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         compmap = CompoundMap()
         # setting lmb to such a small value renders the
         # LM update steps equivalent to the GLS update
-        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+        res1 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-50, maxiter=3, print_status=True, correct_ppp=True,
                 must_converge=False, no_reject=True)
         # due to different convention of counting we must set
@@ -127,9 +127,9 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         datatable = self._datatable
         totcov = self._totcov
         compmap = CompoundMap()
-        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+        res1 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-8, maxiter=20, print_status=True, must_converge=True)
-        res2 = lm_update(compmap, datatable, totcov, retcov=False,
+        res2 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-4, maxiter=20, print_status=True, must_converge=True)
         self.assertTrue(np.all(np.isclose(res1['upd_vals'], res2['upd_vals'],
             atol=1e-8, rtol=1e-8)))
@@ -145,9 +145,9 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         totcov2.setdiag(0.)
         totcov2 = totcov2 + diags(totcov2_diag)
         compmap = CompoundMap()
-        res1 = lm_update(compmap, datatable, totcov, retcov=False,
+        res1 = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-8, maxiter=20, print_status=True, must_converge=True)
-        res2 = lm_update(compmap, datatable, totcov2, retcov=False,
+        res2 = superseded_lm_update(compmap, datatable, totcov2, retcov=False,
                 lmb=1e-8, maxiter=20, print_status=True, must_converge=True)
 
         diff1 = np.mean(np.abs(res1['upd_vals'] - priorvals))
@@ -163,7 +163,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         datatable = self._datatable
         totcov = self._totcov
         compmap = CompoundMap()
-        res = lm_update(compmap, datatable, totcov, retcov=False,
+        res = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True,
                 must_converge=False)
         source_idcs = res['idcs']
@@ -189,7 +189,7 @@ class TestLevenbergMarquardtUpdate(unittest.TestCase):
         datatable = self._datatable
         totcov = self._totcov
         compmap = CompoundMap()
-        res = lm_update(compmap, datatable, totcov, retcov=False,
+        res = superseded_lm_update(compmap, datatable, totcov, retcov=False,
                 lmb=1e-8, maxiter=1, ret_invcov=True, print_status=True,
                 must_converge=False)
         source_idcs = res['idcs']

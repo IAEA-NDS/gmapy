@@ -16,7 +16,7 @@ from gmapy.mappings.priortools import (
     create_propagate_target_mask
 )
 from gmapy.inference import (
-    lm_update,
+    superseded_lm_update,
     new_lm_update,
 )
 from gmapy.data_management.database_IO import read_legacy_gma_database
@@ -72,7 +72,7 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
         compmap1 = CompoundMap()
         compmap2 = CompoundMap(datatable, reduce=True)
         postdist = Posterior(priorvals, priorcov, compmap2, expvals, expcov)
-        r1 = lm_update(
+        r1 = superseded_lm_update(
             compmap1, datatable, totcov, retcov=False, print_status=True, lmb=1
         )
         res1 = priorvals.copy()

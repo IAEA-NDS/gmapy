@@ -1,7 +1,7 @@
 import numpy as np
 from statsmodels.tsa.stattools import acf
 from .mappings.compound_map import CompoundMap
-from .inference import lm_update
+from .inference import superseded_lm_update
 from .posterior import Posterior
 from multiprocessing import Process, Pipe
 import time
@@ -124,7 +124,7 @@ def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
     if startvals is None:
         print('Determine initial values for MCMC chain...')
         mapping = CompoundMap(datatable, rtol=int_rtol, reduce=False)
-        lmres = lm_update(mapping, datatable, covmat, print_status=True) 
+        lmres = superseded_lm_update(mapping, datatable, covmat, print_status=True)
         startvals = np.empty(len(datatable), dtype=float)
         startvals[prior_idcs] = priorvals
         startvals[lmres['idcs']] = lmres['upd_vals']

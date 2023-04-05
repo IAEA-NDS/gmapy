@@ -67,7 +67,7 @@ def gls_update(mapping, datatable, covmat, retcov=False):
             'idcs': np.sort(datatable.index[isadj])}
 
 
-def lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
+def superseded_lm_update(mapping, datatable, covmat, retcov=False, startvals=None,
         maxiter=10, atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
         correct_ppp=False, ret_invcov=False, must_converge=True,
         no_reject=False):

@@ -13,7 +13,7 @@ from .data_management.uncfuns import (
 from .data_management.unc_utils import scale_covmat
 from .mappings.compound_map import CompoundMap
 from .mappings.relative_error_map import attach_relative_error_df
-from .inference import lm_update, compute_posterior_covmat
+from .inference import superseded_lm_update, compute_posterior_covmat
 from .mappings.priortools import (
     propagate_mesh_css,
     attach_shape_prior,
@@ -185,7 +185,7 @@ class GMADatabase:
             ret_uncs = False
         kwargs['ret_invcov'] = calc_invcov
 
-        lmres = lm_update(mapping, datatable, covmat, **kwargs)
+        lmres = superseded_lm_update(mapping, datatable, covmat, **kwargs)
         self._cache['lmb'] = lmres['lmb']
         self._cache['last_rejected'] = lmres['last_rejected']
         self._cache['converged'] = lmres['converged']
