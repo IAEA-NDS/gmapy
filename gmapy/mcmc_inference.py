@@ -286,18 +286,9 @@ class Posterior:
     def approximate_postmode(self, xref, lmb=0.):
         priorvals = self.__priorvals
         # calculate the inverse posterior covariance matrix
-        S = self.__mapping.jacobian(xref)
-        if not self.__relative_exp_errors:
-            d_jac = -S
-        else:
-            propx = self._get_propx(xref)
-            propx2 = self._get_propx2(xref)
-            d_jac = self._exp_pred_diff_jacobian(S, propx, propx2)
-        d_jac = d_jac.tocsc()[:, self.__adj]
-
         xref = xref.copy()
         xref[self.__nonadj] = priorvals.flatten()[self.__nonadj]
-        inv_post_cov = self._approximate_invpostcov(xref, d_jac)
+        inv_post_cov = self._approximate_invpostcov(xref)
         dampmat = lmb * identity(inv_post_cov.shape[0],
                                  dtype=float, format='csr')
         inv_post_cov += dampmat
@@ -312,6 +303,7 @@ class Posterior:
 
     def approximate_postcov(self, xref):
         xref = xref.flatten()
+        xref[self.__nonadj] = self.__priorvals[self.__nonadj, 0]
         adjidcs = self.__adj_idcs
         size = self.__size
         tmp = coo_matrix(sps.linalg.inv(
@@ -398,13 +390,25 @@ class Posterior:
             res = np.squeeze(res)
         return res
 
-    def _approximate_invpostcov(self, xref, S=None):
+    def _approximate_invpostcov(self, xref):
         xref = xref.flatten()
         pf = self.__priorfact
         ef = self.__expfact
-        if S is None:
-            S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
-        invpostcov = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
+        invpostcov = pf.inv()
+        S = self.__mapping.jacobian(xref)
+        if not self.__relative_exp_errors:
+            J = S.tocsc()[:, self.__adj]
+        if self.__relative_exp_errors:
+            propx = self._get_propx(xref)
+            propx2 = self._get_propx2(xref)
+            logdet_hessian = \
+                self._likelihood_logdet_approximate_hessian(S, propx)
+            logdet_hessian = logdet_hessian[:, self.__adj][self.__adj, :]
+            invpostcov += 0.5 * logdet_hessian
+            J = self._exp_pred_diff_jacobian(S, propx, propx2)
+            J = J.tocsc()[:, self.__adj]
+        invpostcov += J.T @ ef(J.tocsc())
+        invpostcov = invpostcov.tocsc()
         return invpostcov
 
 
