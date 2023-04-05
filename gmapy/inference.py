@@ -244,9 +244,9 @@ def superseded_lm_update(mapping, datatable, covmat, retcov=False, startvals=Non
     return res
 
 
-def new_lm_update(dist_obj, startvals=None, maxiter=10,
-                  atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
-                  must_converge=True, no_reject=False):
+def lm_update(dist_obj, startvals=None, maxiter=10,
+              atol=1e-6, rtol=1e-6, lmb=1e-6, print_status=False,
+              must_converge=True, no_reject=False):
     if startvals is None:
         startvals = dist_obj.get_priorvals()
     cur_vals = startvals

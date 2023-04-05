@@ -17,7 +17,7 @@ from gmapy.mappings.priortools import (
 )
 from gmapy.inference import (
     superseded_lm_update,
-    new_lm_update,
+    lm_update,
 )
 from gmapy.data_management.database_IO import read_legacy_gma_database
 from gmapy.mappings.compound_map import CompoundMap
@@ -60,7 +60,7 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
         cls._datatable = datatable
         cls._totcov = totcov
 
-    def test_new_lm_update_equivalent_lm_update(self):
+    def test_lm_update_equivalent_lm_update(self):
         datatable = self._datatable
         totcov = self._totcov
         quants = prepare_prior_and_likelihood_quantities(datatable, totcov)
@@ -78,11 +78,11 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
         res1 = priorvals.copy()
         res1[adjidcs] = r1['upd_vals']
         print('\n\n----------------------------------------\n\n')
-        r2 = new_lm_update(postdist, print_status=True, lmb=1.)
+        r2 = lm_update(postdist, print_status=True, lmb=1.)
         res2 = r2['upd_vals']
         self.assertTrue(np.allclose(res1, res2, atol=1e-12, rtol=1e-12))
 
-    def test_new_lm_update_convergence_with_ppp(self):
+    def test_lm_update_convergence_with_ppp(self):
         datatable = self._datatable
         totcov = self._totcov
         quants = prepare_prior_and_likelihood_quantities(datatable, totcov)
@@ -100,7 +100,7 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
             relative_exp_errors=True, source_mask=source_mask,
             target_mask=target_mask
         )
-        res = new_lm_update(postdist, print_status=True, maxiter=100,
+        res = lm_update(postdist, print_status=True, maxiter=100,
                             must_converge=True, lmb=1., rtol=1e-6, atol=1e-6)
         best = res['upd_vals'].flatten()
         grad = postdist.grad_logpdf(best).flatten()
