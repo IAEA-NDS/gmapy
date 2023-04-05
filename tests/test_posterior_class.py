@@ -203,6 +203,34 @@ class TestPosteriorClass(unittest.TestCase):
         test_covmat = postdist_lin.approximate_postcov(testx).toarray()
         self.assertTrue(np.allclose(ref_covmat, test_covmat))
 
+    def test_correct_computation_of_approximate_postcov_with_ppp(self):
+        np.random.seed(50)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        refx = np.random.rand(len(priorvals))
+        postdist = Posterior(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True
+        )
+        S = mock_map.jacobian(refx)
+        propx = postdist._get_propx(refx)
+        propx2 = postdist._get_propx2(refx)
+        d2ref = postdist._get_d2(propx, propx2)
+        d2jac = postdist._exp_pred_diff_jacobian(S, propx, propx2)
+        zerovals = np.zeros(expvals.shape, dtype=float)
+        mock_map_lin = self.MockMapLinear(d2ref, d2jac, refx)
+        postdist_lin = Posterior(
+            priorvals, priorcov, mock_map_lin, zerovals, expcov
+        )
+        logdet_hessian = \
+            postdist_lin._likelihood_logdet_approximate_hessian(S, propx2)
+        tmp = postdist_lin.approximate_postcov(refx).toarray()
+        inv_ref_postcov = np.linalg.inv(tmp)
+        inv_ref_postcov += 0.5 * logdet_hessian
+        ref_postcov = np.linalg.inv(inv_ref_postcov)
+        test_postcov = postdist.approximate_postcov(refx).toarray()
+        self.assertTrue(np.allclose(test_postcov, ref_postcov))
+
     def test_correct_computation_of_grad_logpdf(self):
         np.random.seed(49)
         priorvals, priorcov, mock_map, expvals, expcov = \
