@@ -1,3 +1,13 @@
+############################################################
+#
+# Author(s):       Georg Schnabel
+# Email:           g.schnabel@iaea.org
+# Creation date:   2023/04/05
+# Last modified:   2023/04/05
+# License:         MIT
+# Copyright (c) 2023 International Atomic Energy Agency (IAEA)
+#
+############################################################
 import numpy as np
 from sksparse.cholmod import cholesky
 import scipy.sparse as sps
