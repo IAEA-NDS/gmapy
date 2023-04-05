@@ -153,16 +153,16 @@ class TestMCMCInference(unittest.TestCase):
         samplecov = np.cov(samples)
         self.assertTrue(np.allclose(samplecov/(scale_fact**2), postcov, atol=0.5))
 
-    def test_covmat_of_proposal_distribution_width_zero_prior_uncertainty(self):
+    def test_covmat_of_proposal_distribution_with_zero_prior_uncertainty(self):
         np.random.seed(299794)
         priorvals, priorcov, mockmap, expvals, expcov = \
             self.create_mock_data()
         priorcov[:,1] = 0.
         priorcov[1,:] = 0.
         post = Posterior(priorvals, priorcov, mockmap, expvals, expcov)
-        xref = priorvals + np.random.normal(size=priorvals.size)
+        xref = priorvals + np.random.normal(size=priorvals.shape)
         xref[1] = priorvals[1]
-        scale_fact = 1. 
+        scale_fact = 1.
         propfun = post.generate_proposal_fun(xref, scale=scale_fact)
         # reference calculation
         postcov = post.approximate_postcov(xref)
