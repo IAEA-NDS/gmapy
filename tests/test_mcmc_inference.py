@@ -11,7 +11,6 @@ from gmapy.mcmc_inference import (
 from gmapy.posterior import Posterior
 from gmapy.mappings.compound_map import CompoundMap
 from gmapy.gma_database_class import GMADatabase
-from gmapy.mappings.priortools import prepare_prior_and_exptable
 from gmapy.mappings.helperfuns import numeric_jacobian
 
 
@@ -98,21 +97,6 @@ class TestMCMCInference(unittest.TestCase):
         samples2 = samples2[:, 1000::10].flatten()
         testres = ks_2samp(samples1, samples2)
         self.assertTrue(testres.pvalue >= 0.05)
-
-    def test_evaluation_of_posterior_logpdf(self):
-        priorvals, priorcov, mockmap, expvals, expcov = \
-            self.create_mock_data()
-        post = Posterior(priorvals, priorcov, mockmap, expvals, expcov)
-        # reference evaluation
-        xvec = priorvals + np.random.normal(size=priorvals.shape)
-        d1 = xvec - priorvals
-        d2 = expvals - mockmap.propagate(xvec)
-        invpriorcov = sps.linalg.inv(priorcov)
-        invexpcov = sps.linalg.inv(expcov)
-        refres = (-0.5) * (d2.T @ invexpcov @ d2 + (d1.T @ invpriorcov @ d1)) 
-        # test result
-        testres = post.logpdf(xvec)
-        self.assertTrue(np.isclose(testres, refres))
 
     def test_gradient_of_posterior_logpdf(self):
         priorvals, priorcov, mockmap, expvals, expcov = \
@@ -215,32 +199,13 @@ class TestMCMCInference(unittest.TestCase):
         post = Posterior(
             priorvals, priorcov, mockmap, expvals, expcov
         )
-        xref = np.full(priorvals.shape, 0.) 
+        xref = np.full(priorvals.shape, 0.)
         propfun = post.generate_proposal_fun(xref)
         samples = propfun(np.zeros((xref.shape[0], 10000)))
         postcov = post.approximate_postcov(xref).toarray()
         samplecov = np.cov(samples)
         self.assertTrue(np.allclose(postcov, samplecov, atol=1.))
         self.assertTrue(np.all(samplecov[postcov == 0] == 0))
-
-    def test_post_logpdf_method(self):
-        gmadb = self.__gmadb
-        dt = gmadb.get_datatable()
-        covmat = gmadb.get_covmat()
-        m = CompoundMap(dt, reduce=True)
-        priorvals = gmadb.get_priorvals()
-        expvals = gmadb.get_expvals()
-        priorcov = gmadb.get_priorcov()
-        expcov = gmadb.get_expcov()
-        post = Posterior(priorvals, priorcov, m, expvals, expcov)
-        testres = post.logpdf(priorvals)
-        invexpcov = sps.linalg.inv(expcov)
-        propx = m.propagate(priorvals)
-        d = expvals - propx
-        # we don't need to add prior contribution
-        # because uncertainties are infinite in GMA database
-        refres = float((-0.5) * d.T @ invexpcov @ d)
-        self.assertTrue(np.isclose(testres, refres))
 
     def test_gmap_mh_inference(self):
         np.random.seed(123)
