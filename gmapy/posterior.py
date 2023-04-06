@@ -49,10 +49,6 @@ class Posterior:
     def get_priorvals(self):
         return self.__priorvals.flatten()
 
-    def update_expcov(self, new_expcov):
-        new_expcov = csr_matrix(new_expcov)
-        self.__expfact = cholesky(new_expcov)
-
     def logpdf(self, x):
         return self._logpdf(x)
 
