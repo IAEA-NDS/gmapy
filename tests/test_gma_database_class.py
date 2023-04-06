@@ -7,7 +7,6 @@ from copy import deepcopy
 from scipy.sparse import csr_matrix
 
 
-
 class TestGMADatabase(unittest.TestCase):
 
     @classmethod
@@ -198,7 +197,5 @@ class TestGMADatabase(unittest.TestCase):
         self.assertTrue(oldtable.equals(newtable))
 
 
-
 if __name__ == '__main__':
     unittest.main()
-
