@@ -40,6 +40,8 @@ class Posterior:
         self._debug_only_likelihood_logdet = False
         self._debug_only_likelihood_chisquare = False
 
+    # getter/setter methods
+
     def set_squeeze(self, flag):
         self.__apply_squeeze = flag
 
@@ -49,8 +51,110 @@ class Posterior:
     def get_priorvals(self):
         return self.__priorvals.flatten()
 
+    # interface for important quantities for Bayesian inference
+
     def logpdf(self, x):
         return self._logpdf(x)
+
+    def approximate_logpdf(self, xref, x):
+        return self._logpdf(x, xref=xref)
+
+    def grad_logpdf(self, x):
+        x = x.copy()
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
+        if x.shape[1] != 1:
+            raise ValueError('x must be a vector and not a matrix')
+        adj = self.__adj
+        nonadj = self.__nonadj
+        # gradient of prior contribution
+        pf = self.__priorfact
+        d1 = x[adj] - self.__priorvals[adj]
+        z1r = pf(d1)
+        z1 = np.zeros(self.__priorvals.shape, dtype=float)
+        z1[adj, :] = (-z1r)
+        # gradient of likelihood contribution
+        m = self.__mapping
+        ef = self.__expfact
+        propx = m.propagate(x.flatten()).reshape(-1, 1)
+        S = m.jacobian(x.flatten())
+        if not self.__relative_exp_errors:
+            d2 = self.__expvals - propx
+            z2 = S.T @ ef(d2)
+            if self._debug_only_likelihood_chisquare:
+                z2[nonadj, :] = 0.
+                return -2*z2.flatten()
+        else:
+            propx2 = self._get_propx2(x)
+            d2 = self._get_d2(propx, propx2)
+            inv_expcov_times_d2 = ef(d2)
+            d2deriv = self._exp_pred_diff_jacobian(S, propx, propx2)
+            z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv))
+            if self._debug_only_likelihood_chisquare:
+                z2[:, nonadj] = 0.
+                return -2*z2.flatten()
+            if self._debug_only_likelihood_logdet:
+                return self._likelihood_logdet_jacobian(S, propx2).flatten()
+            z2 -= 0.5 * self._likelihood_logdet_jacobian(S, propx2)
+            z2 = z2.T
+
+        z2[nonadj, :] = 0.
+        res = z1 + z2
+        if self.__apply_squeeze:
+            res = np.squeeze(res)
+        return res
+
+    def approximate_postmode(self, xref, lmb=0.):
+        priorvals = self.__priorvals
+        # calculate the inverse posterior covariance matrix
+        xref = xref.copy()
+        xref[self.__nonadj] = priorvals.flatten()[self.__nonadj]
+        inv_post_cov = self._approximate_invpostcov(xref)
+        dampmat = lmb * identity(inv_post_cov.shape[0],
+                                 dtype=float, format='csr')
+        inv_post_cov += dampmat
+        # calculate the gradient of the difference in
+        # the experimental chisquare value
+        zvec = self.grad_logpdf(xref)
+        zvec = zvec[self.__adj]
+        postvals = xref.reshape(-1, 1)[self.__adj]
+        postvals += sps.linalg.spsolve(inv_post_cov, zvec).reshape(-1, 1)
+        xref[self.__adj] = postvals.flatten()
+        return xref
+
+    def approximate_postcov(self, xref):
+        xref = xref.flatten()
+        xref[self.__nonadj] = self.__priorvals[self.__nonadj, 0]
+        adjidcs = self.__adj_idcs
+        size = self.__size
+        tmp = coo_matrix(sps.linalg.inv(
+            self._approximate_invpostcov(xref)
+        ))
+        postcov = csr_matrix((tmp.data, (adjidcs[tmp.row], adjidcs[tmp.col])),
+                             dtype=float, shape=(size, size))
+        return postcov
+
+    def generate_proposal_fun(self, xref, scale=1.):
+        def proposal(x):
+            if len(x.shape) == 1:
+                x = x.reshape(-1, 1)
+            adj = self.__adj
+            numadj = self.__numadj
+            rvec = np.random.normal(size=(numadj, x.shape[1]))
+            d = fact.apply_Pt(fact.solve_Lt(rvec, use_LDLt_decomposition=False))
+            res = x.copy()
+            res[adj] += d*scale
+            return res
+        S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
+        pf = self.__priorfact
+        ef = self.__expfact
+        tmp = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
+        fact = cholesky(tmp)
+        del tmp
+        del S
+        return proposal
+
+    # private/protected functions
 
     def _get_propx(self, x):
         return self.__mapping.propagate(x.flatten()).reshape(-1, 1)
@@ -115,104 +219,6 @@ class Posterior:
         d = x.reshape(-1, 1) - xref.reshape(-1, 1)
         ypred = logdet_ref + T1 @ d + 0.5 * d.T @ T2 @ d
         return ypred
-
-    def grad_logpdf(self, x):
-        x = x.copy()
-        if len(x.shape) == 1:
-            x = x.reshape(-1, 1)
-        if x.shape[1] != 1:
-            raise ValueError('x must be a vector and not a matrix')
-        adj = self.__adj
-        nonadj = self.__nonadj
-        # gradient of prior contribution
-        pf = self.__priorfact
-        d1 = x[adj] - self.__priorvals[adj]
-        z1r = pf(d1)
-        z1 = np.zeros(self.__priorvals.shape, dtype=float)
-        z1[adj, :] = (-z1r)
-        # gradient of likelihood contribution
-        m = self.__mapping
-        ef = self.__expfact
-        propx = m.propagate(x.flatten()).reshape(-1, 1)
-        S = m.jacobian(x.flatten())
-        if not self.__relative_exp_errors:
-            d2 = self.__expvals - propx
-            z2 = S.T @ ef(d2)
-            if self._debug_only_likelihood_chisquare:
-                z2[nonadj, :] = 0.
-                return -2*z2.flatten()
-        else:
-            propx2 = self._get_propx2(x)
-            d2 = self._get_d2(propx, propx2)
-            inv_expcov_times_d2 = ef(d2)
-            d2deriv = self._exp_pred_diff_jacobian(S, propx, propx2)
-            z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv))
-            if self._debug_only_likelihood_chisquare:
-                z2[:, nonadj] = 0.
-                return -2*z2.flatten()
-            if self._debug_only_likelihood_logdet:
-                return self._likelihood_logdet_jacobian(S, propx2).flatten()
-            z2 -= 0.5 * self._likelihood_logdet_jacobian(S, propx2)
-            z2 = z2.T
-
-        z2[nonadj, :] = 0.
-        res = z1 + z2
-        if self.__apply_squeeze:
-            res = np.squeeze(res)
-        return res
-
-    def generate_proposal_fun(self, xref, scale=1.):
-        def proposal(x):
-            if len(x.shape) == 1:
-                x = x.reshape(-1, 1)
-            adj = self.__adj
-            numadj = self.__numadj
-            rvec = np.random.normal(size=(numadj, x.shape[1]))
-            d = fact.apply_Pt(fact.solve_Lt(rvec, use_LDLt_decomposition=False))
-            res = x.copy()
-            res[adj] += d*scale
-            return res
-        S = self.__mapping.jacobian(xref).tocsc()[:, self.__adj]
-        pf = self.__priorfact
-        ef = self.__expfact
-        tmp = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
-        fact = cholesky(tmp)
-        del tmp
-        del S
-        return proposal
-
-    def approximate_logpdf(self, xref, x):
-        return self._logpdf(x, xref=xref)
-
-    def approximate_postmode(self, xref, lmb=0.):
-        priorvals = self.__priorvals
-        # calculate the inverse posterior covariance matrix
-        xref = xref.copy()
-        xref[self.__nonadj] = priorvals.flatten()[self.__nonadj]
-        inv_post_cov = self._approximate_invpostcov(xref)
-        dampmat = lmb * identity(inv_post_cov.shape[0],
-                                 dtype=float, format='csr')
-        inv_post_cov += dampmat
-        # calculate the gradient of the difference in
-        # the experimental chisquare value
-        zvec = self.grad_logpdf(xref)
-        zvec = zvec[self.__adj]
-        postvals = xref.reshape(-1, 1)[self.__adj]
-        postvals += sps.linalg.spsolve(inv_post_cov, zvec).reshape(-1, 1)
-        xref[self.__adj] = postvals.flatten()
-        return xref
-
-    def approximate_postcov(self, xref):
-        xref = xref.flatten()
-        xref[self.__nonadj] = self.__priorvals[self.__nonadj, 0]
-        adjidcs = self.__adj_idcs
-        size = self.__size
-        tmp = coo_matrix(sps.linalg.inv(
-            self._approximate_invpostcov(xref)
-        ))
-        postcov = csr_matrix((tmp.data, (adjidcs[tmp.row], adjidcs[tmp.col])),
-                             dtype=float, shape=(size, size))
-        return postcov
 
     def _logpdf(self, x, xref=None):
         x = x.copy()
@@ -311,4 +317,3 @@ class Posterior:
         invpostcov += J.T @ ef(J.tocsc())
         invpostcov = invpostcov.tocsc()
         return invpostcov
-
