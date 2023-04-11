@@ -179,7 +179,7 @@ def superseded_lm_update(mapping, datatable, covmat, retcov=False, startvals=Non
         # as criterion to determine the adjustment of the damping term
         exp_improvement = cur_negloglike - exp_negloglike
         real_improvement = cur_negloglike - real_negloglike
-        rho = (exp_improvement+1e-8) / (real_improvement+1e-8)
+        rho = (real_improvement+1e-8) / (exp_improvement+1e-8)
         lmb_used = lmb
         if real_improvement < 0:
             lmb *= 97
@@ -259,12 +259,12 @@ def lm_update(dist_obj, startvals=None, maxiter=10,
         proposed_loglike = dist_obj.logpdf(prop_vals)
         expected_improvement = expected_loglike - cur_loglike
         real_improvement = proposed_loglike - cur_loglike
-        rho = (expected_improvement+1e-8) / (real_improvement+1e-8)
+        rho = (real_improvement+1e-8) / (expected_improvement+1e-8)
         accepted = real_improvement > 0 or no_reject
         if print_status:
             print('###############')
-            print('cur_negloglike: ' + str(cur_loglike))
-            print('exp_negloglike: ' + str(expected_loglike))
+            print('cur_loglike: ' + str(cur_loglike))
+            print('exp_loglike: ' + str(expected_loglike))
             print('real_negloglike: ' + str(proposed_loglike))
             print('exp_improvement: ' + str(expected_improvement))
             print('real_improvement: ' + str(real_improvement))
