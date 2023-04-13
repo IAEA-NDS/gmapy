@@ -10,6 +10,7 @@ from .cross_section_total_map import CrossSectionTotalMap
 from .cross_section_shape_of_sum_map import CrossSectionShapeOfSumMap
 from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 from .cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
+from .energy_dependent_usu_map import EnergyDependentUSUMap
 from .relative_error_map import RelativeErrorMap
 from .mapping_elements import InputSelectorCollection, SumOfDistributors
 from .helperfuns import mapclass_with_params
@@ -54,18 +55,31 @@ class CompoundMap:
         self._dim = len(datatable)
         resp = np.full(len(datatable.index), False, dtype=bool)
         selcol = InputSelectorCollection()
-        distsum = SumOfDistributors()
+        tmp_distsum = SumOfDistributors()
         for curclass in self.mapclasslist:
-            curmap = curclass(datatable, selcol=selcol, distsum=distsum,
+            curmap = curclass(datatable, selcol=selcol, distsum=tmp_distsum,
                               reduce=reduce)
             curresp = curmap.is_responsible()
             if np.any(np.logical_and(curresp, resp)):
                 raise ValueError(f'Several maps claim responsibility ({str(curmap)})')
             resp = np.logical_or(resp, curresp)
+
         # add the relative error map
         relerrmap = RelativeErrorMap(
-            datatable, distsum, selcol=selcol, distsum=distsum, reduce=reduce
+            datatable, tmp_distsum, selcol=selcol, reduce=reduce
         )
+        relerr_dists = relerrmap.get_distributors()
+        # add the energy dependent USU error map
+        usumap = EnergyDependentUSUMap(
+            datatable, tmp_distsum, selcol=selcol, reduce=reduce
+        )
+        usumap_dists = usumap.get_distributors()
+        # '+' means here to concatenate the lists
+        all_dists = []
+        all_dists.extend(relerr_dists)
+        all_dists.extend(usumap_dists)
+        all_dists.extend(tmp_distsum.get_distributors())
+        distsum = SumOfDistributors(all_dists)
         # save everything for later
         self.__input = selcol
         self.__output = distsum
