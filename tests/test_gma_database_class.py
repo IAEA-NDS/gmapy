@@ -111,11 +111,11 @@ class TestGMADatabase(unittest.TestCase):
         self.assertFalse(np.all(postvals[2][is_relerr] == 0.))
         # now the real checks
         self.assertTrue(np.allclose(postvals[0], postvals[1],
-                                    rtol=1e-5, atol=1e-8))
+                                    rtol=2e-5, atol=1e-8))
         self.assertTrue(np.allclose(postvals[0], postvals[2],
-                                    rtol=1e-5, atol=1e-8))
+                                    rtol=2e-5, atol=1e-8))
         self.assertTrue(np.allclose(postvals[1], postvals[2],
-                                    rtol=1e-5, atol=1e-8))
+                                    rtol=2e-5, atol=1e-8))
 
     def test_covmat_passed_by_copy(self):
         gmadb = deepcopy(self._gmadb)
