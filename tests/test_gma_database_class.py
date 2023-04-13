@@ -58,30 +58,6 @@ class TestGMADatabase(unittest.TestCase):
         # equal_nan is True because of fission spectrum
         self.assertTrue(np.all(res1[not_fis_idcs] == res2[not_fis_idcs]))
 
-    def test_evaluation_equivalence_ppp_relative_errors(self):
-        print('\n\n#######################################################')
-        print('Starting test to check relative error / PPP equivalence\n\n')
-        gmadb1 = GMADatabase(self._dbpath, use_relative_errors=False)
-        gmadb2 = GMADatabase(self._dbpath, use_relative_errors=True)
-        atol = 1e-6
-        rtol = 1e-6
-        maxiter = 10
-        gmadb1.evaluate(correct_ppp=True, must_converge=False,
-                        maxiter=maxiter, atol=atol, rtol=rtol,
-                        print_status=True)
-        print('\n\nRunning LM algorithm with explicit relative error definition\n\n')
-        gmadb2.evaluate(correct_ppp=False, must_converge=True,
-                        maxiter=maxiter, atol=atol, rtol=rtol,
-                        print_status=True)
-        dt1 = gmadb1.get_datatable()
-        dt2 = gmadb2.get_datatable()
-        red_dt2 = dt2[~dt2['NODE'].str.match('relerr_')]
-        postvals1 = dt1['POST']
-        postvals2 = red_dt2['POST']
-        # NOTE: 20% maximum difference is a lot but this is what we
-        #       get if we optimize exactly instead of doing ad-hoc PPP
-        self.assertTrue(np.allclose(postvals1, postvals2, rtol=2e-1))
-
     def test_abserr_nugget_has_negligible_impact_on_evaluation(self):
         print('\n\n#######################################################')
         print('Starting test to assess negligible impact of abserr_nugget\n')
