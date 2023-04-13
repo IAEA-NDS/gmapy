@@ -13,19 +13,26 @@ from .data_management.uncfuns import (
 from .data_management.unc_utils import scale_covmat
 from .mappings.compound_map import CompoundMap
 from .mappings.relative_error_map import attach_relative_error_df
-from .inference import superseded_lm_update, compute_posterior_covmat
+from .inference import (
+    lm_update,
+    compute_posterior_covmat
+    )
 from .mappings.priortools import (
     propagate_mesh_css,
     attach_shape_prior,
     initialize_shape_prior,
-    remove_dummy_datasets
+    remove_dummy_datasets,
+    prepare_prior_and_likelihood_quantities,
+    create_propagate_source_mask,
+    create_propagate_target_mask
 )
+from .posterior import Posterior
 
 
 class GMADatabase:
 
     def __init__(self, dbfile=None, prior_list=None, datablock_list=None,
-                 remove_dummy=True, mapping=None, fix_covmat=True,
+                 remove_dummy=True, fix_covmat=True,
                  use_relative_errors=False, abserr_nugget=1e-4):
         if dbfile is not None:
             if prior_list is not None or datablock_list is not None:
@@ -58,19 +65,16 @@ class GMADatabase:
         expsel = datatable['NODE'].str.match('exp_', na=False).to_numpy()
         reluncs[expsel] = create_relunc_vector(db['datablock_list'])
 
-        if not mapping:
-            mapping = CompoundMap()
+        mapping = CompoundMap()
         initialize_shape_prior(datatable, mapping, refvals, reluncs)
         # convert absolute experimental errors to relative ones if desired
         if use_relative_errors:
             datatable = attach_relative_error_df(datatable)
-            mapping = CompoundMap()
         # define the state variables of the instance
         self._cache = {}
         self._raw_database = db
         self._datatable = datatable
         self._covmat = None
-        self._mapping = mapping
         self._initialize_uncertainty_info(
             fix_covmat=fix_covmat, use_relative_errors=use_relative_errors,
             abserr_nugget=abserr_nugget
@@ -166,9 +170,7 @@ class GMADatabase:
         self._covmat = covmat
         self._cache['uncertainties'] = uncs
 
-    def evaluate(self, remove_idcs=None, ret_uncs=True, calc_invcov=True,
-                 **kwargs):
-        mapping = self._mapping
+    def evaluate(self, remove_idcs=None, correct_ppp=False, **kwargs):
         if remove_idcs is None:
             datatable = self._datatable
             covmat = self._covmat
@@ -181,37 +183,55 @@ class GMADatabase:
             startvals = kwargs.get('startvals', None)
             startvals = startvals[keep_mask] if startvals is not None else None
             kwargs['startvals'] = startvals
-        if not calc_invcov:
-            ret_uncs = False
-        kwargs['ret_invcov'] = calc_invcov
 
-        lmres = superseded_lm_update(mapping, datatable, covmat, **kwargs)
+        quants = prepare_prior_and_likelihood_quantities(datatable, covmat)
+        priortable = quants['priortable']
+        exptable = quants['exptable']
+        priorvals = quants['priorvals']
+        priorcov = quants['priorcov']
+        expvals = quants['expvals']
+        expcov = quants['expcov']
+        compmap = CompoundMap(datatable, reduce=True)
+        source_mask = create_propagate_source_mask(
+            priortable, prop_normfact=False, prop_usu_errors=False)
+        target_mask = create_propagate_target_mask(exptable, mt6_exp=False)
+        postdist = Posterior(
+            priorvals, priorcov, compmap, expvals, expcov,
+            relative_exp_errors=correct_ppp, source_mask=source_mask,
+            target_mask=target_mask
+        )
+        lmres = lm_update(postdist, **kwargs)
+
         self._cache['lmb'] = lmres['lmb']
         self._cache['last_rejected'] = lmres['last_rejected']
         self._cache['converged'] = lmres['converged']
-        self._cache['upd_vals'] = lmres['upd_vals']
-        if calc_invcov:
-            self._cache['upd_invcov'] = lmres['upd_invcov']
+        is_really_adj = priorcov.diagonal() != 0.
+        self._cache['upd_vals'] = lmres['upd_vals'][is_really_adj].copy()
 
-        if remove_idcs is None:
-            adj_idcs = lmres['idcs']
-        else:
+        is_param = pd.isna(datatable['DATA'])
+        adj_idcs = np.array(datatable.index[is_param])
+        if remove_idcs is not None:
             datatable = self._datatable
-            adj_idcs = orig_idcs[lmres['idcs']]
-        self._cache['adj_idcs'] = adj_idcs
+            adj_idcs = orig_idcs[adj_idcs]
+        self._cache['adj_idcs'] = adj_idcs[is_really_adj].copy()
+        self._cache['upd_invcov'] = \
+            postdist._approximate_invpostcov(lmres['upd_vals'])
 
         refvals = datatable['PRIOR'].to_numpy(copy=True)
         refvals[adj_idcs] = lmres['upd_vals']
+
+        m = CompoundMap()
         propvals = propagate_mesh_css(
-            datatable, mapping, refvals, prop_normfact=False,
-            prop_usu_errors=False
+            datatable, m, refvals,
+            prop_normfact=False, prop_usu_errors=False
         )
         self._datatable['POST'] = propvals
-
-        if ret_uncs:
-            uncs = self.get_postcov(unc_only=True)
-            self._datatable['POSTUNC'] = uncs
-
+        self._datatable['UNC'] = \
+            compute_posterior_covmat(
+                m, datatable,
+                self._cache['upd_vals'], self._cache['upd_invcov'],
+                source_idcs=self._cache['adj_idcs'], unc_only=True
+            )
         return propvals
 
     def get_prior_idcs(self):
@@ -246,14 +266,16 @@ class GMADatabase:
         return expcov
 
     def get_postvals(self, testdf, **mapargs):
+        mapping = CompoundMap()
         workdf = pd.concat([self._datatable, testdf], axis=0,
                            ignore_index=True)
         refvals = workdf.POST.to_numpy()
-        propvals = propagate_mesh_css(workdf, self._mapping, refvals, **mapargs)
+        propvals = propagate_mesh_css(workdf, mapping, refvals, **mapargs)
         propvals = propvals[len(self._datatable):len(self._datatable)+len(testdf)]
         return propvals
 
     def get_postcov(self, testdf=None, idcs=None, unc_only=False):
+        mapping = CompoundMap()
         if testdf is not None and idcs is not None:
             raise ValueError('specify either testdf or idcs')
         if testdf is None:
@@ -261,7 +283,7 @@ class GMADatabase:
         else:
             workdf = pd.concat([self._datatable, testdf], axis=0, ignore_index=True)
             idcs = np.arange(len(self._datatable), len(self._datatable) + len(testdf))
-        return compute_posterior_covmat(self._mapping, workdf,
+        return compute_posterior_covmat(mapping, workdf,
                 self._cache['upd_vals'], self._cache['upd_invcov'],
                 source_idcs=self._cache['adj_idcs'], idcs=idcs, unc_only=unc_only)
 
@@ -338,6 +360,3 @@ class GMADatabase:
         self._datatable.sort_index(inplace=True)
         self._datatable = pd.concat([self._datatable, new_datatable], axis=0, ignore_index=True)
         self._covmat = block_diag([self._covmat, new_covmat], format='csr', dtype='d')
-
-    def get_mapping(self):
-        return self._mapping
