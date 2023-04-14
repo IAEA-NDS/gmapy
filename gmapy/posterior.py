@@ -28,10 +28,11 @@ class Posterior:
         self._adj_idcs = np.where(adjustable)[0]
         self._nonadj = np.logical_not(adjustable)
         self._numadj = np.sum(adjustable)
-        self._priorfact = cholesky(priorcov)
+        self._priorcov = coo_matrix(priorcov)
+        self._priorfact = cholesky(priorcov.tocsc())
         self._mapping = mapping
         self._expvals = expvals.reshape(-1, 1)
-        self._expfact = cholesky(expcov)
+        self._expfact = cholesky(expcov.tocsc())
         self._relative_exp_errors = relative_exp_errors
         self._apply_squeeze = squeeze
         self._source_mask = source_mask
@@ -50,6 +51,9 @@ class Posterior:
 
     def get_priorvals(self):
         return self._priorvals.flatten()
+
+    def get_priorcov(self):
+        return self._priorcov.copy()
 
     # interface for important quantities for Bayesian inference
 
