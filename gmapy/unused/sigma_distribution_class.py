@@ -87,10 +87,19 @@ class SigmaDist:
 
 if __name__ == '__main__':
     n = 12
-    a = 25 
+    a = 25
+    alpha = n/2 - 1/2
+    beta = a
 
     dist = SigmaDist(a=a, n=n)
     dist.probfun(3)
+
+    # test the relationship between the probability functions
+    u = 2
+    log_prob1 = np.log(dist.probfun(u))
+    x = u*u / a
+    log_prob2 = invgamma.logpdf(x, a=alpha) + np.log(2*u / beta)
+    print(f'log_prob1 {log_prob1} vs log_prob2 {log_prob2}')  
 
     # testing that derivative of distribution function is probability density function
     print('testing numerical derivatives...')
@@ -106,8 +115,6 @@ if __name__ == '__main__':
 
     # generating two sets of samples from the two distributions
     smpl = dist.sample(100000)
-    alpha = n/2 - 1/2
-    beta = a
     rv = invgamma(alpha)
     smpl2 = rv.rvs(size=100000)
     tsmpl2 = np.sqrt(smpl2 * beta)
