@@ -3,6 +3,7 @@ from gmapy.posterior_usu import PosteriorUSU
 from gmapy.mappings.helperfuns import numeric_jacobian
 import numpy as np
 import scipy.sparse as sps
+from scipy.stats import multivariate_normal
 
 
 class TestPosteriorUSUClass(unittest.TestCase):
@@ -98,7 +99,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
             priorvals, priorcov, mock_map, expvals, expcov, testx
         )
         ext_testx = postdist.stack_params_and_uncs(
-            testx, {'grp_A': [unc_group_A], 'grp_B': [unc_group_B]}
+            testx, {'grp_A': unc_group_A, 'grp_B': unc_group_B}
         )
         test_logpdf = postdist.logpdf(ext_testx)
         self.assertTrue(np.isclose(test_logpdf, ref_logpdf))
@@ -113,7 +114,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
             priorvals, priorcov, mock_map, expvals, expcov, testx
         )
         ext_testx = postdist.stack_params_and_uncs(
-            testx, {'grp_A': [unc_group_A], 'grp_B': [unc_group_B]}
+            testx, {'grp_A': unc_group_A, 'grp_B': unc_group_B}
         )
         test_logpdf = postdist.logpdf(ext_testx)
         self.assertTrue(np.isclose(test_logpdf, ref_logpdf))
@@ -147,10 +148,59 @@ class TestPosteriorUSUClass(unittest.TestCase):
             priorvals, priorcov, mock_map, expvals, expcov, testx,
         )
         ext_testx = postdist.stack_params_and_uncs(
-            testx, {'grp_A': [unc_group_A], 'grp_B': [unc_group_B]}
+            testx, {'grp_A': unc_group_A, 'grp_B': unc_group_B}
         )
         test_logpdf = postdist.logpdf(ext_testx)
         self.assertTrue(np.isclose(test_logpdf, ref_logpdf))
+
+    def test_param_proposal_function(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        unc_idcs = [3, 5, 7, 9]
+        unc_group_assoc = ['grp_A', 'grp_B', 'grp_A', 'grp_B']
+        postdist = PosteriorUSU(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True,
+            unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+        )
+        unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
+        num_unc = len(unc_dict)
+        xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
+        xarr = np.vstack([xref]*1000000).T
+        propfun, prop_logpdf, invcov = \
+            postdist.generate_proposal_fun(xref, rho=0)
+        res = propfun(xarr)
+        ref_cov = np.linalg.inv(invcov.toarray())
+        test_cov = np.cov(res[:-len(unc_dict), :])
+        self.assertTrue(np.allclose(test_cov, ref_cov, rtol=1e-4, atol=1e-4))
+        ref_mean = xref[:-num_unc]
+        test_mean = np.mean(res[:-num_unc], axis=1)
+        self.assertTrue(np.allclose(ref_mean, test_mean, rtol=1e-4))
+
+    def test_param_logpdf_function(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        unc_idcs = [3, 5, 7, 9]
+        unc_group_assoc = ['grp_A', 'grp_B', 'grp_A', 'grp_B']
+        postdist = PosteriorUSU(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True,
+            unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+        )
+        unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
+        num_unc = len(unc_dict)
+        xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
+        xarr = np.vstack([xref]*100).T
+        propfun, prop_logpdf, invcov = \
+            postdist.generate_proposal_fun(xref, rho=0)
+        ref_cov = np.linalg.inv(invcov.toarray())
+        res = propfun(xarr)
+        logpdf_vec = prop_logpdf(xarr, res)
+        mvn = multivariate_normal(mean=priorvals, cov=ref_cov)
+        ref_logpdf_vec = mvn.logpdf(res[:-num_unc].T)
+        self.assertTrue(np.allclose(logpdf_vec, ref_logpdf_vec))
 
 
 if __name__ == '__main__':
