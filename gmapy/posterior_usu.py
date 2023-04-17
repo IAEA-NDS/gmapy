@@ -99,7 +99,10 @@ class PosteriorUSU(Posterior):
 
     def extract_params(self, x):
         fidx = len(x) - len(self._groups)
-        return x[0:fidx].copy()
+        if len(x.shape) == 1:
+            return x[0:fidx].copy()
+        elif len(x.shape) == 2:
+            return x[0:fidx, :].copy()
 
     def extract_uncvec(self, x):
         sidx = len(x) - len(self._groups)
@@ -108,8 +111,9 @@ class PosteriorUSU(Posterior):
     def stack_params_and_uncs(self, params, uncs):
         vec_list = [params]
         for group in self._groups:
-            vec_list.append(uncs[group])
-        return np.concatenate(vec_list)
+            vec_list.append([uncs[group]])
+        res = np.concatenate(vec_list)
+        return res
 
     def unstack_params_and_uncs(self, x):
         params = self.extract_params(x)
@@ -207,26 +211,86 @@ class PosteriorUSU(Posterior):
                              dtype=float, shape=(size, size))
         return postcov
 
-    def generate_proposal_fun(self, xref, scale=1.):
-        raise NotImplementedError('generate_proposal_fun not implemented')
+    def generate_proposal_fun(self, xref, scale=1., rho=0.5):
 
-        def proposal(x):
+        def unc_proposal():
+            # TODO
+            pass
+
+        def param_proposal(x):
             if len(x.shape) == 1:
                 x = x.reshape(-1, 1)
+            xr = self.extract_params(x)
             adj = self._adj
             numadj = self._numadj
-            rvec = np.random.normal(size=(numadj, x.shape[1]))
+            rvec = np.random.normal(size=(numadj, xr.shape[1]))
             d = fact.apply_Pt(fact.solve_Lt(rvec, use_LDLt_decomposition=False))
-            res = x.copy()
-            res[adj] += d*scale
+            rres = xr.copy()
+            rres[adj, :] += d*scale
+            res = np.empty(x.shape, dtype=float)
+            res[:-len(self._groups), :] = rres
+            res[-len(self._groups):, :] = self.extract_uncvec(x)
             return res
+
+        def proposal(x):
+            z = np.random.rand()
+            if z > rho:
+                return param_proposal(x)
+            else:
+                # TODO
+                return unc_proposal()
+
+        def param_proposal_logpdf(x, propx):
+            uncs = self.extract_uncvec(x)
+            prop_uncs = self.extract_uncvec(propx)
+            if np.any(uncs != prop_uncs):
+                return -np.inf
+            xr = self.extract_params(x)
+            propxr = self.extract_params(propx)
+            if np.any(xr[self._nonadj] != propxr[self._nonadj]):
+                return -np.inf
+            d = (propxr[self._adj] - xr[self._adj]) / scale
+            dp = fact.apply_P(d)
+            z = fact.L().T @ dp
+            # chisqr = np.sum(d * (invcov @ d), axis=0)
+            chisqr = np.sum(np.square(z), axis=0)
+            logdet = fact_logdet
+            # -logdet because inverse posterior covariance matrix
+            return -0.5 * (chisqr - logdet + np.log(2*np.pi)*self._numadj)
+
+        def unc_proposal_logpdf(x, propx):
+            params = self.extract_params(x)
+            prop_params = self.extract_params(propx)
+            if np.any(params != prop_params):
+                return -np.inf
+            # TODO
+            raise NotImplementedError('unc_proposal_logpdf not implemented')
+
+        def proposal_logpdf(x, propx):
+            log_p1 = param_proposal_logpdf(x, propx)
+            # log_p2 = self.unc_proposal_pdf(x, propx)
+            contrib1 = np.exp(log_1mrho + log_p1)
+            # contrib2 = np.exp(log_rho + log_p2)
+            return np.log(contrib1)  # + contrib2
+
+        if rho < 0. or rho > 1:
+            raise ValueError('violation of constraint 0 <= rho <= 1')
+        elif rho > 0:
+            log_rho = np.log(rho)
+            log_1mrho = np.log(1-rho)
+        else:  # rho == 0:
+            log_rho = -np.inf
+            log_1mrho = 0.
+
+        xref = self.extract_params(xref)
         S = self._mapping.jacobian(xref).tocsc()[:, self._adj]
         pf = self._priorfact
         ef = self._expfact
-        tmp = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
-        fact = cholesky(tmp)
-        del tmp
+        invcov = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
+        fact = cholesky(invcov)
+        fact_logdet = fact.logdet()
+        # TODO: calculate the determinant and the chisquare value
+        #       because it will serve as the normalization constant
+        # del tmp
         del S
-        return proposal
-
-    # private/protected functions
+        return proposal, proposal_logpdf, invcov
