@@ -109,10 +109,12 @@ class PosteriorUSU(Posterior):
         return x[sidx:].copy()
 
     def stack_params_and_uncs(self, params, uncs):
+        if len(params.shape) == 1:
+            params = params.reshape(-1, 1)
         vec_list = [params]
         for group in self._groups:
-            vec_list.append([uncs[group]])
-        res = np.concatenate(vec_list)
+            vec_list.append(np.array([uncs[group]]).reshape(-1, 1))
+        res = np.concatenate(vec_list, axis=0)
         return res
 
     def unstack_params_and_uncs(self, x):
