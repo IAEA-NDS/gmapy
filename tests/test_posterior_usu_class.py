@@ -286,6 +286,64 @@ class TestPosteriorUSUClass(unittest.TestCase):
                           num_burn=0)
         self.assertTrue(np.isclose(mh_res2['accept_rate'], 0.2, atol=1e-2))
 
+    def test_posterior_sampling_2(self):
+        # see if sampling from posterior distribution
+        # with no usu errors present drives the usu uncertainty
+        # towards zero
+        groups = ['grp_A', 'grp_B', 'grp_C']
+        n_groups = len(groups)
+        n_normal_params = 10
+        n_usu_params = n_groups * 30
+        n_param = 10 + n_usu_params
+        n_exp = 110
+        np.random.seed(49)
+        # unc groups
+        unc_idcs = np.arange(n_normal_params, n_param)
+        unc_group_assoc = np.full(
+            len(unc_idcs), groups * int(n_usu_params / n_groups))
+        # prior
+        priorvals = np.full((n_param, 1), 0.)
+        priorvals[:n_normal_params, :] = 10 + 4*np.random.rand(n_normal_params, 1)
+        priorcov = sps.diags([10000] * priorvals.shape[0])
+        # system quantities
+        yref = 5 + 4 * np.random.rand(n_exp, 1)
+        S = sps.csr_matrix(np.random.rand(n_exp, n_param))
+        mock_map_linear = self.MockMapLinear(yref, S, priorvals)
+        # true values
+        real_unc = 1e-10
+        truevals = priorvals.copy()
+        truevals[:n_normal_params, :] += np.random.normal(
+            scale=15, size=(n_normal_params, 1)
+        )
+        truevals[unc_idcs, :] += np.random.normal(
+            scale=real_unc, size=(len(unc_idcs), 1)
+        )
+        # and associated experimental values
+        expvals = mock_map_linear.propagate(truevals)
+        expcov = sps.diags([10.] * len(expvals))
+        # define posterior
+        postdist = PosteriorUSU(
+            priorvals, priorcov, mock_map_linear, expvals, expcov,
+            relative_exp_errors=False,
+            unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+        )
+        # define mapping
+        unc_dict = {k: real_unc for k in groups}
+        param_ref = truevals.copy()
+        xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
+        propfun, prop_logpdf, invcov = \
+            postdist.generate_proposal_fun(xref, rho=0.5, scale=0.1, squeeze=False)
+        mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
+                         thin_step=100, log_transition_pdf=prop_logpdf,
+                         num_burn=100)
+        smpl = mh_res['samples']
+        m = np.mean(smpl, axis=1, keepdims=True)
+        s = np.std(smpl, axis=1, keepdims=True)
+        normdiff = np.abs((m - xref) / s)
+        self.assertTrue(np.all(np.max(normdiff[:-n_groups, :]) < 2))
+        self.assertTrue(np.all(np.max(normdiff[-n_groups:, :]) < 3.5))
+        self.assertTrue(mh_res['accept_rate'] > 0.6)
+
 
 if __name__ == '__main__':
     unittest.main()
