@@ -256,7 +256,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         # define posterior
         postdist = PosteriorUSU(
             priorvals, priorcov, mock_map_linear, expvals, expcov,
-            relative_exp_errors=True,
+            relative_exp_errors=False,
             unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
         )
         # define mapping
