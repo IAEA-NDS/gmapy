@@ -13,6 +13,7 @@ from sksparse.cholmod import cholesky
 import scipy.sparse as sps
 from scipy.sparse import csr_matrix, coo_matrix, identity
 from .posterior import Posterior
+from scipy.stats import invgamma
 
 
 class PosteriorUSU(Posterior):
@@ -211,11 +212,23 @@ class PosteriorUSU(Posterior):
         params = self.extract_params(xref)
         return super().approximate_postcov(params)
 
-    def generate_proposal_fun(self, xref, scale=1., rho=0.5):
+    def generate_proposal_fun(self, xref, scale=1., rho=0.5, squeeze=False):
 
-        def unc_proposal():
-            # TODO
-            pass
+        def unc_proposal(x):
+            if len(x.shape) == 1:
+                x = x.reshape(-1, 1)
+            uncvec = np.empty((len(self._groups), x.shape[1]), dtype=float)
+            for i, group in enumerate(self._groups):
+                idcs = self._unc_group_dict[group]
+                usu_errors = x[idcs, :]
+                d = usu_errors - self._priorvals[idcs, :]
+                beta = 0.5 * np.sum(np.square(d), axis=0)
+                alpha = 0.5 * (usu_errors.shape[0] - 1.)
+                rv = invgamma.rvs(alpha, size=usu_errors.shape[1])
+                uncvec[i, :] = np.sqrt(rv * beta)
+            propx = x.copy()
+            propx[-len(self._groups):, :] = uncvec
+            return propx
 
         def param_proposal(x):
             if len(x.shape) == 1:
@@ -235,10 +248,12 @@ class PosteriorUSU(Posterior):
         def proposal(x):
             z = np.random.rand()
             if z > rho:
-                return param_proposal(x)
+                res = param_proposal(x)
             else:
-                # TODO
-                return unc_proposal()
+                res = unc_proposal(x)
+            if squeeze:
+                res = np.squeeze(res)
+            return res
 
         def param_proposal_logpdf(x, propx):
             uncs = self.extract_uncvec(x)
@@ -256,32 +271,56 @@ class PosteriorUSU(Posterior):
             chisqr = np.sum(np.square(z), axis=0)
             logdet = fact_logdet
             # -logdet because inverse posterior covariance matrix
-            return -0.5 * (chisqr - logdet + np.log(2*np.pi)*self._numadj)
+            res = -0.5 * (chisqr - logdet + np.log(2*np.pi)*self._numadj)
+            return res
 
         def unc_proposal_logpdf(x, propx):
             params = self.extract_params(x)
             prop_params = self.extract_params(propx)
             if np.any(params != prop_params):
                 return -np.inf
-            # TODO
-            raise NotImplementedError('unc_proposal_logpdf not implemented')
+            uncvec = self.extract_uncvec(propx)
+            log_prob = 0.
+            for i, group in enumerate(self._groups):
+                idcs = self._unc_group_dict[group]
+                usu_errors = x[idcs, :]
+                d = usu_errors - self._priorvals[idcs, :]
+                beta = 0.5 * np.sum(np.square(d), axis=0)
+                alpha = 0.5 * (usu_errors.shape[0] - 1.)
+                u = uncvec[i]
+                z = u*u / beta
+                log_prob += invgamma.logpdf(z, a=alpha) + np.log(2*u / beta)
+            return log_prob
 
         def proposal_logpdf(x, propx):
+            if len(x.shape) == 1:
+                x = x.reshape(-1, 1)
+            if len(propx.shape) == 1:
+                propx = propx.reshape(-1, 1)
             log_p1 = param_proposal_logpdf(x, propx)
-            # log_p2 = self.unc_proposal_pdf(x, propx)
-            contrib1 = np.exp(log_1mrho + log_p1)
-            # contrib2 = np.exp(log_rho + log_p2)
-            return np.log(contrib1)  # + contrib2
+            log_p2 = unc_proposal_logpdf(x, propx)
+            contrib1 = log_1mrho + log_p1
+            contrib2 = log_rho + log_p2
+            m = np.maximum(contrib1, contrib2)
+            r = np.log(np.exp(contrib1-m) + np.exp(contrib2 - m)) + m
+            if squeeze and len(r) == 1:
+                r = r[0]
+            return r
 
         if rho < 0. or rho > 1:
             raise ValueError('violation of constraint 0 <= rho <= 1')
-        elif rho > 0:
-            log_rho = np.log(rho)
-            log_1mrho = np.log(1-rho)
-        else:  # rho == 0:
+        elif rho == 0.:
             log_rho = -np.inf
             log_1mrho = 0.
+        elif rho == 1.:
+            log_rho = 0.
+            log_1mrho = -np.inf
+        else:
+            log_rho = np.log(rho)
+            log_1mrho = np.log(1-rho)
 
+        uncref = self.extract_uncvec(xref)
+        self._update_priorcov_if_necessary(uncref)
         xref = self.extract_params(xref)
         S = self._mapping.jacobian(xref).tocsc()[:, self._adj]
         pf = self._priorfact
@@ -291,6 +330,5 @@ class PosteriorUSU(Posterior):
         fact_logdet = fact.logdet()
         # TODO: calculate the determinant and the chisquare value
         #       because it will serve as the normalization constant
-        # del tmp
         del S
         return proposal, proposal_logpdf, invcov
