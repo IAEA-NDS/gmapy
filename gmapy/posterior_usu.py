@@ -206,17 +206,10 @@ class PosteriorUSU(Posterior):
         return xref
 
     def approximate_postcov(self, xref):
-        raise NotImplementedError('approximate_postcov not implemented')
-        xref = xref.flatten()
-        xref[self._nonadj] = self._priorvals[self._nonadj, 0]
-        adjidcs = self._adj_idcs
-        size = self._size
-        tmp = coo_matrix(sps.linalg.inv(
-            self._approximate_invpostcov(xref)
-        ))
-        postcov = csr_matrix((tmp.data, (adjidcs[tmp.row], adjidcs[tmp.col])),
-                             dtype=float, shape=(size, size))
-        return postcov
+        uncvec = self.extract_uncvec(xref)
+        self._update_priorcov_if_necessary(uncvec)
+        params = self.extract_params(xref)
+        return super().approximate_postcov(params)
 
     def generate_proposal_fun(self, xref, scale=1., rho=0.5):
 
