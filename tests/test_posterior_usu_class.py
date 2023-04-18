@@ -38,7 +38,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
 
         def __init__(self, yref, S, xref):
             self.yref = yref.reshape(-1, 1)
-            self.S = S
+            self.S = sps.csr_matrix(S)
             self.xref = xref.reshape(-1, 1)
 
         def propagate(self, x):
@@ -167,7 +167,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
         num_unc = len(unc_dict)
         xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
-        xarr = np.vstack([xref]*1000000).T
+        xarr = np.hstack([xref]*1000000)
         propfun, prop_logpdf, invcov = \
             postdist.generate_proposal_fun(xref, rho=0)
         res = propfun(xarr)
@@ -175,7 +175,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         test_cov = np.cov(res[:-len(unc_dict), :])
         self.assertTrue(np.allclose(test_cov, ref_cov, rtol=1e-4, atol=1e-4))
         ref_mean = xref[:-num_unc]
-        test_mean = np.mean(res[:-num_unc], axis=1)
+        test_mean = np.mean(res[:-num_unc], axis=1, keepdims=True)
         self.assertTrue(np.allclose(ref_mean, test_mean, rtol=1e-4))
 
     def test_param_logpdf_function(self):
@@ -192,7 +192,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
         num_unc = len(unc_dict)
         xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
-        xarr = np.vstack([xref]*100).T
+        xarr = np.hstack([xref]*100)
         propfun, prop_logpdf, invcov = \
             postdist.generate_proposal_fun(xref, rho=0)
         ref_cov = np.linalg.inv(invcov.toarray())
