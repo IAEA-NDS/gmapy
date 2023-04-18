@@ -1,6 +1,7 @@
 import unittest
 from gmapy.posterior_usu import PosteriorUSU
 from gmapy.mappings.helperfuns import numeric_jacobian
+from gmapy.mcmc_inference import mh_algo
 import numpy as np
 import scipy.sparse as sps
 from scipy.stats import multivariate_normal
@@ -201,6 +202,90 @@ class TestPosteriorUSUClass(unittest.TestCase):
         mvn = multivariate_normal(mean=priorvals, cov=ref_cov)
         ref_logpdf_vec = mvn.logpdf(res[:-num_unc].T)
         self.assertTrue(np.allclose(logpdf_vec, ref_logpdf_vec))
+
+    def test_unc_proposal_logpdf(self):
+        np.random.seed(49)
+        priorvals, priorcov, mock_map, expvals, expcov = \
+            self.create_mock_quantities()
+        unc_idcs = [3, 5, 7, 9]
+        unc_group_assoc = ['grp_A', 'grp_B', 'grp_A', 'grp_B']
+        postdist = PosteriorUSU(
+            priorvals, priorcov, mock_map, expvals, expcov,
+            relative_exp_errors=True,
+            unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+        )
+        unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
+        param_ref = priorvals + np.random.rand(*priorvals.shape)
+        xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
+        propfun, prop_logpdf, invcov = \
+            postdist.generate_proposal_fun(xref, rho=1, squeeze=False)
+        smpl = []
+        for i in range(1000):
+            smpl.append(propfun(xref))
+        smpl = np.concatenate(smpl, axis=1)
+        logpdfvec1 = prop_logpdf(smpl, smpl)
+        logpdfvec2 = postdist.logpdf(smpl)
+        diffs = logpdfvec1 - logpdfvec2
+        self.assertTrue(np.isclose(min(diffs), max(diffs)))
+
+    def test_posterior_sampling_1(self):
+        # see (1) if sampling from posterior distribution
+        # leads to estimate of uncertainty compatible with
+        # the data generation process
+        n_param = 100
+        n_exp = 110
+        np.random.seed(49)
+        # unc groups
+        unc_idcs = np.arange(1, n_param)
+        unc_group_assoc = np.full(len(unc_idcs), 'grp_A')
+        # prior
+        priorvals = 5 + 2 * np.random.rand(n_param, 1)
+        priorcov = sps.diags([500] * priorvals.shape[0])
+        # system quantities
+        yref = 5 + 4 * np.random.rand(n_exp, 1)
+        S = sps.csr_matrix(np.random.rand(n_exp, n_param))
+        mock_map_linear = self.MockMapLinear(yref, S, priorvals)
+        # true values
+        real_unc = 20
+        truevals = priorvals.copy()
+        truevals[unc_idcs, :] += np.random.normal(
+            scale=real_unc, size=(len(unc_idcs), 1)
+        )
+        # and associated experimental values
+        expvals = mock_map_linear.propagate(truevals)
+        expcov = sps.diags([10.] * len(expvals))
+        # define posterior
+        postdist = PosteriorUSU(
+            priorvals, priorcov, mock_map_linear, expvals, expcov,
+            relative_exp_errors=True,
+            unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+        )
+        # define mapping
+        unc_dict = {'grp_A': real_unc}
+        param_ref = truevals.copy()
+        xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
+        propfun, prop_logpdf, invcov = \
+            postdist.generate_proposal_fun(xref, rho=0.5, scale=0.1, squeeze=False)
+        mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
+                         thin_step=100, log_transition_pdf=prop_logpdf,
+                         num_burn=100)
+        smpl = mh_res['samples']
+        uncvec = postdist.extract_uncvec(smpl)
+        assert uncvec.shape[0] == 1
+        m = np.mean(smpl, axis=1, keepdims=True)
+        s = np.std(smpl, axis=1, keepdims=True)
+        normdiff = (m - xref) / s
+        self.assertTrue(np.all(np.max(np.abs(normdiff)) < 2))
+        self.assertTrue(mh_res['accept_rate'] > 0.6)
+        # check that the mixture sampling is done appropriately
+        # by choosing a really bad proposal in the MH step so that
+        # accepts only happen in the Gibbs step (sampling the uncertainty)
+        propfun, prop_logpdf, invcov = \
+            postdist.generate_proposal_fun(xref, rho=0.2, scale=1000, squeeze=False)
+        mh_res2 = mh_algo(xref, postdist.logpdf, propfun, num_samples=100,
+                          thin_step=100, log_transition_pdf=prop_logpdf,
+                          num_burn=0)
+        self.assertTrue(np.isclose(mh_res2['accept_rate'], 0.2, atol=1e-2))
 
 
 if __name__ == '__main__':
