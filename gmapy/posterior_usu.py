@@ -126,10 +126,15 @@ class PosteriorUSU(Posterior):
     # interface for important quantities for Bayesian inference
 
     def logpdf(self, x):
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
         uncvec = self.extract_uncvec(x)
-        self._update_priorcov_if_necessary(uncvec)
-        params = self.extract_params(x)
-        return self._logpdf(params)
+        logpdfs = []
+        for i in range(x.shape[1]):
+            self._update_priorcov_if_necessary(uncvec[:, i])
+            params = self.extract_params(x[:, i])
+            logpdfs.append(self._logpdf(params))
+        return np.array(logpdfs)
 
     def approximate_logpdf(self, xref, x):
         raise NotImplementedError('approximate_logpdf method not implemented')
