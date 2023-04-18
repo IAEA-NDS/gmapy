@@ -7,8 +7,9 @@ from multiprocessing import Process, Pipe
 import time
 
 
-def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
-                      num_burn=0, thin_step=1, seed=None, print_info=False):
+def mh_algo(startvals, log_probdens, proposal, num_samples,
+            log_transition_pdf=None, num_burn=0, thin_step=1,
+            seed=None, print_info=False):
     if seed is not None:
         np.random.seed(seed)
     startvals = startvals.reshape(-1, 1)
@@ -27,6 +28,9 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
         candidate = proposal(curvals)
         cand_logprob = log_probdens(candidate)
         log_alpha = cand_logprob - cur_logprob
+        if log_transition_pdf is not None:
+            log_alpha += log_transition_pdf(candidate, curvals)
+            log_alpha -= log_transition_pdf(curvals, candidate)
         log_u = np.log(np.random.uniform())
         if log_u < log_alpha:
             curvals = candidate
@@ -53,6 +57,15 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
         'seed': seed
     }
     return result
+
+
+def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
+                      num_burn=0, thin_step=1, seed=None, print_info=False):
+    return mh_algo(
+        startvals, log_probdens, proposal, num_samples,
+        num_burn=num_burn, thin_step=thin_step,
+        seed=seed, print_info=print_info
+    )
 
 
 def symmetric_mh_worker(con, mh_args, mh_kwargs):
