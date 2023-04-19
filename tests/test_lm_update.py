@@ -76,10 +76,10 @@ class TestNewLevenbergMarquardtUpdate(unittest.TestCase):
             compmap1, datatable, totcov, retcov=False, print_status=True, lmb=1
         )
         res1 = priorvals.copy()
-        res1[adjidcs] = r1['upd_vals']
+        res1[adjidcs] = r1['upd_vals'].flatten()
         print('\n\n----------------------------------------\n\n')
         r2 = lm_update(postdist, print_status=True, lmb=1.)
-        res2 = r2['upd_vals']
+        res2 = r2['upd_vals'].flatten()
         self.assertTrue(np.allclose(res1, res2, atol=1e-12, rtol=1e-12))
 
     def test_lm_update_convergence_with_ppp(self):

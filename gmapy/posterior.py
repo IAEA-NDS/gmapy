@@ -230,7 +230,7 @@ class Posterior:
             x = x.reshape(-1, 1)
         adj = self._adj
         nonadj = self._nonadj
-        x[nonadj] = self._priorvals[nonadj]
+        x[nonadj, :] = self._priorvals[nonadj]
         # prior contribution
         pf = self._priorfact
         d1 = x[adj] - self._priorvals[adj]
