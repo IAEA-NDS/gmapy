@@ -344,6 +344,70 @@ class TestPosteriorUSUClass(unittest.TestCase):
         self.assertTrue(np.all(np.max(normdiff[-n_groups:, :]) < 3.5))
         self.assertTrue(mh_res['accept_rate'] > 0.6)
 
+    def test_unc_adjustment_in_approximate_postmode(self):
+        # approximate_postmode with huge lmb parameter
+        # should lead only to an update of the uncertainty
+        # parameters that should
+        groups = ['grp_A', 'grp_B', 'grp_C']
+        n_groups = len(groups)
+        n_normal_params = 10
+        n_usu_params = n_groups * 30
+        n_param = 10 + n_usu_params
+        n_exp = 110
+        np.random.seed(56)
+        # unc groups
+        unc_idcs = np.arange(n_normal_params, n_param)
+        unc_group_assoc = np.full(
+            len(unc_idcs), groups * int(n_usu_params / n_groups))
+        # prior
+        priorvals = np.full((n_param, 1), 0.)
+        priorvals[:n_normal_params, :] = 10 + 4*np.random.rand(n_normal_params, 1)
+        priorcov = sps.diags([10000] * priorvals.shape[0])
+        # system quantities
+        yref = 5 + 4 * np.random.rand(n_exp, 1)
+        S = sps.csr_matrix(np.random.rand(n_exp, n_param))
+        mock_map_linear = self.MockMapLinear(yref, S, priorvals)
+        # true values
+        real_unc = 70
+        truevals = priorvals.copy()
+        truevals[:n_normal_params, :] += np.random.normal(
+            scale=15, size=(n_normal_params, 1)
+        )
+        truevals[unc_idcs, :] += np.random.normal(
+            scale=real_unc, size=(len(unc_idcs), 1)
+        )
+        # and associated experimental values
+        expvals = mock_map_linear.propagate(truevals)
+        expcov = sps.diags([10.] * len(expvals))
+        # define posterior
+        postdist = PosteriorUSU(
+            priorvals, priorcov, mock_map_linear, expvals, expcov,
+            relative_exp_errors=False,
+            unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+        )
+        # define mapping
+        unc_dict = {k: real_unc/10 for k in groups}
+        param_ref = truevals.copy()
+        xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
+        new_x = postdist.approximate_postmode(xref, lmb=1e16)
+        new_params = postdist.extract_params(new_x)
+        self.assertTrue(np.allclose(new_params, truevals))
+        # check if we find really the mode of the
+        # posterior distribution conditioned on parameters
+        new_uncvec = postdist.extract_uncvec(new_x)
+        for i in range(len(new_uncvec)):
+            tmp_up = new_uncvec.copy()
+            tmp_down = new_uncvec.copy()
+            tmp_up[i] += 0.01
+            tmp_down[i] -= 0.01
+            full_tmp_up = np.vstack([new_params, tmp_up])
+            full_tmp_down = np.vstack([new_params, tmp_down])
+            logprob = postdist.logpdf(new_x)
+            logprob_up = postdist.logpdf(full_tmp_up)
+            logprob_down = postdist.logpdf(full_tmp_down)
+            self.assertTrue(logprob_up < logprob)
+            self.assertTrue(logprob_down < logprob)
+
 
 if __name__ == '__main__':
     unittest.main()
