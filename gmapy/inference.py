@@ -272,7 +272,8 @@ def lm_update(dist_obj, startvals=None, maxiter=10,
             print('rho: ' + str(rho))
             print('accepted: ' + str(accepted))
         converged = False
-        if accepted:
+        if (accepted or
+                (rho > 0.99 and np.isclose(real_improvement, 0, atol=1e-8))):
             # auxiliary quantities for convergence criterion
             absdiff = np.abs(prop_vals - cur_vals)
             reldiff = np.abs(absdiff) / (atol + np.abs(cur_vals))
