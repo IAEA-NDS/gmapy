@@ -153,50 +153,18 @@ class PosteriorUSU(Posterior):
         return self._logpdf(x, xref=xref)
 
     def grad_logpdf(self, x):
-        raise NotImplementedError('grad_logpdf method not implemented')
-        x = x.copy()
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
-        if x.shape[1] != 1:
-            raise ValueError('x must be a vector and not a matrix')
-        adj = self._adj
-        nonadj = self._nonadj
-        # gradient of prior contribution
-        pf = self._priorfact
-        d1 = x[adj] - self._priorvals[adj]
-        z1r = pf(d1)
-        z1 = np.zeros(self._priorvals.shape, dtype=float)
-        z1[adj, :] = (-z1r)
-        # gradient of likelihood contribution
-        m = self._mapping
-        ef = self._expfact
-        propx = m.propagate(x.flatten()).reshape(-1, 1)
-        S = m.jacobian(x.flatten())
-        if not self._relative_exp_errors:
-            d2 = self._expvals - propx
-            z2 = S.T @ ef(d2)
-            if self._debug_only_likelihood_chisquare:
-                z2[nonadj, :] = 0.
-                return -2*z2.flatten()
-        else:
-            propx2 = self._get_propx2(x)
-            d2 = self._get_d2(propx, propx2)
-            inv_expcov_times_d2 = ef(d2)
-            d2deriv = self._exp_pred_diff_jacobian(S, propx, propx2)
-            z2 = ((-1) * (inv_expcov_times_d2.T @ d2deriv))
-            if self._debug_only_likelihood_chisquare:
-                z2[:, nonadj] = 0.
-                return -2*z2.flatten()
-            if self._debug_only_likelihood_logdet:
-                return self._likelihood_logdet_jacobian(S, propx2).flatten()
-            z2 -= 0.5 * self._likelihood_logdet_jacobian(S, propx2)
-            z2 = z2.T
-
-        z2[nonadj, :] = 0.
-        res = z1 + z2
+        uncvec = self.extract_uncvec(x)
+        gradarr = np.full(x.shape, 0., dtype=float)
+        for i in range(x.shape[1]):
+            self._update_priorcov_if_necessary(uncvec[:, i])
+            params = self.extract_params(x[:, i])
+            tmp = super().grad_logpdf(params)
+            gradarr[:params.shape[0], i] = tmp
         if self._apply_squeeze:
-            res = np.squeeze(res)
-        return res
+            gradarr = np.squeeze(gradarr)
+        return gradarr
 
     def approximate_postmode(self, xref, lmb=0.):
         raise NotImplementedError('approximate_postmode not implemented')
