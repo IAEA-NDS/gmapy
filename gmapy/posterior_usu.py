@@ -149,8 +149,34 @@ class PosteriorUSU(Posterior):
         return np.array(logpdfs)
 
     def approximate_logpdf(self, xref, x):
-        raise NotImplementedError('approximate_logpdf method not implemented')
-        return self._logpdf(x, xref=xref)
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
+        if len(xref.shape) == 1:
+            xref = xref.reshape(-1, 1)
+        uncvec_ref = self.extract_uncvec(xref)
+        uncarr = self.extract_uncvec(x)
+        params_ref = self.extract_params(xref)
+        params = self.extract_params(x)
+        logpdfs = np.empty(x.shape[1], dtype=float)
+        for i in range(x.shape[1]):
+            self._update_priorcov_if_necessary(uncvec_ref[:, i])
+            logpdfs[i] = self._logpdf(params[:, i], xref=params_ref)
+        # post-hoc adjustment to account for uncertainty maximization
+        alpha_betas_ref = self._determine_alpha_beta(xref)
+        refval = 0
+        for i, (group, alpha, beta) in enumerate(alpha_betas_ref):
+            num = alpha*2 + 1
+            u = uncvec_ref[i]
+            refval -= beta / (u*u) + num*np.log(u)
+        alpha_betas = self._determine_alpha_beta(x)
+        tarvals = np.zeros((1, xref.shape[1]), dtype=float)
+        for i, (group, alpha, beta) in enumerate(alpha_betas):
+            num = alpha*2 + 1
+            us = uncarr[i, :]
+            tarvals -= beta / (us*us) + num*np.log(us)
+        logpdf_adj = tarvals - refval
+        tmp = self._logpdf(params, xref=params_ref)
+        return (tmp + logpdf_adj).reshape(-1)
 
     def grad_logpdf(self, x):
         if len(x.shape) == 1:
