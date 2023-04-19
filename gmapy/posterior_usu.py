@@ -98,6 +98,17 @@ class PosteriorUSU(Posterior):
                 self._priorcov.tocsc(copy=True)
             )
 
+    def _determine_alpha_beta(self, x):
+        res = []
+        for i, group in enumerate(self._groups):
+            idcs = self._unc_group_dict[group]
+            usu_errors = x[idcs, :]
+            d = usu_errors - self._priorvals[idcs, :]
+            beta = 0.5 * np.sum(np.square(d), axis=0)
+            alpha = 0.5 * (usu_errors.shape[0] - 1.)
+            res.append((group, alpha, beta))
+        return tuple(res)
+
     def extract_params(self, x):
         fidx = len(x) - len(self._groups)
         if len(x.shape) == 1:
@@ -218,13 +229,9 @@ class PosteriorUSU(Posterior):
             if len(x.shape) == 1:
                 x = x.reshape(-1, 1)
             uncvec = np.empty((len(self._groups), x.shape[1]), dtype=float)
-            for i, group in enumerate(self._groups):
-                idcs = self._unc_group_dict[group]
-                usu_errors = x[idcs, :]
-                d = usu_errors - self._priorvals[idcs, :]
-                beta = 0.5 * np.sum(np.square(d), axis=0)
-                alpha = 0.5 * (usu_errors.shape[0] - 1.)
-                rv = invgamma.rvs(alpha, size=usu_errors.shape[1])
+            alpha_betas = self._determine_alpha_beta(x)
+            for i, (group, alpha, beta) in enumerate(alpha_betas):
+                rv = invgamma.rvs(alpha, size=x.shape[1])
                 uncvec[i, :] = np.sqrt(rv * beta)
             propx = x.copy()
             propx[-len(self._groups):, :] = uncvec
@@ -280,13 +287,9 @@ class PosteriorUSU(Posterior):
             if np.any(params != prop_params):
                 return -np.inf
             uncvec = self.extract_uncvec(propx)
+            alpha_betas = self._determine_alpha_beta(x)
             log_prob = 0.
-            for i, group in enumerate(self._groups):
-                idcs = self._unc_group_dict[group]
-                usu_errors = x[idcs, :]
-                d = usu_errors - self._priorvals[idcs, :]
-                beta = 0.5 * np.sum(np.square(d), axis=0)
-                alpha = 0.5 * (usu_errors.shape[0] - 1.)
+            for i, (group, alpha, beta) in enumerate(alpha_betas):
                 u = uncvec[i]
                 z = u*u / beta
                 log_prob += invgamma.logpdf(z, a=alpha) + np.log(2*u / beta)
