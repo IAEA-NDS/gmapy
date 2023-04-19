@@ -279,7 +279,8 @@ def lm_update(dist_obj, startvals=None, maxiter=10,
             maxreldiff = np.max(reldiff)
             if print_status:
                 print('maximal relative parameter change: ' + str(maxreldiff))
-            converged = np.all(absdiff < (atol + rtol*cur_vals))
+            converged = np.all(absdiff < (atol + rtol*np.abs(cur_vals)))
+
         # rescale lambda according to improvement
         if real_improvement < 0:
             lmb *= 97
