@@ -167,23 +167,18 @@ class PosteriorUSU(Posterior):
         return gradarr
 
     def approximate_postmode(self, xref, lmb=0.):
-        raise NotImplementedError('approximate_postmode not implemented')
-        priorvals = self._priorvals
-        # calculate the inverse posterior covariance matrix
-        xref = xref.copy()
-        xref[self._nonadj] = priorvals.flatten()[self._nonadj]
-        inv_post_cov = self._approximate_invpostcov(xref)
-        dampmat = lmb * identity(inv_post_cov.shape[0],
-                                 dtype=float, format='csr')
-        inv_post_cov += dampmat
-        # calculate the gradient of the difference in
-        # the experimental chisquare value
-        zvec = self.grad_logpdf(xref)
-        zvec = zvec[self._adj]
-        postvals = xref.reshape(-1, 1)[self._adj]
-        postvals += sps.linalg.spsolve(inv_post_cov, zvec).reshape(-1, 1)
-        xref[self._adj] = postvals.flatten()
-        return xref
+        if len(xref.shape) == 1:
+            xref = xref.reshape(-1, 1)
+        parvec = self.extract_params(xref)
+        new_parvec = super().approximate_postmode(parvec, lmb=lmb)
+        alpha_betas = self._determine_alpha_beta(new_parvec)
+        new_uncvec = np.empty((len(alpha_betas), xref.shape[1]), dtype=float)
+        for i, (group, alpha, beta) in enumerate(alpha_betas):
+            # determine uncertainty corresponding to mode
+            # of inverse gamma distribution
+            curunc = np.sqrt(beta / (alpha + 0.5))
+            new_uncvec[i, :] = curunc
+        return np.concatenate([new_parvec, new_uncvec], axis=0)
 
     def approximate_postcov(self, xref):
         uncvec = self.extract_uncvec(xref)
