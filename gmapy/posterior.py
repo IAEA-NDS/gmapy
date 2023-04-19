@@ -64,6 +64,9 @@ class Posterior:
         return self._logpdf(x, xref=xref)
 
     def grad_logpdf(self, x):
+        return self._grad_logpdf(x)
+
+    def _grad_logpdf(self, x):
         x = x.copy()
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
@@ -73,7 +76,7 @@ class Posterior:
         nonadj = self._nonadj
         # gradient of prior contribution
         pf = self._priorfact
-        d1 = x[adj] - self._priorvals[adj]
+        d1 = x[adj, :] - self._priorvals[adj, :]
         z1r = pf(d1)
         z1 = np.zeros(self._priorvals.shape, dtype=float)
         z1[adj, :] = (-z1r)
@@ -109,21 +112,23 @@ class Posterior:
         return res
 
     def approximate_postmode(self, xref, lmb=0.):
+        if len(xref.shape) == 1:
+            xref = xref.reshape(-1, 1)
         priorvals = self._priorvals
         # calculate the inverse posterior covariance matrix
         xref = xref.copy()
-        xref[self._nonadj] = priorvals.flatten()[self._nonadj]
+        xref[self._nonadj, :] = priorvals[self._nonadj, :]
         inv_post_cov = self._approximate_invpostcov(xref)
         dampmat = lmb * identity(inv_post_cov.shape[0],
                                  dtype=float, format='csr')
         inv_post_cov += dampmat
         # calculate the gradient of the difference in
         # the experimental chisquare value
-        zvec = self.grad_logpdf(xref)
+        zvec = self._grad_logpdf(xref)
         zvec = zvec[self._adj]
-        postvals = xref.reshape(-1, 1)[self._adj]
+        postvals = xref.reshape(-1, 1)[self._adj, :]
         postvals += sps.linalg.spsolve(inv_post_cov, zvec).reshape(-1, 1)
-        xref[self._adj] = postvals.flatten()
+        xref[self._adj, :] = postvals
         return xref
 
     def approximate_postcov(self, xref):
