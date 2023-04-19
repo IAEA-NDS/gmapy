@@ -344,7 +344,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         self.assertTrue(np.all(np.max(normdiff[-n_groups:, :]) < 3.5))
         self.assertTrue(mh_res['accept_rate'] > 0.6)
 
-    def test_unc_adjustment_in_approximate_postmode(self):
+    def test_unc_adjustment_in_approximate_postmode_and_logpdf(self):
         # approximate_postmode with huge lmb parameter
         # should lead only to an update of the uncertainty
         # parameters that should
@@ -407,6 +407,12 @@ class TestPosteriorUSUClass(unittest.TestCase):
             logprob_down = postdist.logpdf(full_tmp_down)
             self.assertTrue(logprob_up < logprob)
             self.assertTrue(logprob_down < logprob)
+        # check the approximate_logpdf functionality
+        logpdf_ref = postdist.logpdf(xref)
+        logpdf_exact = postdist.logpdf(new_x)
+        logpdf_approx = postdist.approximate_logpdf(xref, new_x)
+        self.assertTrue(np.isclose(logpdf_exact, logpdf_approx))
+        self.assertFalse(np.isclose(logpdf_ref, logpdf_exact))
 
 
 if __name__ == '__main__':
