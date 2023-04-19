@@ -10,8 +10,7 @@
 ############################################################
 import numpy as np
 from sksparse.cholmod import cholesky
-import scipy.sparse as sps
-from scipy.sparse import csr_matrix, coo_matrix, identity
+from scipy.sparse import coo_matrix
 from .posterior import Posterior
 from scipy.stats import invgamma
 
