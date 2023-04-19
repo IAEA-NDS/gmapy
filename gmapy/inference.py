@@ -253,10 +253,11 @@ def lm_update(dist_obj, startvals=None, maxiter=10,
     cur_loglike = dist_obj.logpdf(cur_vals)
     for num_iter in range(maxiter):
         prop_vals = dist_obj.approximate_postmode(cur_vals, lmb=lmb)
+        prop_vals = prop_vals.flatten()
         # calculate expected and real improvement and use the ratio
         # as criterion to determine the adjustment of the damping term
-        expected_loglike = dist_obj.approximate_logpdf(cur_vals, prop_vals)
-        proposed_loglike = dist_obj.logpdf(prop_vals)
+        expected_loglike = float(dist_obj.approximate_logpdf(cur_vals, prop_vals))
+        proposed_loglike = float(dist_obj.logpdf(prop_vals))
         expected_improvement = expected_loglike - cur_loglike
         real_improvement = proposed_loglike - cur_loglike
         rho = (real_improvement+1e-8) / (expected_improvement+1e-8)
