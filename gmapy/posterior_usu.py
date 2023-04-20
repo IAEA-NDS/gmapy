@@ -50,6 +50,8 @@ class PosteriorUSU(Posterior):
         self._adjunc_group_dict2 = self._determine_idcs_in_coo_matrix(
             self._priorcov, self._adjunc_group_dict
         )
+        # caching some vars to accelerate
+        self.__cache = {}
 
     def _prepare_priorcov(self, priorcov, unc_idcs):
         priorcov = coo_matrix(priorcov)
@@ -90,15 +92,11 @@ class PosteriorUSU(Posterior):
         return idcs_dict
 
     def _update_priorcov_if_necessary(self, uncvec):
-        found_diff = False
-        diag = self._priorcov.diagonal()
-        for i, group in enumerate(self._groups):
-            idcs = self._adjunc_group_dict[group]
-            squared_unc = uncvec[i]*uncvec[i]
-            if np.any(diag[idcs] != squared_unc):
-                found_diff = True
-                break
+        found_diff = 'uncvec' not in self.__cache
+        if not found_diff:
+            found_diff = np.any(self.__cache['uncvec'] != uncvec)
         if found_diff:
+            self.__cache['uncvec'] = uncvec.copy()
             for i, group in enumerate(self._groups):
                 idcs = self._adjunc_group_dict2[group]
                 squared_unc = uncvec[i]*uncvec[i]
