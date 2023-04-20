@@ -274,7 +274,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         assert uncvec.shape[0] == 1
         m = np.mean(smpl, axis=1, keepdims=True)
         s = np.std(smpl, axis=1, keepdims=True)
-        normdiff = (m - xref) / s
+        normdiff = np.abs(m - xref) / (s+1e-10)
         self.assertTrue(np.all(np.max(np.abs(normdiff)) < 2))
         self.assertTrue(mh_res['accept_rate'] > 0.6)
         # check that the mixture sampling is done appropriately
@@ -305,7 +305,12 @@ class TestPosteriorUSUClass(unittest.TestCase):
         # prior
         priorvals = np.full((n_param, 1), 0.)
         priorvals[:n_normal_params, :] = 10 + 4*np.random.rand(n_normal_params, 1)
-        priorcov = sps.diags([10000] * priorvals.shape[0])
+        priorcov = np.diag([10000] * priorvals.shape[0])
+        # add non-adjustable parameter as well
+        nonadj_idx = 5
+        assert nonadj_idx < n_normal_params
+        priorcov[nonadj_idx, nonadj_idx] = 0.
+        priorcov = sps.csr_matrix(priorcov)
         # system quantities
         yref = 5 + 4 * np.random.rand(n_exp, 1)
         S = sps.csr_matrix(np.random.rand(n_exp, n_param))
@@ -319,6 +324,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         truevals[unc_idcs, :] += np.random.normal(
             scale=real_unc, size=(len(unc_idcs), 1)
         )
+        truevals[nonadj_idx, :] = priorvals[nonadj_idx, :]
         # and associated experimental values
         expvals = mock_map_linear.propagate(truevals)
         expcov = sps.diags([10.] * len(expvals))
@@ -340,10 +346,11 @@ class TestPosteriorUSUClass(unittest.TestCase):
         smpl = mh_res['samples']
         m = np.mean(smpl, axis=1, keepdims=True)
         s = np.std(smpl, axis=1, keepdims=True)
-        normdiff = np.abs((m - xref) / s)
+        normdiff = np.abs(m - xref) / (s+1e-10)
         self.assertTrue(np.all(np.max(normdiff[:-n_groups, :]) < 2))
         self.assertTrue(np.all(np.max(normdiff[-n_groups:, :]) < 3.5))
         self.assertTrue(mh_res['accept_rate'] > 0.6)
+        self.assertTrue(np.all(smpl[nonadj_idx, :] == smpl[nonadj_idx, 0]))
 
     def test_unc_adjustment_in_approximate_postmode_and_logpdf(self):
         # approximate_postmode with huge lmb parameter
@@ -363,7 +370,12 @@ class TestPosteriorUSUClass(unittest.TestCase):
         # prior
         priorvals = np.full((n_param, 1), 0.)
         priorvals[:n_normal_params, :] = 10 + 4*np.random.rand(n_normal_params, 1)
-        priorcov = sps.diags([10000] * priorvals.shape[0])
+        priorcov = np.diag([10000] * priorvals.shape[0])
+        # add non-adjustable parameter as well
+        nonadj_idx = 5
+        assert nonadj_idx < n_normal_params
+        priorcov[nonadj_idx, nonadj_idx] = 0.
+        priorcov = sps.csr_matrix(priorcov)
         # system quantities
         yref = 5 + 4 * np.random.rand(n_exp, 1)
         S = sps.csr_matrix(np.random.rand(n_exp, n_param))
@@ -377,6 +389,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         truevals[unc_idcs, :] += np.random.normal(
             scale=real_unc, size=(len(unc_idcs), 1)
         )
+        truevals[nonadj_idx, :] = priorvals[nonadj_idx, :]
         # and associated experimental values
         expvals = mock_map_linear.propagate(truevals)
         expcov = sps.diags([10.] * len(expvals))
@@ -393,6 +406,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         new_x = postdist.approximate_postmode(xref, lmb=1e16)
         new_params = postdist.extract_params(new_x)
         self.assertTrue(np.allclose(new_params, truevals))
+        self.assertTrue(new_params[nonadj_idx] == truevals[nonadj_idx])
         # check if we find really the mode of the
         # posterior distribution conditioned on parameters
         new_uncvec = postdist.extract_uncvec(new_x)
