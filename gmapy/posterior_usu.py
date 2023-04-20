@@ -34,11 +34,21 @@ class PosteriorUSU(Posterior):
             squeeze=squeeze, relative_exp_errors=relative_exp_errors,
             source_mask=source_mask, target_mask=target_mask
         )
+        # create a version of unc_group_dict for the covariance matrix
+        # that may be of smaller dimension due to non-adjustable parameters
+        if (unc_idcs is not None and
+                np.any((priorcov.diagonal() == 0)[unc_idcs])):
+            raise IndexError('unc_idcs refer to non-adjustable parameters')
+        adjustable_idcs = np.arange(len(priorvals))[priorcov.diagonal() > 0]
+        self._adjunc_group_dict = {
+            k: np.searchsorted(adjustable_idcs, v, side='left')
+            for k, v in self._unc_group_dict.items()
+        }
         # NOTE: we need to take self._priorcov in the following as
         #       the constructor of Posterior rearranges the indices
         #       in the COO Matrix instance
-        self._unc_group_dict2 = self._determine_idcs_in_coo_matrix(
-            self._priorcov, self._unc_group_dict
+        self._adjunc_group_dict2 = self._determine_idcs_in_coo_matrix(
+            self._priorcov, self._adjunc_group_dict
         )
 
     def _prepare_priorcov(self, priorcov, unc_idcs):
@@ -83,14 +93,14 @@ class PosteriorUSU(Posterior):
         found_diff = False
         diag = self._priorcov.diagonal()
         for i, group in enumerate(self._groups):
-            idcs = self._unc_group_dict[group]
+            idcs = self._adjunc_group_dict[group]
             squared_unc = uncvec[i]*uncvec[i]
             if np.any(diag[idcs] != squared_unc):
                 found_diff = True
                 break
         if found_diff:
             for i, group in enumerate(self._groups):
-                idcs = self._unc_group_dict2[group]
+                idcs = self._adjunc_group_dict2[group]
                 squared_unc = uncvec[i]*uncvec[i]
                 self._priorcov.data[idcs] = squared_unc
             self._priorfact.cholesky_inplace(
