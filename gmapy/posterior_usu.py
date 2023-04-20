@@ -302,9 +302,19 @@ class PosteriorUSU(Posterior):
             contrib2 = log_rho + log_p2
             m = np.maximum(contrib1, contrib2)
             r = np.log(np.exp(contrib1-m) + np.exp(contrib2 - m)) + m
+            # calculate inverse transition propx -> x
+            inv_log_p1 = log_p1
+            inv_log_p2 = unc_proposal_logpdf(propx, x)
+            inv_contrib1 = log_1mrho + inv_log_p1
+            inv_contrib2 = log_rho + inv_log_p2
+            inv_m = np.maximum(inv_contrib1, inv_contrib2)
+            inv_r = np.log(
+                np.exp(inv_contrib1 - inv_m) +
+                np.exp(inv_contrib2 - inv_m)
+            ) + inv_m
             if squeeze and len(r) == 1:
-                r = r[0]
-            return r
+                return r[0], inv_r[0]
+            return r, inv_r
 
         if rho < 0. or rho > 1:
             raise ValueError('violation of constraint 0 <= rho <= 1')
@@ -327,7 +337,5 @@ class PosteriorUSU(Posterior):
         invcov = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
         fact = cholesky(invcov)
         fact_logdet = fact.logdet()
-        # TODO: calculate the determinant and the chisquare value
-        #       because it will serve as the normalization constant
         del S
         return proposal, proposal_logpdf, invcov

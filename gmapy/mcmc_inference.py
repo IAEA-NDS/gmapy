@@ -29,8 +29,9 @@ def mh_algo(startvals, log_probdens, proposal, num_samples,
         cand_logprob = log_probdens(candidate)
         log_alpha = cand_logprob - cur_logprob
         if log_transition_pdf is not None:
-            log_alpha += log_transition_pdf(candidate, curvals)
-            log_alpha -= log_transition_pdf(curvals, candidate)
+            t_logprob, inv_t_logprob = log_transition_pdf(curvals, candidate)
+            log_alpha += inv_t_logprob
+            log_alpha -= t_logprob
         log_u = np.log(np.random.uniform())
         if log_u < log_alpha:
             curvals = candidate

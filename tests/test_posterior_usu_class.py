@@ -198,7 +198,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
             postdist.generate_proposal_fun(xref, rho=0)
         ref_cov = np.linalg.inv(invcov.toarray())
         res = propfun(xarr)
-        logpdf_vec = prop_logpdf(xarr, res)
+        logpdf_vec, inv_logpdf_vec = prop_logpdf(xarr, res)
         mvn = multivariate_normal(mean=priorvals, cov=ref_cov)
         ref_logpdf_vec = mvn.logpdf(res[:-num_unc].T)
         self.assertTrue(np.allclose(logpdf_vec, ref_logpdf_vec))
@@ -223,7 +223,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         for i in range(1000):
             smpl.append(propfun(xref))
         smpl = np.concatenate(smpl, axis=1)
-        logpdfvec1 = prop_logpdf(smpl, smpl)
+        logpdfvec1, inv_logpdfvec1 = prop_logpdf(smpl, smpl)
         logpdfvec2 = postdist.logpdf(smpl)
         diffs = logpdfvec1 - logpdfvec2
         self.assertTrue(np.isclose(min(diffs), max(diffs)))
