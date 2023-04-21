@@ -229,18 +229,12 @@ class Posterior:
         ypred = logdet_ref + T1 @ d + 0.5 * d.T @ T2 @ d
         return ypred
 
-    def _logpdf(self, x, xref=None):
+    def _likelihood_logpdf(self, x, xref=None):
         x = x.copy()
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
-        adj = self._adj
         nonadj = self._nonadj
         x[nonadj, :] = self._priorvals[nonadj]
-        # prior contribution
-        pf = self._priorfact
-        d1 = x[adj] - self._priorvals[adj]
-        d1_perm = pf.apply_P(d1)
-        z1 = pf.solve_L(d1_perm, use_LDLt_decomposition=False)
         # likelihood contribution
         m = self._mapping
         ef = self._expfact
@@ -277,14 +271,7 @@ class Posterior:
                 d2 = d2ref + J @ (x2 - x2ref)
         d2_perm = ef.apply_P(d2)
         z2 = ef.solve_L(d2_perm, use_LDLt_decomposition=False)
-        prior_res = np.sum(np.square(z1), axis=0)
-        t = pf.D()
-        prior_logdet = np.sum(np.log(t[~np.isposinf(t)]))
-        prior_res += prior_logdet + np.pi*len(d1)
         like_res = np.sum(np.square(z2), axis=0) + np.pi*len(d2)
-
-        if self._debug_only_likelihood_chisquare:
-            return like_res
 
         if self._relative_exp_errors:
             if xref is None:
@@ -301,10 +288,38 @@ class Posterior:
             return like_logdet
 
         like_res += like_logdet
-        res = -0.5 * (prior_res + like_res)
+        like_res *= (-0.5)
         if self._apply_squeeze:
-            res = np.squeeze(res)
-        return res
+            like_res = np.squeeze(like_res)
+        return like_res
+
+    def _prior_logpdf(self, x):
+        x = x.copy()
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
+        adj = self._adj
+        nonadj = self._nonadj
+        x[nonadj, :] = self._priorvals[nonadj]
+        # prior contribution
+        pf = self._priorfact
+        d1 = x[adj] - self._priorvals[adj]
+        d1_perm = pf.apply_P(d1)
+        z1 = pf.solve_L(d1_perm, use_LDLt_decomposition=False)
+        prior_res = np.sum(np.square(z1), axis=0)
+        t = pf.D()
+        prior_logdet = np.sum(np.log(t[~np.isposinf(t)]))
+        prior_res += prior_logdet + np.pi*len(d1)
+        prior_res *= (-0.5)
+        if self._apply_squeeze:
+            prior_res = np.squeeze(prior_res)
+        return prior_res
+
+    def _logpdf(self, x, xref=None):
+        prior_res = self._prior_logpdf(x)
+        like_res = self._likelihood_logpdf(x, xref)
+        if self._debug_only_likelihood_logdet:
+            return like_res
+        return prior_res + like_res
 
     def _approximate_invpostcov(self, xref):
         xref = xref.flatten()
