@@ -107,6 +107,8 @@ class PosteriorUSU(Posterior):
         return found_diff
 
     def _determine_alpha_beta(self, x):
+        if len(x.shape) == 1:
+            x = x.reshape(-1, 1)
         res = []
         for i, group in enumerate(self._groups):
             idcs = self._unc_group_dict[group]
@@ -151,9 +153,22 @@ class PosteriorUSU(Posterior):
         uncvec = self.extract_uncvec(x)
         logpdfs = []
         for i in range(x.shape[1]):
-            self._update_priorcov_if_necessary(uncvec[:, i])
             params = self.extract_params(x[:, i])
-            logpdfs.append(self._logpdf(params))
+            self._update_priorcov_if_necessary(uncvec[:, i])
+            if ('params' not in self.__cache or
+                    np.any(params != self.__cache['params'])):
+                like_logpdf = super()._likelihood_logpdf(params)
+                prior_logpdf = super()._prior_logpdf(params)
+                self.__cache['params'] = params
+                self.__cache['like_logpdf'] = like_logpdf
+                self.__cache['prior_logpdf'] = prior_logpdf
+                logpdfs.append(prior_logpdf + like_logpdf)
+            else:
+                # only prior uncertainties were updated and
+                # we only need to re-compute the prior contribution
+                prior_logpdf = super()._prior_logpdf(params)
+                self.__cache['prior_logpdf'] = prior_logpdf
+                logpdfs.append(self.__cache['like_logpdf'] + prior_logpdf)
         return np.array(logpdfs)
 
     def approximate_logpdf(self, xref, x):
