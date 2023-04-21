@@ -220,10 +220,14 @@ class TestPosteriorUSUClass(unittest.TestCase):
         propfun, prop_logpdf, invcov = \
             postdist.generate_proposal_fun(xref, rho=1, squeeze=False)
         smpl = []
+        logpdfvec1 = []
         for i in range(1000):
-            smpl.append(propfun(xref))
+            cursmpl = propfun(xref)
+            smpl.append(cursmpl)
+            cur_logpdfvec1, _ = prop_logpdf(cursmpl, cursmpl)
+            logpdfvec1.append(cur_logpdfvec1)
         smpl = np.concatenate(smpl, axis=1)
-        logpdfvec1, inv_logpdfvec1 = prop_logpdf(smpl, smpl)
+        logpdfvec1 = np.concatenate(logpdfvec1)
         logpdfvec2 = postdist.logpdf(smpl)
         diffs = logpdfvec1 - logpdfvec2
         self.assertTrue(np.isclose(min(diffs), max(diffs)))

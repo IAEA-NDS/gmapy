@@ -104,6 +104,7 @@ class PosteriorUSU(Posterior):
             self._priorfact.cholesky_inplace(
                 self._priorcov.tocsc(copy=True)
             )
+        return found_diff
 
     def _determine_alpha_beta(self, x):
         res = []
@@ -234,12 +235,14 @@ class PosteriorUSU(Posterior):
             return propx
 
         def param_proposal(x):
+            nonlocal fact
             if len(x.shape) == 1:
                 x = x.reshape(-1, 1)
             xr = self.extract_params(x)
             adj = self._adj
             numadj = self._numadj
             rvec = np.random.normal(size=(numadj, xr.shape[1]))
+            _update_propcov(self.extract_uncvec(x))
             d = fact.apply_Pt(fact.solve_Lt(rvec, use_LDLt_decomposition=False))
             rres = xr.copy()
             rres[adj, :] += d*scale
@@ -259,6 +262,7 @@ class PosteriorUSU(Posterior):
             return res
 
         def param_proposal_logpdf(x, propx):
+            nonlocal fact, fact_logdet
             uncs = self.extract_uncvec(x)
             prop_uncs = self.extract_uncvec(propx)
             if np.any(uncs != prop_uncs):
@@ -267,6 +271,7 @@ class PosteriorUSU(Posterior):
             propxr = self.extract_params(propx)
             if np.any(xr[self._nonadj] != propxr[self._nonadj]):
                 return -np.inf
+            _update_propcov(uncs)
             d = (propxr[self._adj] - xr[self._adj]) / scale
             dp = fact.apply_P(d)
             z = fact.L().T @ dp
@@ -316,6 +321,15 @@ class PosteriorUSU(Posterior):
                 return r[0], inv_r[0]
             return r, inv_r
 
+        def _update_propcov(uncvec):
+            nonlocal ST_invexpcov_S, invcov
+            nonlocal fact, fact_logdet
+            updated = self._update_priorcov_if_necessary(uncvec)
+            if updated:
+                invcov = ST_invexpcov_S + self._priorfact.inv().tocsc()
+                fact.cholesky_inplace(invcov)
+                fact_logdet = fact.logdet()
+
         if rho < 0. or rho > 1:
             raise ValueError('violation of constraint 0 <= rho <= 1')
         elif rho == 0.:
@@ -332,10 +346,11 @@ class PosteriorUSU(Posterior):
         self._update_priorcov_if_necessary(uncref)
         xref = self.extract_params(xref)
         S = self._mapping.jacobian(xref).tocsc()[:, self._adj]
-        pf = self._priorfact
-        ef = self._expfact
-        invcov = (S.T @ ef(S.tocsc()) + pf.inv()).tocsc()
+        # begin of vars used in param_proposal_logpdf and param_proposal
+        ST_invexpcov_S = (S.T @ self._expfact(S.tocsc())).tocsc()
+        invcov = ST_invexpcov_S + self._priorfact.inv()
         fact = cholesky(invcov)
         fact_logdet = fact.logdet()
+        # end of vars
         del S
         return proposal, proposal_logpdf, invcov
