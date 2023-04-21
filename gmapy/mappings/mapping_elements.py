@@ -45,6 +45,11 @@ class MyAlgebra:
         self._jacobian_updated = True
         self._ancestors = []
         self._descendants = []
+        # track descendants whose input is
+        # a non-linear function of the
+        # input of this mapping
+        self._nonlinear_descendants = set()
+        self._linear_descendants = set()
 
     def __add__(self, other):
         return Addition(self, other)
@@ -70,8 +75,20 @@ class MyAlgebra:
     def jacobian(self):
         self._jacobian_updated = False
 
+    def __track_nonlinear_deps(self, path):
+        path = [self] + path
+        for ancestor in self._ancestors:
+            ancestor.__track_nonlinear_deps(path)
+        for i, curobj in enumerate(path[1:]):
+            if not curobj.islinear():
+                self._linear_descendants.update(path[1:i+1])
+                self._nonlinear_descendants.update(path[i+1:])
+                return
+        self._linear_descendants.update(path[1:])
+
     def _add_descendant(self, descendant):
         self._descendants.append(descendant)
+        self.__track_nonlinear_deps([descendant])
 
     def _add_ancestors(self, ancestors):
         self._ancestors.extend(ancestors)
@@ -79,15 +96,15 @@ class MyAlgebra:
     def _get_ancestors(self):
         return self._ancestors
 
-    def _signal_changes(self, ancestor=None):
+    def _signal_changes(self):
         self._values_updated = True
-        if self.islinear():
-            if ancestor is not None and ancestor.jacobian_updated():
-                self._jacobian_updated = True
-        else:
+        if not self.islinear():
             self._jacobian_updated = True
-        for desc in self._descendants:
-            desc._signal_changes(ancestor=self)
+        for desc in self._nonlinear_descendants:
+            desc._values_updated = True
+            desc._jacobian_updated = True
+        for desc in self._linear_descendants:
+            desc._values_updated = True
 
     def values_updated(self):
         return self._values_updated
