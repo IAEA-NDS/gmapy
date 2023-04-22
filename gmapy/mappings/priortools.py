@@ -145,7 +145,7 @@ def create_propagate_source_mask(
         idcs_list.append(norm_selidx)
         vals_list.append(np.full(len(norm_selidx), 1.))
     if not prop_usu_errors:
-        usu_selidx = datatable[datatable['NODE'].str.match('usu_', na=False)].index
+        usu_selidx = datatable[datatable['NODE'].str.match('usu_|endep_usu_', na=False)].index
         idcs_list.append(usu_selidx)
         vals_list.append(np.full(len(usu_selidx), 0.))
     if len(idcs_list) > 0:
