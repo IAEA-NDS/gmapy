@@ -1,4 +1,8 @@
 from time import time
+import numpy as np
+
+
+function_times = {}
 
 
 def time_func(fun):
@@ -7,8 +11,8 @@ def time_func(fun):
         result = fun(*args, **kwargs)
         end_time = time()
         diff_time = end_time - start_time
-        print(f'Function {fun.__name__!r} executed in '
-              f'{diff_time:.4f}s')
+        function_times.setdefault(fun.__name__, 0.0)
+        function_times[fun.__name__] += diff_time
         return result
     return wrap_fun
 
@@ -19,7 +23,18 @@ def time_method(fun):
         result = fun(self, *args, **kwargs)
         end_time = time()
         diff_time = end_time - start_time
-        print(f'Function {self.__class__.__name__}.{fun.__name__!r} '
-              f'executed in {diff_time:.4f}s')
+        identifier = f'{self.__class__.__name__}.{fun.__name__}'
+        function_times[identifier] += diff_time
         return result
     return wrap_method
+
+
+def list_timings():
+    tmp = [(name, time) for name, time in function_times.items()]
+    names = np.array([t[0] for t in tmp])
+    times = np.array([t[1] for t in tmp])
+    sort_idcs = np.argsort(times)
+    names = names[sort_idcs]
+    times = times[sort_idcs]
+    for n, t in zip(names, times):
+        print(f'{n}: {t}')
