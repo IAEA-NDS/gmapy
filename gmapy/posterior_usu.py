@@ -91,16 +91,19 @@ class PosteriorUSU(Posterior):
             idcs_dict[group] = np.where(row_sel)[0]
         return idcs_dict
 
+    def _update_priorcov(self, priorcov, uncvec):
+        for i, group in enumerate(self._groups):
+            idcs = self._adjunc_group_dict2[group]
+            squared_unc = uncvec[i]*uncvec[i]
+            priorcov.data[idcs] = squared_unc
+
     def _update_priorcov_if_necessary(self, uncvec):
         found_diff = 'uncvec' not in self.__cache
         if not found_diff:
             found_diff = np.any(self.__cache['uncvec'] != uncvec)
         if found_diff:
             self.__cache['uncvec'] = uncvec.copy()
-            for i, group in enumerate(self._groups):
-                idcs = self._adjunc_group_dict2[group]
-                squared_unc = uncvec[i]*uncvec[i]
-                self._priorcov.data[idcs] = squared_unc
+            self._update_priorcov(self._priorcov, uncvec)
             self._priorfact.cholesky_inplace(
                 self._priorcov.tocsc(copy=True)
             )
