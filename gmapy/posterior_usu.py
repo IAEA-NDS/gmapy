@@ -407,4 +407,4 @@ class PosteriorUSU(Posterior):
         # end of vars
         del S
         del priorcov_ref
-        return proposal, proposal_logpdf, invcov
+        return proposal, proposal_logpdf

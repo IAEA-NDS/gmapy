@@ -169,7 +169,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         num_unc = len(unc_dict)
         xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
         xarr = np.hstack([xref]*1000000)
-        propfun, prop_logpdf, _ = \
+        propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0)
         res = propfun(xarr)
         priorcov[unc_idcs, :] = 0.0
@@ -207,7 +207,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         num_unc = len(unc_dict)
         xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
         xarr = np.hstack([xref]*100)
-        propfun, prop_logpdf, _ = \
+        propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0)
         S = mock_map.jacobian(xref[:-num_unc])
         ST_invexp_S = S.T @ sps.linalg.spsolve(expcov.tocsc(), S.tocsc())
@@ -233,7 +233,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
         param_ref = priorvals + np.random.rand(*priorvals.shape)
         xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
-        propfun, prop_logpdf, invcov = \
+        propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=1, squeeze=False)
         smpl = []
         logpdfvec1 = []
@@ -284,7 +284,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         unc_dict = {'grp_A': real_unc}
         param_ref = truevals.copy()
         xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
-        propfun, prop_logpdf, invcov = \
+        propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0.5, scale=0.1, squeeze=False)
         mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
                          thin_step=100, log_transition_pdf=prop_logpdf,
@@ -300,7 +300,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         # check that the mixture sampling is done appropriately
         # by choosing a really bad proposal in the MH step so that
         # accepts only happen in the Gibbs step (sampling the uncertainty)
-        propfun, prop_logpdf, invcov = \
+        propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0.2, scale=1000, squeeze=False)
         mh_res2 = mh_algo(xref, postdist.logpdf, propfun, num_samples=100,
                           thin_step=100, log_transition_pdf=prop_logpdf,
@@ -358,7 +358,7 @@ class TestPosteriorUSUClass(unittest.TestCase):
         unc_dict = {k: real_unc for k in groups}
         param_ref = truevals.copy()
         xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
-        propfun, prop_logpdf, invcov = \
+        propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0.5, scale=0.1, squeeze=False)
         mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
                          thin_step=100, log_transition_pdf=prop_logpdf,

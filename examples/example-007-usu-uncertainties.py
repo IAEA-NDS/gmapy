@@ -69,7 +69,7 @@ endep_usu_idcs = priordt.index[priordt.NODE.str.match('endep_usu')]
 mh_startvals[endep_usu_idcs] = 0.01
 mh_startvals[-len(uncvec):] = 0.012
 
-propfun, prop_logpdf, _ = postdist.generate_proposal_fun(mh_startvals, scale=0.05, rho=0.5)
+propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.05, rho=0.5)
 
 # mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 9000, log_transition_pdf=prop_logpdf, thin_step=100) 
 # import pickle
