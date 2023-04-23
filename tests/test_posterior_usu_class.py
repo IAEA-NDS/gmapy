@@ -169,10 +169,18 @@ class TestPosteriorUSUClass(unittest.TestCase):
         num_unc = len(unc_dict)
         xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
         xarr = np.hstack([xref]*1000000)
-        propfun, prop_logpdf, invcov = \
+        propfun, prop_logpdf, _ = \
             postdist.generate_proposal_fun(xref, rho=0)
         res = propfun(xarr)
-        ref_cov = np.linalg.inv(invcov.toarray())
+        priorcov[unc_idcs, :] = 0.0
+        priorcov[:, unc_idcs] = 0.0
+        priorcov[[3, 7], [3, 7]] = 0.3**2
+        priorcov[[5, 9], [5, 9]] = 0.02**2
+        inv_priorcov = sps.linalg.inv(priorcov)
+        S = mock_map.jacobian(priorvals)
+        ST_invexp_S = S.T @ sps.linalg.spsolve(expcov.tocsc(), S.tocsc())
+        ref_invcov = ST_invexp_S + inv_priorcov
+        ref_cov = np.linalg.inv(ref_invcov.toarray())
         test_cov = np.cov(res[:-len(unc_dict), :])
         self.assertTrue(np.allclose(test_cov, ref_cov, rtol=1e-4, atol=1e-4))
         ref_mean = xref[:-num_unc]
@@ -185,18 +193,26 @@ class TestPosteriorUSUClass(unittest.TestCase):
             self.create_mock_quantities()
         unc_idcs = [3, 5, 7, 9]
         unc_group_assoc = ['grp_A', 'grp_B', 'grp_A', 'grp_B']
+        priorcov[unc_idcs, :] = 0.0
+        priorcov[:, unc_idcs] = 0.0
         postdist = PosteriorUSU(
             priorvals, priorcov, mock_map, expvals, expcov,
             relative_exp_errors=True,
             unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
         )
         unc_dict = {'grp_A': 0.3, 'grp_B': 0.02}
+        priorcov[[3, 7], [3, 7]] = 0.3**2
+        priorcov[[5, 9], [5, 9]] = 0.02**2
+        inv_priorcov = sps.linalg.inv(priorcov.tocsc())
         num_unc = len(unc_dict)
         xref = postdist.stack_params_and_uncs(priorvals, unc_dict)
         xarr = np.hstack([xref]*100)
-        propfun, prop_logpdf, invcov = \
+        propfun, prop_logpdf, _ = \
             postdist.generate_proposal_fun(xref, rho=0)
-        ref_cov = np.linalg.inv(invcov.toarray())
+        S = mock_map.jacobian(xref[:-num_unc])
+        ST_invexp_S = S.T @ sps.linalg.spsolve(expcov.tocsc(), S.tocsc())
+        ref_invcov = ST_invexp_S + inv_priorcov
+        ref_cov = np.linalg.inv(ref_invcov.toarray())
         res = propfun(xarr)
         logpdf_vec, inv_logpdf_vec = prop_logpdf(xarr, res)
         mvn = multivariate_normal(mean=priorvals, cov=ref_cov)
