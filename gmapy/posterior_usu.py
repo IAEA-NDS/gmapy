@@ -10,7 +10,7 @@
 ############################################################
 import numpy as np
 from sksparse.cholmod import cholesky
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, csc_matrix
 from .posterior import Posterior
 from scipy.stats import invgamma
 
@@ -29,6 +29,7 @@ class PosteriorUSU(Posterior):
         self._unc_group_dict = \
             self._prepare_unc_group_dict(unc_idcs, unc_group_assoc)
         self._groups = np.array(tuple(self._unc_group_dict.keys()))
+        self._unc_idcs = np.array(unc_idcs).flatten()
         super().__init__(
             priorvals, priorcov, mapping, expvals, expcov,
             squeeze=squeeze, relative_exp_errors=relative_exp_errors,
@@ -286,7 +287,7 @@ class PosteriorUSU(Posterior):
             return res
 
         def param_proposal_logpdf(x, propx):
-            nonlocal fact, fact_logdet
+            nonlocal fact
             uncs = self.extract_uncvec(x)
             prop_uncs = self.extract_uncvec(propx)
             if np.any(uncs != prop_uncs):
@@ -301,7 +302,7 @@ class PosteriorUSU(Posterior):
             z = fact.L().T @ dp
             # chisqr = np.sum(d * (invcov @ d), axis=0)
             chisqr = np.sum(np.square(z), axis=0)
-            logdet = fact_logdet
+            logdet = fact.logdet()
             # -logdet because inverse posterior covariance matrix
             res = -0.5 * (chisqr - logdet + np.log(2*np.pi)*self._numadj)
             return res
@@ -346,13 +347,26 @@ class PosteriorUSU(Posterior):
             return r, inv_r
 
         def _update_propcov(uncvec):
-            nonlocal ST_invexpcov_S, invcov
-            nonlocal fact, fact_logdet
-            updated = self._update_priorcov_if_necessary(uncvec)
-            if updated:
-                invcov = ST_invexpcov_S + self._priorfact.inv().tocsc()
-                fact.cholesky_inplace(invcov)
-                fact_logdet = fact.logdet()
+            nonlocal ST_invexpcov_S
+            nonlocal fact_ref, fact
+            nonlocal last_uncvec, uncref
+            if np.all(uncvec == last_uncvec):
+                return
+            last_uncvec = uncvec.copy()
+            m = ST_invexpcov_S.shape[0]
+            n = self._unc_idcs.size
+            adjmat = np.zeros((m, n), dtype=float)
+            col_ofs = 0
+            for i, group in enumerate(self._groups):
+                row_idcs = self._adjunc_group_dict[group]
+                col_idcs = col_ofs + np.arange(row_idcs.size)
+                adjmat[row_idcs, col_idcs] = np.sqrt(
+                    1 / (uncvec[i]*uncvec[i]) - 1 / (uncref[i]*uncref[i])
+                )
+                col_ofs += row_idcs.size
+            adjmat = csc_matrix(adjmat)
+            fact = fact_ref.copy()
+            fact.update_inplace(adjmat)
 
         if rho < 0. or rho > 1:
             raise ValueError('violation of constraint 0 <= rho <= 1')
@@ -366,16 +380,23 @@ class PosteriorUSU(Posterior):
             log_rho = np.log(rho)
             log_1mrho = np.log(1-rho)
 
-        uncref = self.extract_uncvec(xref)
+        # we set all elements in uncref to large value so that it leads
+        # to tiny values in the inverted priorcov matrix which helps
+        # in updating them to arbitrary positive values in _update_propcov
+        uncref = np.full(len(self._groups), 1e6, dtype=float)
         priorcov_ref = self._priorcov.copy()
         self._update_priorcov(priorcov_ref, uncref)
         xref = self.extract_params(xref)
         S = self._mapping.jacobian(xref).tocsc()[:, self._adj]
         # begin of vars used in param_proposal_logpdf and param_proposal
         ST_invexpcov_S = (S.T @ self._expfact(S.tocsc())).tocsc()
-        invcov = ST_invexpcov_S + cholesky(priorcov_ref.tocsc()).inv()
-        fact = cholesky(invcov)
-        fact_logdet = fact.logdet()
+        inv_priorcov = cholesky(priorcov_ref.tocsc()).inv()
+        invcov = ST_invexpcov_S + inv_priorcov
+        fact_ref = cholesky(invcov)
+        fact = fact_ref.copy()
+        last_uncvec = uncref
         # end of vars
         del S
+        del priorcov_ref
+        del inv_priorcov
         return proposal, proposal_logpdf, invcov
