@@ -350,6 +350,7 @@ class PosteriorUSU(Posterior):
             nonlocal ST_invexpcov_S
             nonlocal fact_ref, fact
             nonlocal last_uncvec, uncref
+            nonlocal inv_priorcov
             if np.all(uncvec == last_uncvec):
                 return
             last_uncvec = uncvec.copy()
@@ -357,16 +358,24 @@ class PosteriorUSU(Posterior):
             n = self._unc_idcs.size
             adjmat = np.zeros((m, n), dtype=float)
             col_ofs = 0
-            for i, group in enumerate(self._groups):
-                row_idcs = self._adjunc_group_dict[group]
-                col_idcs = col_ofs + np.arange(row_idcs.size)
-                adjmat[row_idcs, col_idcs] = np.sqrt(
-                    1 / (uncvec[i]*uncvec[i]) - 1 / (uncref[i]*uncref[i])
-                )
-                col_ofs += row_idcs.size
-            adjmat = csc_matrix(adjmat)
-            fact = fact_ref.copy()
-            fact.update_inplace(adjmat)
+            if np.all(uncvec < uncref):
+                for i, group in enumerate(self._groups):
+                    row_idcs = self._adjunc_group_dict[group]
+                    col_idcs = col_ofs + np.arange(row_idcs.size)
+                    adjmat[row_idcs, col_idcs] = np.sqrt(
+                        1 / (uncvec[i]*uncvec[i]) - 1 / (uncref[i]*uncref[i])
+                    )
+                    col_ofs += row_idcs.size
+                adjmat = csc_matrix(adjmat)
+                fact = fact_ref.copy()
+                fact.update_inplace(adjmat)
+            # fallback
+            else:
+                for i, group in enumerate(self._groups):
+                    idcs = self._adjunc_group_dict[group]
+                    inv_priorcov[idcs, idcs] = 1 / (uncvec[i] * uncvec[i])
+                invcov = ST_invexpcov_S + inv_priorcov
+                fact = cholesky(invcov)
 
         if rho < 0. or rho > 1:
             raise ValueError('violation of constraint 0 <= rho <= 1')
@@ -398,5 +407,4 @@ class PosteriorUSU(Posterior):
         # end of vars
         del S
         del priorcov_ref
-        del inv_priorcov
         return proposal, proposal_logpdf, invcov
