@@ -260,13 +260,19 @@ class PosteriorUSU(Posterior):
             adj = self._adj
             numadj = self._numadj
             rvec = np.random.normal(size=(numadj, xr.shape[1]))
-            _update_propcov(self.extract_uncvec(x))
+            uncvec = self.extract_uncvec(x)
+            if uncvec.shape[1] > 1:
+                if np.any(np.any(uncvec != uncvec[:, 0:1], axis=1)):
+                    raise ValueError('each column must contain the same ' +
+                                     'uncertainty vector contribution')
+                uncvec = uncvec[:, 0:1]
+            _update_propcov(uncvec)
             d = fact.apply_Pt(fact.solve_Lt(rvec, use_LDLt_decomposition=False))
             rres = xr.copy()
             rres[adj, :] += d*scale
             res = np.empty(x.shape, dtype=float)
             res[:-len(self._groups), :] = rres
-            res[-len(self._groups):, :] = self.extract_uncvec(x)
+            res[-len(self._groups):, :] = uncvec
             return res
 
         def proposal(x):
@@ -361,12 +367,13 @@ class PosteriorUSU(Posterior):
             log_1mrho = np.log(1-rho)
 
         uncref = self.extract_uncvec(xref)
-        self._update_priorcov_if_necessary(uncref)
+        priorcov_ref = self._priorcov.copy()
+        self._update_priorcov(priorcov_ref, uncref)
         xref = self.extract_params(xref)
         S = self._mapping.jacobian(xref).tocsc()[:, self._adj]
         # begin of vars used in param_proposal_logpdf and param_proposal
         ST_invexpcov_S = (S.T @ self._expfact(S.tocsc())).tocsc()
-        invcov = ST_invexpcov_S + self._priorfact.inv()
+        invcov = ST_invexpcov_S + cholesky(priorcov_ref.tocsc()).inv()
         fact = cholesky(invcov)
         fact_logdet = fact.logdet()
         # end of vars
