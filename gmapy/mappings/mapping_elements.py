@@ -430,23 +430,14 @@ class Multiplication(MyAlgebra):
         self._add_ancestors([obj1, obj2])
         self.__obj1 = obj1
         self.__obj2 = obj2
-        self.__cache = {}
 
     def __len__(self):
         return len(self.__obj1)
 
     def evaluate(self):
         super().evaluate()
-        if not self.__obj1.values_updated() and 'res1' in self.__cache:
-            res1 = self.__cache['res1']
-        else:
-            res1 = self.__obj1.evaluate()
-            self.__cache['res1'] = res1
-        if not self.__obj2.values_updated() and 'res2' in self.__cache:
-            res2 = self.__cache['res2']
-        else:
-            res2 = self.__obj2.evaluate()
-            self.__cache['res2'] = res2
+        res1 = self.__obj1.evaluate()
+        res2 = self.__obj2.evaluate()
         return res1 * res2
 
     def jacobian(self):
