@@ -53,6 +53,25 @@ def _evaluate_deco(cache=True):
     return _inner_evaluate_deco
 
 
+# decorator that should be used to
+# decorate all 'jacobian' methods
+# in the classes derived from MyAlgebra
+
+def _jacobian_deco(cache=True):
+    def _inner_jacobian_deco(fun):
+        def wrap(self):
+            if cache:
+                if self._jacobian_updated:
+                    self._cached_jac_result = fun(self)
+                self._jacobian_updated = False
+                return self._cached_jac_result.copy()
+            else:
+                self._jacobian_updated = False
+                return fun(self)
+        return wrap
+    return _inner_jacobian_deco
+
+
 # the following classes are the building
 # blocks to construct mathematical expressions
 # enabling the automated computation of derivatives
@@ -71,6 +90,8 @@ class MyAlgebra:
         self._linear_descendants = set()
         # see _evaluate_deco above regarding caching
         self._cached_result = None
+        # see _jacobian_deco above regarding caching
+        self._cached_jac_result = None
 
     def __add__(self, other):
         return Addition(self, other)
@@ -91,10 +112,14 @@ class MyAlgebra:
         return False
 
     def evaluate(self):
-        raise NotImplementedError('please implement evaluate method')
+        raise NotImplementedError(
+            'please implement evaluate method decorated by _evaluate_deco'
+        )
 
     def jacobian(self):
-        self._jacobian_updated = False
+        raise NotImplementedError(
+            'please implement jacobian method decorated with _jacobian_deco'
+        )
 
     def __track_nonlinear_deps(self, path):
         path = [self] + path
