@@ -33,10 +33,29 @@ def elem_mul(x, y):
     else:
         return x.multiply(y)
 
+
+# decorator that should be used to
+# decorate all 'evaluate' methods
+# in the classes derived from MyAlgebra
+
+def _evaluate_deco(cache=True):
+    def _inner_evaluate_deco(fun):
+        def wrap(self):
+            if cache:
+                if self._values_updated:
+                    self._cached_result = fun(self)
+                self._values_updated = False
+                return self._cached_result.copy()
+            else:
+                self._values_updated = False
+                return fun(self)
+        return wrap
+    return _inner_evaluate_deco
+
+
 # the following classes are the building
 # blocks to construct mathematical expressions
 # enabling the automated computation of derivatives
-
 
 class MyAlgebra:
 
@@ -50,6 +69,8 @@ class MyAlgebra:
         # input of this mapping
         self._nonlinear_descendants = set()
         self._linear_descendants = set()
+        # see _evaluate_deco above regarding caching
+        self._cached_result = None
 
     def __add__(self, other):
         return Addition(self, other)
