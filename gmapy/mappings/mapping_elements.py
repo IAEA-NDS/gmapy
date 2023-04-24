@@ -187,8 +187,8 @@ class InputSelector(MyAlgebra):
             raise ValueError('please assign numbers')
         return self.__values.copy()
 
+    @_jacobian_deco(cache=False)
     def jacobian(self):
-        super().jacobian()
         return self.__jacmat
 
     def assign(self, arraylike):
@@ -226,8 +226,8 @@ class Selector(MyAlgebra):
         allvals = self.__inpobj.evaluate()
         return allvals[self.__idcs]
 
+    @_jacobian_deco(cache=False)
     def jacobian(self):
-        super().jacobian()
         src_size = len(self.__inpobj)
         tar_size = len(self.__idcs)
         coeffs = np.ones(tar_size)
@@ -300,8 +300,8 @@ class Const(MyAlgebra):
     def evaluate(self):
         return self.__values
 
+    @_jacobian_deco(cache=False)
     def jacobian(self):
-        super().jacobian()
         return 0.0
 
 
@@ -343,12 +343,9 @@ class Distributor(MyAlgebra):
         res[self.__idcs] += nonzero_res
         return res
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        if self.__cache and not self.jacobian_updated():
-            return self.__last_jacobian
-        super().jacobian()
         jac = matmul(self.__dist_mat, self.__obj.jacobian())
-        self.__last_jacobian = jac
         return jac
 
     def get_indices(self):
@@ -383,8 +380,8 @@ class SumOfDistributors(MyAlgebra):
             res += obj.evaluate()
         return res
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         jac = self.__distributor_list[0].jacobian()
         for obj in self.__distributor_list[1:]:
             jac += obj.jacobian()
@@ -428,8 +425,8 @@ class Replicator(MyAlgebra):
             self.__num, axis=0
         ).flatten()
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         return vstack(
             [self.__obj.jacobian()] * self.__num, format='csr'
         )
@@ -457,8 +454,8 @@ class Addition(MyAlgebra):
     def evaluate(self):
         return self.__obj1.evaluate() + self.__obj2.evaluate()
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         return self.__obj1.jacobian() + self.__obj2.jacobian()
 
 
@@ -483,8 +480,8 @@ class Multiplication(MyAlgebra):
         res2 = self.__obj2.evaluate()
         return res1 * res2
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         vals1 = self.__obj1.evaluate().reshape(-1, 1)
         vals2 = self.__obj2.evaluate().reshape(-1, 1)
         S1 = elem_mul(self.__obj1.jacobian(), vals2)
@@ -511,8 +508,8 @@ class Division(MyAlgebra):
     def evaluate(self):
         return self.__obj1.evaluate() / self.__obj2.evaluate()
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         v1 = self.__obj1.evaluate().reshape(-1, 1)
         v2_inv = 1.0 / self.__obj2.evaluate().reshape(-1, 1)
         S1 = elem_mul(self.__obj1.jacobian(), v2_inv)
@@ -544,8 +541,8 @@ class LinearInterpolation(MyAlgebra):
     def evaluate(self):
         return matmul(self.__jacobian, self.__obj.evaluate()).flatten()
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         return matmul(self.__jacobian, self.__obj.jacobian())
 
 
@@ -561,8 +558,6 @@ class Integral(MyAlgebra):
         self.__xvals = np.array(xvals)
         self.__interp_type = interp_type
         self.__kwargs = kwargs
-        self.__last_jacobian = None
-        self.__cache = cache
 
     def __len__(self):
         return 1
@@ -577,17 +572,14 @@ class Integral(MyAlgebra):
             self.__xvals, yvals, self.__interp_type, **self.__kwargs
         )])
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        if self.__cache and not self.jacobian_updated():
-            return self.__last_jacobian.copy()
-        super().jacobian()
         yvals = self.__obj.evaluate()
         outer_jac = csr_matrix(get_basic_integral_sensmat(
             self.__xvals, yvals, self.__interp_type, **self.__kwargs
         ))
         inner_jac = self.__obj.jacobian()
-        self.__last_jacobian = matmul(outer_jac, inner_jac)
-        return self.__last_jacobian.copy()
+        return matmul(outer_jac, inner_jac)
 
 
 class IntegralOfProduct(MyAlgebra):
@@ -611,8 +603,6 @@ class IntegralOfProduct(MyAlgebra):
         self.__interplist = interplist
         self.__zero_outside = zero_outside
         self.__kwargs = kwargs
-        self.__last_jacobian = None
-        self.__cache = cache
 
     def __len__(self):
         return 1
@@ -625,10 +615,8 @@ class IntegralOfProduct(MyAlgebra):
             self.__zero_outside, **self.__kwargs
         )
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        if self.__cache and not self.jacobian_updated():
-            return self.__last_jacobian.copy()
-        super().jacobian()
         ancestors = self._get_ancestors()
         ylist = [obj.evaluate() for obj in ancestors]
         outer_jacs = get_basic_integral_of_product_sensmats(
@@ -640,8 +628,7 @@ class IntegralOfProduct(MyAlgebra):
         jac = 0.
         for outer_jac, inner_jac in zip(outer_jacs, inner_jacs):
             jac += matmul(outer_jac, inner_jac)
-        self.__last_jacobian = jac
-        return self.__last_jacobian.copy()
+        return jac
 
 
 class LegacyFissionAverage(MyAlgebra):
@@ -677,8 +664,8 @@ class LegacyFissionAverage(MyAlgebra):
         assert isinstance(ret, float)
         return np.array([ret])
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         xs = self.__xsobj.evaluate()
         fisvals = self.__fisobj.evaluate()
         xsjac = self.__xsobj.jacobian()
@@ -741,6 +728,6 @@ class FissionAverage(MyAlgebra):
         ret = self.__fisavg.evaluate()
         return ret
 
+    @_jacobian_deco(cache=True)
     def jacobian(self):
-        super().jacobian()
         return self.__fisavg.jacobian()
