@@ -24,6 +24,7 @@ def time_method(fun):
         end_time = time()
         diff_time = end_time - start_time
         identifier = f'{self.__class__.__name__}.{fun.__name__}'
+        function_times.setdefault(identifier, 0.0)
         function_times[identifier] += diff_time
         return result
     return wrap_method
