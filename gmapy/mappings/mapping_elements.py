@@ -139,7 +139,7 @@ class InputSelector(MyAlgebra):
         super().evaluate()
         if self.__values is None:
             raise ValueError('please assign numbers')
-        return self.__values
+        return self.__values.copy()
 
     def jacobian(self):
         super().jacobian()
