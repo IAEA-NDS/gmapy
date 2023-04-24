@@ -91,7 +91,7 @@ class MyAlgebra:
         return False
 
     def evaluate(self):
-        self._values_updated = False
+        raise NotImplementedError('please implement evaluate method')
 
     def jacobian(self):
         self._jacobian_updated = False
@@ -156,8 +156,8 @@ class InputSelector(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=False)
     def evaluate(self):
-        super().evaluate()
         if self.__values is None:
             raise ValueError('please assign numbers')
         return self.__values.copy()
@@ -196,8 +196,8 @@ class Selector(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=False)
     def evaluate(self):
-        super().evaluate()
         allvals = self.__inpobj.evaluate()
         return allvals[self.__idcs]
 
@@ -271,8 +271,8 @@ class Const(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=False)
     def evaluate(self):
-        super().evaluate()
         return self.__values
 
     def jacobian(self):
@@ -310,12 +310,9 @@ class Distributor(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
         res = np.zeros(self.__size, dtype=float)
-        if self.__cache and not self.values_updated():
-            res[self.__idcs] += self.__last_propvals
-            return res
-        super().evaluate()
         nonzero_res = self.__obj.evaluate()
         self.__last_propvals = nonzero_res
         res[self.__idcs] += nonzero_res
@@ -354,8 +351,8 @@ class SumOfDistributors(MyAlgebra):
             raise IndexError('empty list of distributors')
         return len(self.__distributor_list[0])
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         res = self.__distributor_list[0].evaluate()
         for obj in self.__distributor_list[1:]:
             res += obj.evaluate()
@@ -399,8 +396,8 @@ class Replicator(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         return np.repeat(
             self.__obj.evaluate().reshape(1, -1),
             self.__num, axis=0
@@ -431,8 +428,8 @@ class Addition(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         return self.__obj1.evaluate() + self.__obj2.evaluate()
 
     def jacobian(self):
@@ -455,8 +452,8 @@ class Multiplication(MyAlgebra):
     def __len__(self):
         return len(self.__obj1)
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         res1 = self.__obj1.evaluate()
         res2 = self.__obj2.evaluate()
         return res1 * res2
@@ -485,8 +482,8 @@ class Division(MyAlgebra):
     def __len__(self):
         return len(self.__obj1)
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         return self.__obj1.evaluate() / self.__obj2.evaluate()
 
     def jacobian(self):
@@ -518,8 +515,8 @@ class LinearInterpolation(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         return matmul(self.__jacobian, self.__obj.evaluate()).flatten()
 
     def jacobian(self):
@@ -539,7 +536,6 @@ class Integral(MyAlgebra):
         self.__xvals = np.array(xvals)
         self.__interp_type = interp_type
         self.__kwargs = kwargs
-        self.__last_result = None
         self.__last_jacobian = None
         self.__cache = cache
 
@@ -549,15 +545,12 @@ class Integral(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        if self.__cache and not self.values_updated():
-            return self.__last_result
-        super().evaluate()
         yvals = self.__obj.evaluate()
-        self.__last_result = np.array([basic_integral_propagate(
+        return np.array([basic_integral_propagate(
             self.__xvals, yvals, self.__interp_type, **self.__kwargs
         )])
-        return self.__last_result.copy()
 
     def jacobian(self):
         if self.__cache and not self.jacobian_updated():
@@ -593,23 +586,19 @@ class IntegralOfProduct(MyAlgebra):
         self.__interplist = interplist
         self.__zero_outside = zero_outside
         self.__kwargs = kwargs
-        self.__last_result = None
         self.__last_jacobian = None
         self.__cache = cache
 
     def __len__(self):
         return 1
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        if self.__cache and not self.values_updated():
-            return self.__last_result.copy()
-        super().evaluate()
         ylist = [obj.evaluate() for obj in self._get_ancestors()]
-        self.__last_result = basic_integral_of_product_propagate(
+        return basic_integral_of_product_propagate(
             self.__xlist, ylist, self.__interplist,
             self.__zero_outside, **self.__kwargs
         )
-        return self.__last_result.copy()
 
     def jacobian(self):
         if self.__cache and not self.jacobian_updated():
@@ -654,8 +643,8 @@ class LegacyFissionAverage(MyAlgebra):
     def islinear(self):
         return True
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         xs = self.__xsobj.evaluate()
         fisvals = self.__fisobj.evaluate()
         ret = propagate_fisavg(self.__en, xs, self.__fisen, fisvals,
@@ -718,8 +707,8 @@ class FissionAverage(MyAlgebra):
     def islinear(self):
         return type(self.__fisavg) == LegacyFissionAverage
 
+    @_evaluate_deco(cache=True)
     def evaluate(self):
-        super().evaluate()
         if self.__check_norm and not self.__legacy:
             if not np.isclose(self.__fisint.evaluate()[0], 1.,
                               rtol=self.__rtol, atol=self.__atol):
