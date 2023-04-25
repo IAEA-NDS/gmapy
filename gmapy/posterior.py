@@ -11,6 +11,7 @@
 import numpy as np
 from sksparse.cholmod import cholesky
 import scipy.sparse as sps
+import scipy.stats as stats
 from scipy.sparse import csr_matrix, coo_matrix, identity
 from .mappings.priortools import apply_mask
 
@@ -144,12 +145,13 @@ class Posterior:
         return postcov
 
     def generate_proposal_fun(self, xref, scale=1.):
-        def proposal(x):
+        def proposal(x, random_state=None):
             if len(x.shape) == 1:
                 x = x.reshape(-1, 1)
             adj = self._adj
             numadj = self._numadj
-            rvec = np.random.normal(size=(numadj, x.shape[1]))
+            rvec = stats.norm.rvs(size=(numadj, x.shape[1]),
+                              random_state=random_state)
             d = fact.apply_Pt(fact.solve_Lt(rvec, use_LDLt_decomposition=False))
             res = x.copy()
             res[adj] += d*scale

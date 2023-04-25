@@ -12,7 +12,7 @@ import numpy as np
 from sksparse.cholmod import cholesky
 from scipy.sparse import coo_matrix, csc_matrix
 from .posterior import Posterior
-from scipy.stats import invgamma
+from scipy.stats import invgamma, norm, uniform
 
 
 class PosteriorUSU(Posterior):
@@ -241,26 +241,28 @@ class PosteriorUSU(Posterior):
 
     def generate_proposal_fun(self, xref, scale=1., rho=0.5, squeeze=False):
 
-        def unc_proposal(x):
+        def unc_proposal(x, random_state=None):
             if len(x.shape) == 1:
                 x = x.reshape(-1, 1)
             uncvec = np.empty((len(self._groups), x.shape[1]), dtype=float)
             alpha_betas = self._determine_alpha_beta(x)
             for i, (group, alpha, beta) in enumerate(alpha_betas):
-                rv = invgamma.rvs(alpha, size=x.shape[1])
+                rv = invgamma.rvs(alpha, size=x.shape[1],
+                                  random_state=random_state)
                 uncvec[i, :] = np.sqrt(rv * beta)
             propx = x.copy()
             propx[-len(self._groups):, :] = uncvec
             return propx
 
-        def param_proposal(x):
+        def param_proposal(x, random_state=None):
             nonlocal fact
             if len(x.shape) == 1:
                 x = x.reshape(-1, 1)
             xr = self.extract_params(x)
             adj = self._adj
             numadj = self._numadj
-            rvec = np.random.normal(size=(numadj, xr.shape[1]))
+            rvec = norm.rvs(size=(numadj, xr.shape[1]),
+                            random_state=random_state)
             uncvec = self.extract_uncvec(x)
             if uncvec.shape[1] > 1:
                 if np.any(np.any(uncvec != uncvec[:, 0:1], axis=1)):
@@ -276,12 +278,12 @@ class PosteriorUSU(Posterior):
             res[-len(self._groups):, :] = uncvec
             return res
 
-        def proposal(x):
-            z = np.random.rand()
+        def proposal(x, random_state=None):
+            z = uniform.rvs(size=1, random_state=random_state)
             if z > rho:
-                res = param_proposal(x)
+                res = param_proposal(x, random_state)
             else:
-                res = unc_proposal(x)
+                res = unc_proposal(x, random_state)
             if squeeze:
                 res = np.squeeze(res)
             return res
