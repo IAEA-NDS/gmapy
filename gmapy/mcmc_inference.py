@@ -1,17 +1,20 @@
+import os
 import numpy as np
+import pickle
 from statsmodels.tsa.stattools import acf
 from .mappings.compound_map import CompoundMap
 from .inference import superseded_lm_update
 from .posterior import Posterior
 from multiprocessing import Process, Pipe
+from copy import deepcopy
 import time
 
 
-def mh_algo(startvals, log_probdens, proposal, num_samples,
-            log_transition_pdf=None, num_burn=0, thin_step=1,
-            seed=None, print_info=False):
-    if seed is not None:
-        np.random.seed(seed)
+def _mh_algo(
+    random_generator, startvals, log_probdens, proposal,
+    num_samples, log_transition_pdf=None, num_burn=0, thin_step=1,
+):
+    initial_rg_state = deepcopy(random_generator.bit_generator.state)
     startvals = startvals.reshape(-1, 1)
     dim = startvals.shape[0]
     num_total = num_samples + num_burn
@@ -25,14 +28,14 @@ def mh_algo(startvals, log_probdens, proposal, num_samples,
     j = 0
     while i < num_samples:
         j += 1
-        candidate = proposal(curvals)
+        candidate = proposal(curvals, random_state=random_generator)
         cand_logprob = log_probdens(candidate)
         log_alpha = cand_logprob - cur_logprob
         if log_transition_pdf is not None:
             t_logprob, inv_t_logprob = log_transition_pdf(curvals, candidate)
             log_alpha += inv_t_logprob
             log_alpha -= t_logprob
-        log_u = np.log(np.random.uniform())
+        log_u = np.log(random_generator.uniform())
         if log_u < log_alpha:
             curvals = candidate
             cur_logprob = cand_logprob
@@ -44,8 +47,8 @@ def mh_algo(startvals, log_probdens, proposal, num_samples,
                 logprob_hist[i] = cur_logprob
             j = 0
             i += 1
-            print(f'Obtained sample number {i}')
     end_time = time.time()
+    final_rg_state = deepcopy(random_generator.bit_generator.state)
     elapsed_time = end_time - start_time
     accept_rate = num_acc / (num_samples*thin_step)
     result = {
@@ -55,17 +58,166 @@ def mh_algo(startvals, log_probdens, proposal, num_samples,
         'elapsed_time': elapsed_time,
         'num_burn': num_burn,
         'thin_step': thin_step,
-        'seed': seed
+        'initial_rg_state': initial_rg_state,
+        'final_rg_state': final_rg_state
     }
     return result
 
 
-def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
-                      num_burn=0, thin_step=1, seed=None, print_info=False):
+def _get_chain_files(prefix, suffix, save_dir):
+    chain_files = os.listdir(save_dir)
+    chain_files = [fn for fn in chain_files if fn.startswith(prefix)]
+    chain_files = [fn for fn in chain_files if fn.endswith(suffix)]
+    countstrs = [fn[len(prefix):-len(suffix)] for fn in chain_files]
+    should_include = np.array([len(c) == 6 and c.isdigit() for c in countstrs])
+    if len(should_include) == 0:
+        return None
+    chain_files = np.array(chain_files)[should_include]
+    countstrs = np.array(countstrs)[should_include]
+    count_seq = np.array([int(c) for c in countstrs])
+    order = np.argsort(count_seq)
+    sorted_count_seq = count_seq[order]
+    if (not np.all(np.diff(sorted_count_seq) == 1) or
+            sorted_count_seq[0] != 0):
+        raise FileNotFoundError('Missing files in the MCMC chain, aborting')
+    sorted_chain_files = chain_files[order]
+    return sorted_chain_files
+
+
+def _get_resume_info(prefix, suffix, save_dir, attempt_resume):
+    chain_files = _get_chain_files(prefix, suffix, save_dir)
+    if chain_files is not None and not attempt_resume:
+        raise FileExistsError('Strongly refusing to overwrite existing files')
+    if chain_files is None:
+        return None
+    sample_count = 0
+    for i, curfile in enumerate(chain_files):
+        curpath = os.path.join(save_dir, curfile)
+        with open(curpath, 'rb') as fin:
+            curcont = pickle.load(fin)
+        sample_count += curcont['samples'].shape[1]
+        # NOTE: overriding startvals
+        startvals = curcont['samples'][:, -1]
+        final_rg_state = curcont['final_rg_state']
+    # initial_rg_state = last_mh_res['initial_rng_state']
+    rg = np.random.Generator(np.random.PCG64())
+    rg.bit_generator.state = final_rg_state
+    cur_file_idx = len(chain_files)
+    return {
+        'random_generator': rg,
+        'cur_file_idx': cur_file_idx,
+        'sample_count': sample_count,
+        'startvals': startvals
+    }
+
+
+def load_mcmc_result(prefix, suffix, save_dir, idcs=None):
+    chain_files = _get_chain_files(prefix, suffix, save_dir)
+    if chain_files is None:
+        raise FileNotFoundError('files of the chain not found')
+    if idcs is not None:
+        idcs_set = set(idcs)
+    offset = 0
+    sample_list = []
+    logprob_hist_list = []
+    cum_elapsed_time = 0
+    num_accepted = 0
+    num_total = 0
+    for i, curfile in enumerate(chain_files):
+        curpath = os.path.join(save_dir, curfile)
+        with open(curpath, 'rb') as fin:
+            curcont = pickle.load(fin)
+        cursamples = curcont['samples']
+        cum_elapsed_time += curcont['elapsed_time']
+        logprob_hist_list.append(curcont['logprob_hist'])
+        num_total += cursamples.shape[1] * curcont['thin_step']
+        num_accepted += \
+            curcont['accept_rate'] * cursamples.shape[1] * curcont['thin_step']
+        if idcs is None:
+            sample_list.append(cursamples)
+        else:
+            curidcs = np.arange(cursamples.shape[1]) + offset
+            is_sel = [idx in idcs_set for idx in curidcs]
+            sel_idcs = curidcs[is_sel]
+            sample_list.append(cursamples[:, sel_idcs])
+    mcmc_res = {
+        'samples': np.hstack(sample_list),
+        'logprob_hist': np.hstack(logprob_hist_list),
+        'elapsed_time': cum_elapsed_time,
+        'num_total': num_total,
+        'accept_rate': num_accepted / num_total
+    }
+    if idcs is not None:
+        mcmc_res['idcs'] = idcs.copy()
+    return mcmc_res
+
+
+def mh_algo(
+    startvals, log_probdens, proposal, num_samples,
+    log_transition_pdf=None, thin_step=1,
+    seed=None, print_info=True, attempt_resume=False,
+    save_prefix='mh_res_', save_suffix='.pkl', save_dir='.',
+    save_batchsize=1000, return_type='chain'
+):
+    num_burn = 0
+    resume_info = _get_resume_info(
+        save_prefix, save_suffix, save_dir, attempt_resume
+    )
+    if resume_info is None:
+        rg = np.random.Generator(np.random.PCG64(seed))
+        cur_file_idx = 0
+        sample_count = 0
+    else:
+        rg = resume_info['random_generator']
+        cur_file_idx = resume_info['cur_file_idx']
+        sample_count = resume_info['sample_count']
+        startvals = resume_info['startvals']
+
+    total_count = num_burn + num_samples
+    samples_obtained = 0
+    remaining_sample_count = num_burn + num_samples - sample_count
+    while remaining_sample_count > 0:
+        curbatchsize = min(save_batchsize, remaining_sample_count)
+        mh_res = _mh_algo(
+            rg, startvals, log_probdens, proposal, curbatchsize,
+            log_transition_pdf=log_transition_pdf, num_burn=0,
+            thin_step=thin_step
+        )
+        startvals = mh_res['samples'][:,-1].copy()
+        if cur_file_idx == 0:
+            mh_res['seed'] = seed
+        cur_samples_obtained = min(curbatchsize, mh_res['samples'].shape[1])
+        remaining_sample_count -= cur_samples_obtained
+        samples_obtained += cur_samples_obtained
+        curfile = save_prefix + '{:06d}'.format(cur_file_idx) + save_suffix
+        curpath = os.path.join(save_dir, curfile)
+        if os.path.isfile(curpath):
+            raise FileExistsError(f'file {curpath} already exists')
+        with open(curpath, 'wb') as fout:
+            pickle.dump(mh_res, fout)
+        cur_file_idx += 1
+        if print_info:
+            print(f'obtained {samples_obtained} samples of {total_count}')
+
+    if return_type == 'chain':
+        mcmc_res = load_mcmc_result(save_prefix, save_suffix, save_dir)
+        return mcmc_res
+    else:
+        return None
+
+
+def symmetric_mh_algo(
+    startvals, log_probdens, proposal, num_samples,
+    thin_step=1, seed=None, print_info=False,
+    attempt_resume=False, save_prefix='mh_res_', save_suffix='.pkl',
+    save_dir='.', save_batchsize=1000, return_type='chain'
+):
     return mh_algo(
         startvals, log_probdens, proposal, num_samples,
-        num_burn=num_burn, thin_step=thin_step,
-        seed=seed, print_info=print_info
+        thin_step=thin_step, seed=seed, print_info=print_info,
+        attempt_resume=attempt_resume, save_prefix=save_prefix,
+        save_suffix=save_suffix, save_dir=save_dir,
+        save_batchsize=save_batchsize, return_type=return_type
     )
 
 
@@ -77,8 +229,10 @@ def _mh_worker(con, mh_args, mh_kwargs):
 
 def parallel_mh_algo(
     num_workers, startvals, log_probdens, proposal,
-    num_samples, log_transition_pdf=None, num_burn=0, thin_step=1,
-    seeds=None, print_info=False
+    num_samples, log_transition_pdf=None, thin_step=1,
+    seeds=None, print_info=False, attempt_resume=False,
+    save_prefix='mh_res_', save_suffix='.pkl', save_dir='.',
+    save_batchsize=1000, return_type='chain'
 ):
     if seeds is None:
         seeds = np.random.randint(low=0, high=65535, size=num_workers)
@@ -86,12 +240,19 @@ def parallel_mh_algo(
         raise ValueError('number of seed values must equal num_workers')
     mh_args = (startvals, log_probdens, proposal, num_samples)
     mh_kwargs = {'log_transition_pdf': log_transition_pdf,
-                 'num_burn': num_burn, 'thin_step': thin_step}
+                 'thin_step': thin_step,
+                 'print_info': print_info,
+                 'attempt_resume': attempt_resume,
+                 'save_dir': save_dir,
+                 'save_batchsize': save_batchsize,
+                 'return_type': return_type,
+                 }
     pipe_parents = []
     pipe_children = []
     procs = []
     for i, seed in zip(range(num_workers), seeds):
         mh_kwargs['seed'] = seed
+        mh_kwargs['save_prefix'] = save_prefix + '{:03d}_'.format(i)
         pipe_parent, pipe_child = Pipe()
         pipe_parents.append(pipe_parent)
         pipe_children.append(pipe_child)
@@ -104,17 +265,24 @@ def parallel_mh_algo(
     for pipe_parent, proc in zip(pipe_parents, procs):
         mh_res_list.append(pipe_parent.recv())
         proc.join()
-    return mh_res_list
+    if return_type == 'chain':
+        return mh_res_list
+    else:
+        return None
 
 
 def parallel_symmetric_mh_algo(
     num_workers, startvals, log_probdens, proposal,
-    num_samples, num_burn=0, thin_step=1, seeds=None, print_info=False
+    num_samples, thin_step=1, seeds=None, print_info=True,
+    attempt_resume=False, save_prefix='mh_res_', save_suffix='.pkl',
+    save_dir='.', save_batchsize=1000, return_type='chain'
 ):
     return parallel_mh_algo(
         num_workers, startvals, log_probdens, proposal,
-        num_samples, num_burn=num_burn, thin_step=thin_step,
-        seeds=seeds, print_info=print_info
+        num_samples, thin_step=1, seeds=seeds, print_info=print_info,
+        attempt_resume=attempt_resume, save_prefix=save_prefix,
+        save_suffix=save_suffix, save_dir=save_dir,
+        save_batchsize=save_batchsize, return_type=return_type
     )
 
 
@@ -137,6 +305,11 @@ def compute_effective_sample_size(arr):
 def gmap_mh_inference(datatable, covmat, num_samples, prop_scaling,
                       startvals=None, num_burn=0, thin_step=1, int_rtol=1e-4,
                       relative_exp_errors=False, num_workers=1):
+    raise NotImplementedError("""
+    TODO: this function needs to be rewritten to make use of the
+          new lm_update function and to account for the changed
+          interface of the mh_algo and related functions'
+    """)
     if not np.all(datatable.index == np.sort(datatable.index)):
         raise IndexError('index of datatable must be sorted')
     # prepare the relevant objects, e.g., prior values and prior covariance matrix

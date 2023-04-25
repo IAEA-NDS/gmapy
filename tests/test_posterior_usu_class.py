@@ -5,6 +5,7 @@ from gmapy.inference import lm_update
 import numpy as np
 import scipy.sparse as sps
 from scipy.stats import multivariate_normal
+import tempfile
 
 
 class TestPosteriorUSUClass(unittest.TestCase):
@@ -286,9 +287,10 @@ class TestPosteriorUSUClass(unittest.TestCase):
         xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
         propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0.5, scale=0.1, squeeze=False)
-        mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
-                         thin_step=100, log_transition_pdf=prop_logpdf,
-                         num_burn=100)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
+                             thin_step=100, log_transition_pdf=prop_logpdf,
+                             save_dir=tmpdir)
         smpl = mh_res['samples']
         uncvec = postdist.extract_uncvec(smpl)
         assert uncvec.shape[0] == 1
@@ -302,9 +304,10 @@ class TestPosteriorUSUClass(unittest.TestCase):
         # accepts only happen in the Gibbs step (sampling the uncertainty)
         propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0.2, scale=1000, squeeze=False)
-        mh_res2 = mh_algo(xref, postdist.logpdf, propfun, num_samples=100,
-                          thin_step=100, log_transition_pdf=prop_logpdf,
-                          num_burn=0)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mh_res2 = mh_algo(xref, postdist.logpdf, propfun, num_samples=100,
+                              thin_step=100, log_transition_pdf=prop_logpdf,
+                              save_dir=tmpdir)
         self.assertTrue(np.isclose(mh_res2['accept_rate'], 0.2, atol=1e-2))
 
     def test_posterior_sampling_2(self):
@@ -360,9 +363,10 @@ class TestPosteriorUSUClass(unittest.TestCase):
         xref = postdist.stack_params_and_uncs(param_ref, unc_dict)
         propfun, prop_logpdf = \
             postdist.generate_proposal_fun(xref, rho=0.5, scale=0.1, squeeze=False)
-        mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
-                         thin_step=100, log_transition_pdf=prop_logpdf,
-                         num_burn=100)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mh_res = mh_algo(xref, postdist.logpdf, propfun, num_samples=2000,
+                             thin_step=100, log_transition_pdf=prop_logpdf,
+                             save_dir=tmpdir)
         smpl = mh_res['samples']
         m = np.mean(smpl, axis=1, keepdims=True)
         s = np.std(smpl, axis=1, keepdims=True)
