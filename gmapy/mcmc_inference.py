@@ -69,20 +69,24 @@ def symmetric_mh_algo(startvals, log_probdens, proposal, num_samples,
     )
 
 
-def symmetric_mh_worker(con, mh_args, mh_kwargs):
-    mh_res = symmetric_mh_algo(*mh_args, **mh_kwargs)
+def _mh_worker(con, mh_args, mh_kwargs):
+    mh_res = mh_algo(*mh_args, **mh_kwargs)
     con.send(mh_res)
     con.close()
 
 
-def parallel_symmetric_mh_algo(num_workers, startvals, log_probdens, proposal, num_samples,
-                               num_burn=0, thin_step=1, seeds=None, print_info=False):
+def parallel_mh_algo(
+    num_workers, startvals, log_probdens, proposal,
+    num_samples, log_transition_pdf=None, num_burn=0, thin_step=1,
+    seeds=None, print_info=False
+):
     if seeds is None:
         seeds = np.random.randint(low=0, high=65535, size=num_workers)
     elif len(seeds) != num_workers:
         raise ValueError('number of seed values must equal num_workers')
     mh_args = (startvals, log_probdens, proposal, num_samples)
-    mh_kwargs = {'num_burn': num_burn, 'thin_step': thin_step}
+    mh_kwargs = {'log_transition_pdf': log_transition_pdf,
+                 'num_burn': num_burn, 'thin_step': thin_step}
     pipe_parents = []
     pipe_children = []
     procs = []
@@ -91,7 +95,7 @@ def parallel_symmetric_mh_algo(num_workers, startvals, log_probdens, proposal, n
         pipe_parent, pipe_child = Pipe()
         pipe_parents.append(pipe_parent)
         pipe_children.append(pipe_child)
-        proc = Process(target=symmetric_mh_worker,
+        proc = Process(target=_mh_worker,
                        args=(pipe_child, mh_args, mh_kwargs))
         proc.start()
         procs.append(proc)
@@ -101,6 +105,17 @@ def parallel_symmetric_mh_algo(num_workers, startvals, log_probdens, proposal, n
         mh_res_list.append(pipe_parent.recv())
         proc.join()
     return mh_res_list
+
+
+def parallel_symmetric_mh_algo(
+    num_workers, startvals, log_probdens, proposal,
+    num_samples, num_burn=0, thin_step=1, seeds=None, print_info=False
+):
+    return parallel_mh_algo(
+        num_workers, startvals, log_probdens, proposal,
+        num_samples, num_burn=num_burn, thin_step=thin_step,
+        seeds=seeds, print_info=print_info
+    )
 
 
 def compute_acceptance_rate(samples):
