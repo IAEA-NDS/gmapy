@@ -120,6 +120,8 @@ class PosteriorUSU(Posterior):
             d = usu_errors - self._priorvals[idcs, :]
             beta = 0.5 * np.sum(np.square(d), axis=0)
             alpha = 0.5 * (usu_errors.shape[0] - 1.)
+            if alpha <= 0:
+                raise ValueError(f'alpha <= 0 for group {group}')
             res.append((group, alpha, beta))
         return tuple(res)
 
