@@ -174,7 +174,7 @@ def mh_algo(
         startvals = resume_info['startvals']
 
     total_count = num_burn + num_samples
-    samples_obtained = 0
+    samples_obtained = sample_count
     remaining_sample_count = num_burn + num_samples - sample_count
     while remaining_sample_count > 0:
         curbatchsize = min(save_batchsize, remaining_sample_count)
