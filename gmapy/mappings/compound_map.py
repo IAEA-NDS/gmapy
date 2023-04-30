@@ -11,6 +11,7 @@ from .cross_section_shape_of_sum_map import CrossSectionShapeOfSumMap
 from .cross_section_fission_average_map import CrossSectionFissionAverageMap
 from .cross_section_ratio_of_sacs_map import CrossSectionRatioOfSacsMap
 from .energy_dependent_usu_map import EnergyDependentUSUMap
+from .energy_dependent_reac_usu_map import EnergyDependentReacUSUMap
 from .relative_error_map import RelativeErrorMap
 from .mapping_elements import InputSelectorCollection, SumOfDistributors
 from .helperfuns import mapclass_with_params
@@ -74,10 +75,16 @@ class CompoundMap:
             datatable, tmp_distsum, selcol=selcol, reduce=reduce
         )
         usumap_dists = usumap.get_distributors()
+        # add the energy dependent reaction USU error map
+        reacusumap = EnergyDependentReacUSUMap(
+            datatable, tmp_distsum, selcol=selcol, reduce=reduce
+        )
+        reacusumap_dists = reacusumap.get_distributors()
         # '+' means here to concatenate the lists
         all_dists = []
         all_dists.extend(relerr_dists)
         all_dists.extend(usumap_dists)
+        all_dists.extend(reacusumap_dists)
         all_dists.extend(tmp_distsum.get_distributors())
         distsum = SumOfDistributors(all_dists)
         # save everything for later
