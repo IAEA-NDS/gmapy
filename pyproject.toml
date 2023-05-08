@@ -14,6 +14,8 @@ scipy = ">=1.8.0"
 fortranformat = "^1.2.2"
 scikit-sparse = "^0.4.6"
 statsmodels = "^0.13.5"
+tensorflow-probability = "^0.19.0"
+tensorflow = "^2.12.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.3"
