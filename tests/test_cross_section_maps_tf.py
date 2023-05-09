@@ -12,10 +12,33 @@ from gmapy.mappings.cross_section_ratio_map_tf \
 from gmapy.mappings.cross_section_shape_map import CrossSectionShapeMap
 from gmapy.mappings.cross_section_shape_map_tf \
     import CrossSectionShapeMap as CrossSectionShapeMapTF
+from gmapy.mappings.cross_section_absolute_ratio_map \
+    import CrossSectionAbsoluteRatioMap
+from gmapy.mappings.cross_section_absolute_ratio_map_tf \
+    import CrossSectionAbsoluteRatioMap as CrossSectionAbsoluteRatioMapTF
+from gmapy.mappings.cross_section_ratio_shape_map \
+    import CrossSectionRatioShapeMap
+from gmapy.mappings.cross_section_ratio_shape_map_tf \
+    import CrossSectionRatioShapeMap as CrossSectionRatioShapeMapTF
+from gmapy.mappings.cross_section_shape_of_ratio_map \
+    import CrossSectionShapeOfRatioMap
+from gmapy.mappings.cross_section_shape_of_ratio_map_tf \
+    import CrossSectionShapeOfRatioMap as CrossSectionShapeOfRatioMapTF
+from gmapy.mappings.cross_section_shape_of_sum_map \
+    import CrossSectionShapeOfSumMap
+from gmapy.mappings.cross_section_shape_of_sum_map_tf \
+    import CrossSectionShapeOfSumMap as CrossSectionShapeOfSumMapTF
+from gmapy.mappings.cross_section_total_map \
+    import CrossSectionTotalMap
+from gmapy.mappings.cross_section_total_map_tf \
+    import CrossSectionTotalMap as CrossSectionTotalMapTF
+from gmapy.mappings.compound_map import CompoundMap
+from gmapy.mappings.compound_map_tf \
+    import CompoundMap as CompoundMapTF
 import time
 
 
-class TestCrossSectionMaps(unittest.TestCase):
+class TestCrossSectionMapsTF(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -35,12 +58,18 @@ class TestCrossSectionMaps(unittest.TestCase):
                 x = dt.loc[~dt.NODE.str.match('exp_'), 'PRIOR'].to_numpy()
             x_tf = tf.Variable(x, dtype=tf.float64)
             res = xs_map.propagate(x)
-            # jac = xs_map.jacobian(x).toarray()
-            # with tf.GradientTape() as tape:
             res_tf = xs_map_tf(x_tf)
-            # jac_tf = tape.jacobian(res_tf, x_tf).numpy()
+            jac = xs_map.jacobian(x).toarray()
+            grad = np.sum(jac, axis=0)
+
+            # def myscalarfun(x):
+            #     return tf.reduce_sum(xs_map_tf(x))
+
+            # with tf.GradientTape() as tape:
+            #     summed_res_tf = myscalarfun(x_tf)
+            # grad_tf = tape.gradient(summed_res_tf, x_tf).numpy()
             self.assertTrue(np.allclose(res, res_tf.numpy()))
-            # self.assertTrue(np.allclose(jac, jac_tf))
+            # self.assertTrue(np.allclose(grad, grad_tf))
 
     def test_cross_section_map_tf_equivalence(self):
         self._test_mapping_tf_equivalence(
@@ -56,6 +85,38 @@ class TestCrossSectionMaps(unittest.TestCase):
         self._test_mapping_tf_equivalence(
             CrossSectionShapeMap, CrossSectionShapeMapTF
         )
+
+    def test_cross_section_absolute_ratio_map_tf_equivalence(self):
+        self._test_mapping_tf_equivalence(
+            CrossSectionAbsoluteRatioMap, CrossSectionAbsoluteRatioMapTF
+        )
+
+    def test_cross_section_ratio_shape_map_tf_equivalence(self):
+        self._test_mapping_tf_equivalence(
+            CrossSectionRatioShapeMap, CrossSectionRatioShapeMapTF
+        )
+
+    def test_cross_section_shape_of_ratio_map_tf_equivalence(self):
+        self._test_mapping_tf_equivalence(
+            CrossSectionShapeOfRatioMap, CrossSectionShapeOfRatioMapTF
+        )
+
+    def test_cross_section_shape_of_sum_map_tf_equivalence(self):
+        self._test_mapping_tf_equivalence(
+            CrossSectionShapeOfSumMap, CrossSectionShapeOfSumMapTF
+        )
+
+    def test_cross_section_total_map_tf_equivalence(self):
+        self._test_mapping_tf_equivalence(
+            CrossSectionTotalMap, CrossSectionTotalMapTF
+        )
+
+    def test_compound_map_tf_equivalence(self):
+        dt = self._gmadb.get_datatable()
+        xs_map_tf = CompoundMapTF(dt, reduce=True)
+        x = dt.loc[~dt.NODE.str.match('exp_'), 'PRIOR'].to_numpy()
+        x_tf = tf.Variable(x, dtype=tf.float64)
+        y = xs_map_tf(x_tf)
 
     def test_temp(self):
         for cur_reduce in (False,):
