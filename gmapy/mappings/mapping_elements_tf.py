@@ -34,6 +34,60 @@ class PiecewiseLinearInterpolation(tf.Module):
         return yint
 
 
+class IntegralLinLin(tf.Module):
+    def __init__(self, xin, **kwargs):
+        super().__init__(**kwargs)
+        sxin = np.sort(xin)
+        xdiff = np.diff(sxin)
+        xout = sxin[:-1] + xdiff / 2
+        self._xdiff = tf.constant(xdiff, dtype=tf.float64)
+        self._pwlinint = PiecewiseLinearInterpolation(xin, xout)
+
+    def __call__(self, inputs):
+        pwlinint = self._pwlinint
+        yint = pwlinint(inputs)
+        intres = yint * self._xdiff
+        intres = tf.reduce_sum(intres, axis=-1, keepdims=True)
+        return intres
+
+
+class IntegralOfProductLinLin(tf.Module):
+    def __init__(self, xin1, xin2):
+        xmin = max(min(xin1), min(xin2))
+        xmax = min(max(xin1), max(xin2))
+        xm = np.unique(np.concatenate([xin1, xin2]))
+        xm = xm[(xm >= xmin) & (xm <= xmax)]
+        self._xm = xm
+        self._pwlinint1 = PiecewiseLinearInterpolation(xin1, xm)
+        self._pwlinint2 = PiecewiseLinearInterpolation(xin2, xm)
+
+    def __call__(self, inputs1, inputs2):
+        x1 = tf.constant(self._xm[:-1], dtype=tf.float64)
+        x2 = tf.constant(self._xm[1:], dtype=tf.float64)
+        yam = self._pwlinint1(inputs1)
+        ybm = self._pwlinint2(inputs2)
+        ya1 = yam[:-1]
+        ya2 = yam[1:]
+        yb1 = ybm[:-1]
+        yb2 = ybm[1:]
+        d = x2 - x1
+        ca1 = (x2*ya1 - x1*ya2) / d
+        ca2 = (-1*ya1 + 1*ya2) / d
+        cb1 = (x2*yb1 - x1*yb2) / d
+        cb2 = (-1*yb1 + 1*yb2) / d
+        xp1 = x1
+        xp2 = x2
+        p1 = ca1*cb1*(xp2-xp1)
+        xp1 = xp1 * x1
+        xp2 = xp2 * x2
+        p2 = (ca2*cb1 + ca1*cb2)*(xp2 - xp1)/2
+        xp1 = xp1 * x1
+        xp2 = xp2 * x2
+        p3 = ca2*cb2*(xp2 - xp1)/3
+        intres = tf.reduce_sum(p1 + p2 + p3, axis=-1, keepdims=True)
+        return intres
+
+
 class InputSelectorCollection:
 
     def __init__(self, listlike=None):
