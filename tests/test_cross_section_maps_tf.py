@@ -32,9 +32,16 @@ from gmapy.mappings.cross_section_total_map \
     import CrossSectionTotalMap
 from gmapy.mappings.cross_section_total_map_tf \
     import CrossSectionTotalMap as CrossSectionTotalMapTF
+
+from gmapy.mappings.cross_section_fission_average_map import CrossSectionFissionAverageMap
+from gmapy.mappings.cross_section_fission_average_map_tf \
+    import CrossSectionFissionAverageMap as CrossSectionFissionAverageMapTF
+
+
 from gmapy.mappings.compound_map import CompoundMap
 from gmapy.mappings.compound_map_tf \
     import CompoundMap as CompoundMapTF
+from gmapy.mappings.helperfuns import mapclass_with_params
 import time
 
 
@@ -62,14 +69,14 @@ class TestCrossSectionMapsTF(unittest.TestCase):
             jac = xs_map.jacobian(x).toarray()
             grad = np.sum(jac, axis=0)
 
-            # def myscalarfun(x):
-            #     return tf.reduce_sum(xs_map_tf(x))
+            def myscalarfun(x):
+                return tf.reduce_sum(xs_map_tf(x))
 
-            # with tf.GradientTape() as tape:
-            #     summed_res_tf = myscalarfun(x_tf)
-            # grad_tf = tape.gradient(summed_res_tf, x_tf).numpy()
+            with tf.GradientTape() as tape:
+                summed_res_tf = myscalarfun(x_tf)
+            grad_tf = tape.gradient(summed_res_tf, x_tf).numpy()
             self.assertTrue(np.allclose(res, res_tf.numpy()))
-            # self.assertTrue(np.allclose(grad, grad_tf))
+            self.assertTrue(np.allclose(grad, grad_tf))
 
     def test_cross_section_map_tf_equivalence(self):
         self._test_mapping_tf_equivalence(
@@ -111,6 +118,15 @@ class TestCrossSectionMapsTF(unittest.TestCase):
             CrossSectionTotalMap, CrossSectionTotalMapTF
         )
 
+    def test_cross_section_fission_average_map_tf_equivalence(self):
+        ModernCrossSectionFissionAverageMap = mapclass_with_params(
+            CrossSectionFissionAverageMap,
+            legacy_integration=False,
+        )
+        self._test_mapping_tf_equivalence(
+            ModernCrossSectionFissionAverageMap, CrossSectionFissionAverageMapTF
+        )
+
     def test_compound_map_tf_equivalence(self):
         dt = self._gmadb.get_datatable()
         xs_map_tf = CompoundMapTF(dt, reduce=True)
@@ -119,10 +135,10 @@ class TestCrossSectionMapsTF(unittest.TestCase):
         y = xs_map_tf(x_tf)
 
     def test_temp(self):
-        for cur_reduce in (False,):
+        for cur_reduce in (True,):
             dt = self._gmadb.get_datatable()
-            xs_map = CrossSectionRatioMap(dt, reduce=cur_reduce)
-            xs_map_tf = CrossSectionRatioMapTF(dt, reduce=cur_reduce)
+            xs_map = CompoundMap(dt, reduce=cur_reduce)
+            xs_map_tf = CompoundMapTF(dt, reduce=cur_reduce)
             if not cur_reduce:
                 x = dt['PRIOR'].to_numpy()
             else:

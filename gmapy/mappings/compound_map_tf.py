@@ -2,6 +2,12 @@ import numpy as np
 from .cross_section_map_tf import CrossSectionMap
 from .cross_section_shape_map_tf import CrossSectionShapeMap
 from .cross_section_ratio_map_tf import CrossSectionRatioMap
+from .cross_section_ratio_shape_map_tf import CrossSectionRatioShapeMap
+from .cross_section_absolute_ratio_map_tf import CrossSectionAbsoluteRatioMap
+from .cross_section_shape_of_ratio_map_tf import CrossSectionShapeOfRatioMap
+from .cross_section_shape_of_sum_map_tf import CrossSectionShapeOfSumMap
+from .cross_section_total_map_tf import CrossSectionTotalMap
+from .cross_section_fission_average_map_tf import CrossSectionFissionAverageMap
 import tensorflow as tf
 from .mapping_elements_tf import (
     InputSelectorCollection,
@@ -17,6 +23,12 @@ class CompoundMap(tf.Module):
                 CrossSectionMap,
                 CrossSectionShapeMap,
                 CrossSectionRatioMap,
+                CrossSectionRatioShapeMap,
+                CrossSectionAbsoluteRatioMap,
+                CrossSectionShapeOfRatioMap,
+                CrossSectionShapeOfSumMap,
+                CrossSectionTotalMap,
+                CrossSectionFissionAverageMap
             ]
         self._reduce = reduce
         self._datatable = datatable
