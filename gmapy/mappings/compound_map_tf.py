@@ -9,6 +9,7 @@ from .cross_section_shape_of_sum_map_tf import CrossSectionShapeOfSumMap
 from .cross_section_total_map_tf import CrossSectionTotalMap
 from .cross_section_fission_average_map_tf import CrossSectionFissionAverageMap
 from .relative_error_map_tf import RelativeErrorMap
+from .energy_dependent_usu_map_tf import EnergyDependentUSUMap
 import tensorflow as tf
 from .mapping_elements_tf import (
     InputSelectorCollection,
@@ -55,9 +56,18 @@ class CompoundMap(tf.Module):
             inpdist = Distributor(self._indep_idcs, len(res))(inp)
             res = res + inpdist
         # modifier maps (rely on the output of the other maps)
+        adj_list = []
         if RelativeErrorMap.is_applicable(self._datatable):
             curmap = RelativeErrorMap(
                 self._datatable, res, self._selcol, self._reduce
             )
-            res = res + curmap(inputs)
+            adj_list.append(curmap(inputs))
+        if EnergyDependentUSUMap.is_applicable(self._datatable):
+            curmap = EnergyDependentUSUMap(
+                self._datatable, res, self._selcol, self._reduce
+            )
+            adj_list.append(curmap(inputs))
+
+        if len(adj_list) > 0:
+            res = res + tf.add_n(adj_list)
         return res
