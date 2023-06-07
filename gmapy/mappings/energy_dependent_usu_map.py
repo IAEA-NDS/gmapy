@@ -73,6 +73,7 @@ class EnergyDependentUSUMap:
         tmp_out = SumOfDistributors()
         rerr_expids = priortable['NODE'].str.extract(r'endep_usu_([0-9]+)$')
         rerr_expids = pd.unique(rerr_expids.iloc[:, 0])
+        tar_idcs_list = []
         for expid in rerr_expids:
             srcnode = 'endep_usu_' + expid
             srcdt = priortable[priortable['NODE'] == srcnode]
@@ -85,11 +86,14 @@ class EnergyDependentUSUMap:
             outvar = Distributor(intres, tardt.index, tar_len)
             inp.add_selector(inpvar)
             tmp_out.add_distributor(outvar)
+            tar_idcs_list.append(np.array(tardt.index, copy=True))
 
-        # target_indices = tmp_out.get_indices()
+        # TODO: The following lines are probably really inefficient...
+        all_tar_idcs = np.concatenate(tar_idcs_list)
         expquants = aux_distsum
         abserrors = tmp_out * expquants
-        abserrors_dist = Distributor(abserrors, np.arange(tar_len), tar_len)
+        abserrors_sel = Selector(abserrors, all_tar_idcs)
+        abserrors_dist = Distributor(abserrors_sel, all_tar_idcs, tar_len)
         out.add_distributor(abserrors_dist)
         return inp, out
 
