@@ -37,9 +37,11 @@ def create_relative_datablock_covmat(datablock):
     return curfun(datablock)
 
 
-def create_experimental_covmat(datablock_list, propcss=None,
-        fix_ppp_bug=True, fix_covmat=True, relative=False):
-    """Calculate experimental covariance matrix."""
+def create_datablock_covmat_list(
+    datablock_list, propcss=None,
+    fix_ppp_bug=True, fix_covmat=True, relative=False
+):
+    idcs_tuples = []
     uncs = create_relunc_vector(datablock_list)
     covmat_list = []
     start_idx = 0
@@ -81,8 +83,20 @@ def create_experimental_covmat(datablock_list, propcss=None,
             curcovmat = scale_covmat(curcormat, curabsuncs)
 
         covmat_list.append(csr_matrix(curcovmat))
+        idcs_tuples.append((start_idx, next_idx-1))
         start_idx = next_idx
 
+    return covmat_list, idcs_tuples
+
+
+def create_experimental_covmat(
+    datablock_list, propcss=None,
+    fix_ppp_bug=True, fix_covmat=True, relative=False
+):
+    """Calculate experimental covariance matrix."""
+    covmat_list, _ = create_datablock_covmat_list(
+        datablock_list, propcss, fix_ppp_bug, fix_covmat, relative
+    )
     covmat = block_diag(covmat_list, format='csr')
     return covmat
 
