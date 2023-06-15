@@ -42,8 +42,9 @@ class CompoundMap(tf.Module):
         self._selcol = selcol
         self._maplist = []
         for curclass in self.mapclasslist:
-            curmap = curclass(dt, selcol=selcol, reduce=reduce)
-            self._maplist.append(curmap)
+            if curclass.is_applicable(dt):
+                curmap = curclass(dt, selcol=selcol, reduce=reduce)
+                self._maplist.append(curmap)
 
     @tf.function
     def __call__(self, inputs):
