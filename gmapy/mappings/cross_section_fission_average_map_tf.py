@@ -54,7 +54,7 @@ class CrossSectionFissionAverageMap(tf.Module):
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = np.array(fistable['ENERGY'].to_numpy())
 
-        selcol = self._selcol 
+        selcol = self._selcol
 
         raw_fisobj = selcol.define_selector(np.array(fistable.index))(inputs)
         # NOTE: Propagation of uncertainties in the energies of the
@@ -63,7 +63,7 @@ class CrossSectionFissionAverageMap(tf.Module):
         scl = get_legacy_to_pointwise_fis_factors(ensfis)
         scl = tf.constant(scl, dtype=tf.float64)
 
-        unnorm_fisobj = raw_fisobj * scl 
+        unnorm_fisobj = raw_fisobj * scl
         fisint = IntegralLinLin(ensfis)(unnorm_fisobj)
         fisobj = unnorm_fisobj / fisint
 
@@ -85,5 +85,5 @@ class CrossSectionFissionAverageMap(tf.Module):
             outvar = Distributor(idcs2red, tar_len)(rep_curfisavg)
             out_list.append(outvar)
 
-        res = tf.add_n(out_list) 
+        res = tf.add_n(out_list)
         return res
