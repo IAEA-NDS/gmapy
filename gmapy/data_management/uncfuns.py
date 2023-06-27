@@ -6,6 +6,10 @@ from .unc_utils import (
     calculate_ppp_factors,
     fix_cormat
 )
+from .dataset_api import (
+    get_measured_values,
+    get_dataset_identifier
+)
 from .specialized_uncertainty_funs import (
     legacy_uncertainty_funs as legacy_uncfuns,
     simple_uncertainty_funs as simple_uncfuns
@@ -47,8 +51,9 @@ def create_experimental_covmat(datablock_list, propcss=None,
         numpts = 0
         curexpcss = []
         for ds in db['datasets']:
-            numpts += len(ds['CSS'])
-            curexpcss.extend(ds['CSS'])
+            css = get_measured_values(ds)
+            numpts += len(css)
+            curexpcss.extend(css)
         next_idx = start_idx + numpts
 
         curuncs = uncs[start_idx:next_idx]
@@ -71,7 +76,8 @@ def create_experimental_covmat(datablock_list, propcss=None,
             try:
                 curcormat = fix_cormat(curcormat)
             except Exception:
-                ds_ids = ', '.join((str(ds['NS']) for ds in db['datasets']))
+                ds_ids = ', '.join((
+                    str(get_dataset_identifier(ds)) for ds in db['datasets']))
                 raise ValueError(f'Problem with covariance matrix of datablock '
                                  f'with dataset ids {ds_ids}')
 

@@ -1,6 +1,12 @@
 import numpy as np
 from ...mappings.priortools import SHAPE_MT_IDS
 from ..unc_utils import calculate_ppp_factors, cov2cor, cor2cov
+from ..dataset_api import (
+    get_dataset_identifier,
+    get_measured_values,
+    get_quantity_type,
+    get_incident_energies
+)
 
 
 # this function is here to reproduce
@@ -15,7 +21,7 @@ def relcov_to_wrong_cor(relcovmat, datasets, css):
     ds_idcs = []
     for ds in datasets:
         ds_idcs.append(cur_idx)
-        numpts = len(ds['CSS'])
+        numpts = len(get_measured_values(ds))
         cur_idx += numpts
     ds_idcs.append(cur_idx)
     # start treating the correlations
@@ -39,7 +45,8 @@ def relcov_to_wrong_cor(relcovmat, datasets, css):
 
 def create_dataset_relunc_vector(dataset):
     XNORU = 0.
-    if dataset['MT'] not in SHAPE_MT_IDS:
+    quantity_type = get_quantity_type(dataset)
+    if quantity_type not in SHAPE_MT_IDS:
         # calculate total normalization uncertainty squared
         XNORU = np.sum(np.square(dataset['ENFF']))
 
@@ -67,14 +74,15 @@ def create_relunc_vector(datablock):
 
 def create_relative_dataset_covmat(dataset):
     """Create correlation matrix of dataset."""
-    numpts = len(dataset['CSS'])
+    dataset_id = get_dataset_identifier(dataset)
+    numpts = len(get_measured_values(dataset))
     uncs = create_dataset_relunc_vector(dataset)
     if len(uncs) != numpts:
         raise IndexError('length of uncs must equal length of datapoints')
     # some abbreviations
-    MT = dataset['MT']
+    MT = get_quantity_type(dataset)
     EPAF = np.array(dataset['EPAF'])
-    E = np.array(dataset['E'])
+    E = get_incident_energies(dataset)
     CO = np.array(dataset['CO'])
     ENFF = np.array(dataset['ENFF']) if 'ENFF' in dataset else None
     NNCOX = dataset['NNCOX']
@@ -91,13 +99,13 @@ def create_relative_dataset_covmat(dataset):
                 if dataset['NETG'][L] not in (0,9):
                     FKS = EPAF[0,L] + EPAF[1,L]
                     if EPAF[2,L] == 0.:
-                        if dataset['NS'] not in problematic_datasets:
+                        if dataset_id not in problematic_datasets:
                             print(f'Warning: EPAF[2,{L}] is zero for dataset {dataset["NS"]} '
                                   f'(MT: {dataset["MT"]}, {dataset.get("BREF","").strip()}, '
                                   f'{dataset.get("CLABL").strip()}). '
                                    'You may want to check the uncertainty specifications '
                                    'of this datasset.')
-                            problematic_datasets[dataset['NS']] = True
+                            problematic_datasets[dataset_id] = True
                     XYY = EPAF[1,L] - (E[KS]-E[KT])/(EPAF[2,L]*E[KS])
                     XYY = max(XYY, 0.)
                     FKT = EPAF[0,L] + XYY
@@ -133,12 +141,17 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
     start_ofs_dic = {}
     next_ofs_dic = {}
     for i, ds in enumerate(dslist):
-        if len(ds['CSS']) != len(ds['E']):
-            raise IndexError('Incompatible E and CSS mesh for dataset %d' % ds['NS'])
-        dsdic[ds['NS']] = ds
-        start_ofs_dic[ds['NS']] = numpts
-        numpts += len(ds['CSS'])
-        next_ofs_dic[ds['NS']] = numpts
+        dataset_id = get_dataset_identifier(ds)
+        energies = get_incident_energies(ds)
+        cross_sections = get_measured_values(ds)
+        if len(cross_sections) != len(energies):
+            raise IndexError(
+                'Incompatible E and CSS mesh for dataset %d' % dataset_id
+            )
+        dsdic[dataset_id] = ds
+        start_ofs_dic[dataset_id] = numpts
+        numpts += len(cross_sections)
+        next_ofs_dic[dataset_id] = numpts
 
     # if correlation matrix is explicitly provided for the
     # complete datablock, just return it and ignore
@@ -155,10 +168,10 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
     # fill the correlations into the correlation matrix
     covmat = np.zeros((numpts, numpts), dtype=float)
     for ds in dslist:
-        dsid = ds['NS']
+        dsid = get_dataset_identifier(ds)
         start_ofs1 = start_ofs_dic[dsid]
         next_ofs1 = next_ofs_dic[dsid]
-        numpts = len(ds['CSS'])
+        numpts = len(get_measured_values(ds))
         # calculate the correlations within a dataset
         covmat[start_ofs1:next_ofs1, start_ofs1:next_ofs1] = \
                 create_relative_dataset_covmat(ds)
@@ -168,7 +181,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
             continue
         # some abbreviations
         # we also convert the nested lists in JSON to numpy arrays
-        MT = ds['MT']
+        MT = get_quantity_type(ds)
         NEC = np.array(ds['NEC'])
         FCFC = np.array(ds['FCFC'])
         NETG = np.array(ds['NETG'])
@@ -191,7 +204,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
         ENFF = np.array(ds['ENFF']) if 'ENFF' in ds else None
         if MT in SHAPE_MT_IDS and ENFF is not None:
             ENFF = np.full(10, 0., dtype='d')
-        E = np.array(ds['E'])
+        E = get_incident_energies(ds)
         # loop over datasets to which correlations exist
         for pos2, dsid2 in enumerate(ds['NCSST']):
             # some error checking
@@ -220,8 +233,8 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
             start_ofs2 = start_ofs_dic[dsid2]
             # some abbreviations
             ds2 = dsdic[dsid2]
-            numpts2 = len(ds2['CSS'])
-            MT2 = ds2['MT']
+            numpts2 = len(get_measured_values(ds2))
+            MT2 = get_quantity_type(ds2)
             NETG2 = np.array(ds2['NETG'])
             EPAF2 = np.array(ds2['EPAF'])
             CO2 = np.array(ds2['CO'])
@@ -231,7 +244,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
             ENFF2 = np.array(ds2['ENFF']) if 'ENFF' in ds2 else None
             if MT2 in SHAPE_MT_IDS and ENFF2 is not None:
                 ENFF2 = np.full(10, 0., dtype='d')
-            E2 = np.array(ds2['E'])
+            E2 = get_incident_energies(ds2)
 
             # We skip if one of the two datasets contains
             # shape data and there is only one measurement
