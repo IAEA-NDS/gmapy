@@ -16,7 +16,8 @@ from .specialized_uncertainty_funs import (
 )
 
 
-def get_method(blocktype, method):
+def _get_method(datablock, method):
+    blocktype = datablock['type']
     if blocktype == 'legacy-experiment-datablock':
         mod = legacy_uncfuns
     elif blocktype == 'simple-experiment-datablock':
@@ -30,14 +31,13 @@ def get_method(blocktype, method):
 def create_relunc_vector(datablock_list):
     relunc_list = []
     for datablock in datablock_list:
-        curtype = datablock['type']
-        curfun = get_method(curtype, 'create_relunc_vector')
+        curfun = _get_method(datablock, 'create_relunc_vector')
         relunc_list.append(curfun(datablock))
     return np.concatenate(relunc_list)
 
 
 def create_relative_datablock_covmat(datablock):
-    curfun = get_method(datablock['type'], 'create_relative_datablock_covmat')
+    curfun = _get_method(datablock, 'create_relative_datablock_covmat')
     return curfun(datablock)
 
 
