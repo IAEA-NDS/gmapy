@@ -1,6 +1,15 @@
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
+from .dataset_api import (
+    get_dataset_identifier,
+    get_quantity_type,
+    get_reaction_identifiers,
+    get_measured_values,
+    get_incident_energies,
+    get_authors_string,
+    get_publication_string
+)
 
 
 def create_prior_table(prior_list):
@@ -62,18 +71,22 @@ def create_dataframe_from_legacy_experiment_dataset(
     dataset, datablock_index, dataset_index
 ):
     ds = dataset
+    quant_part = 'MT:' + str(get_quantity_type(ds))
+    reac_ids = get_reaction_identifiers(ds)
+    reac_part = ''.join(
+        ['-R%d:%d' % (i+1, r) for i, r in enumerate(reac_ids)]
+    )
     curdf = pd.DataFrame.from_dict({
-        'NODE': 'exp_' + str(ds['NS']),
-        'REAC': 'MT:' + str(ds['MT']) +
-                ''.join(['-R%d:%d'%(i+1,r) for i,r in enumerate(ds['NT'])]),
-        'ENERGY': ds['E'],
+        'NODE': 'exp_' + str(get_dataset_identifier(ds)),
+        'REAC':   quant_part + reac_part,
+        'ENERGY': get_incident_energies(ds),
         'PRIOR':  0.,
         'UNC':    np.nan,
-        'DATA':   ds['CSS'],
+        'DATA':   get_measured_values(ds),
         'DB_IDX': datablock_index,
         'DS_IDX': dataset_index,
-        'AUTHOR': ds['CLABL'].strip(),
-        'PUBREF': ds['BREF'].strip()
+        'AUTHOR': get_authors_string(ds).strip(),
+        'PUBREF': get_publication_string(ds).strip()
     })
     return curdf
 

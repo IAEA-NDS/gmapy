@@ -132,7 +132,7 @@ class Datablock(object):
             return csr_matrix(covmat)
         elif unit == 'relative' or 'percent':
             tmp = 1/css
-            if 'precent':
+            if 'percent':
                 tmp *= 100
             res = (covmat.toarray() * tmp.reshape(-1, 1)) * tmp.reshape(1,-1)
             return csr_matrix(res)

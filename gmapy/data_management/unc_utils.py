@@ -1,5 +1,9 @@
 import numpy as np
 from scipy.sparse import issparse
+from .dataset_api import (
+    get_measured_values,
+    get_quantity_type
+)
 
 
 def scale_covmat(covmat, sclvec):
@@ -33,12 +37,13 @@ def calculate_ppp_factors(datasets, css):
     cur_idx = 0
     factors = []
     for ds in datasets:
-        origcss = np.array(ds['CSS'])
+        origcss = get_measured_values(ds)
         next_idx = cur_idx + len(origcss)
         newcss = css[cur_idx:next_idx]
         cur_idx = next_idx
         # no PPP correction for SACS measurements
-        if ds['MT'] == 6:
+        quant_type = get_quantity_type(ds)
+        if quant_type == 6:
             factors.extend(np.ones(len(origcss), dtype='d'))
         else:
             factors.extend(newcss/origcss)
