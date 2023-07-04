@@ -1,5 +1,8 @@
 from .dataset import Dataset
-from .uncfuns import create_relunc_vector, create_experimental_covmat
+from .datablock_uncertainty_api import (
+    create_relunc_vector,
+    create_experimental_covmat
+)
 from scipy.sparse import csr_matrix
 import numpy as np
 import warnings

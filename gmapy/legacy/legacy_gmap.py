@@ -18,7 +18,10 @@ from ..legacy.data_extraction_functions import update_effDCS_values
 
 from ..inference import gls_update
 from ..data_management.tablefuns import (create_prior_table, create_experiment_table)
-from ..data_management.uncfuns import (create_relunc_vector, create_experimental_covmat)
+from ..data_management.datablock_uncertainty_api import (
+    create_relunc_vector,
+    create_experimental_covmat
+)
 from ..mappings.priortools import (
     attach_shape_prior,
     initialize_shape_prior,
