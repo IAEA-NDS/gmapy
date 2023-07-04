@@ -6,6 +6,10 @@ from .unc_utils import (
     calculate_ppp_factors,
     fix_cormat
 )
+from .datablock_api import (
+    dataset_iterator,
+    get_datablock_type
+)
 from .dataset_api import (
     get_measured_values,
     get_dataset_identifier
@@ -50,7 +54,8 @@ def create_experimental_covmat(datablock_list, propcss=None,
     for db in datablock_list:
         numpts = 0
         curexpcss = []
-        for ds in db['datasets']:
+        datasets = tuple(dataset_iterator(db))
+        for ds in datasets:
             css = get_measured_values(ds)
             numpts += len(css)
             curexpcss.extend(css)
@@ -58,7 +63,7 @@ def create_experimental_covmat(datablock_list, propcss=None,
 
         curuncs = uncs[start_idx:next_idx]
         curpropcss = propcss[start_idx:next_idx] if propcss is not None else curexpcss
-        ppp_factors = calculate_ppp_factors(db['datasets'], curpropcss)
+        ppp_factors = calculate_ppp_factors(datasets, curpropcss)
         cureffuncs = curuncs * ppp_factors
         curabsuncs = curexpcss * cureffuncs * 0.01
 
@@ -66,9 +71,10 @@ def create_experimental_covmat(datablock_list, propcss=None,
 
         # This if-else statement is here to be able to
         # reproduce a bug of the Fortran GMAP version
-        if (db['type'] == 'legacy-experiment-datablock' and
+        dbtype = get_datablock_type(db)
+        if (dbtype == 'legacy-experiment-datablock' and
                 'ECOR' not in db and not fix_ppp_bug):
-            curcormat = legacy_uncfuns.relcov_to_wrong_cor(curcovmat, db['datasets'], curpropcss)
+            curcormat = legacy_uncfuns.relcov_to_wrong_cor(curcovmat, datasets, curpropcss)
         else:
             curcormat = cov2cor(curcovmat)
 
@@ -77,7 +83,7 @@ def create_experimental_covmat(datablock_list, propcss=None,
                 curcormat = fix_cormat(curcormat)
             except Exception:
                 ds_ids = ', '.join((
-                    str(get_dataset_identifier(ds)) for ds in db['datasets']))
+                    str(get_dataset_identifier(ds)) for ds in datasets))
                 raise ValueError(f'Problem with covariance matrix of datablock '
                                  f'with dataset ids {ds_ids}')
 

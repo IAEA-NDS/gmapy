@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
+from .datablock_api import (
+    dataset_iterator
+)
 from .dataset_api import (
     get_dataset_identifier,
     get_quantity_type,
@@ -67,7 +70,7 @@ def create_prior_table(prior_list):
     return df
 
 
-def create_dataframe_from_legacy_experiment_dataset(
+def create_dataframe_from_experiment_dataset(
     dataset, datablock_index, dataset_index
 ):
     ds = dataset
@@ -101,7 +104,7 @@ def create_experiment_table(datablock_list):
             raise ValueError('Unsupported type of datablock')
         for dsidx, ds in enumerate(db['datasets']):
             if ds['type'] == 'legacy-experiment-dataset':
-                curdf = create_dataframe_from_legacy_experiment_dataset(
+                curdf = create_dataframe_from_experiment_dataset(
                     ds, dbidx, dsidx
                 )
             else:
@@ -110,5 +113,5 @@ def create_experiment_table(datablock_list):
 
     expdf = pd.concat(df_list, ignore_index=True)
     cols = ['NODE', 'REAC', 'ENERGY', 'DATA', 'DB_IDX', 'DS_IDX', 'AUTHOR', 'PUBREF']
-    expdf = expdf.reindex(columns = cols)
+    expdf = expdf.reindex(columns=cols)
     return expdf

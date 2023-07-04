@@ -3,14 +3,22 @@ from .specialized_dataset_apis import (
 )
 
 
+_api_mapping = {
+    'legacy-experiment-dataset': legacy_dataset_api
+}
+
+
 def _get_method(dataset, method):
-    ds_type = dataset['type']
-    if ds_type == 'legacy-experiment-dataset':
-        module = legacy_dataset_api
-    else:
-        raise ValueError(f'unknown dataset type `{ds_type}`')
+    dstype = get_dataset_type(dataset)
+    if dstype not in _api_mapping:
+        raise ValueError(f'unknown dataset type `{dstype}`')
+    module = _api_mapping[dstype]
     special_method = getattr(module, method)
     return special_method
+
+
+def get_dataset_type(dataset):
+    return dataset['type']
 
 
 def get_dataset_identifier(dataset):
