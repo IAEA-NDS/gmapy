@@ -14,9 +14,9 @@ from .dataset_api import (
     get_measured_values,
     get_dataset_identifier
 )
-from .specialized_uncertainty_funs import (
-    legacy_uncertainty_funs as legacy_uncfuns,
-    simple_uncertainty_funs as simple_uncfuns
+from .specialized_datablock_apis import (
+    legacy_datablock_uncertainty_api as legacy_uncfuns,
+    simple_datablock_uncertainty_api as simple_uncfuns
 )
 
 
