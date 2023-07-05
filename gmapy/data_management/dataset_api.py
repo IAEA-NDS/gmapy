@@ -9,7 +9,11 @@ _api_mapping = {
 
 
 def get_dataset_type(dataset):
-    return dataset['type']
+    dataset_type = str(dataset['type'])
+    if 'api_version' in dataset:
+        api_version = str(dataset['api_version'])
+        dataset_type += '-v' + api_version
+    return dataset_type
 
 
 _call_method = generate_method_caller(get_dataset_type, _api_mapping)
