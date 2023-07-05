@@ -1,8 +1,11 @@
 def get_method(item, method, type_getter, dispatch_map):
     itemtype = type_getter(item)
-    if itemtype not in dispatch_map:
+    if callable(dispatch_map):
+        module = dispatch_map(itemtype)
+    else:
+        module = dispatch_map.get(itemtype, None)
+    if module is None:
         raise ValueError(f'unknown type `{itemtype}`')
-    module = dispatch_map[itemtype]
     special_method = getattr(module, method)
     return special_method
 
