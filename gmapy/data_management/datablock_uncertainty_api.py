@@ -8,6 +8,7 @@ from .unc_utils import (
 )
 from . import datablock_api as dbapi
 from . import dataset_api as dsapi
+from . import priorblock_api as priorapi
 from .specialized_datablock_apis import (
     legacy_datablock_uncertainty_api as legacy_uncfuns,
     simple_datablock_uncertainty_api as simple_uncfuns
@@ -96,20 +97,8 @@ def create_experimental_covmat(datablock_list, propcss=None,
 def create_prior_covmat(prior_list):
     cov_list = []
     for curprior in prior_list:
-
-        curtype = curprior['type']
-        if curtype == 'legacy-prior-cross-section':
-            n = len(curprior['EN'])
-            curcov = diags(np.full(n, np.inf, dtype='d'))
-            cov_list.append(curcov)
-
-        elif curtype == 'legacy-fission-spectrum':
-            n = len(curprior['ENFIS'])
-            curcov = diags(np.full(n, 0., dtype='d'))
-            cov_list.append(curcov)
-
-        else:
-            raise TypeError(f'Unsupported prior block type {curtype}')
-
+        uncs = priorapi.get_uncertainties(curprior)
+        curcov = diags(np.square(uncs))
+        cov_list.append(curcov)
     covmat = block_diag(cov_list, format='csr')
     return covmat
