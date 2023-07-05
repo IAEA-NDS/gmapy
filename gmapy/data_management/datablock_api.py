@@ -1,3 +1,4 @@
+from .dispatch_utils import generate_method_getter
 from .specialized_datablock_apis import (
     legacy_datablock_api
 )
@@ -10,13 +11,11 @@ _api_mapping = {
 }
 
 
-def _get_method(datablock, method):
-    dbtype = get_datablock_type(datablock)
-    if dbtype not in _api_mapping:
-        raise ValueError(f'unknown datablock type `{dbtype}`')
-    module = _api_mapping[dbtype]
-    special_method = getattr(module, method)
-    return special_method
+def get_datablock_type(datablock):
+    return datablock['type']
+
+
+_get_method = generate_method_getter(get_datablock_type, _api_mapping)
 
 
 def _flatten(listlike):
@@ -28,10 +27,6 @@ def _flatten(listlike):
 def _apply(datablock, func):
     ds_iter = dataset_iterator(datablock)
     return tuple(func(ds) for ds in ds_iter)
-
-
-def get_datablock_type(datablock):
-    return datablock['type']
 
 
 def dataset_iterator(datablock):
