@@ -10,14 +10,20 @@ def get_method(item, method, type_getter, dispatch_map):
     return special_method
 
 
-def call_method(item, method, type_getter, dispatch_map):
+def call_method(
+    item, method, type_getter, dispatch_map, *args, **kwargs
+):
+    args = [] if args is None else args
+    kwargs = {} if kwargs is None else kwargs
     fun = get_method(item, method, type_getter, dispatch_map)
-    return fun(item)
+    return fun(item, *args, **kwargs)
 
 
 def generate_method_caller(type_getter, dispatch_map):
-    def customized_call_method(item, method):
-        return call_method(item, method, type_getter, dispatch_map)
+    def customized_call_method(item, method, *args, **kwargs):
+        return call_method(
+            item, method, type_getter, dispatch_map, *args, **kwargs
+        )
     return customized_call_method
 
 
