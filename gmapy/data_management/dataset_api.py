@@ -2,9 +2,12 @@ from .dispatch_utils import generate_method_caller
 from .specialized_dataset_apis import (
     legacy_dataset_api
 )
+from .specialized_dataset_apis import modern_dataset_api
+
 
 _api_mapping = {
-    'legacy-experiment-dataset': legacy_dataset_api
+    'legacy-experiment-dataset': legacy_dataset_api,
+    'modern-experiment-dataset-v0.1': modern_dataset_api.version_0_1
 }
 
 
