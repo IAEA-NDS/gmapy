@@ -19,6 +19,10 @@ def get_dataset_identifier(dataset):
     return _call_method(dataset, 'get_dataset_identifier')
 
 
+def get_nodename(dataset):
+    return 'exp_' + str(get_dataset_identifier(dataset))
+
+
 def get_quantity_type(dataset):
     return _call_method(dataset, 'get_quantity_type')
 
