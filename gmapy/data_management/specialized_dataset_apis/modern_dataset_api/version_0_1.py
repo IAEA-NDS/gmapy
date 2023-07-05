@@ -25,21 +25,21 @@ def add_quantity_type(dataset, quantity_type):
 def get_reaction_identifiers(dataset):
     quantstr = dataset['quantity']
     if quantstr in ('xs', 'xs_shape', 'legacy_sacs'):
-        reacids = [dataset['reaction_identifier']]
+        reacids = [int(dataset['reaction_identifier'])]
 
     elif quantstr in ('xs_ratio', 'xs_ratio_shape', 'legacy_sacs_ratio'):
         reacids = [
-            dataset['reaction_identifier_numerator'],
-            dataset['reaction_identifier_denominator']
+            int(dataset['reaction_identifier_numerator']),
+            int(dataset['reaction_identifier_denominator'])
         ]
 
     elif quantstr in ('xs_sum', 'xs_sum_shape'):
-        reacids = dataset['reaction_identifiers']
+        reacids = list(dataset['reaction_identifiers'])
 
     elif quantstr in ('xs_div_xs_sum', 'xs_div_xs_sum_shape'):
         reacids = (
-            [dataset['reaction_identifier_numerator']] +
-            dataset['reaction_identifiers_denominator']
+            [int(dataset['reaction_identifier_numerator'])] +
+            list(dataset['reaction_identifiers_denominator'])
         )
 
     else:
@@ -51,18 +51,18 @@ def add_reaction_identifiers(dataset, reaction_identifiers):
     quantstr = dataset['quantity']
     quantstr = dataset['quantity']
     if quantstr in ('xs', 'xs_shape', 'legacy_sacs'):
-        dataset['reaction_identifier'] = reaction_identifiers[0]
+        dataset['reaction_identifier'] = int(reaction_identifiers[0])
 
     elif quantstr in ('xs_ratio', 'xs_ratio_shape', 'legacy_sacs_ratio'):
-        dataset['reaction_identifier_numerator'] = reaction_identifiers[0]
-        dataset['reaction_identifier_denominator'] = reaction_identifiers[1]
+        dataset['reaction_identifier_numerator'] = int(reaction_identifiers[0])
+        dataset['reaction_identifier_denominator'] = int(reaction_identifiers[1])
 
     elif quantstr in ('xs_sum', 'xs_sum_shape'):
-        dataset['reaction_identifiers'] = reaction_identifiers
+        dataset['reaction_identifiers'] = list(reaction_identifiers)
 
     elif quantstr in ('xs_div_xs_sum', 'xs_div_xs_sum_shape'):
-        dataset['reaction_identifier_numerator'] = reaction_identifiers[0]
-        dataset['reaction_identifiers_denominator'] = reaction_identifiers[1:]
+        dataset['reaction_identifier_numerator'] = int(reaction_identifiers[0])
+        dataset['reaction_identifiers_denominator'] = list(reaction_identifiers[1:])
     else:
         raise ValueError(f'unknown quantity type `{quantstr}`')
 
