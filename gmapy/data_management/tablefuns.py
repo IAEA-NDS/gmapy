@@ -13,58 +13,25 @@ from .dataset_api import (
     get_authors_string,
     get_publication_string
 )
+from . import priorblock_api as priorapi
 
 
 def create_prior_table(prior_list):
-    curid = 0
     df = []
     for item in prior_list:
-        if item['type'] == 'legacy-prior-cross-section':
-            curid += 1
-            xsid = item['ID']
-            # error checking
-            if curid != xsid:
-                raise IndexError('prior items must be sorted according to ID in prior_list ' +
-                        'but prior item with ID %d violates this constraint' % xsid)
-            if not np.all(np.sort(item['EN']) == item['EN']):
-                raise ValueError('Energies of prior mesh must be sorted, but this is ' +
-                        'not the case for prior block with ID %d' % xsid)
-            if not len(item['EN']) == len(item['CS']):
-                raise IndexError('Energy mesh and cross sections are of unequal length ' +
-                        'for prior block with ID %d' % xsid)
-
-            # append to the dataframe
-            prd = prior_dic = OrderedDict()
-            prd['NODE'] = 'xsid_' + str(xsid)
-            prd['REAC'] = 'MT:1-R1:' + str(xsid)
-            prd['ENERGY'] = item['EN']
-            prd['PRIOR'] = item['CS']
-            prd['UNC'] = np.inf
-            prd['DESCR'] = item['CLAB'].strip()
-            curdf = pd.DataFrame.from_dict(prd)
-            df.append(curdf)
-
-        elif item['type'] == 'legacy-fission-spectrum':
-            # error checking
-            if not np.all(np.sort(item['ENFIS']) == item['ENFIS']):
-                raise ValueError('Energies of prior mesh of fission spectrum must be sorted ' +
-                        'but this is not the case for the the legacy-fission-spectrum')
-            if not len(item['ENFIS']) == len(item['FIS']):
-                raise IndexError('Energy mesh and fission spectrum values must be of same length')
-            # append to the dataframe
-            prd = prior_dic = OrderedDict()
-            prd['NODE'] = 'fis'
-            prd['REAC'] = 'NA'
-            prd['ENERGY'] = item['ENFIS']
-            prd['PRIOR'] = item['FIS']
-            prd['UNC'] = 0.
-            prd['DATA'] = np.nan
-            prd['DESCR'] = 'fission spectrum'
-            curdf = pd.DataFrame.from_dict(prd)
-            df.append(curdf)
-
-        else:
-            raise ValueError('Unknown type "%s" of prior block' % item['type'])
+        # append to the dataframe
+        quant_type = priorapi.get_quantity_type(item)
+        reac_id = priorapi.get_reaction_identifier(item)
+        reacstr = f'MT:{quant_type}-R1:{reac_id}'
+        prd = OrderedDict()
+        prd['NODE'] = priorapi.get_nodename(item)
+        prd['REAC'] = reacstr
+        prd['ENERGY'] = priorapi.get_energies(item)
+        prd['PRIOR'] = priorapi.get_values(item)
+        prd['UNC'] = priorapi.get_uncertainties(item)
+        prd['DESCR'] = priorapi.get_description(item)
+        curdf = pd.DataFrame.from_dict(prd)
+        df.append(curdf)
 
     df = pd.concat(df, axis=0, ignore_index=True)
     return df
