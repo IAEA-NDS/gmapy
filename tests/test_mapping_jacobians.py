@@ -5,9 +5,13 @@ import pandas as pd
 
 from gmapy.legacy.database_reading import read_gma_database
 from gmapy.legacy.conversion_utils import (sanitize_datablock, sanitize_prior)
-from gmapy.data_management.tablefuns import (create_prior_table,
-        create_experiment_table)
-from gmapy.data_management.uncfuns import create_relunc_vector
+from gmapy.data_management.tablefuns import (
+    create_prior_table,
+    create_experiment_table
+)
+from gmapy.data_management.datablock_uncertainty_api import (
+    create_relunc_vector
+)
 from gmapy.mappings.priortools import (
     attach_shape_prior,
     initialize_shape_prior
