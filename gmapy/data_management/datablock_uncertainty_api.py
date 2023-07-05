@@ -6,6 +6,7 @@ from .unc_utils import (
     calculate_ppp_factors,
     fix_cormat
 )
+from .dispatch_utils import generate_method_caller
 from . import datablock_api as dbapi
 from . import dataset_api as dsapi
 from . import priorblock_api as priorapi
@@ -15,29 +16,25 @@ from .specialized_datablock_apis import (
 )
 
 
-def _get_method(datablock, method):
-    blocktype = datablock['type']
-    if blocktype == 'legacy-experiment-datablock':
-        mod = legacy_uncfuns
-    elif blocktype == 'simple-experiment-datablock':
-        mod = simple_uncfuns
-    else:
-        TypeError('unknown datablock type')
-    special_method = getattr(mod, method)
-    return special_method
+_api_mapping = {
+    'legacy-experiment-datablock': legacy_uncfuns,
+    'simple-experiment-datablock': simple_uncfuns
+}
+
+
+_call_method = generate_method_caller(dbapi.get_datablock_type, _api_mapping)
 
 
 def create_relunc_vector(datablock_list):
     relunc_list = []
     for datablock in datablock_list:
-        curfun = _get_method(datablock, 'create_relunc_vector')
-        relunc_list.append(curfun(datablock))
+        curvec = _call_method(datablock, 'create_relunc_vector')
+        relunc_list.append(curvec)
     return np.concatenate(relunc_list)
 
 
 def create_relative_datablock_covmat(datablock):
-    curfun = _get_method(datablock, 'create_relative_datablock_covmat')
-    return curfun(datablock)
+    return _call_method(datablock, 'create_relative_datablock_covmat')
 
 
 def create_experimental_covmat(datablock_list, propcss=None,
