@@ -108,20 +108,6 @@ def create_prior_covmat(prior_list):
             curcov = diags(np.full(n, 0., dtype='d'))
             cov_list.append(curcov)
 
-        elif curtype == 'modern-fission-spectrum':
-            en = curprior['energies']
-            energies = curprior['covmat']['energies']
-            curcov1 = diags(np.full(len(en), 0., dtype='d'))
-            curcov2 = np.array(curprior['covmat']['matrix'])
-            if curcov2.shape[0] != curcov2.shape[0]:
-                raise TypeError('covariance matrix in prior fission spectrum ' +
-                                'is not square')
-            if len(energies)-1 != curcov2.shape[0]:
-                raise IndexError('mismatch between number of energies and ' +
-                                 'dimension of covariance matrix')
-            cov_list.append(curcov1)
-            cov_list.append(curcov2)
-
         else:
             raise TypeError(f'Unsupported prior block type {curtype}')
 
