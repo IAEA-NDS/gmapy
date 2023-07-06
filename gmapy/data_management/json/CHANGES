@@ -1,0 +1,6 @@
+# Changes to json package
+
+The file "encoder.py" part of the json package
+of Python was modified to alter where spaces
+and newline characters are inserted in the
+generated JSON string.
