@@ -1,6 +1,7 @@
 """Implementation of JSONEncoder
 """
 import re
+import numpy as np
 
 try:
     from _json import encode_basestring_ascii as c_encode_basestring_ascii
@@ -10,10 +11,8 @@ try:
     from _json import encode_basestring as c_encode_basestring
 except ImportError:
     c_encode_basestring = None
-try:
-    from _json import make_encoder as c_make_encoder
-except ImportError:
-    c_make_encoder = None
+
+c_make_encoder = None
 
 ESCAPE = re.compile(r'[\x00-\x1f\\"\b\f\n\r\t]')
 ESCAPE_ASCII = re.compile(r'([\\"]|[^\ -~])')
@@ -103,7 +102,8 @@ class JSONEncoder(object):
     key_separator = ': '
     def __init__(self, *, skipkeys=False, ensure_ascii=True,
             check_circular=True, allow_nan=True, sort_keys=False,
-            indent=None, separators=None, default=None):
+            indent=None, separators=None, default=None,
+            min_list_len=15, values_per_line=10):
         """Constructor for JSONEncoder, with sensible defaults.
 
         If skipkeys is false, then it is a TypeError to attempt
@@ -150,6 +150,10 @@ class JSONEncoder(object):
         self.allow_nan = allow_nan
         self.sort_keys = sort_keys
         self.indent = indent
+        # custom modification
+        self.min_list_len = min_list_len
+        self.values_per_line = values_per_line
+        # end custom modification
         if separators is not None:
             self.item_separator, self.key_separator = separators
         elif indent is not None:
@@ -176,6 +180,11 @@ class JSONEncoder(object):
                 return JSONEncoder.default(self, o)
 
         """
+        if _is_int(o):
+            return int(o)
+        elif _is_float(o):
+            return float(o)
+
         raise TypeError(f'Object of type {o.__class__.__name__} '
                         f'is not JSON serializable')
 
@@ -242,22 +251,16 @@ class JSONEncoder(object):
 
             return text
 
-
-        if (_one_shot and c_make_encoder is not None
-                and self.indent is None):
-            _iterencode = c_make_encoder(
-                markers, self.default, _encoder, self.indent,
-                self.key_separator, self.item_separator, self.sort_keys,
-                self.skipkeys, self.allow_nan)
-        else:
-            _iterencode = _make_iterencode(
-                markers, self.default, _encoder, self.indent, floatstr,
-                self.key_separator, self.item_separator, self.sort_keys,
-                self.skipkeys, _one_shot)
+        _iterencode = _make_iterencode(
+            markers, self.default, _encoder, self.indent, floatstr,
+            self.key_separator, self.item_separator, self.sort_keys,
+            self.skipkeys, _one_shot,
+            self.values_per_line, self.min_list_len)
         return _iterencode(o, 0)
 
 def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
         _key_separator, _item_separator, _sort_keys, _skipkeys, _one_shot,
+        _values_per_line, _min_list_len,
         ## HACK: hand-optimized bytecode; turn globals into locals
         ValueError=ValueError,
         dict=dict,
@@ -274,7 +277,9 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
     if _indent is not None and not isinstance(_indent, str):
         _indent = ' ' * _indent
 
-    def _iterencode_list(lst, _current_indent_level):
+    def _iterencode_list(lst, _current_indent_level, max_str_width=None):
+        if isinstance(lst, np.ndarray):
+            lst = lst.tolist()
         if not lst:
             yield '[]'
             return
@@ -283,21 +288,49 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
             if markerid in markers:
                 raise ValueError("Circular reference detected")
             markers[markerid] = lst
+        # start custom modification
+        is_1d_array, numels, arrtype, m = \
+            _get_1d_array_info(lst, _intstr, _floatstr)
+        is_2d_array = False
+        if not is_1d_array:
+            is_2d_array, numels, arrtype, m = \
+                _get_2d_array_info(lst, _intstr, _floatstr)
+        if max_str_width is None:
+            max_str_width = m
+        # end custom modification
         buf = '['
         if _indent is not None:
             _current_indent_level += 1
             newline_indent = '\n' + _indent * _current_indent_level
-            separator = _item_separator + newline_indent
-            buf += newline_indent
+            # custom modification
+            separator = _item_separator
+            if not is_1d_array and not is_2d_array:
+                separator += newline_indent
+            if not is_1d_array or len(lst) >= _min_list_len:
+                buf += newline_indent
+            # end custom modification
         else:
             newline_indent = None
             separator = _item_separator
         first = True
-        for value in lst:
+        elcounter = 0
+        for elnr, value in enumerate(lst):
+            elcounter += 1
             if first:
                 first = False
             else:
                 buf = separator
+                # custom modification
+                if _indent is not None:
+                    if is_1d_array:
+                        if (elnr % _values_per_line == 0
+                                and len(lst) >= _min_list_len):
+                            buf += newline_indent
+                    elif is_2d_array:
+                        if elcounter * numels > _values_per_line:
+                            elcounter = 0
+                            buf += newline_indent
+                # end custom modification
             if isinstance(value, str):
                 yield buf + _encoder(value)
             elif value is None:
@@ -310,14 +343,20 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
                 # Subclasses of int/float may override __repr__, but we still
                 # want to encode them as integers/floats in JSON. One example
                 # within the standard library is IntEnum.
-                yield buf + _intstr(value)
+                if is_1d_array:
+                    yield buf + _intstr(value).rjust(max_str_width)
+                else:
+                    yield buf + _intstr(value)
             elif isinstance(value, float):
                 # see comment above for int
-                yield buf + _floatstr(value)
+                if is_1d_array:
+                    yield buf + _floatstr(value).rjust(max_str_width)
+                else:
+                    yield buf + _floatstr(value)
             else:
                 yield buf
-                if isinstance(value, (list, tuple)):
-                    chunks = _iterencode_list(value, _current_indent_level)
+                if isinstance(value, (list, tuple, np.ndarray)):
+                    chunks = _iterencode_list(value, _current_indent_level, max_str_width)
                 elif isinstance(value, dict):
                     chunks = _iterencode_dict(value, _current_indent_level)
                 else:
@@ -325,7 +364,10 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
                 yield from chunks
         if newline_indent is not None:
             _current_indent_level -= 1
-            yield '\n' + _indent * _current_indent_level
+            # custom modification
+            if not is_1d_array or len(lst) >= _min_list_len:
+                yield '\n' + _indent * _current_indent_level
+            # end custom modification
         yield ']'
         if markers is not None:
             del markers[markerid]
@@ -396,7 +438,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
                 # see comment for int/float in _make_iterencode
                 yield _floatstr(value)
             else:
-                if isinstance(value, (list, tuple)):
+                if isinstance(value, (list, tuple, np.ndarray)):
                     chunks = _iterencode_list(value, _current_indent_level)
                 elif isinstance(value, dict):
                     chunks = _iterencode_dict(value, _current_indent_level)
@@ -425,7 +467,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
         elif isinstance(o, float):
             # see comment for int/float in _make_iterencode
             yield _floatstr(o)
-        elif isinstance(o, (list, tuple)):
+        elif isinstance(o, (list, tuple, np.ndarray)):
             yield from _iterencode_list(o, _current_indent_level)
         elif isinstance(o, dict):
             yield from _iterencode_dict(o, _current_indent_level)
@@ -440,3 +482,62 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
             if markers is not None:
                 del markers[markerid]
     return _iterencode
+
+
+# custom code starts here
+
+def _is_int(x):
+    return isinstance(x,
+        (np.int_, np.intc, np.intp, np.int8,
+         np.int16, np.int32, np.int64, np.uint8,
+         np.uint16, np.uint32, np.uint64, int))
+
+
+def _is_float(x):
+    return isinstance(x,
+        (np.float_, np.float16, np.float32,
+         np.float64, np.float128, float))
+
+
+def _get_1d_array_info(arr, _intstr, _floatstr):
+    is_1d_array = True
+    arrtype = None
+    max_str_width = 0
+    numels = len(arr)
+    for value in arr:
+        if _is_int(value):
+            if arrtype is not None and arrtype != int:
+                is_1d_array = False
+                break
+            arrtype = int
+            max_str_width = max(max_str_width, len(_intstr(value)))
+        elif _is_float(value):
+            if arrtype is not None and arrtype != float:
+                is_1d_array = False
+                break
+            arrtype = float
+            max_str_width = max(max_str_width, len(_floatstr(value)))
+        else:
+            is_1d_array = False
+            break
+        if not is_1d_array:
+            max_str_width = None
+    return is_1d_array, numels, arrtype, max_str_width
+
+
+def _get_2d_array_info(arr, _intstr, _floatstr):
+    max_str_width = 0
+    arrtype = None
+    is_arr, numel, arrtype, max_str_width = _get_1d_array_info(
+        arr[0], _intstr, _floatstr
+    )
+    if not is_arr:
+        return False, 0, None, 0
+    for value in arr[1:]:
+        is_arr, n, t, m = _get_1d_array_info(
+            value, _intstr, _floatstr
+        )
+        if not is_arr or numel != n or arrtype != t:
+            return False, 0, None, 0
+        max_str_width = max(max_str_width, m)
+    return True, numel, arrtype, max_str_width
