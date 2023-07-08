@@ -2,7 +2,15 @@ import numpy as np
 
 
 TYPE_SPECIFICATION = 'legacy-experiment-dataset'
-API_VERSION = None
+API_VERSION = '1.0'
+
+
+def get_api_version(dataset):
+    return API_VERSION
+
+
+def add_api_version(dataset):
+    dataset['api_version'] = API_VERSION
 
 
 def get_dataset_identifier(dataset):

@@ -1,26 +1,23 @@
 from .dispatch_utils import generate_method_caller
 from .specialized_dataset_apis import (
-    legacy_dataset_api
+    legacy_dataset_api,
+    modern_dataset_api
 )
-from .specialized_dataset_apis import modern_dataset_api
 
 
 _api_mapping = {
     'legacy-experiment-dataset': legacy_dataset_api,
-    'modern-experiment-dataset-v0.1': modern_dataset_api.version_0_1
+    'modern-experiment-dataset': modern_dataset_api
 }
 
 
 def get_dataset_type(dataset):
-    dataset_type = str(dataset['type'])
-    if 'api_version' in dataset:
-        api_version = str(dataset['api_version'])
-        dataset_type += '-v' + api_version
-    return dataset_type
+    return str(dataset['type'])
 
 
 _call_method = generate_method_caller(get_dataset_type, _api_mapping)
 _required_getter_setter_list = (
+    ('get_api_version', 'add_api_version'),
     ('get_dataset_identifier', 'add_dataset_identifier'),
     ('get_quantity_type', 'add_quantity_type'),
     ('get_reaction_identifiers', 'add_reaction_identifiers'),
@@ -30,6 +27,14 @@ _required_getter_setter_list = (
     ('get_publication_string', 'add_publication_string'),
     ('get_year', 'add_year')
 )
+
+
+def get_api_version(dataset):
+    return _call_method(dataset, 'get_api_version')
+
+
+def add_api_version(dataset):
+    return _call_method(dataset, 'add_api_version')
 
 
 def get_dataset_identifier(dataset):

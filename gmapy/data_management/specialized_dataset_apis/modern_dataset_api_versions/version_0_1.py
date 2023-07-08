@@ -2,7 +2,6 @@ import numpy as np
 from ...quantity_types import map_str2mt, map_mt2str
 
 
-TYPE_SPECIFICATION = 'modern-experiment-dataset'
 API_VERSION = '0.1'
 
 
@@ -49,7 +48,6 @@ def get_reaction_identifiers(dataset):
 
 def add_reaction_identifiers(dataset, reaction_identifiers):
     quantstr = dataset['quantity']
-    quantstr = dataset['quantity']
     if quantstr in ('xs', 'xs_shape', 'legacy_sacs'):
         dataset['reaction_identifier'] = int(reaction_identifiers[0])
 
@@ -68,7 +66,11 @@ def add_reaction_identifiers(dataset, reaction_identifiers):
 
 
 def get_measured_values(dataset):
-    return np.array(dataset['measured_values'], dtype=np.float64)
+    quantstr = dataset['quantity']
+    if quantstr in ('legacy_sacs', 'legacy_sacs_ratio'):
+        return np.array([float(dataset['measured_value'])], dtype=np.float64)
+    else:
+        return np.array(dataset['measured_values'], dtype=np.float64)
 
 
 def add_measured_values(dataset, measured_values):
