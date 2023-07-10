@@ -6,7 +6,7 @@ from scipy.sparse import coo_matrix, csr_matrix
 
 from gmapy.legacy.database_reading import read_gma_database
 from gmapy.legacy.conversion_utils import (sanitize_datablock, sanitize_prior)
-from gmapy.data_management.datablock_uncertainty_api import (
+from gmapy.data_management.uncfuns import (
     create_relunc_vector,
     create_experimental_covmat
 )

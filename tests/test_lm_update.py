@@ -6,7 +6,7 @@ from scipy.sparse import block_diag, diags
 from gmapy.data_management.tablefuns import (
     create_prior_table,
     create_experiment_table)
-from gmapy.data_management.datablock_uncertainty_api import (
+from gmapy.data_management.uncfuns import (
     create_relunc_vector,
     create_experimental_covmat
 )

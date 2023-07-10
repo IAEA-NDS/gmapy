@@ -1,5 +1,5 @@
 from .dataset import Dataset
-from .datablock_uncertainty_api import (
+from .uncfuns import (
     create_relunc_vector,
     create_experimental_covmat
 )
