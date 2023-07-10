@@ -6,7 +6,10 @@ from scipy.sparse import block_diag, diags
 from gmapy.data_management.tablefuns import (
     create_prior_table,
     create_experiment_table)
-from gmapy.data_management.uncfuns import create_experimental_covmat
+from gmapy.data_management.uncfuns import (
+    create_relunc_vector,
+    create_experimental_covmat
+)
 from gmapy.mappings.priortools import (
     prepare_prior_and_likelihood_quantities,
     attach_shape_prior,
@@ -21,7 +24,6 @@ from gmapy.inference import (
 )
 from gmapy.data_management.database_IO import read_legacy_gma_database
 from gmapy.mappings.compound_map import CompoundMap
-from gmapy.data_management.uncfuns import create_relunc_vector
 from gmapy.posterior import Posterior
 
 

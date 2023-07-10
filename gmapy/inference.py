@@ -6,7 +6,9 @@ from scipy.linalg.lapack import dpotri, dpotrf
 from sksparse.cholmod import cholesky
 import warnings
 from .mappings.priortools import propagate_mesh_css
-from .data_management.uncfuns import scale_covmat
+from .data_management.unc_utils import (
+    scale_covmat
+)
 
 
 def gls_update(mapping, datatable, covmat, retcov=False):

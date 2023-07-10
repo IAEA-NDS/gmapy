@@ -1,48 +1,112 @@
+from .dispatch_utils import generate_method_caller
 from .specialized_dataset_apis import (
-    legacy_dataset_api
+    legacy_dataset_api,
+    modern_dataset_api
 )
 
 
-def _get_method(dataset, method):
-    ds_type = dataset['type']
-    if ds_type == 'legacy-experiment-dataset':
-        module = legacy_dataset_api
-    else:
-        raise ValueError(f'unknown dataset type `{ds_type}`')
-    special_method = getattr(module, method)
-    return special_method
+_api_mapping = {
+    'legacy-experiment-dataset': legacy_dataset_api,
+    'modern-experiment-dataset': modern_dataset_api
+}
+
+
+def get_dataset_type(dataset):
+    return str(dataset['type'])
+
+
+_call_method = generate_method_caller(get_dataset_type, _api_mapping)
+_required_getter_setter_list = (
+    ('get_api_version', 'add_api_version'),
+    ('get_dataset_identifier', 'add_dataset_identifier'),
+    ('get_quantity_type', 'add_quantity_type'),
+    ('get_reaction_identifiers', 'add_reaction_identifiers'),
+    ('get_measured_values', 'add_measured_values'),
+    ('get_incident_energies', 'add_incident_energies'),
+    ('get_authors_string', 'add_authors_string'),
+    ('get_publication_string', 'add_publication_string'),
+    ('get_year', 'add_year')
+)
+
+
+def get_api_version(dataset):
+    return _call_method(dataset, 'get_api_version')
+
+
+def add_api_version(dataset):
+    return _call_method(dataset, 'add_api_version')
 
 
 def get_dataset_identifier(dataset):
-    fun = _get_method(dataset, 'get_dataset_identifier')
-    return fun(dataset)
+    return _call_method(dataset, 'get_dataset_identifier')
+
+
+def add_dataset_identifier(dataset, dataset_identifier):
+    _call_method(dataset, 'add_dataset_identifier', dataset_identifier)
+
+
+def get_nodename(dataset):
+    return 'exp_' + str(get_dataset_identifier(dataset))
 
 
 def get_quantity_type(dataset):
-    fun = _get_method(dataset, 'get_quantity_type')
-    return fun(dataset)
+    return _call_method(dataset, 'get_quantity_type')
+
+
+def add_quantity_type(dataset, quantity_type):
+    _call_method(dataset, 'add_quantity_type', quantity_type)
 
 
 def get_reaction_identifiers(dataset):
-    fun = _get_method(dataset, 'get_reaction_identifiers')
-    return fun(dataset)
+    return _call_method(dataset, 'get_reaction_identifiers')
+
+
+def add_reaction_identifiers(dataset, reaction_identifiers):
+    _call_method(dataset, 'add_reaction_identifiers', reaction_identifiers)
 
 
 def get_measured_values(dataset):
-    fun = _get_method(dataset, 'get_measured_values')
-    return fun(dataset)
+    return _call_method(dataset, 'get_measured_values')
+
+
+def add_measured_values(dataset, measured_values):
+    _call_method(dataset, 'add_measured_values', measured_values)
 
 
 def get_incident_energies(dataset):
-    fun = _get_method(dataset, 'get_incident_energies')
-    return fun(dataset)
+    return _call_method(dataset, 'get_incident_energies')
+
+
+def add_incident_energies(dataset, incident_energies):
+    _call_method(dataset, 'add_incident_energies', incident_energies)
 
 
 def get_authors_string(dataset):
-    fun = _get_method(dataset, 'get_authors_string')
-    return fun(dataset)
+    return _call_method(dataset, 'get_authors_string')
+
+
+def add_authors_string(dataset, authors_string):
+    _call_method(dataset, 'add_authors_string', authors_string)
 
 
 def get_publication_string(dataset):
-    fun = _get_method(dataset, 'get_publication_string')
-    return fun(dataset)
+    return _call_method(dataset, 'get_publication_string')
+
+
+def add_publication_string(dataset, publication_string):
+    _call_method(dataset, 'add_publication_string', publication_string)
+
+
+def get_year(dataset):
+    return _call_method(dataset, 'get_year')
+
+
+def add_year(dataset, year):
+    _call_method(dataset, 'add_year', year)
+
+
+def transfer_dataset_info(source_dataset, target_dataset):
+    for getter, setter in _required_getter_setter_list:
+        getfun = globals()[getter]
+        setfun = globals()[setter]
+        setfun(target_dataset, getfun(source_dataset))

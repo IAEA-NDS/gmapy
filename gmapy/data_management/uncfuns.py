@@ -1,44 +1,26 @@
 import numpy as np
 from scipy.sparse import block_diag, csr_matrix, diags
+from . import dataset_api as dsapi
+from . import datablock_api as dbapi
+from . import priorblock_api as priorapi
+from . import datablock_uncertainty_api as dbunc_api
 from .unc_utils import (
     scale_covmat,
     cov2cor,
     calculate_ppp_factors,
     fix_cormat
 )
-from .dataset_api import (
-    get_measured_values,
-    get_dataset_identifier
+from .specialized_datablock_apis import (
+    legacy_datablock_uncertainty_api as legacy_uncfuns
 )
-from .specialized_uncertainty_funs import (
-    legacy_uncertainty_funs as legacy_uncfuns,
-    simple_uncertainty_funs as simple_uncfuns
-)
-
-
-def get_method(blocktype, method):
-    if blocktype == 'legacy-experiment-datablock':
-        mod = legacy_uncfuns
-    elif blocktype == 'simple-experiment-datablock':
-        mod = simple_uncfuns
-    else:
-        TypeError('unknown datablock type')
-    special_method = getattr(mod, method)
-    return special_method
 
 
 def create_relunc_vector(datablock_list):
     relunc_list = []
     for datablock in datablock_list:
-        curtype = datablock['type']
-        curfun = get_method(curtype, 'create_relunc_vector')
-        relunc_list.append(curfun(datablock))
+        curvec = dbunc_api.create_relunc_vector(datablock)
+        relunc_list.append(curvec)
     return np.concatenate(relunc_list)
-
-
-def create_relative_datablock_covmat(datablock):
-    curfun = get_method(datablock['type'], 'create_relative_datablock_covmat')
-    return curfun(datablock)
 
 
 def create_datablock_covmat_list(
@@ -52,25 +34,27 @@ def create_datablock_covmat_list(
     for db in datablock_list:
         numpts = 0
         curexpcss = []
-        for ds in db['datasets']:
-            css = get_measured_values(ds)
+        datasets = tuple(dbapi.dataset_iterator(db))
+        for ds in datasets:
+            css = dsapi.get_measured_values(ds)
             numpts += len(css)
             curexpcss.extend(css)
         next_idx = start_idx + numpts
 
         curuncs = uncs[start_idx:next_idx]
         curpropcss = propcss[start_idx:next_idx] if propcss is not None else curexpcss
-        ppp_factors = calculate_ppp_factors(db['datasets'], curpropcss)
+        ppp_factors = calculate_ppp_factors(datasets, curpropcss)
         cureffuncs = curuncs * ppp_factors
         curabsuncs = curexpcss * cureffuncs * 0.01
 
-        curcovmat = create_relative_datablock_covmat(db)
+        curcovmat = dbunc_api.create_relative_datablock_covmat(db)
 
         # This if-else statement is here to be able to
         # reproduce a bug of the Fortran GMAP version
-        if (db['type'] == 'legacy-experiment-datablock' and
+        dbtype = dbapi.get_datablock_type(db)
+        if (dbtype == 'legacy-experiment-datablock' and
                 'ECOR' not in db and not fix_ppp_bug):
-            curcormat = legacy_uncfuns.relcov_to_wrong_cor(curcovmat, db['datasets'], curpropcss)
+            curcormat = legacy_uncfuns.relcov_to_wrong_cor(curcovmat, datasets, curpropcss)
         else:
             curcormat = cov2cor(curcovmat)
 
@@ -79,7 +63,7 @@ def create_datablock_covmat_list(
                 curcormat = fix_cormat(curcormat)
             except Exception:
                 ds_ids = ', '.join((
-                    str(get_dataset_identifier(ds)) for ds in db['datasets']))
+                    str(dsapi.get_dataset_identifier(ds)) for ds in datasets))
                 raise ValueError(f'Problem with covariance matrix of datablock '
                                  f'with dataset ids {ds_ids}')
 
@@ -110,34 +94,8 @@ def create_experimental_covmat(
 def create_prior_covmat(prior_list):
     cov_list = []
     for curprior in prior_list:
-
-        curtype = curprior['type']
-        if curtype == 'legacy-prior-cross-section':
-            n = len(curprior['EN'])
-            curcov = diags(np.full(n, np.inf, dtype='d'))
-            cov_list.append(curcov)
-
-        elif curtype == 'legacy-fission-spectrum':
-            n = len(curprior['ENFIS'])
-            curcov = diags(np.full(n, 0., dtype='d'))
-            cov_list.append(curcov)
-
-        elif curtype == 'modern-fission-spectrum':
-            en = curprior['energies']
-            energies = curprior['covmat']['energies']
-            curcov1 = diags(np.full(len(en), 0., dtype='d'))
-            curcov2 = np.array(curprior['covmat']['matrix'])
-            if curcov2.shape[0] != curcov2.shape[0]:
-                raise TypeError('covariance matrix in prior fission spectrum ' +
-                                'is not square')
-            if len(energies)-1 != curcov2.shape[0]:
-                raise IndexError('mismatch between number of energies and ' +
-                                 'dimension of covariance matrix')
-            cov_list.append(curcov1)
-            cov_list.append(curcov2)
-
-        else:
-            raise TypeError(f'Unsupported prior block type {curtype}')
-
+        uncs = priorapi.get_uncertainties(curprior)
+        curcov = diags(np.square(uncs))
+        cov_list.append(curcov)
     covmat = block_diag(cov_list, format='csr')
     return covmat

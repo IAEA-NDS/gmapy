@@ -1,12 +1,25 @@
 import numpy as np
 from ...mappings.priortools import SHAPE_MT_IDS
 from ..unc_utils import calculate_ppp_factors, cov2cor, cor2cov
+from ..quantity_types import map_mt2str
 from ..dataset_api import (
     get_dataset_identifier,
     get_measured_values,
     get_quantity_type,
     get_incident_energies
 )
+
+
+def get_incident_energies_safely(dataset):
+    quant_type = map_mt2str[get_quantity_type(dataset)]
+    energies = get_incident_energies(dataset)
+    if np.any(np.isnan(energies)):
+        if (len(energies) == 1 and
+                quant_type in ('legacy_sacs', 'legacy_sacs_ratio')):
+            return np.array([0.], dtype=np.float64)
+        else:
+            raise ValueError('NaN values encountered in incident energies')
+    return energies
 
 
 # this function is here to reproduce
@@ -82,7 +95,7 @@ def create_relative_dataset_covmat(dataset):
     # some abbreviations
     MT = get_quantity_type(dataset)
     EPAF = np.array(dataset['EPAF'])
-    E = get_incident_energies(dataset)
+    E = get_incident_energies_safely(dataset)
     CO = np.array(dataset['CO'])
     ENFF = np.array(dataset['ENFF']) if 'ENFF' in dataset else None
     NNCOX = dataset['NNCOX']
@@ -142,7 +155,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
     next_ofs_dic = {}
     for i, ds in enumerate(dslist):
         dataset_id = get_dataset_identifier(ds)
-        energies = get_incident_energies(ds)
+        energies = get_incident_energies_safely(ds)
         cross_sections = get_measured_values(ds)
         if len(cross_sections) != len(energies):
             raise IndexError(
@@ -204,7 +217,8 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
         ENFF = np.array(ds['ENFF']) if 'ENFF' in ds else None
         if MT in SHAPE_MT_IDS and ENFF is not None:
             ENFF = np.full(10, 0., dtype='d')
-        E = get_incident_energies(ds)
+        quant_type = map_mt2str[get_quantity_type(ds)]
+        E = get_incident_energies_safely(ds)
         # loop over datasets to which correlations exist
         for pos2, dsid2 in enumerate(ds['NCSST']):
             # some error checking
@@ -244,7 +258,8 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
             ENFF2 = np.array(ds2['ENFF']) if 'ENFF' in ds2 else None
             if MT2 in SHAPE_MT_IDS and ENFF2 is not None:
                 ENFF2 = np.full(10, 0., dtype='d')
-            E2 = get_incident_energies(ds2)
+            quant_type2 = map_mt2str[get_quantity_type(ds2)]
+            E2 = get_incident_energies_safely(ds2)
 
             # We skip if one of the two datasets contains
             # shape data and there is only one measurement
@@ -258,6 +273,7 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
 
             # The following loops calculate the correlation block between
             # dataset 1 and dataset 2
+            sacs_energy_warning_printed = False
             for K in range(numpts):
                 ofs1 = start_ofs1 + K
                 for KK in range(numpts2):
@@ -293,6 +309,21 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
                             if NETG2[pNC2] == 9:
                                 FKS = 1.
                             else:
+                                problematic_quants = (
+                                    'legacy_sacs', 'legacy_sacs_ratio'
+                                )
+                                if ((quant_type in problematic_quants or
+                                        quant_type2 in problematic_quants) and
+                                        not sacs_energy_warning_printed):
+                                    print(('Warning: Energy-dependent correlations ' +
+                                        'provided between datasets %d (%s) and ' +
+                                        '%d (%s) but one of those datasets is a SACS or ' +
+                                        'ratio of SACS measurement. ' +
+                                        'The problem was encountered for the %d-th NEC component ' +
+                                        'where NC1=%d and NC2=%d.') %
+                                        (dsid, quant_type, dsid2, quant_type2, KKK+1, NC1, NC2+10))
+                                    sacs_energy_warning_printed = True
+
                                 XYY = (EPAF2[1, pNC2] - np.abs(E[K] - E2[KK]) /
                                         (EPAF2[2,pNC2]*E2[KK]))
                                 XYY = max(XYY, 0.)
