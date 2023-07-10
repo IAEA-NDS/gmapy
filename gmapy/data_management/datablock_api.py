@@ -1,13 +1,15 @@
 from .dispatch_utils import generate_method_getter
 from .specialized_datablock_apis import (
-    legacy_datablock_api
+    legacy_datablock_api,
+    simple_datablock_api
 )
 from . import dataset_api as dsapi
 import numpy as np
 
 
 _api_mapping = {
-    'legacy-experiment-datablock': legacy_datablock_api
+    'legacy-experiment-datablock': legacy_datablock_api,
+    'simple-experiment-datablock': simple_datablock_api
 }
 
 
@@ -48,7 +50,7 @@ def get_reaction_identifiers(datablock):
 
 
 def get_measured_values(datablock, flatten=False):
-    res = _apply(datablock, dsapi.get_reaction_identifiers)
+    res = _apply(datablock, dsapi.get_measured_values)
     if flatten:
         res = _flatten(res)
     return res
@@ -59,6 +61,10 @@ def get_incident_energies(datablock, flatten=False):
     if flatten:
         res = _flatten(res)
     return res
+
+
+def get_years(datablock):
+    return _apply(datablock, dsapi.get_year)
 
 
 def get_authors_strings(datablock):

@@ -15,7 +15,17 @@ def create_relative_datablock_covmat(datablock):
         relcovmat = np.array(datablock['relative_covariance_matrix'],
                              dtype=np.float64)
     elif 'percentual_uncertainties' in datablock:
-        reluncs = np.array('percentual_uncertainties', dtype=np.float64) / 100.
-        cormat = np.array(datablock['correlation_matrix'], dtype=np.float64)
-        relcovmat = (cormat * reluncs.reshape(-1, 1)) * reluncs.reshape(1, -1)
+        reluncs = np.array(datablock['percentual_uncertainties'],
+                           dtype=np.float64) / 100.
+        if 'lower_triagonal_correlation_matrix' in datablock:
+            tmp = datablock['lower_triagonal_correlation_matrix']
+            cormat = np.empty([len(tmp), len(tmp)], dtype=np.float64)
+            for i, currow in enumerate(tmp):
+                cormat[i, :i+1] = currow
+                cormat[:i+1, i] = currow
+            cormat /= 100
+            relcovmat = cormat * reluncs.reshape(-1, 1) * reluncs.reshape(1, -1)
+        else:
+            relcovmat = np.diag(np.square(reluncs), k=0)
+
     return relcovmat
