@@ -36018,6 +36018,166 @@
           }
         }
       ]
+    }, 
+    {
+      "type": "simple-experiment-datablock", 
+      "datasets": [
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2500, 
+          "quantity": "legacy_sacs", 
+          "reaction_identifier": 8, 
+          "measured_value": 1.216, 
+          "authors": "Grundl", 
+          "publication": "GRUNDL MEMO (Rev. Heaton 1976 ABSOL U-235f),indc(nds)-146, p.237", 
+          "year": 1976
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2501, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 8, 
+          "reaction_identifier_denominator": 10, 
+          "measured_value": 3.73, 
+          "authors": "Grundl, Gilliam", 
+          "publication": "GRUNDL-GILLIAM indc(nds)-146 (1983), p.244, inverse = 0.2681", 
+          "year": 1983
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2504, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 8, 
+          "reaction_identifier_denominator": 9, 
+          "measured_value": 0.666, 
+          "authors": "Grundl, Gilliam", 
+          "publication": "GRUNDL-GILLIAM indc(nds)-146 (1983), p.244, inverse = 1.502 (0.9%)", 
+          "year": 1983
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2505, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 9, 
+          "reaction_identifier_denominator": 8, 
+          "measured_value": 1.5, 
+          "authors": "Heaton", 
+          "publication": "Heaton 1976 ANL-76-90 60% ratio correl derived from common ratio uncert.", 
+          "year": 1976
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2506, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 10, 
+          "reaction_identifier_denominator": 8, 
+          "measured_value": 0.2644, 
+          "authors": "Heaton", 
+          "publication": "Heaton 1976 ANL-76-90 60% ratio correl derived from common ratio uncert.", 
+          "year": 1976
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2507, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 10, 
+          "reaction_identifier_denominator": 8, 
+          "measured_value": 0.269, 
+          "authors": "Schroeder", 
+          "publication": "Schroeder JANS 50(1985)154", 
+          "year": 1985
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2508, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 9, 
+          "reaction_identifier_denominator": 8, 
+          "measured_value": 1.5, 
+          "authors": "Schroeder", 
+          "publication": "Schroeder JANS 50(1985)154", 
+          "year": 1985
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2509, 
+          "quantity": "legacy_sacs", 
+          "reaction_identifier": 8, 
+          "measured_value": 1.234, 
+          "authors": "Schroeder", 
+          "publication": "Schroeder JANS 50(1985)154", 
+          "year": 1985
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2512, 
+          "quantity": "legacy_sacs", 
+          "reaction_identifier": 8, 
+          "measured_value": 1.215, 
+          "authors": "Knoll", 
+          "publication": "Davis/Knoll ANE 5 (1978) 583", 
+          "year": 1978
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2513, 
+          "quantity": "legacy_sacs", 
+          "reaction_identifier": 9, 
+          "measured_value": 1.79, 
+          "authors": "Knoll", 
+          "publication": "Davis/Knoll ANE 5 (1978) 583", 
+          "year": 1978
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2514, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 10, 
+          "reaction_identifier_denominator": 8, 
+          "measured_value": 0.2741, 
+          "authors": "Adamov", 
+          "publication": "NA", 
+          "year": 9999
+        }, 
+        {
+          "type": "modern-experiment-dataset", 
+          "api_version": "0.1", 
+          "identifier": 2515, 
+          "quantity": "legacy_sacs_ratio", 
+          "reaction_identifier_numerator": 9, 
+          "reaction_identifier_denominator": 8, 
+          "measured_value": 1.475, 
+          "authors": "Adamov", 
+          "publication": "NA", 
+          "year": 9999
+        }
+      ], 
+      "percentual_uncertainties": [1.62,  1.2,  0.9,  1.6, 1.32,  1.2,  0.8, 1.45, 1.79, 2.26, 1.66,  1.5], 
+      "lower_triagonal_correlation_matrix": [
+        [100], 
+        [ 23, 100], 
+        [ -9,  36, 100], 
+        [  0,   0,   0, 100], 
+        [  0,   0,   0,  60, 100], 
+        [  0,   0,   0,   0,   0, 100], 
+        [  0,   0,   0,   0,   0,  39, 100], 
+        [  0,   0,   0,   0,   0,   0,   0, 100], 
+        [  0,   0,   0,   0,   0,   0,   0,   0, 100], 
+        [  0,   0,   0,   0,   0,   0,   0,   0,  59, 100], 
+        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 100], 
+        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  39, 100]
+      ]
     }
   ]
 }
