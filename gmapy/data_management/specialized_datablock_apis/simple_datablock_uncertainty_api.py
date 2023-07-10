@@ -11,5 +11,11 @@ def create_relative_datablock_covmat(datablock):
         raise TypeError(
             f'this function cannot create a relative '
             f'covariance matrix for a datablock of type {datablock["type"]}.')
-    relcovmat = np.array(datablock['relative_covmat'])
+    if 'relative_covariance_matrix' in datablock:
+        relcovmat = np.array(datablock['relative_covariance_matrix'],
+                             dtype=np.float64)
+    elif 'percentual_uncertainties' in datablock:
+        reluncs = np.array('percentual_uncertainties', dtype=np.float64) / 100.
+        cormat = np.array(datablock['correlation_matrix'], dtype=np.float64)
+        relcovmat = (cormat * reluncs.reshape(-1, 1)) * reluncs.reshape(1, -1)
     return relcovmat
