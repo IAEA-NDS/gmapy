@@ -318,8 +318,10 @@ def create_relative_datablock_covmat(datablock, shouldfix=True):
                                     print(('Warning: Energy-dependent correlations ' +
                                         'provided between datasets %d (%s) and ' +
                                         '%d (%s) but one of those datasets is a SACS or ' +
-                                        'ratio of SACS measurement') %
-                                        (dsid, quant_type, dsid2, quant_type2))
+                                        'ratio of SACS measurement. ' +
+                                        'The problem was encountered for the %d-th NEC component ' +
+                                        'where NC1=%d and NC2=%d.') %
+                                        (dsid, quant_type, dsid2, quant_type2, KKK+1, NC1, NC2+10))
                                     sacs_energy_warning_printed = True
 
                                 XYY = (EPAF2[1, pNC2] - np.abs(E[K] - E2[KK]) /
