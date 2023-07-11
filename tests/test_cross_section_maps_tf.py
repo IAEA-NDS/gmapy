@@ -32,6 +32,10 @@ from gmapy.mappings.cross_section_total_map \
     import CrossSectionTotalMap
 from gmapy.mappings.cross_section_total_map_tf \
     import CrossSectionTotalMap as CrossSectionTotalMapTF
+from gmapy.mappings.cross_section_ratio_of_sacs_map \
+    import CrossSectionRatioOfSacsMap
+from gmapy.mappings.cross_section_ratio_of_sacs_map_tf \
+    import CrossSectionRatioOfSacsMap as CrossSectionRatioOfSacsMapTF
 
 from gmapy.mappings.cross_section_fission_average_map import CrossSectionFissionAverageMap
 from gmapy.mappings.cross_section_fission_average_map_tf \
@@ -50,7 +54,7 @@ class TestCrossSectionMapsTF(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         dbpath = (pathlib.Path(__file__).parent / 'testdata' /
-                'data-2017-07-26.gma').resolve().as_posix()
+                'data_and_sacs.json').resolve().as_posix()
         cls._dbpath = dbpath
         cls._gmadb = GMADatabase(dbpath)
 
@@ -127,14 +131,23 @@ class TestCrossSectionMapsTF(unittest.TestCase):
             ModernCrossSectionFissionAverageMap, CrossSectionFissionAverageMapTF
         )
 
+    def test_cross_section_ratio_of_sacs_map_tf_equivalence(self):
+        self._test_mapping_tf_equivalence(
+            CrossSectionRatioOfSacsMap, CrossSectionRatioOfSacsMapTF
+        )
+
     def test_compound_map_tf_equivalence(self):
         dt = self._gmadb.get_datatable()
+        xs_map = CompoundMap(dt, reduce=True)
         xs_map_tf = CompoundMapTF(dt, reduce=True)
         x = dt.loc[~dt.NODE.str.match('exp_'), 'PRIOR'].to_numpy()
         x_tf = tf.Variable(x, dtype=tf.float64)
-        y = xs_map_tf(x_tf)
+        y_tf = xs_map_tf(x_tf)
+        y = xs_map.propagate(x)
+        self.assertTrue(np.allclose(y, y_tf.numpy()))
 
-    def test_temp(self):
+    @unittest.skip
+    def test_timings_of_propagate_and_gradient(self):
         for cur_reduce in (True,):
             dt = self._gmadb.get_datatable()
             xs_map = CompoundMap(dt, reduce=cur_reduce)
