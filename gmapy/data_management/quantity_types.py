@@ -13,3 +13,6 @@ map_str2mt = {
 
 
 map_mt2str = {v: k for k, v in map_str2mt.items()}
+
+
+SHAPE_MT_IDS = (2, 4, 8, 9)
