@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import re
+from ..data_management.datablock_api import dataset_iterator
+from ..data_management import dataset_api as dsapi
 
 
 SHAPE_MT_IDS = (2,4,8,9)
@@ -113,10 +115,15 @@ def update_dummy_datapoints(datatable, refvals):
 def update_dummy_datapoints2(datablock_list, refvals):
     cur_idx = 0
     for db in datablock_list:
-        for ds in db['datasets']:
-            next_idx = cur_idx + len(ds['CSS'])
-            if re.match('^90[0-9]$', str(ds['NS'])):
-                ds['CSS'] = refvals[cur_idx:next_idx]
+        datasets = tuple(dataset_iterator(db))
+        for ds in datasets:
+            dstype = dsapi.get_dataset_type(ds)
+            dsid = dsapi.get_dataset_identifier(ds)
+            css = dsapi.get_measured_values(ds)
+            next_idx = cur_idx + len(css)
+            if (dstype == 'legacy-experiment-dataset' and
+                    re.match('^90[0-9]$', str(dsid))):
+                dsapi.add_measured_values(ds, refvals[cur_idx:next_idx])
             cur_idx = next_idx
 
 
@@ -124,11 +131,13 @@ def remove_dummy_datasets(datablock_list):
     dummy_db_idcs = []
     for db_idx, db in enumerate(datablock_list):
         dummy_ds_idcs = []
-        for ds_idx, ds in enumerate(db['datasets']):
-            if re.match('^90[0-9]$', str(ds['NS'])):
+        datasets = tuple(dataset_iterator(db))
+        for ds_idx, ds in enumerate(datasets):
+            dstype = dsapi.get_dataset_type(ds)
+            dsid = dsapi.get_dataset_identifier(ds)
+            if (dstype == 'legacy-experiment-dataset' and
+                    re.match('^90[0-9]$', str(dsid))):
                 dummy_ds_idcs.append(ds_idx)
-        if not np.all(dummy_ds_idcs == np.arange(len(dummy_ds_idcs))):
-            raise IndexError('mix of dummy and non-dummy datasets in datablock not allowed')
         if len(dummy_ds_idcs) > 0:
             dummy_db_idcs.append(db_idx)
     for db_idx in reversed(dummy_db_idcs):
