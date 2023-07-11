@@ -28,4 +28,7 @@ def create_relative_datablock_covmat(datablock):
         else:
             relcovmat = np.diag(np.square(reluncs), k=0)
 
+        # for the time being "relative" means on the scale of percent
+        relcovmat *= 1e4
+
     return relcovmat
