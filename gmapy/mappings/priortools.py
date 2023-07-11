@@ -3,9 +3,7 @@ import pandas as pd
 import re
 from ..data_management.datablock_api import dataset_iterator
 from ..data_management import dataset_api as dsapi
-
-
-SHAPE_MT_IDS = (2,4,8,9)
+from ..data_management.quantity_types import SHAPE_MT_IDS
 
 
 def prepare_prior_and_exptable(datatable, reduce, reset_index=True):
