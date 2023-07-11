@@ -8,6 +8,7 @@ from .cross_section_shape_of_ratio_map_tf import CrossSectionShapeOfRatioMap
 from .cross_section_shape_of_sum_map_tf import CrossSectionShapeOfSumMap
 from .cross_section_total_map_tf import CrossSectionTotalMap
 from .cross_section_fission_average_map_tf import CrossSectionFissionAverageMap
+from .cross_section_ratio_of_sacs_map_tf import CrossSectionRatioOfSacsMap
 from .relative_error_map_tf import RelativeErrorMap
 from .energy_dependent_usu_map_tf import EnergyDependentUSUMap
 import tensorflow as tf
@@ -32,7 +33,8 @@ class CompoundMap(tf.Module):
                 CrossSectionShapeOfRatioMap,
                 CrossSectionShapeOfSumMap,
                 CrossSectionTotalMap,
-                CrossSectionFissionAverageMap
+                CrossSectionFissionAverageMap,
+                CrossSectionRatioOfSacsMap
             ]
         dt = datatable
         self._reduce = reduce
