@@ -68,7 +68,6 @@ class CrossSectionBaseMap(tf.Module):
         self._jacfun_list = jacfun_list
         self._prepared_jacobian = True
 
-    @tf.function
     def __call__(self, inputs):
         self._base_prepare_propagate()
         selcol = self._selcol
@@ -86,7 +85,6 @@ class CrossSectionBaseMap(tf.Module):
         res = tf.add_n(out_list)
         return res
 
-    @tf.function
     def jacobian(self, inputs):
         if not self._prepared_jacobian:
             self._prepare_jacobian()
