@@ -1,24 +1,11 @@
 import numpy as np
-import tensorflow as tf
-from .priortools import prepare_prior_and_exptable
+from .cross_section_base_map_tf import CrossSectionBaseMap
 from .mapping_elements_tf import (
-    PiecewiseLinearInterpolation,
-    InputSelectorCollection,
-    Distributor
+    PiecewiseLinearInterpolation
 )
 
 
-class CrossSectionShapeOfRatioMap(tf.Module):
-
-    def __init__(self, datatable, selcol=None, reduce=True):
-        super().__init__()
-        if not self.is_applicable(datatable):
-            raise TypeError('CrossSectionRatioMap not applicable')
-        self._datatable = datatable
-        self._reduce = reduce
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self._selcol = selcol
+class CrossSectionShapeOfRatioMap(CrossSectionBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
@@ -27,11 +14,7 @@ class CrossSectionShapeOfRatioMap(tf.Module):
             datatable['NODE'].str.match('exp_', na=False)
         ).any()
 
-    @tf.function
-    def __call__(self, inputs):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(self._datatable, self._reduce)
-
+    def _prepare_propagate(self, priortable, exptable):
         priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
                      priortable['NODE'].str.match('xsid_', na=False))
         priormask = np.logical_or(priormask, priortable['NODE'].str.match('norm_', na=False))
@@ -43,9 +26,6 @@ class CrossSectionShapeOfRatioMap(tf.Module):
 
         exptable = exptable[expmask]
         reacs = exptable['REAC'].unique()
-
-        selcol = self._selcol
-        out_list = []
         for curreac in reacs:
             # obtain the involved reactions
             string_groups = curreac.split('-')
@@ -71,10 +51,6 @@ class CrossSectionShapeOfRatioMap(tf.Module):
             src_en2 = np.array(priortable_red2['ENERGY'])
             src_en3 = np.array(priortable_red3['ENERGY'])
 
-            inpvar1 = selcol.define_selector(src_idcs1)(inputs)
-            inpvar2 = selcol.define_selector(src_idcs2)(inputs)
-            inpvar3 = selcol.define_selector(src_idcs3)(inputs)
-
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             datasets = exptable_red['NODE'].unique()
             for ds in datasets:
@@ -92,15 +68,18 @@ class CrossSectionShapeOfRatioMap(tf.Module):
                 )
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
+                propfun = self._generate_atomic_propagate(
+                    src_en1, src_en2, src_en3, tar_en
+                )
+                self._add_lists(
+                    (src_idcs1, src_idcs2, src_idcs3, norm_index), tar_idcs, propfun
+                )
 
-                norm_fact = selcol.define_selector(norm_index)(inputs)
-
-                inpvar1_int = PiecewiseLinearInterpolation(src_en1, tar_en)(inpvar1)
-                inpvar2_int = PiecewiseLinearInterpolation(src_en2, tar_en)(inpvar2)
-                inpvar3_int = PiecewiseLinearInterpolation(src_en3, tar_en)(inpvar3)
-                tmpres = norm_fact * inpvar1_int / (inpvar2_int + inpvar3_int)
-                outvar = Distributor(tar_idcs, tar_len)(tmpres)
-                out_list.append(outvar)
-
-        res = tf.add_n(out_list)
-        return res
+    def _generate_atomic_propagate(self, src_en1, src_en2, src_en3, tar_en):
+        def _atomic_propagate(inpvar1, inpvar2, inpvar3, norm_fact):
+            inpvar1_int = PiecewiseLinearInterpolation(src_en1, tar_en)(inpvar1)
+            inpvar2_int = PiecewiseLinearInterpolation(src_en2, tar_en)(inpvar2)
+            inpvar3_int = PiecewiseLinearInterpolation(src_en3, tar_en)(inpvar3)
+            tmpres = norm_fact * inpvar1_int / (inpvar2_int + inpvar3_int)
+            return tmpres
+        return _atomic_propagate
