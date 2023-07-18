@@ -1,24 +1,12 @@
 import numpy as np
 import tensorflow as tf
-from .priortools import prepare_prior_and_exptable
+from .cross_section_base_map_tf import CrossSectionBaseMap
 from .mapping_elements_tf import (
-    PiecewiseLinearInterpolation,
-    InputSelectorCollection,
-    Distributor
+    PiecewiseLinearInterpolation
 )
 
 
-class CrossSectionTotalMap(tf.Module):
-
-    def __init__(self, datatable, selcol=None, reduce=True):
-        super().__init__()
-        if not self.is_applicable(datatable):
-            raise TypeError('CrossSectionRatioMap not applicable')
-        self._datatable = datatable
-        self._reduce = reduce
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self._selcol = selcol
+class CrossSectionTotalMap(CrossSectionBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
@@ -27,11 +15,7 @@ class CrossSectionTotalMap(tf.Module):
             datatable['NODE'].str.match('exp_', na=False)
         ).any()
 
-    @tf.function
-    def __call__(self, inputs):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(self._datatable, self._reduce)
-
+    def _prepare_propagate(self, priortable, exptable):
         priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
                      priortable['NODE'].str.match('xsid_', na=False))
         priortable = priortable[priormask]
@@ -39,12 +23,8 @@ class CrossSectionTotalMap(tf.Module):
             exptable['REAC'].str.match('MT:5(-R[0-9]+:[0-9]+)+', na=False) &
             exptable['NODE'].str.match('exp_', na=False)
         )
-
         exptable = exptable[expmask]
         reacs = exptable['REAC'].unique()
-
-        selcol = self._selcol
-        out_list = []
         for curreac in reacs:
             # obtian the involved reactions
             reac_groups = curreac.split('-')[1:]
@@ -61,18 +41,14 @@ class CrossSectionTotalMap(tf.Module):
             src_en_list = [np.array(pt['ENERGY']) for pt in priortable_reds]
             tar_idcs = np.array(exptable_red.index)
             tar_en = np.array(exptable_red['ENERGY'])
+            propfun = self._generate_atomic_propagate(src_en_list, tar_en)
+            self._add_lists(src_idcs_list, tar_idcs, propfun)
 
-            cvars = [
-                selcol.define_selector(idcs)(inputs)
-                for idcs in src_idcs_list
-            ]
+    def _generate_atomic_propagate(self, src_en_list, tar_en):
+        def _atomic_propagate(*cvars):
             cvars_int = []
             for cv, en in zip(cvars, src_en_list):
                 cvars_int.append(PiecewiseLinearInterpolation(en, tar_en)(cv))
 
-            tmpres = tf.add_n(cvars_int)
-            outvar = Distributor(tar_idcs, tar_len)(tmpres)
-            out_list.append(outvar)
-
-        res = tf.add_n(out_list)
-        return res
+            return tf.add_n(cvars_int)
+        return _atomic_propagate
