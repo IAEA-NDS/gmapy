@@ -3,25 +3,13 @@ import tensorflow as tf
 from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
-from .priortools import prepare_prior_and_exptable
+from .cross_section_base_map_tf import CrossSectionBaseMap
 from .mapping_elements_tf import (
-    InputSelectorCollection,
-    Distributor,
     IntegralOfProductLinLin
 )
 
 
-class CrossSectionRatioOfSacsMap:
-
-    def __init__(self, datatable, selcol=None, reduce=True):
-        super().__init__()
-        if not self.is_applicable(datatable):
-            raise TypeError('CrossSectionRatioMap not applicable')
-        self._datatable = datatable
-        self._reduce = reduce
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self._selcol = selcol
+class CrossSectionRatioOfSacsMap(CrossSectionBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
@@ -30,10 +18,7 @@ class CrossSectionRatioOfSacsMap:
             datatable['NODE'].str.match('exp_', na=False)
         ).any()
 
-    def __call__(self, inputs):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(self._datatable, self._reduce)
-
+    def _prepare_propagate(self, priortable, exptable):
         priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
                      priortable['NODE'].str.match('xsid_', na=False))
         is_fis_row = priortable['NODE'].str.fullmatch('fis', na=False)
@@ -43,22 +28,15 @@ class CrossSectionRatioOfSacsMap:
         priortable = priortable[priormask]
         expmask = exptable['REAC'].str.match('MT:10-R1:[0-9]+-R2:[0-9]+', na=False)
 
-        selcol = self._selcol
-
         exptable = exptable[expmask]
         expids = exptable['NODE'].unique()
 
         # retrieve fission spectrum
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
+        fis_idcs = np.array(fistable.index)
         ensfis = fistable['ENERGY'].to_numpy()
 
-        raw_fisobj = selcol.define_selector(np.array(fistable.index))(inputs)
-
-        scl = get_legacy_to_pointwise_fis_factors(ensfis)
-        scl = tf.constant(scl, dtype=tf.float64)
-
-        unnorm_fisobj = raw_fisobj * scl
-        out_list = []
+        norm_fact = get_legacy_to_pointwise_fis_factors(ensfis)
         for curexp in expids:
             exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
             if len(exptable_red) != 1:
@@ -84,17 +62,19 @@ class CrossSectionRatioOfSacsMap:
 
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
+            propfun = self._generate_atomic_propagate(
+                ens1, ens2, ensfis, norm_fact
+            )
+            self._add_lists(
+                (idcs1red, idcs2red, fis_idcs), idcs_exp_red, propfun
+            )
 
-            xsobj1 = selcol.define_selector(idcs1red)(inputs)
-            xsobj2 = selcol.define_selector(idcs2red)(inputs)
-
+    def _generate_atomic_propagate(self, ens1, ens2, ensfis, norm_fact):
+        def _atomic_propagate(xsobj1, xsobj2, raw_fisobj):
+            scl = tf.constant(norm_fact, dtype=tf.float64)
+            unnorm_fisobj = raw_fisobj * scl
             fisavg1 = IntegralOfProductLinLin(ens1, ensfis)(xsobj1, unnorm_fisobj)
             fisavg2 = IntegralOfProductLinLin(ens2, ensfis)(xsobj2, unnorm_fisobj)
-
             fisavg_ratio = fisavg1 / fisavg2
-
-            outvar = Distributor(idcs_exp_red, tar_len)(fisavg_ratio)
-            out_list.append(outvar)
-
-        res = tf.add_n(out_list)
-        return res
+            return fisavg_ratio
+        return _atomic_propagate
