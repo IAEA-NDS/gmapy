@@ -85,6 +85,21 @@ class CrossSectionBaseMap(tf.Module):
         self._jacfun_list = jacfun_list
         self._prepared_jacobian = True
 
+    def _rebase_sparse_matrix(self, spmat, row_idcs, col_idcs, shape):
+        row_idcs_tf = tf.constant(row_idcs, dtype=tf.int64)
+        col_idcs_tf = tf.constant(col_idcs, dtype=tf.int64)
+        col_slc = tf.slice(spmat.indices, [0, 1], [-1, 1])
+        s = tf.gather(col_idcs_tf, col_slc)
+        row_slc = tf.slice(spmat.indices, [0, 0], [-1, 1])
+        t = tf.gather(row_idcs_tf, row_slc)
+        z = tf.concat((t, s), axis=1)
+        newmat = tf.sparse.SparseTensor(
+            indices=z,
+            values=spmat.values,
+            dense_shape=shape
+        )
+        return newmat
+
     def _jacobian_iterator(self, inputs):
         if not self._prepared_jacobian:
             self._prepare_jacobian()
@@ -99,17 +114,10 @@ class CrossSectionBaseMap(tf.Module):
             jac_list = jacfun(*inpvars)
             tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
             for src_idcs, jac in zip(src_idcs_list, jac_list):
-                st = tf.sparse.from_dense(jac)
-                src_idcs_tf = tf.constant(src_idcs, dtype=tf.int64)
-                slice1 = tf.slice(st.indices, [0, 1], [-1, 1])
-                s1 = tf.gather(src_idcs_tf, slice1)
-                slice2 = tf.slice(st.indices, [0, 0], [-1, 1])
-                t1 = tf.gather(tar_idcs_tf, slice2)
-                z = tf.concat((t1, s1), axis=1)
-                curjac = tf.sparse.SparseTensor(
-                    indices=z,
-                    values=st.values,
-                    dense_shape=(self._tar_len, self._src_len)
+                red_curjac = tf.sparse.from_dense(jac)
+                curjac = self._rebase_sparse_matrix(
+                    red_curjac, tar_idcs_tf, src_idcs,
+                    (self._tar_len, self._src_len)
                 )
                 yield curjac
 
