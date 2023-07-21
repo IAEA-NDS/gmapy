@@ -58,16 +58,6 @@ class CrossSectionBaseMap(tf.Module):
             self._prepare_propagate(priortable, exptable)
             self._prepared_propagate = True
 
-    def _prepare_jacobian(self):
-        self._base_prepare_propagate()
-        it = self._lists_iterator()
-        jacfun_list = []
-        for _, _, propfun, _, _ in it:
-            jacfun = self._generate_atomic_jacobian(propfun)
-            jacfun_list.append(jacfun)
-        self._jacfun_list = jacfun_list
-        self._prepared_jacobian = True
-
     def __call__(self, inputs):
         self._base_prepare_propagate()
         selcol = self._selcol
@@ -85,16 +75,21 @@ class CrossSectionBaseMap(tf.Module):
         res = tf.add_n(out_list)
         return res
 
-    def jacobian(self, inputs):
+    def _prepare_jacobian(self):
+        self._base_prepare_propagate()
+        it = self._lists_iterator()
+        jacfun_list = []
+        for _, _, propfun, _, _ in it:
+            jacfun = self._generate_atomic_jacobian(propfun)
+            jacfun_list.append(jacfun)
+        self._jacfun_list = jacfun_list
+        self._prepared_jacobian = True
+
+    def _jacobian_iterator(self, inputs):
         if not self._prepared_jacobian:
             self._prepare_jacobian()
             self._prepared_jacobian = True
         selcol = self._selcol
-        res = tf.sparse.SparseTensor(
-            indices=[[0, 0]],
-            values=tf.zeros(shape=(1,), dtype=tf.float64),
-            dense_shape=(self._tar_len, self._src_len)
-        )
         it = self._lists_iterator()
         for src_idcs_list, tar_idcs, _, jacfun, _ in it:
             inpvars = []
@@ -102,28 +97,26 @@ class CrossSectionBaseMap(tf.Module):
                 cur_inpvar = selcol.define_selector(src_idcs)(inputs)
                 inpvars.append(cur_inpvar)
             jac_list = jacfun(*inpvars)
+            tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
             for src_idcs, jac in zip(src_idcs_list, jac_list):
                 st = tf.sparse.from_dense(jac)
                 src_idcs_tf = tf.constant(src_idcs, dtype=tf.int64)
-                tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
-                slice1 = tf.reshape(
-                    tf.slice(st.indices, [0, 1], [-1, 1]),
-                    shape=(-1,)
-                )
+                slice1 = tf.slice(st.indices, [0, 1], [-1, 1])
                 s1 = tf.gather(src_idcs_tf, slice1)
-                slice2 = tf.reshape(
-                    tf.slice(st.indices, [0, 0], [-1, 1]),
-                    shape=(-1,)
-                )
+                slice2 = tf.slice(st.indices, [0, 0], [-1, 1])
                 t1 = tf.gather(tar_idcs_tf, slice2)
-                z = tf.stack((t1, s1), axis=1)
-                st = tf.sparse.SparseTensor(
+                z = tf.concat((t1, s1), axis=1)
+                curjac = tf.sparse.SparseTensor(
                     indices=z,
                     values=st.values,
                     dense_shape=(self._tar_len, self._src_len)
                 )
-                res = tf.sparse.add(res, st)
+                yield curjac
 
+    def jacobian(self, inputs):
+        res = None
+        for curjac in self._jacobian_iterator(inputs):
+            res = curjac if res is None else tf.sparse.add(res, curjac)
         return res
 
     def _generate_atomic_propagate(self, *args, **kwargs):
