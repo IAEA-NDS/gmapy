@@ -48,8 +48,7 @@ class CompoundMap(tf.Module):
                 curmap = curclass(dt, selcol=selcol, reduce=reduce)
                 self._maplist.append(curmap)
 
-    @tf.function
-    def __call__(self, inputs):
+    def _orig_propagate(self, inputs):
         out_list = []
         for curmap in self._maplist:
             out_list.append(curmap(inputs))
@@ -58,19 +57,29 @@ class CompoundMap(tf.Module):
             inp = InputSelector(self._indep_idcs)(inputs)
             inpdist = Distributor(self._indep_idcs, len(res))(inp)
             res = res + inpdist
+        return res
+
+    def _apply_modifier_maps(self, inputs, orig_propvals):
         # modifier maps (rely on the output of the other maps)
         adj_list = []
         if RelativeErrorMap.is_applicable(self._datatable):
             curmap = RelativeErrorMap(
-                self._datatable, res, self._selcol, self._reduce
+                self._datatable, orig_propvals, self._selcol, self._reduce
             )
             adj_list.append(curmap(inputs))
         if EnergyDependentUSUMap.is_applicable(self._datatable):
             curmap = EnergyDependentUSUMap(
-                self._datatable, res, self._selcol, self._reduce
+                self._datatable, orig_propvals, self._selcol, self._reduce
             )
             adj_list.append(curmap(inputs))
 
-        if len(adj_list) > 0:
-            res = res + tf.add_n(adj_list)
+        if len(adj_list) == 0:
+            return orig_propvals
+        else:
+            res = orig_propvals + tf.add_n(adj_list)
+            return res
+
+    def __call__(self, inputs):
+        orig_propvals = self._orig_propagate(inputs)
+        res = self._apply_modifier_maps(inputs, orig_propvals)
         return res
