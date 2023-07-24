@@ -83,3 +83,27 @@ class CompoundMap(tf.Module):
         orig_propvals = self._orig_propagate(inputs)
         res = self._apply_modifier_maps(inputs, orig_propvals)
         return res
+
+    def _orig_jacobian(self, inputs):
+        first = True
+        res = None
+        for curmap in self._maplist:
+            curjac = curmap.jacobian(inputs)
+            if first is True:
+                first = False
+                res = curjac
+            else:
+                res = tf.sparse.add(res, curjac)
+        return res
+
+    def jacobian(self, inputs):
+        orig_propvals = self._orig_propagate(inputs)
+        orig_jac = self._orig_jacobian(inputs)
+        final_jac = orig_jac
+        if RelativeErrorMap.is_applicable(self._datatable):
+            curmap = RelativeErrorMap(
+                self._datatable, orig_propvals, self._selcol, self._reduce
+            )
+            curjac = curmap.jacobian(inputs, orig_jac)
+            final_jac = tf.sparse.add(final_jac, curjac)
+        return final_jac
