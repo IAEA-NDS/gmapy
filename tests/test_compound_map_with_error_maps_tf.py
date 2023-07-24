@@ -1,6 +1,7 @@
 import unittest
 import pathlib
 import numpy as np
+from scipy.sparse import csr_matrix
 import tensorflow as tf
 from gmapy.gma_database_class import GMADatabase
 from gmapy.mappings.compound_map import CompoundMap
@@ -49,6 +50,23 @@ class TestCompoundMapWithErrorMapsTF(unittest.TestCase):
         propvals = compmap.propagate(refvals)
         propvals_tf = compmap_tf(refvals_tf)
         self.assertTrue(np.allclose(propvals, propvals_tf.numpy()))
+
+    def test_proper_jacobian_of_relative_errors(self):
+        dt = self._gmadb.get_datatable()
+        sel = dt.NODE.str.match('relerr_1027') & (dt.ENERGY == 14.0)
+        idx = dt.index[sel]
+        assert len(idx) == 1
+        refvals = dt.PRIOR.to_numpy(copy=True)
+        refvals[idx] = 0.27
+        refvals_tf = tf.Variable(refvals, dtype=tf.float64)
+        compmap = CompoundMap(dt)
+        compmap_tf = CompoundMapTF(dt)
+        jac = compmap.jacobian(refvals, with_id=False)
+        jac_tf = compmap_tf.jacobian(refvals_tf)
+        jac_tf_csr = csr_matrix((jac_tf.values, (
+            jac_tf.indices[:, 0], jac_tf.indices[:, 1])), shape=jac_tf.dense_shape
+        )
+        self.assertTrue(np.allclose(jac.toarray(), jac_tf_csr.toarray()))
 
 
 if __name__ == '__main__':
