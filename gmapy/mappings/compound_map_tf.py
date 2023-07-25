@@ -36,6 +36,10 @@ class CompoundMap(tf.Module):
                 CrossSectionFissionAverageMap,
                 CrossSectionRatioOfSacsMap
             ]
+        self.modifierclasslist = [
+                RelativeErrorMap,
+                EnergyDependentUSUMap
+        ]
         dt = datatable
         self._reduce = reduce
         self._indep_idcs = dt.index[~dt.NODE.str.match('exp_', na=False)]
@@ -62,17 +66,13 @@ class CompoundMap(tf.Module):
     def _apply_modifier_maps(self, inputs, orig_propvals):
         # modifier maps (rely on the output of the other maps)
         adj_list = []
-        if RelativeErrorMap.is_applicable(self._datatable):
-            curmap = RelativeErrorMap(
+        for curclass in self.modifierclasslist:
+            if not curclass.is_applicable(self._datatable):
+                continue
+            curmap = curclass(
                 self._datatable, orig_propvals, self._selcol, self._reduce
             )
             adj_list.append(curmap(inputs))
-        if EnergyDependentUSUMap.is_applicable(self._datatable):
-            curmap = EnergyDependentUSUMap(
-                self._datatable, orig_propvals, self._selcol, self._reduce
-            )
-            adj_list.append(curmap(inputs))
-
         if len(adj_list) == 0:
             return orig_propvals
         else:
@@ -100,15 +100,10 @@ class CompoundMap(tf.Module):
         orig_propvals = self._orig_propagate(inputs)
         orig_jac = self._orig_jacobian(inputs)
         final_jac = orig_jac
-        if RelativeErrorMap.is_applicable(self._datatable):
-            curmap = RelativeErrorMap(
-                self._datatable, orig_propvals, self._selcol, self._reduce
-            )
-            curjac = curmap.jacobian(inputs, orig_jac)
-            final_jac = tf.sparse.add(final_jac, curjac)
-
-        if EnergyDependentUSUMap.is_applicable(self._datatable):
-            curmap = EnergyDependentUSUMap(
+        for curclass in self.modifierclasslist:
+            if not curclass.is_applicable(self._datatable):
+                continue
+            curmap = curclass(
                 self._datatable, orig_propvals, self._selcol, self._reduce
             )
             curjac = curmap.jacobian(inputs, orig_jac)
