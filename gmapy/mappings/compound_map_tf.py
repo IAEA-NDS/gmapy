@@ -106,4 +106,11 @@ class CompoundMap(tf.Module):
             )
             curjac = curmap.jacobian(inputs, orig_jac)
             final_jac = tf.sparse.add(final_jac, curjac)
+
+        if EnergyDependentUSUMap.is_applicable(self._datatable):
+            curmap = EnergyDependentUSUMap(
+                self._datatable, orig_propvals, self._selcol, self._reduce
+            )
+            curjac = curmap.jacobian(inputs, orig_jac)
+            final_jac = tf.sparse.add(final_jac, curjac)
         return final_jac
