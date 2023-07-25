@@ -146,7 +146,7 @@ class CrossSectionBaseMap(tf.Module):
         )
         return newmat
 
-    def _jacobian_iterator(self, inputs):
+    def _outer_jacobian_iterator(self, inputs):
         if not self._prepared_jacobian:
             self._prepare_jacobian()
             self._prepared_jacobian = True
@@ -159,18 +159,25 @@ class CrossSectionBaseMap(tf.Module):
                 inpvars.append(cur_inpvar)
             yield jacfun, inpvars, src_idcs_list, tar_idcs
 
+    def _inner_jacobian_iterator(self, src_idcs_list, tar_idcs, jac_list):
+        tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
+        for src_idcs, jac in zip(src_idcs_list, jac_list):
+            red_curjac = tf.sparse.from_dense(jac)
+            curjac = self._rebase_sparse_matrix(
+                red_curjac, tar_idcs_tf, src_idcs,
+                (self._tar_len, self._src_len)
+            )
+            yield curjac
+
     def jacobian(self, inputs):
         res = None
-        jaciter = self._jacobian_iterator(inputs)
-        for jacfun, inpvars, src_idcs_list, tar_idcs in jaciter:
+        outer_iter = self._outer_jacobian_iterator(inputs)
+        for jacfun, inpvars, src_idcs_list, tar_idcs in outer_iter:
             jac_list = jacfun(*inpvars)
-            tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
-            for src_idcs, jac in zip(src_idcs_list, jac_list):
-                red_curjac = tf.sparse.from_dense(jac)
-                curjac = self._rebase_sparse_matrix(
-                    red_curjac, tar_idcs_tf, src_idcs,
-                    (self._tar_len, self._src_len)
-                )
+            inner_iter = self._inner_jacobian_iterator(
+                src_idcs_list, tar_idcs, jac_list
+            )
+            for curjac in inner_iter:
                 res = curjac if res is None else tf.sparse.add(res, curjac)
         return res
 
