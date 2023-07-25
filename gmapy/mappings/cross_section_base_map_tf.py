@@ -135,13 +135,19 @@ class CrossSectionBaseMap(tf.Module):
         if col_idcs is None:
             col_idcs_tf = tf.range(spmat.dense_shape[1], dtype=tf.int64)
         else:
-            col_idcs_tf = tf.constant(col_idcs, dtype=tf.int64)
+            if isinstance(col_idcs, tf.Tensor):
+                col_idcs_tf = col_idcs
+            else:
+                col_idcs_tf = tf.constant(col_idcs, dtype=tf.int64)
         col_slc = tf.slice(spmat.indices, [0, 1], [-1, 1])
         s = tf.gather(col_idcs_tf, col_slc)
         if row_idcs is None:
             row_idcs_tf = tf.range(spmat.dense_shape[0], dtype=tf.int64)
         else:
-            row_idcs_tf = tf.constant(row_idcs, dtype=tf.int64)
+            if isinstance(row_idcs, tf.Tensor):
+                row_idcs_tf = row_idcs
+            else:
+                row_idcs_tf = tf.constant(row_idcs, dtype=tf.int64)
         row_slc = tf.slice(spmat.indices, [0, 0], [-1, 1])
         t = tf.gather(row_idcs_tf, row_slc)
         z = tf.concat((t, s), axis=1)
