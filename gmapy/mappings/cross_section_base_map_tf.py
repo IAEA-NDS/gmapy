@@ -157,6 +157,12 @@ class CrossSectionBaseMap(tf.Module):
             for src_idcs in src_idcs_list:
                 cur_inpvar = selcol.define_selector(src_idcs)(inputs)
                 inpvars.append(cur_inpvar)
+            yield jacfun, inpvars, src_idcs_list, tar_idcs
+
+    def jacobian(self, inputs):
+        res = None
+        jaciter = self._jacobian_iterator(inputs)
+        for jacfun, inpvars, src_idcs_list, tar_idcs in jaciter:
             jac_list = jacfun(*inpvars)
             tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
             for src_idcs, jac in zip(src_idcs_list, jac_list):
@@ -165,12 +171,7 @@ class CrossSectionBaseMap(tf.Module):
                     red_curjac, tar_idcs_tf, src_idcs,
                     (self._tar_len, self._src_len)
                 )
-                yield curjac
-
-    def jacobian(self, inputs):
-        res = None
-        for curjac in self._jacobian_iterator(inputs):
-            res = curjac if res is None else tf.sparse.add(res, curjac)
+                res = curjac if res is None else tf.sparse.add(res, curjac)
         return res
 
     def _generate_atomic_propagate(self, *args, **kwargs):
