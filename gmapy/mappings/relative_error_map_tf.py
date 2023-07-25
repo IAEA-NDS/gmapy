@@ -31,8 +31,11 @@ class RelativeErrorMap(CrossSectionModifierBaseMap):
         mapdf2.set_index(['expid', 'ptidx'], inplace=True)
         source_indices = mapdf2['index'].to_numpy()
         target_indices = mapdf1.loc[list(mapdf2.index), 'index'].to_numpy()
-        propfun = self._generate_atomic_propagate()
-        self._add_lists([source_indices], target_indices, propfun)
+        for i in range(0, len(source_indices), 100):
+            src_idcs = source_indices[i:i+100].copy()
+            tar_idcs = target_indices[i:i+100].copy()
+            propfun = self._generate_atomic_propagate()
+            self._add_lists([src_idcs], tar_idcs, propfun)
 
     def _generate_atomic_propagate(self):
         def _atomic_propagate(propvals, inpvars):
