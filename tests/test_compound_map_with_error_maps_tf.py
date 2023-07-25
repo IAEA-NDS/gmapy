@@ -37,6 +37,27 @@ class TestCompoundMapWithErrorMapsTF(unittest.TestCase):
         propvals_tf = compmap_tf(refvals_tf)
         self.assertTrue(np.allclose(propvals, propvals_tf.numpy()))
 
+    def test_proper_jacobian_of_endep_usu_errors(self):
+        dt = self._gmadb.get_datatable()
+        dt = attach_endep_usu_df(
+            dt, ['MT:1-R1:8'], [1, 10, 18], [0.1, 0.2, 0.3]
+        )
+        refvals = dt.PRIOR.to_numpy(copy=True)
+        compmap = CompoundMap(dt)
+        compmap_tf = CompoundMapTF(dt)
+        sel = (dt.NODE.str.match('endep_usu_1027') &
+               (dt.ENERGY.isin([1.0, 10.0, 18.0])))
+        idcs = dt.index[sel]
+        assert len(idcs) == 3
+        refvals[idcs] = np.array((0.11, 0.34, -0.12), dtype=float)
+        refvals_tf = tf.Variable(refvals, dtype=tf.float64)
+        jac = compmap.jacobian(refvals, with_id=False)
+        jac_tf = compmap_tf.jacobian(refvals_tf)
+        jac_tf_csr = csr_matrix((jac_tf.values, (
+            jac_tf.indices[:, 0], jac_tf.indices[:, 1])), shape=jac_tf.dense_shape
+        )
+        self.assertTrue(np.allclose(jac.toarray(), jac_tf_csr.toarray()))
+
     def test_proper_propagation_of_relative_errors(self):
         dt = self._gmadb.get_datatable()
         sel = dt.NODE.str.match('relerr_1027') & (dt.ENERGY == 14.0)
