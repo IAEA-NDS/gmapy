@@ -131,7 +131,7 @@ class CrossSectionBaseMap(tf.Module):
         new_spmat = tf.sparse.reorder(new_spmat)
         return new_spmat
 
-    def _rebase_sparse_matrix(self, spmat, row_idcs, col_idcs, shape):
+    def _scatter_sparse_matrix(self, spmat, row_idcs, col_idcs, shape):
         row_idcs_tf = tf.constant(row_idcs, dtype=tf.int64)
         col_idcs_tf = tf.constant(col_idcs, dtype=tf.int64)
         col_slc = tf.slice(spmat.indices, [0, 1], [-1, 1])
@@ -163,7 +163,7 @@ class CrossSectionBaseMap(tf.Module):
         tar_idcs_tf = tf.constant(tar_idcs, dtype=tf.int64)
         for src_idcs, jac in zip(src_idcs_list, jac_list):
             red_curjac = tf.sparse.from_dense(jac)
-            curjac = self._rebase_sparse_matrix(
+            curjac = self._scatter_sparse_matrix(
                 red_curjac, tar_idcs_tf, src_idcs,
                 (self._tar_len, self._src_len)
             )
