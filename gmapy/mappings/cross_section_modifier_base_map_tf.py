@@ -49,13 +49,14 @@ class CrossSectionModifierBaseMap(CrossSectionBaseMap):
             propjac = jac_list[0]
             red_orig_jac = self._subset_sparse_matrix(orig_jac, tar_idcs)
             red_orig_jac = tf.sparse.reorder(red_orig_jac)
-            res = tf.sparse.sparse_dense_matmul(
+            res1 = tf.sparse.sparse_dense_matmul(
                 red_orig_jac, propjac, adjoint_a=True, adjoint_b=True
             )
-            res = tf.sparse.transpose(tf.sparse.from_dense(res))
-            res = self._scatter_sparse_matrix(
-                res, tar_idcs, None, shape=(self._tar_len, self._src_len)
+            res1 = tf.sparse.transpose(tf.sparse.from_dense(res1))
+            res1 = self._scatter_sparse_matrix(
+                res1, tar_idcs, None, shape=(self._tar_len, self._src_len)
             )
+            res = res1 if res is None else tf.sparse.add(res, res1)
             # calculate direct contributions
             inner_iter = self._inner_jacobian_iterator(
                 src_idcs_list, tar_idcs, jac_list[1:]
