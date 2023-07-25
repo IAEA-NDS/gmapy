@@ -2,7 +2,6 @@ import tensorflow as tf
 from .cross_section_base_map_tf import CrossSectionBaseMap
 from .mapping_elements_tf import (
     InputSelector,
-    InputSelectorCollection,
     Distributor
 )
 
