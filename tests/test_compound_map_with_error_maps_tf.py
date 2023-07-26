@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 import tensorflow as tf
 from gmapy.gma_database_class import GMADatabase
 from gmapy.mappings.compound_map import CompoundMap
-from gmapy.mappings.compound_map_tf \
+from gmapy.mappings.tf.compound_map_tf \
     import CompoundMap as CompoundMapTF
 from gmapy.mappings.energy_dependent_usu_map import attach_endep_usu_df
 

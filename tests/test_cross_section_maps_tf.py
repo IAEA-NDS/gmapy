@@ -4,46 +4,43 @@ import numpy as np
 import tensorflow as tf
 from gmapy.gma_database_class import GMADatabase
 from gmapy.mappings.cross_section_map import CrossSectionMap
-from gmapy.mappings.cross_section_map_tf \
+from gmapy.mappings.tf.cross_section_map_tf \
     import CrossSectionMap as CrossSectionMapTF
 from gmapy.mappings.cross_section_ratio_map import CrossSectionRatioMap
-from gmapy.mappings.cross_section_ratio_map_tf \
+from gmapy.mappings.tf.cross_section_ratio_map_tf \
     import CrossSectionRatioMap as CrossSectionRatioMapTF
 from gmapy.mappings.cross_section_shape_map import CrossSectionShapeMap
-from gmapy.mappings.cross_section_shape_map_tf \
+from gmapy.mappings.tf.cross_section_shape_map_tf \
     import CrossSectionShapeMap as CrossSectionShapeMapTF
 from gmapy.mappings.cross_section_absolute_ratio_map \
     import CrossSectionAbsoluteRatioMap
-from gmapy.mappings.cross_section_absolute_ratio_map_tf \
+from gmapy.mappings.tf.cross_section_absolute_ratio_map_tf \
     import CrossSectionAbsoluteRatioMap as CrossSectionAbsoluteRatioMapTF
 from gmapy.mappings.cross_section_ratio_shape_map \
     import CrossSectionRatioShapeMap
-from gmapy.mappings.cross_section_ratio_shape_map_tf \
+from gmapy.mappings.tf.cross_section_ratio_shape_map_tf \
     import CrossSectionRatioShapeMap as CrossSectionRatioShapeMapTF
 from gmapy.mappings.cross_section_shape_of_ratio_map \
     import CrossSectionShapeOfRatioMap
-from gmapy.mappings.cross_section_shape_of_ratio_map_tf \
+from gmapy.mappings.tf.cross_section_shape_of_ratio_map_tf \
     import CrossSectionShapeOfRatioMap as CrossSectionShapeOfRatioMapTF
 from gmapy.mappings.cross_section_shape_of_sum_map \
     import CrossSectionShapeOfSumMap
-from gmapy.mappings.cross_section_shape_of_sum_map_tf \
+from gmapy.mappings.tf.cross_section_shape_of_sum_map_tf \
     import CrossSectionShapeOfSumMap as CrossSectionShapeOfSumMapTF
 from gmapy.mappings.cross_section_total_map \
     import CrossSectionTotalMap
-from gmapy.mappings.cross_section_total_map_tf \
+from gmapy.mappings.tf.cross_section_total_map_tf \
     import CrossSectionTotalMap as CrossSectionTotalMapTF
 from gmapy.mappings.cross_section_ratio_of_sacs_map \
     import CrossSectionRatioOfSacsMap
-from gmapy.mappings.cross_section_ratio_of_sacs_map_tf \
+from gmapy.mappings.tf.cross_section_ratio_of_sacs_map_tf \
     import CrossSectionRatioOfSacsMap as CrossSectionRatioOfSacsMapTF
-
 from gmapy.mappings.cross_section_fission_average_map import CrossSectionFissionAverageMap
-from gmapy.mappings.cross_section_fission_average_map_tf \
+from gmapy.mappings.tf.cross_section_fission_average_map_tf \
     import CrossSectionFissionAverageMap as CrossSectionFissionAverageMapTF
-
-
 from gmapy.mappings.compound_map import CompoundMap
-from gmapy.mappings.compound_map_tf \
+from gmapy.mappings.tf.compound_map_tf \
     import CompoundMap as CompoundMapTF
 from gmapy.mappings.helperfuns import mapclass_with_params
 import time

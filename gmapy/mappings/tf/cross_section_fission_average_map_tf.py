@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from .helperfuns import (
+from ..helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
 from .cross_section_base_map_tf import CrossSectionBaseMap

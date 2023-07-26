@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .priortools import prepare_prior_and_exptable
+from ..priortools import prepare_prior_and_exptable
 from .mapping_elements_tf import (
     InputSelectorCollection,
     Distributor
