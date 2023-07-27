@@ -42,7 +42,6 @@ class CompoundMap(tf.Module):
         ]
         dt = datatable
         self._reduce = reduce
-        self._indep_idcs = dt.index[~dt.NODE.str.match('exp_', na=False)]
         self._datatable = dt
         selcol = InputSelectorCollection()
         self._selcol = selcol
@@ -51,6 +50,13 @@ class CompoundMap(tf.Module):
             if curclass.is_applicable(dt):
                 curmap = curclass(dt, selcol=selcol, reduce=reduce)
                 self._maplist.append(curmap)
+        if not self._reduce:
+            if isinstance(datatable, (list, tuple)):
+                raise ValueError(
+                    'if datatable is a list with priortable and exptable ' +
+                    'then reduce=True is required'
+                )
+            self._indep_idcs = dt.index[~dt.NODE.str.match('exp_', na=False)]
 
     def _orig_propagate(self, inputs):
         out_list = []
