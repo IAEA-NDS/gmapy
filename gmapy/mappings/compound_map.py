@@ -53,7 +53,12 @@ class CompoundMap:
             if self.__input is None or self.__output is None:
                 raise TypeError('neither map list initialized nor datatable provided')
             return
-        resp = np.full(len(datatable.index), False, dtype=bool)
+
+        if isinstance(datatable, (tuple, list)):
+            outsize = len(datatable[1])
+        else:
+            outsize = len(datatable)
+        resp = np.full(outsize, False, dtype=bool)
         selcol = InputSelectorCollection()
         tmp_distsum = SumOfDistributors()
         for curclass in self.mapclasslist:
