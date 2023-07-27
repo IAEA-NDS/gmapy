@@ -1,4 +1,5 @@
 import numpy as np
+from .cross_section_base_map import CrossSectionBaseMap
 from .mapping_elements import (
     InputSelectorCollection,
     Replicator,
@@ -6,44 +7,11 @@ from .mapping_elements import (
     SumOfDistributors,
     LinearInterpolation,
 )
-from .priortools import prepare_prior_and_exptable
 
 
-class CrossSectionShapeMap:
+class CrossSectionShapeMap(CrossSectionBaseMap):
 
-    def __init__(self, datatable, selcol=None, distsum=None, reduce=False):
-        self.__numrows = len(datatable)
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self.__input, self.__output = self.__prepare(datatable, selcol, reduce)
-        if distsum is not None:
-            distsum.add_distributors(self.__output.get_distributors())
-
-    def is_responsible(self):
-        ret = np.full(self.__numrows, False)
-        if self.__output is not None:
-            idcs = self.__output.get_indices()
-            ret[idcs] = True
-        return ret
-
-    def propagate(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.evaluate()
-
-    def jacobian(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.jacobian()
-
-    def get_selectors(self):
-        return self.__input.get_selectors()
-
-    def get_distributors(self):
-        return self.__output.get_distributors()
-
-    def __prepare(self, datatable, selcol, reduce):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(datatable, reduce)
-
+    def _prepare(self, priortable, exptable, selcol):
         isresp = np.array(exptable['REAC'].str.match('MT:2-R1:', na=False) &
                           exptable['NODE'].str.match('exp_', na=False))
 
@@ -62,7 +30,7 @@ class CrossSectionShapeMap:
             ens1 = priortable_red['ENERGY']
             idcs1red = priortable_red.index
 
-            inpvar = selcol.define_selector(idcs1red, src_len)
+            inpvar = selcol.define_selector(idcs1red, self._src_len)
             inp.add_selector(inpvar)
             # loop over the datasets
             dataset_ids = exptable_red['NODE'].unique()
@@ -75,7 +43,7 @@ class CrossSectionShapeMap:
                     raise IndexError('There are ' + str(len(norm_index)) +
                         ' normalization factors in prior for dataset ' + str(dataset_id))
 
-                norm_fact = selcol.define_selector(norm_index, src_len)
+                norm_fact = selcol.define_selector(norm_index, self._src_len)
                 inp.add_selector(norm_fact)
                 # abbreviate some variables
                 ens2 = exptable_ds['ENERGY']
@@ -84,7 +52,7 @@ class CrossSectionShapeMap:
                 norm_fact_rep = Replicator(norm_fact, len(idcs2red))
                 inpvar_int = LinearInterpolation(inpvar, ens1, ens2)
                 prod = norm_fact_rep * inpvar_int
-                outvar = Distributor(prod, idcs2red, tar_len)
+                outvar = Distributor(prod, idcs2red, self._tar_len)
                 out.add_distributor(outvar)
 
         return inp, out
