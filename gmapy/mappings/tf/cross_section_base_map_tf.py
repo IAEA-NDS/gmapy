@@ -1,4 +1,5 @@
 import tensorflow as tf
+import pandas as pd
 from ..priortools import prepare_prior_and_exptable
 from .mapping_elements_tf import (
     InputSelectorCollection,
@@ -31,6 +32,13 @@ class CrossSectionBaseMap(tf.Module):
     @classmethod
     def is_applicable(cls, datatable):
         raise NotImplementedError('Please implement this method')
+
+    @classmethod
+    def _concat_datatable(self, datatable):
+        if isinstance(datatable, (list, tuple)):
+            return pd.concat(datatable, axis=0, ignore_index=True)
+        else:
+            return datatable
 
     def _add_lists(
         self, src_idcs_list, tar_idcs, propfun, jacfun=None, aux_list=None
