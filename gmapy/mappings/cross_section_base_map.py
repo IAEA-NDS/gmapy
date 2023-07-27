@@ -11,7 +11,10 @@ class CrossSectionBaseMap:
                  more_prepare_args=None):
         if more_prepare_args is None:
             more_prepare_args = {}
-        self.__numrows = len(datatable)
+        if isinstance(datatable, (list, tuple)):
+            self.__numrows = len(datatable[1])
+        else:
+            self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
         self._input, self._output = self._base_prepare(
