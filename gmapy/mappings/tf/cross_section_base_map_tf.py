@@ -11,7 +11,7 @@ class CrossSectionBaseMap(tf.Module):
     def __init__(self, datatable, selcol=None, reduce=True):
         super().__init__()
         if not self.is_applicable(datatable):
-            raise TypeError('CrossSectionRatioMap not applicable')
+            raise TypeError(f'{type(self)} is not applicable')
         self._datatable = datatable
         self._reduce = reduce
         if selcol is None:
