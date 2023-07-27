@@ -7,11 +7,16 @@ from .priortools import prepare_prior_and_exptable
 
 class CrossSectionBaseMap:
 
-    def __init__(self, datatable, selcol=None, distsum=None, reduce=False):
+    def __init__(self, datatable, selcol=None, distsum=None, reduce=False,
+                 more_prepare_args=None):
+        if more_prepare_args is None:
+            more_prepare_args = {}
         self.__numrows = len(datatable)
         if selcol is None:
             selcol = InputSelectorCollection()
-        self._input, self._output = self._base_prepare(datatable, selcol, reduce)
+        self._input, self._output = self._base_prepare(
+            datatable, selcol, reduce, more_prepare_args
+        )
         if distsum is not None:
             distsum.add_distributors(self._output.get_distributors())
 
@@ -36,15 +41,17 @@ class CrossSectionBaseMap:
     def get_distributors(self):
         return self._output.get_distributors()
 
-    def _base_prepare(self, datatable, selcol, reduce):
+    def _base_prepare(self, datatable, selcol, reduce, more_prepare_args):
         priortable, exptable, src_len, tar_len = \
             prepare_prior_and_exptable(datatable, reduce)
         self._src_len = src_len
         self._tar_len = tar_len
-        inp, out = self._prepare(priortable, exptable, selcol)
+        inp, out = self._prepare(
+            priortable, exptable, selcol, **more_prepare_args
+        )
         return inp, out
 
-    def _prepare(self, priortable, exptable, selcol):
+    def _prepare(self, priortable, exptable, selcol, **more_prepare_args):
         raise NotImplementedError(
             'Please implement this method in the derived class'
         )
