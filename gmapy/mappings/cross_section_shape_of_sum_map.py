@@ -1,4 +1,5 @@
 import numpy as np
+from .cross_section_base_map import CrossSectionBaseMap
 from .mapping_elements import (
     InputSelectorCollection,
     Replicator,
@@ -6,44 +7,11 @@ from .mapping_elements import (
     SumOfDistributors,
     LinearInterpolation,
 )
-from .priortools import prepare_prior_and_exptable
 
 
-class CrossSectionShapeOfSumMap:
+class CrossSectionShapeOfSumMap(CrossSectionBaseMap):
 
-    def __init__(self, datatable, selcol=None, distsum=None, reduce=False):
-        self.__numrows = len(datatable)
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self.__input, self.__output = self.__prepare(datatable, selcol, reduce)
-        if distsum is not None:
-            distsum.add_distributors(self.__output.get_distributors())
-
-    def is_responsible(self):
-        ret = np.full(self.__numrows, False)
-        if self.__output is not None:
-            idcs = self.__output.get_indices()
-            ret[idcs] = True
-        return ret
-
-    def propagate(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.evaluate()
-
-    def jacobian(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.jacobian()
-
-    def get_selectors(self):
-        return self.__input.get_selectors()
-
-    def get_distributors(self):
-        return self.__output.get_distributors()
-
-    def __prepare(self, datatable, selcol, reduce):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(datatable, reduce)
-
+    def _prepare(self, priortable, exptable, selcol):
         priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
                      priortable['NODE'].str.match('xsid_', na=False))
         priormask = np.logical_or(priormask, priortable['NODE'].str.match('norm_', na=False))
@@ -75,7 +43,7 @@ class CrossSectionShapeOfSumMap:
             src_en_list = [pt['ENERGY'] for pt in priortable_reds]
 
             cvars = [
-                selcol.define_selector(idcs, src_len)
+                selcol.define_selector(idcs, self._src_len)
                 for idcs in src_idcs_list
             ]
             inp.add_selectors(cvars)
@@ -93,7 +61,7 @@ class CrossSectionShapeOfSumMap:
                 if len(norm_index) != 1:
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
 
-                norm_fact = selcol.define_selector(norm_index, src_len)
+                norm_fact = selcol.define_selector(norm_index, self._src_len)
                 inp.add_selector(norm_fact)
                 norm_fact_rep = Replicator(norm_fact, len(tar_idcs))
 
@@ -102,7 +70,7 @@ class CrossSectionShapeOfSumMap:
                     cvars_int.append(LinearInterpolation(cv, src_en, tar_en))
 
                 tmpres = sum(cvars_int) * norm_fact_rep
-                outvar = Distributor(tmpres, tar_idcs, tar_len)
+                outvar = Distributor(tmpres, tar_idcs, self._tar_len)
                 out.add_distributor(outvar)
 
         return inp, out
