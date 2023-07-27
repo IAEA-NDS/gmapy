@@ -9,6 +9,7 @@ class CrossSectionAbsoluteRatioMap(CrossSectionBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
+        datatable = cls._concat_datatable(datatable)
         return (
             datatable['REAC'].str.match('MT:7-R1:[0-9]+-R2:[0-9]+-R3:[0-9]+', na=False) &
             datatable['NODE'].str.match('exp_', na=False)

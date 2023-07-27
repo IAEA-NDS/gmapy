@@ -10,6 +10,7 @@ class EnergyDependentUSUMap(CrossSectionModifierBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
+        datatable = cls._concat_datatable(datatable)
         return (
             (datatable['NODE'].str.match('exp_', na=False)).any() &
             (datatable['NODE'].str.match('endep_usu_', na=False)).any()

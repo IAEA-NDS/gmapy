@@ -14,6 +14,7 @@ class CrossSectionFissionAverageMap(CrossSectionBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
+        datatable = cls._concat_datatable(datatable)
         return (
             datatable['REAC'].str.match('MT:6-R1:', na=False) &
             datatable['NODE'].str.match('exp_', na=False)

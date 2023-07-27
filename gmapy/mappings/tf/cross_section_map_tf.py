@@ -9,6 +9,7 @@ class CrossSectionMap(CrossSectionBaseMap):
 
     @classmethod
     def is_applicable(cls, datatable):
+        datatable = cls._concat_datatable(datatable)
         return (
             datatable['REAC'].str.match('MT:1-R1:', na=False) &
             datatable['NODE'].str.match('exp_', na=False)
