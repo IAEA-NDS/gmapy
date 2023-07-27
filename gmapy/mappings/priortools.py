@@ -7,14 +7,23 @@ from ..data_management.quantity_types import SHAPE_MT_IDS
 
 
 def prepare_prior_and_exptable(datatable, reduce, reset_index=True):
-    expmask = datatable['NODE'].str.match('exp_')
-    priortable = datatable.loc[~expmask]
-    exptable = datatable.loc[expmask]
+    is_datatable_split = isinstance(datatable, (list, tuple))
+    if is_datatable_split:
+        priortable = datatable[0]
+        exptable = datatable[1]
+    else:
+        expmask = datatable['NODE'].str.match('exp_')
+        priortable = datatable.loc[~expmask]
+        exptable = datatable.loc[expmask]
     if not reduce:
+        if is_datatable_split:
+            raise ValueError(
+                'if list with priortable and exptable '
+                'is provided, it is required that `reduce=True`'
+            )
         src_len = len(datatable)
         tar_len = len(datatable)
     else:
-        datatable = datatable.sort_index(inplace=False)
         if reset_index:
             priortable = priortable.reset_index(drop=True)
             exptable = exptable.reset_index(drop=True)
