@@ -1,4 +1,5 @@
 import numpy as np
+from .cross_section_base_map import CrossSectionBaseMap
 from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
@@ -11,10 +12,9 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors,
 )
-from .priortools import prepare_prior_and_exptable
 
 
-class CrossSectionFissionAverageMap:
+class CrossSectionFissionAverageMap(CrossSectionBaseMap):
 
     def __init__(self, datatable, fix_jacobian=True,
                  legacy_integration=True,
@@ -25,38 +25,9 @@ class CrossSectionFissionAverageMap:
         self._atol = atol
         self._rtol = rtol
         self._maxord = maxord
-        self.__numrows = len(datatable)
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self.__input, self.__output = self.__prepare(datatable, selcol, reduce)
-        if distsum is not None:
-            distsum.add_distributors(self.__output.get_distributors())
+        super().__init__(datatable, selcol, distsum, reduce)
 
-    def is_responsible(self):
-        ret = np.full(self.__numrows, False)
-        if self.__output is not None:
-            idcs = self.__output.get_indices()
-            ret[idcs] = True
-        return ret
-
-    def propagate(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.evaluate()
-
-    def jacobian(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.jacobian()
-
-    def get_selectors(self):
-        return self.__input.get_selectors()
-
-    def get_distributors(self):
-        return self.__output.get_distributors()
-
-    def __prepare(self, datatable, selcol, reduce):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(datatable, reduce)
-
+    def _prepare(self, priortable, exptable, selcol):
         legacy_integration = self._legacy_integration
         fix_jacobian = self._fix_jacobian
         expmask = np.array(
@@ -83,7 +54,7 @@ class CrossSectionFissionAverageMap:
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
 
-        raw_fisobj = selcol.define_selector(fistable.index, src_len)
+        raw_fisobj = selcol.define_selector(fistable.index, self._src_len)
         inp.add_selector(raw_fisobj)
         if legacy_integration:
             fisobj = raw_fisobj
@@ -104,7 +75,7 @@ class CrossSectionFissionAverageMap:
             ens1 = priortable_red['ENERGY'].to_numpy()
             idcs1red = priortable_red.index
 
-            xsobj = selcol.define_selector(idcs1red, src_len)
+            xsobj = selcol.define_selector(idcs1red, self._src_len)
             inp.add_selector(xsobj)
 
             curfisavg = FissionAverage(ens1, xsobj, ensfis, fisobj,
@@ -117,7 +88,7 @@ class CrossSectionFissionAverageMap:
             exptable_red = exptable[exptable['REAC'].str.fullmatch(curreac, na=False)]
             rep_curfisavg = Replicator(curfisavg, len(exptable_red))
             idcs2red = exptable_red.index
-            outvar = Distributor(rep_curfisavg, idcs2red, tar_len)
+            outvar = Distributor(rep_curfisavg, idcs2red, self._tar_len)
             out.add_distributor(outvar)
 
         return inp, out
