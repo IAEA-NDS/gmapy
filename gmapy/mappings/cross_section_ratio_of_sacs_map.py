@@ -1,4 +1,5 @@
 import numpy as np
+from .cross_section_base_map import CrossSectionBaseMap
 from .helperfuns import (
     get_legacy_to_pointwise_fis_factors
 )
@@ -9,48 +10,18 @@ from .mapping_elements import (
     Distributor,
     SumOfDistributors,
 )
-from .priortools import prepare_prior_and_exptable
 
 
-class CrossSectionRatioOfSacsMap:
+class CrossSectionRatioOfSacsMap(CrossSectionBaseMap):
 
     def __init__(self, datatable, atol=1e-05, rtol=1e-05,
                  maxord=16, selcol=None, distsum=None, reduce=False):
         self.__atol = atol
         self.__rtol = rtol
         self.__maxord = maxord
-        self.__numrows = len(datatable)
-        if selcol is None:
-            selcol = InputSelectorCollection()
-        self.__input, self.__output = self.__prepare(datatable, selcol, reduce)
-        if distsum is not None:
-            distsum.add_distributors(self.__output.get_distributors())
+        super().__init__(datatable, selcol, distsum, reduce)
 
-    def is_responsible(self):
-        ret = np.full(self.__numrows, False)
-        if self.__output is not None:
-            idcs = self.__output.get_indices()
-            ret[idcs] = True
-        return ret
-
-    def propagate(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.evaluate()
-
-    def jacobian(self, refvals):
-        self.__input.assign(refvals)
-        return self.__output.jacobian()
-
-    def get_selectors(self):
-        return self.__input.get_selectors()
-
-    def get_distributors(self):
-        return self.__output.get_distributors()
-
-    def __prepare(self, datatable, selcol, reduce):
-        priortable, exptable, src_len, tar_len = \
-            prepare_prior_and_exptable(datatable, reduce)
-
+    def _prepare(self, priortable, exptable, selcol):
         priormask = (priortable['REAC'].str.match('MT:1-R1:', na=False) &
                      priortable['NODE'].str.match('xsid_', na=False))
         is_fis_row = priortable['NODE'].str.fullmatch('fis', na=False)
@@ -72,7 +43,7 @@ class CrossSectionRatioOfSacsMap:
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
 
-        raw_fisobj = selcol.define_selector(fistable.index, src_len)
+        raw_fisobj = selcol.define_selector(fistable.index, self._src_len)
         inp.add_selector(raw_fisobj)
 
         scl = get_legacy_to_pointwise_fis_factors(ensfis)
@@ -104,8 +75,8 @@ class CrossSectionRatioOfSacsMap:
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
 
-            xsobj1 = selcol.define_selector(idcs1red, src_len)
-            xsobj2 = selcol.define_selector(idcs2red, src_len)
+            xsobj1 = selcol.define_selector(idcs1red, self._src_len)
+            xsobj2 = selcol.define_selector(idcs2red, self._src_len)
             inp.add_selector(xsobj1)
             inp.add_selector(xsobj2)
 
@@ -119,7 +90,7 @@ class CrossSectionRatioOfSacsMap:
             )
             fisavg_ratio = fisavg1 / fisavg2
 
-            outvar = Distributor(fisavg_ratio, idcs_exp_red, tar_len)
+            outvar = Distributor(fisavg_ratio, idcs_exp_red, self._tar_len)
             out.add_distributor(outvar)
 
         return inp, out
