@@ -9,6 +9,7 @@ from gmapy.data_management.tablefuns import (
     create_prior_table,
     create_experiment_table
 )
+from gmapy.mappings.priortools import attach_shape_prior
 
 
 class TestCompoundMap(unittest.TestCase):
@@ -19,12 +20,26 @@ class TestCompoundMap(unittest.TestCase):
                 'data-2017-07-26.gma').resolve().as_posix()
         cls._dbpath = dbpath
         rawdb = read_gma_database(dbpath)
-        priortable = create_prior_table(rawdb['prior_list'])
-        exptable = create_experiment_table(rawdb['datablock_list'])
+        cls._priortable = create_prior_table(rawdb['prior_list'])
+        cls._exptable = create_experiment_table(rawdb['datablock_list'])
+        cls._priortable = attach_shape_prior((cls._priortable, cls._exptable))
         cls._gmadb = GMADatabase(
             prior_list=rawdb['prior_list'],
-            datablock_list=rawdb['datablock_list']
+            datablock_list=rawdb['datablock_list'],
+            remove_dummy=False
         )
+
+    def test_compoundmap_split_initialisation(self):
+        dt = self._gmadb.get_datatable()
+        compmap1 = CompoundMapTF(dt, reduce=True)
+        compmap2 = CompoundMapTF(
+            (self._priortable, self._exptable), reduce=True
+        )
+        expsel = dt.NODE.str.match('exp')
+        x = dt.loc[~expsel, 'PRIOR'].to_numpy()
+        res1 = compmap1(x).numpy()
+        res2 = compmap2(x).numpy()
+        self.assertTrue(np.allclose(res1, res2))
 
     def test_propagate_with_reduce_option(self):
         dt = self._gmadb.get_datatable()
