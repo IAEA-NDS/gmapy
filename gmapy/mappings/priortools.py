@@ -54,9 +54,12 @@ def prepare_prior_and_likelihood_quantities(datatable, covmat):
 
 def attach_shape_prior(datatable):
     """Attach experimental normalization constants to prior."""
-    # split datatable into priortable and exptable
-    exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
-
+    # split datatable into priortable and exptable if not already done
+    if isinstance(datatable, (list, tuple)):
+        exptable = datatable[1]
+        datatable = datatable[0]
+    else:
+        exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
     # obtain all experimental points that are affected by unknown normalization
     mtnums = exptable['REAC'].str.extract('^ *MT:([0-9]+)-', expand=False)
     mtnums = mtnums.astype('int')
