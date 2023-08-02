@@ -125,7 +125,7 @@ class GMADatabase:
             # remove the relative SACS errors
             # (because now converted to absolute ones)
             not_mt6_relerr = np.logical_not(is_mt6_relerr)
-            datatable = datatable.loc[not_mt6_relerr].reset_index()
+            datatable = datatable.loc[not_mt6_relerr].reset_index(drop=True)
             covmat = covmat[np.ix_(not_mt6_relerr, not_mt6_relerr)]
             covmat = covmat.tocsr()
         else:
