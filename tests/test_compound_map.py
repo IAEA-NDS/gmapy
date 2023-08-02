@@ -28,6 +28,18 @@ class TestCompoundMap(unittest.TestCase):
             remove_dummy=False
         )
 
+    def test_compoundmap_split_initialisation(self):
+        dt = self._gmadb.get_datatable()
+        compmap1 = CompoundMap(dt, reduce=True)
+        compmap2 = CompoundMap(
+            (self._priortable, self._exptable), reduce=True
+        )
+        expsel = dt.NODE.str.match('exp')
+        x = dt.loc[~expsel, 'PRIOR'].to_numpy()
+        res1 = compmap1.propagate(x)
+        res2 = compmap2.propagate(x)
+        self.assertTrue(np.allclose(res1, res2))
+
     def test_propagate_with_reduce_option(self):
         dt = self._gmadb.get_datatable()
         compmap1 = CompoundMap(dt, reduce=False)
