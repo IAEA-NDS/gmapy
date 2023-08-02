@@ -114,43 +114,51 @@ class TestCompoundMapWithErrorMapsTF(unittest.TestCase):
         propvals, propvals_tf = self._propagate_both(dt, refvals)
         self.assertTrue(np.allclose(propvals, propvals_tf))
 
-    def test_proper_jacobian_of_endep_usu_errors(self):
-        dt = self._gmadb.get_datatable()
-        dt = attach_endep_usu_df(
-            dt, ['MT:1-R1:8'], [1, 10, 18], [0.1, 0.2, 0.3]
-        )
-        refvals = dt.PRIOR.to_numpy(copy=True)
+    def _jacobian_both(self, dt, refvals):
         compmap = CompoundMap(dt)
         compmap_tf = CompoundMapTF(dt)
-        sel = (dt.NODE.str.match('endep_usu_1027') &
-               (dt.ENERGY.isin([1.0, 10.0, 18.0])))
-        idcs = dt.index[sel]
-        assert len(idcs) == 3
-        refvals[idcs] = np.array((0.11, 0.34, -0.12), dtype=float)
         refvals_tf = tf.Variable(refvals, dtype=tf.float64)
         jac = compmap.jacobian(refvals, with_id=False)
         jac_tf = compmap_tf.jacobian(refvals_tf)
         jac_tf_csr = csr_matrix((jac_tf.values, (
             jac_tf.indices[:, 0], jac_tf.indices[:, 1])), shape=jac_tf.dense_shape
         )
-        self.assertTrue(np.allclose(jac.toarray(), jac_tf_csr.toarray()))
+        return jac, jac_tf_csr
+
+    def _test_shuffled_jacobian(self, dt, refvals):
+        jac, jac_tf = self._jacobian_both(dt, refvals)
+        dt_shuffled, refvals_shuffled, perm = self._permute_dataframe(
+            dt, refvals, reset_index=True
+        )
+        jac_shuffled, jac_tf_shuffled = \
+            self._jacobian_both(dt_shuffled, refvals_shuffled)
+        jac = jac.toarray()
+        jac_tf = jac_tf.toarray()
+        jac_rev = np.empty_like(jac)
+        jac_rev[np.ix_(perm, perm)] = jac_shuffled.toarray()
+        jac_tf_rev = np.empty_like(jac_tf)
+        jac_tf_rev[np.ix_(perm, perm)] = jac_tf_shuffled.toarray()
+        self.assertTrue(np.allclose(jac, jac_rev))
+        self.assertTrue(np.allclose(jac_tf, jac_tf_rev))
+        self.assertTrue(np.allclose(jac_rev, jac_tf_rev))
+
+    def test_proper_jacobian_of_endep_usu_errors(self):
+        dt, refvals = self._prepare_propagate_endep_usu_errors()
+        jac, jac_tf = self._jacobian_both(dt, refvals)
+        self.assertTrue(np.allclose(jac.toarray(), jac_tf.toarray()))
+
+    def test_proper_jacobian_of_endep_usu_errors_shuffled(self):
+        dt, refvals = self._prepare_propagate_endep_usu_errors()
+        self._test_shuffled_jacobian(dt, refvals)
 
     def test_proper_jacobian_of_relative_errors(self):
-        dt = self._gmadb.get_datatable()
-        sel = dt.NODE.str.match('relerr_1027') & (dt.ENERGY == 14.0)
-        idx = dt.index[sel]
-        assert len(idx) == 1
-        refvals = dt.PRIOR.to_numpy(copy=True)
-        refvals[idx] = 0.27
-        refvals_tf = tf.Variable(refvals, dtype=tf.float64)
-        compmap = CompoundMap(dt)
-        compmap_tf = CompoundMapTF(dt)
-        jac = compmap.jacobian(refvals, with_id=False)
-        jac_tf = compmap_tf.jacobian(refvals_tf)
-        jac_tf_csr = csr_matrix((jac_tf.values, (
-            jac_tf.indices[:, 0], jac_tf.indices[:, 1])), shape=jac_tf.dense_shape
-        )
-        self.assertTrue(np.allclose(jac.toarray(), jac_tf_csr.toarray()))
+        dt, refvals = self._prepare_propagate_relative_errors()
+        jac, jac_tf = self._jacobian_both(dt, refvals)
+        self.assertTrue(np.allclose(jac.toarray(), jac_tf.toarray()))
+
+    def test_proper_jacobian_of_relative_errors_shuffled(self):
+        dt, refvals = self._prepare_propagate_relative_errors()
+        self._test_shuffled_jacobian(dt, refvals)
 
 
 if __name__ == '__main__':
