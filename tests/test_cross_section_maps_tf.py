@@ -143,6 +143,31 @@ class TestCrossSectionMapsTF(unittest.TestCase):
         y = xs_map.propagate(x)
         self.assertTrue(np.allclose(y, y_tf.numpy()))
 
+    def test_compound_map_tf_with_shuffled_dataframe(self):
+        dt = self._gmadb.get_datatable()
+        xs_map = CompoundMap(dt, reduce=False)
+        xs_map_tf = CompoundMapTF(dt, reduce=False)
+        perm = np.random.permutation(dt.index)
+        dt_shuffled = dt.reindex(perm, copy=False)
+        dt_shuffled.reset_index(drop=True, inplace=True)
+        xs_map_shuffled = CompoundMap(dt_shuffled, reduce=False)
+        xs_map_tf_shuffled = CompoundMapTF(dt_shuffled, reduce=False)
+        x = dt.PRIOR.to_numpy()
+        x_tf = tf.Variable(x, dtype=tf.float64)
+        x_shuffled = x[perm]
+        x_tf_shuffled = tf.Variable(x_shuffled, dtype=tf.float64)
+        y = xs_map.propagate(x)
+        y_tf = xs_map_tf(x_tf)
+        y_shuffled = xs_map_shuffled.propagate(x_shuffled)
+        y_tf_shuffled = xs_map_tf_shuffled(x_tf_shuffled)
+        y_rev = np.empty_like(y)
+        y_tf_rev = np.empty_like(y_tf)
+        y_rev[perm] = y_shuffled
+        y_tf_rev[perm] = y_tf_shuffled
+        self.assertTrue(np.allclose(y, y_rev))
+        self.assertTrue(np.allclose(y_tf, y_tf_rev))
+        self.assertTrue(np.allclose(y_rev, y_tf_rev))
+
     @unittest.skip
     def test_timings_of_propagate_and_gradient(self):
         for cur_reduce in (True,):
