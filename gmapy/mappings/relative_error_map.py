@@ -66,7 +66,7 @@ class RelativeErrorMap(CrossSectionBaseMap):
 
 def attach_relative_error_df(datatable):
     dt = datatable.copy()
-    dt.sort_index()
+    dt.sort_index(axis=0, inplace=True)
     groupidx_df = dt.groupby('NODE').cumcount().to_frame(name='PTIDX')
     dt = pd.concat([dt, groupidx_df], axis=1)
     # create the relative errors dataframe
