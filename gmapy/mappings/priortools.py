@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy.sparse as sps
 import re
 from ..data_management.datablock_api import dataset_iterator
 from ..data_management import dataset_api as dsapi
@@ -53,7 +54,7 @@ def prepare_prior_and_likelihood_quantities(datatable, covmat):
     }
 
 
-def attach_shape_prior(datatable, raise_if_exists=True):
+def attach_shape_prior(datatable, covmat=None, raise_if_exists=True):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable if not already done
     if isinstance(datatable, (list, tuple)):
@@ -85,7 +86,16 @@ def attach_shape_prior(datatable, raise_if_exists=True):
         norm_prior_dic['ENERGY'].append(0.)
     norm_df = pd.DataFrame.from_dict(norm_prior_dic)
     ext_datatable = pd.concat([datatable, norm_df], axis=0, ignore_index=True)
-    return ext_datatable
+    if covmat is not None:
+        normuncs = np.full(len(norm_df), np.inf, dtype='d')
+        normcov = sps.diags(np.square(normuncs), dtype='d')
+        ext_priorcov = sps.block_diag(
+            [covmat, normcov], format='csr', dtype='d'
+        )
+    if covmat is None:
+        return ext_datatable
+    else:
+        return ext_datatable, ext_priorcov
 
 
 def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
