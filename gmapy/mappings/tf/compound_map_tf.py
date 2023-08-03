@@ -86,6 +86,9 @@ class CompoundMap(tf.Module):
             return res
 
     def __call__(self, inputs):
+        return self.propagate(inputs)
+
+    def propagate(self, inputs):
         orig_propvals = self._orig_propagate(inputs)
         res = self._apply_modifier_maps(inputs, orig_propvals)
         return res

@@ -67,6 +67,9 @@ class CrossSectionBaseMap(tf.Module):
             self._prepared_propagate = True
 
     def __call__(self, inputs):
+        return self.propagate(inputs)
+
+    def propagate(self, inputs):
         self._base_prepare_propagate()
         selcol = self._selcol
         out_list = []

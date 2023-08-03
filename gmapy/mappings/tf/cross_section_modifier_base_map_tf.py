@@ -19,6 +19,9 @@ class CrossSectionModifierBaseMap(CrossSectionBaseMap):
         raise NotImplementedError('Please implement this method')
 
     def __call__(self, inputs):
+        return self.propagate(inputs)
+
+    def propagate(self, inputs):
         self._base_prepare_propagate()
         selcol = self._selcol
         out_list = []
