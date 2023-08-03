@@ -4,6 +4,7 @@ import re
 from ..data_management.datablock_api import dataset_iterator
 from ..data_management import dataset_api as dsapi
 from ..data_management.quantity_types import SHAPE_MT_IDS
+import tensorflow as tf
 
 
 def prepare_prior_and_exptable(datatable, reduce, reset_index=True):
@@ -80,7 +81,12 @@ def attach_shape_prior(datatable):
 
 
 def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
-    exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
+    # split datatable into priortable and exptable if not already done
+    if isinstance(datatable, (list, tuple)):
+        exptable = datatable[1]
+        datatable = datatable[0]
+    else:
+        exptable = datatable[datatable['NODE'].str.match('exp_', na=False)]
     mtnums = exptable['REAC'].str.extract('^ *MT:([0-9]+)-', expand=False)
     mtnums = mtnums.astype('int')
     is_shape = mtnums.map(lambda x: True if x in SHAPE_MT_IDS else False).to_numpy()
@@ -96,7 +102,14 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     else:
         # calculate a first estimate of normalization factor
         # using the propagated prior values
-        propvals = mapping.propagate(refvals, datatable)
+        try:
+            propvals = mapping.propagate(refvals)
+        except Exception:
+            # invoke old style propagate interface which is
+            # not supported by tensorflow CompoundMap anymore
+            propvals = mapping.propagate(refvals, datatable)
+        if isinstance(propvals, tf.Tensor):
+            propvals = propvals.numpy()
         for cur_exp, cur_exp_df in exp_groups:
             cur_propvals = propvals[cur_exp_df.index]
             cur_uncs = uncs[cur_exp_df.index]
