@@ -111,8 +111,18 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     shape_exp_df = exptable[is_shape]
     exp_groups = shape_exp_df.groupby('NODE', sort=False)
     normmask = datatable['NODE'].str.match('^norm_', na=False)
-    datatable.loc[normmask, 'UNC'] = np.inf
     datatable.loc[normmask, 'PRIOR'] = 1.
+    datatable.loc[normmask, 'UNC'] = np.inf
+    if refvals is None and 'PRIOR' in datatable:
+        refvals = np.empty((len(datatable),), dtype='d')
+        refvals[datatable.index] = datatable.PRIOR.to_numpy()
+    else:
+        refvals = np.array(refvals)
+        norm_idcs = datatable.index[normmask].to_numpy()
+        refvals[norm_idcs] = 1.
+    if uncs is None and 'UNC' in exptable:
+        uncs = np.empty((len(exptable),), dtype='d')
+        uncs[exptable.index] = (exptable.UNC / exptable.DATA).to_numpy()
     if not (mapping is None or refvals is None or uncs is None):
         # calculate a first estimate of normalization factor
         # using the propagated prior values
@@ -141,6 +151,13 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
             normmask = datatable['NODE'] == re.sub('^exp_', 'norm_', cur_exp)
             datatable.loc[normmask, 'PRIOR'] = cur_expscale
             datatable.loc[normmask, 'UNC'] = np.inf
+    else:
+        raise IndexError(
+            'Could not initialize normalization factors because ' +
+            'essential information is missing: \n' +
+            '- either provide refvals arg or column `PRIOR` in datatable \n' +
+            '- either provide uncs arg or column `UNC` in datatable \n' +
+            '- provide arg compmap with a CompoundMapping object')
 
     return None
 
