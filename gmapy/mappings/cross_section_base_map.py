@@ -30,6 +30,9 @@ class CrossSectionBaseMap:
             ret[idcs] = True
         return ret
 
+    def __call__(self, refvals):
+        return self.propagate(refvals)
+
     def propagate(self, refvals):
         self._input.assign(refvals)
         return self._output.evaluate()

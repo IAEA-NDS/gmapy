@@ -109,6 +109,9 @@ class CompoundMap:
         ret[idcs] = True
         return ret
 
+    def __call__(self, refvals, datatable=None):
+        return self.propagate(refvals, datatable)
+
     def propagate(self, refvals, datatable=None):
         self.instantiate_maps(datatable)
         isresp = self.is_responsible()
