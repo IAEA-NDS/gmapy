@@ -53,7 +53,7 @@ def prepare_prior_and_likelihood_quantities(datatable, covmat):
     }
 
 
-def attach_shape_prior(datatable):
+def attach_shape_prior(datatable, raise_if_exists=True):
     """Attach experimental normalization constants to prior."""
     # split datatable into priortable and exptable if not already done
     if isinstance(datatable, (list, tuple)):
@@ -71,7 +71,15 @@ def attach_shape_prior(datatable):
     # augment the prior with the experimental normalization factors
     norm_prior_dic = {'NODE': [], 'PRIOR': [], 'REAC': [], 'ENERGY': []}
     for cur_exp, cur_exp_df in exp_groups:
-        norm_prior_dic['NODE'].append(re.sub('^exp_', 'norm_', cur_exp))
+        norm_node_name = re.sub('^exp_', 'norm_', cur_exp)
+        if (datatable.NODE == norm_node_name).any():
+            if raise_if_exists:
+                raise IndexError(
+                    f'normalization node {norm_node_name} already exists'
+                )
+            else:
+                continue
+        norm_prior_dic['NODE'].append(norm_node_name)
         norm_prior_dic['PRIOR'].append(1.)
         norm_prior_dic['REAC'].append(cur_exp_df['REAC'].iloc[0])
         norm_prior_dic['ENERGY'].append(0.)
