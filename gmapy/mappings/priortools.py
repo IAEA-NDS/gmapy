@@ -100,22 +100,20 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
     is_shape = mtnums.map(lambda x: True if x in SHAPE_MT_IDS else False).to_numpy()
     shape_exp_df = exptable[is_shape]
     exp_groups = shape_exp_df.groupby('NODE', sort=False)
-    if mapping is None or refvals is None or uncs is None:
-        # we don't have any prior estimates to propagate
-        # and/or uncertainties of the experiments given
-        # so we assume that the normalization factors are one
-        normmask = datatable['NODE'].str.match('^norm_', na=False)
-        datatable.loc[normmask, 'UNC'] = np.inf
-        datatable.loc[normmask, 'PRIOR'] = 1.
-    else:
+    normmask = datatable['NODE'].str.match('^norm_', na=False)
+    datatable.loc[normmask, 'UNC'] = np.inf
+    datatable.loc[normmask, 'PRIOR'] = 1.
+    if not (mapping is None or refvals is None or uncs is None):
         # calculate a first estimate of normalization factor
         # using the propagated prior values
         try:
             propvals = mapping.propagate(refvals)
-        except Exception:
+        except TypeError:
             # invoke old style propagate interface which is
             # not supported by tensorflow CompoundMap anymore
             propvals = mapping.propagate(refvals, datatable)
+        # required type conversion because indexing of
+        # tf.Tensors by numpy arrays does not work
         if isinstance(propvals, tf.Tensor):
             propvals = propvals.numpy()
         for cur_exp, cur_exp_df in exp_groups:
