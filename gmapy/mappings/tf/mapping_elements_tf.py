@@ -5,6 +5,7 @@ import tensorflow as tf
 class PiecewiseLinearInterpolation(tf.Module):
     def __init__(self, xin, xout, **kwargs):
         super().__init__(**kwargs)
+        self._num_xin = len(xin)
         xin = tf.constant(xin, dtype=tf.float64)
         xout = tf.constant(xout, dtype=tf.float64)
         self.sorted_indices = tf.argsort(xin, axis=-1)
@@ -15,7 +16,7 @@ class PiecewiseLinearInterpolation(tf.Module):
         xout = self.xout
         xin = self.xin
         yin = tf.gather(inputs, self.sorted_indices, axis=-1)
-        if tf.size(xin) == 1:
+        if self._num_xin == 1:
             zero = tf.constant((1,), dtype=tf.float64)
             yint = tf.where(xout != xin[0], zero, yin[0])
             return yint
