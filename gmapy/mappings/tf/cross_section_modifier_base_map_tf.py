@@ -4,6 +4,10 @@ from .mapping_elements_tf import (
     InputSelector,
     Distributor
 )
+from .tf_helperfuns import (
+    scatter_sparse_matrix,
+    subset_sparse_matrix
+)
 
 
 class CrossSectionModifierBaseMap(CrossSectionBaseMap):
@@ -50,13 +54,13 @@ class CrossSectionModifierBaseMap(CrossSectionBaseMap):
             jac_list = jacfun(orig_propvals, *inpvars)
             # calculate contribution given by propagated original jacobian
             propjac = jac_list[0]
-            red_orig_jac = self._subset_sparse_matrix(orig_jac, tar_idcs)
+            red_orig_jac = subset_sparse_matrix(orig_jac, tar_idcs)
             red_orig_jac = tf.sparse.reorder(red_orig_jac)
             res1 = tf.sparse.sparse_dense_matmul(
                 red_orig_jac, propjac, adjoint_a=True, adjoint_b=True
             )
             res1 = tf.sparse.transpose(tf.sparse.from_dense(res1))
-            res1 = self._scatter_sparse_matrix(
+            res1 = scatter_sparse_matrix(
                 res1, tar_idcs, None, shape=(self._tar_len, self._src_len)
             )
             res = res1 if res is None else tf.sparse.add(res, res1)
