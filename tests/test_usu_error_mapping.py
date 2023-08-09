@@ -28,7 +28,6 @@ class TestUSUErrorMapping(unittest.TestCase):
         exptable = create_experiment_table(datablock_list)
         datatable = pd.concat([priortable, exptable], axis=0, ignore_index=True)
         datatable = attach_shape_prior(datatable)
-        initialize_shape_prior(datatable)
         cls._datatable = datatable
 
     def test_usu_error_propagation(self):
