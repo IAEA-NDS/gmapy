@@ -121,7 +121,7 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
         norm_idcs = datatable.index[normmask].to_numpy()
         refvals[norm_idcs] = 1.
     if uncs is None and 'UNC' in exptable:
-        uncs = np.empty((len(exptable),), dtype='d')
+        uncs = np.empty((np.max(exptable.index)+1,), dtype='d')
         uncs[exptable.index] = (exptable.UNC / exptable.DATA).to_numpy()
     if not (mapping is None or refvals is None or uncs is None):
         # calculate a first estimate of normalization factor
