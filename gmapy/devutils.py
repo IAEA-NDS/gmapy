@@ -5,14 +5,17 @@ import numpy as np
 function_times = {}
 
 
-def time_func(fun):
+def time_func(fun, cumulative=True):
     def wrap_fun(*args, **kwargs):
         start_time = time()
         result = fun(*args, **kwargs)
         end_time = time()
         diff_time = end_time - start_time
         function_times.setdefault(fun.__name__, 0.0)
-        function_times[fun.__name__] += diff_time
+        if cumulative:
+            function_times[fun.__name__] += diff_time
+        else:
+            function_times[fun.__name__] = diff_time
         return result
     return wrap_fun
 
