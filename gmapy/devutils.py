@@ -20,7 +20,7 @@ def time_func(fun, cumulative=True):
     return wrap_fun
 
 
-def time_method(fun):
+def time_method(fun, cumulative=True):
     def wrap_method(self, *args, **kwargs):
         start_time = time()
         result = fun(self, *args, **kwargs)
@@ -28,7 +28,10 @@ def time_method(fun):
         diff_time = end_time - start_time
         identifier = f'{self.__class__.__name__}.{fun.__name__}'
         function_times.setdefault(identifier, 0.0)
-        function_times[identifier] += diff_time
+        if cumulative:
+            function_times[identifier] += diff_time
+        else:
+            function_times[identifier] = diff_time
         return result
     return wrap_method
 
