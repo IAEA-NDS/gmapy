@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
+import math
 tfd = tfp.distributions
 
 
@@ -122,7 +123,7 @@ class MultivariateNormal(BaseDistribution):
     def log_prob_hessian(self, x):
         prior_scale = self._prior_scale
         covmat = prior_scale.matmul(prior_scale.adjoint())
-        hess = tf.linalg.inv(covmat).to_dense()
+        hess = (-tf.linalg.inv(covmat).to_dense())
         return hess
 
 
@@ -180,3 +181,136 @@ class MultivariateNormalLikelihood(BaseDistribution):
         else:
             model_part = self._log_prob_hessian_model_part(x)
             return gls_part + model_part
+
+
+class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
+
+    def __init__(self, num_params, num_covpars, propfun, jacfun,
+                 like_data, like_cov_fun,
+                 approximate_hessian=False):
+        self._propfun = propfun
+        self._jacfun = jacfun
+        self._like_data = like_data
+        self._like_cov_fun = like_cov_fun
+        self._num_params = num_params
+        self._num_covpars = num_covpars
+        self._approximate_hessian = approximate_hessian
+
+    def log_prob(self, x):
+        x = tf.reshape(x, (-1,))
+        pars, covpars = self.split_pars(x)
+        covop = self._like_cov_fun(covpars)
+        logdet = covop.log_abs_determinant()
+        d = self._like_data - self._propfun(pars)
+        chisqr = tf.matmul(
+            tf.reshape(d, (1, -1)), covop.solve(tf.reshape(d, (-1, 1)))
+        )
+        log2pi = tf.math.log(tf.constant(2*math.pi, dtype=tf.float64))
+        normfact = tf.cast(tf.size(d), dtype=tf.float64) * log2pi
+        res = -0.5 * (normfact + logdet + chisqr)
+        return tf.squeeze(res)
+
+    def combine_pars(self, params, covpars):
+        return tf.concat([params, covpars], axis=0)
+
+    def split_pars(self, x):
+        return tf.split(x, [self._num_params, self._num_covpars])
+
+    def _log_prob_hessian_gls_part(self, like_cov, x):
+        jac = tf.sparse.to_dense(self._jacfun(x))
+        u = like_cov.solve(jac)
+        return (-tf.matmul(tf.transpose(jac), u))
+
+    def _log_prob_hessian_model_part(self, like_cov, x):
+        if not isinstance(x, tf.Tensor):
+            x = tf.constant(x, dtype=tf.float64)
+        like_data = tf.reshape(self._like_data, (-1, 1))
+        propvals = tf.reshape(self._propfun(x), (-1, 1))
+        d = like_data - propvals
+        constvec = like_cov.solve(d)
+        col_list = []
+        for i in range(self._num_params):
+            print(f'Hessian elements related to {i}-th parameter')
+            with tf.GradientTape() as tape:
+                tape.watch(x)
+                j = self._jacfun(x)
+                u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
+                z = tf.gather(u, [[i]])
+            g = tape.gradient(z, x)
+            col_list.append(g)
+        hessian = tf.stack(col_list, axis=0)
+        return hessian
+
+    def _log_prob_hessian_offdiag_part(self, x, covpars):
+        # compute -dz dH z
+        if not isinstance(x, tf.Tensor):
+            x = tf.constant(x, dtype=tf.float64)
+        like_cov_fun = self._like_cov_fun
+        like_data = tf.reshape(self._like_data, (-1, 1))
+        propvals = tf.reshape(self._propfun(x), (-1, 1))
+        d = like_data - propvals
+        with tf.GradientTape() as tape:
+            tape.watch(covpars)
+            j = self._jacfun(x)
+            like_cov = like_cov_fun(covpars)
+            constvec = like_cov.solve(d)
+            u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
+            u = tf.reshape(u, (-1,))
+        g = tape.jacobian(u, covpars)
+        return g
+
+    def _log_prob_hessian_chisqr_wrt_covpars(self, x, covpars):
+        # compute -z ddH z
+        if not isinstance(x, tf.Tensor):
+            x = tf.constant(x, dtype=tf.float64)
+        like_cov_fun = self._like_cov_fun
+        like_data = tf.reshape(self._like_data, (-1, 1))
+        propvals = tf.reshape(self._propfun(x), (-1, 1))
+        d = like_data - propvals
+        d = tf.reshape(d, (-1, 1))
+        with tf.GradientTape() as tape1:
+            tape1.watch(covpars)
+            with tf.GradientTape() as tape2:
+                tape2.watch(covpars)
+                like_cov = like_cov_fun(covpars)
+                u = -0.5 * tf.matmul(tf.transpose(d), like_cov.solve(d))
+            g = tape2.gradient(u, covpars)
+        h = tape1.jacobian(g, covpars)
+        return h
+
+    def _log_prob_hessian_logdet_wrt_covpars(self, covpars):
+        # compute -dd(logdet covmat)
+        if not isinstance(covpars, tf.Tensor):
+            covpars = tf.constant(covpars, dtype=tf.float64)
+        like_cov_fun = self._like_cov_fun
+        with tf.GradientTape() as tape1:
+            tape1.watch(covpars)
+            with tf.GradientTape() as tape2:
+                tape2.watch(covpars)
+                like_cov = like_cov_fun(covpars)
+                u = -0.5 * like_cov.log_abs_determinant()
+            g = tape2.gradient(u, covpars)
+        h = tape1.jacobian(g, covpars)
+        return h
+
+    # first derivative
+    #     2*dz H z + z dH z
+    # second derivative
+    #     2*ddz H z + 2*dz H dz + (param block)
+    #     2*dz dH z (off-diagonal block)
+    #     z ddH z (covparam block)
+    #     dd logdet H (covparam block)
+    def log_prob_hessian(self, x):
+        x, covpars = self.split_pars(x)
+        like_cov = self._like_cov_fun(covpars)
+        pars_part = self._log_prob_hessian_gls_part(like_cov, x)
+        if not self._approximate_hessian:
+            model_part = self._log_prob_hessian_model_part(like_cov, x)
+            pars_part += model_part
+        offdiag_part = self._log_prob_hessian_offdiag_part(x, covpars)
+        covpar_part = self._log_prob_hessian_logdet_wrt_covpars(covpars)
+        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(x, covpars)
+        res1 = tf.concat([pars_part, offdiag_part], axis=1)
+        res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
+        res = tf.concat([res1, res2], axis=0)
+        return res
