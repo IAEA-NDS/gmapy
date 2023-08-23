@@ -70,12 +70,11 @@ class EnergyDependentUSUMap(CrossSectionBaseMap):
         return inp, out
 
 
-def attach_endep_usu_df(datatable, reacs, energies, uncs):
-    dt = datatable.copy()
-    dt.sort_index(inplace=True, axis=0)
+def create_endep_usu_df(datatable, reacs, energies, uncs):
+    dt = datatable
     red_dt = dt[dt.NODE.str.match('exp_[0-9]+') & dt.REAC.isin(reacs)]
     expids = pd.unique(red_dt.NODE.str.extract(r'exp_([0-9]+)$').iloc[:,0])
-    dt_list = [dt]
+    dt_list = []
     for expid in expids:
         expname = 'exp_' + expid
         curdt = red_dt[red_dt.NODE == expname]
@@ -90,6 +89,13 @@ def attach_endep_usu_df(datatable, reacs, energies, uncs):
             'UNC': uncs
         })
         dt_list.append(new_usu_dt)
-
     res_dt = pd.concat(dt_list, axis=0, ignore_index=True)
+    return res_dt
+
+
+def attach_endep_usu_df(datatable, reacs, energies, uncs):
+    dt = datatable.copy()
+    dt.sort_index(inplace=True, axis=0)
+    usu_dt = create_endep_usu_df(dt, reacs, energies, uncs)
+    res_dt = pd.concat([dt, usu_dt], axis=0, ignore_index=True)
     return res_dt
