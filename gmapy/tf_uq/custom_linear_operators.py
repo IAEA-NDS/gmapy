@@ -20,6 +20,7 @@ class MyLinearOperatorLowRankUpdate(tf.linalg.LinearOperatorLowRankUpdate):
             log_abs_det_c = 2 * math_ops.reduce_sum(
               math_ops.log(chol_cap_diag), axis=[-1])
         else:
+            # FIXME: for complex matrices, this would yield the wrong result
             capa = self._make_capacitance(u=u, v=v)
             log_abs_det_c = linalg_ops.log_matrix_determinant(capa).log_abs_determinant
             if self.dtype.is_complex:
