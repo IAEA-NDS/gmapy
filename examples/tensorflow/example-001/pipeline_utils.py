@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 import dill
 
@@ -9,6 +10,8 @@ def load_objects(filename, *varnames):
 
 
 def save_objects(filename, scope, *varnames):
+    dirname = os.path.dirname(filename)
+    os.makedirs(dirname, exist_ok=True)
     objdic = {v: scope[v] for v in varnames}
     with open(filename, 'wb') as f:
         dill.dump(objdic, f)
