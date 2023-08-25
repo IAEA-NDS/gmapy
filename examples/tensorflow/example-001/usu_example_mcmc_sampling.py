@@ -91,7 +91,6 @@ s1 = time.time()
 chain, tracing_info = run_chain()
 s2 = time.time()
 print(f's2-s1: {s2-s1}')
-breakpoint()
 
 save_objects(
     'tmp/usu_example_mcmc_sampling_output.pkl', locals(),

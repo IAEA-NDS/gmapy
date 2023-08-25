@@ -36,7 +36,7 @@ tfd = tfp.distributions
 tfb = tfp.bijectors
 
 # retrieve prior estimates and covariances from the database
-db_path = '../../tests/testdata/data_and_sacs.json'
+db_path = '../../../tests/testdata/data_and_sacs.json'
 db = read_gma_database(db_path)
 
 priortable = create_prior_table(db['prior_list'])
