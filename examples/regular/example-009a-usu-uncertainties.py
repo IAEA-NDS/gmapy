@@ -22,7 +22,7 @@ import scipy.sparse as sps
 import numpy as np
 
 
-gmadb = GMADatabase('../legacy-tests/test_004/input/data.gma')
+gmadb = GMADatabase('../../legacy-tests/test_004/input/data.gma')
 
 dt = gmadb.get_datatable()
 covmat = gmadb.get_covmat()
@@ -40,8 +40,8 @@ red_mod_dt = mod_dt.loc[mod_dt.REAC==myreac]
 red_exp_dt
 
 plt.errorbar(red_exp_dt.ENERGY, red_exp_dt.DATA, red_exp_dt.UNC, fmt='bo', ls='none')
-plt.xlim(0.1, 25) 
-plt.ylim(-1, 3) 
+plt.xlim(0.1, 25)
+plt.ylim(-1, 3)
 # plt.xscale('log')
 plt.show()
 
@@ -63,7 +63,7 @@ expcov = q['expcov']
 
 unc_dt = priordt.loc[priordt.NODE.str.match('endep_reac_usu'), ['NODE', 'REAC', 'ENERGY']]
 unc_idcs = unc_dt.index.to_numpy()
-unc_group_assoc = np.full(len(unc_idcs), 'one_group') 
+unc_group_assoc = np.full(len(unc_idcs), 'one_group')
 
 m = CompoundMap(cdt, reduce=True)
 source_mask = create_propagate_source_mask(priordt)
@@ -85,10 +85,13 @@ mh_startvals[-len(uncvec):] = 0.025
 
 propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.06, rho=0.5)
 
-# mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 20,
-#                  log_transition_pdf=prop_logpdf, thin_step=100, attempt_resume=True,
-#                  save_dir='results-009a', save_prefix='mh_res_001_', save_batchsize=100, seed=424239) 
-mh_res = load_mcmc_result('mh_res_000_', '.pkl', 'results-009a')
+print('Starting sampling... This takes a long time... \n' +
+      'Intermediate results are stored in `.pkl` (pickle) files ' +
+      'every `save_batchsize=100` samples')
+mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 20,
+                 log_transition_pdf=prop_logpdf, thin_step=100, attempt_resume=True,
+                 save_dir='results-009a', save_prefix='mh_res_001_', save_batchsize=100, seed=424239)
+# mh_res = load_mcmc_result('mh_res_000_', '.pkl', 'results-009a')
 
 mh_res['elapsed_time']
 mh_res['accept_rate']
@@ -114,4 +117,3 @@ plt.hist(smpl[-1, 6000:], bins=20)
 plt.show()
 
 stdvec[mod_dt.index]
-

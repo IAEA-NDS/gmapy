@@ -16,7 +16,7 @@ import scipy.sparse as sps
 import numpy as np
 
 
-gmadb = GMADatabase('../legacy-tests/test_004/input/data.gma')
+gmadb = GMADatabase('../../legacy-tests/test_004/input/data.gma')
 
 dt = gmadb.get_datatable()
 covmat = gmadb.get_covmat()
@@ -77,9 +77,14 @@ propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.07, 
 # with open('data-example-007b-30000-01-01-mh-res.pkl', 'rb') as finp:
 #     mh_res = pickle.load(finp)
 #     mh_startvals = mh_res['samples'][:, -1]
-     
-
-mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 30000, log_transition_pdf=prop_logpdf, thin_step=100) 
+print('Starting sampling... This takes a long time... \n' +
+      'Intermediate results are stored in `.pkl` (pickle) files ' +
+      'every `save_batchsize=1000` samples')
+mh_res = mh_algo(
+    mh_startvals, postdist.logpdf, propfun, 9000,
+    log_transition_pdf=prop_logpdf, thin_step=100,
+    attempt_resume=True, save_batchsize=1000
+)
 # import pickle
 # with open('data-example-007b-30000-01-02-mh-res.pkl', 'wb') as fout:
 #     pickle.dump(mh_res, fout)

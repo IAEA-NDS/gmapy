@@ -9,14 +9,16 @@
 # program from the command line. It can read the
 # experimental data either from a JSON file or
 # a file of the legacy structure used by the
-# Fortran GMAP code. This script is only a
-# command line interface to the gmapi package.
+# Fortran GMAP code. This script is a simple
+# command line interface to the gmapy package.
 #
 # Usage:
 #     python example-001-run-gmap.py --dbfile <DBFILE>
 #
 #     <DBFILE>: GMAP Database file in legacy format
 #
+#     Instead of --dbfile you can use the --jsondb
+#     argument to load data from a JSON file.
 ############################################################
 
 import argparse
@@ -31,4 +33,3 @@ if __name__ == '__main__':
     dbtype = 'json' if args.jsondb != '' else 'legacy'
     dbfile = args.jsondb if dbtype == 'json' else args.dbfile
     run_gmap(dbfile=dbfile, dbtype=dbtype)
-

@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..')
+sys.path.append('../..')
 from gmapy.gma_database_class import GMADatabase
 from gmapy.posterior_usu import PosteriorUSU
 from gmapy.mcmc_inference import mh_algo
@@ -16,7 +16,7 @@ import scipy.sparse as sps
 import numpy as np
 
 
-gmadb = GMADatabase('../legacy-tests/test_004/input/data.gma')
+gmadb = GMADatabase('../../legacy-tests/test_004/input/data.gma')
 
 dt = gmadb.get_datatable()
 covmat = gmadb.get_covmat()
@@ -71,7 +71,14 @@ mh_startvals[-len(uncvec):] = 0.012
 
 propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.05, rho=0.5)
 
-# mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 9000, log_transition_pdf=prop_logpdf, thin_step=100) 
+print('Starting sampling... This takes a long time... \n' +
+      'Intermediate results are stored in `.pkl` (pickle) files ' +
+      'every `save_batchsize=1000` samples')
+mh_res = mh_algo(
+    mh_startvals, postdist.logpdf, propfun, 9000,
+    log_transition_pdf=prop_logpdf, thin_step=100,
+    attempt_resume=True, save_batchsize=1000
+)
 # import pickle
 # with open('data-example-007-mh-res.pkl', 'wb') as fout:
 #     pickle.dump(mh_res, fout)

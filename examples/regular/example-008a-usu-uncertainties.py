@@ -3,6 +3,7 @@ sys.path.append('..')
 from gmapy.gma_database_class import GMADatabase
 from gmapy.posterior_usu import PosteriorUSU
 from gmapy.mcmc_inference import parallelmh_algo
+from gmapy.mcmc_inference import mh_algo
 from gmapy.inference import lm_update
 from gmapy.mappings.energy_dependent_usu_map import attach_endep_usu_df
 from gmapy.mappings.priortools import (
@@ -16,7 +17,7 @@ import scipy.sparse as sps
 import numpy as np
 
 
-gmadb = GMADatabase('../legacy-tests/test_004/input/data.gma')
+gmadb = GMADatabase('../../legacy-tests/test_004/input/data.gma')
 
 dt = gmadb.get_datatable()
 covmat = gmadb.get_covmat()
@@ -34,8 +35,8 @@ red_mod_dt = mod_dt.loc[mod_dt.REAC==myreac]
 red_exp_dt
 
 plt.errorbar(red_exp_dt.ENERGY, red_exp_dt.DATA, red_exp_dt.UNC, fmt='bo', ls='none')
-plt.xlim(0.1, 25) 
-plt.ylim(-1, 3) 
+plt.xlim(0.1, 25)
+plt.ylim(-1, 3)
 # plt.xscale('log')
 plt.show()
 
@@ -78,13 +79,19 @@ mh_startvals[-len(uncvec):] = 0.025
 
 propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.055, rho=0.5)
 
-import pickle
-with open('data-example-008a-14000-01-02-mh-res.pkl', 'rb') as finp:
-    mh_res = pickle.load(finp)
-    mh_startvals = mh_res['samples'][:, -1]
-
-mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 14000, log_transition_pdf=prop_logpdf, thin_step=100) 
-import pickle
+# import pickle
+# with open('data-example-008a-14000-01-02-mh-res.pkl', 'rb') as finp:
+#     mh_res = pickle.load(finp)
+#     mh_startvals = mh_res['samples'][:, -1]
+print('Starting sampling... This takes a long time... \n' +
+      'Intermediate results are stored in `.pkl` (pickle) files ' +
+      'every `save_batchsize=1000` samples')
+mh_res = mh_algo(
+    mh_startvals, postdist.logpdf, propfun, 9000,
+    log_transition_pdf=prop_logpdf, thin_step=100,
+    attempt_resume=True, save_batchsize=1000
+)
+# import pickle
 # with open('data-example-008a-14000-01-03-mh-res.pkl', 'wb') as fout:
 #     pickle.dump(mh_res, fout)
 
@@ -112,4 +119,3 @@ plt.hist(smpl[-2, 3000:])
 plt.show()
 
 stdvec[mod_dt.index]
-

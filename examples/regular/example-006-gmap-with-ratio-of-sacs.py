@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..')
+sys.path.append('../..')
 from gmapy.data_management.dataset import Dataset
 from gmapy.data_management.datablock import Datablock
 from gmapy.data_management.datablock_list import DatablockList
@@ -9,7 +9,7 @@ from gmapy.data_management.database_IO import (read_json_gma_database,
         read_legacy_gma_database)
 
 # read the database of standards 2017 and perform the gls fitting
-dbpath = '../legacy-tests/test_002/input/data.gma'
+dbpath = '../../legacy-tests/test_002/input/data.gma'
 db_dic = read_legacy_gma_database(dbpath)
 prior_list = db_dic['prior_list']
 datablock_list = db_dic['datablock_list']
@@ -17,7 +17,7 @@ gls_result = run_gmap_simplified(prior_list=prior_list, datablock_list=datablock
 gls_result['table'].to_csv('gma_result_2017.csv')
 
 # read the database with NIFFTE TPC data and perform the gls fitting
-dbpath = '../legacy-tests/test_004/input/data.gma'
+dbpath = '../../legacy-tests/test_004/input/data.gma'
 db_dic = read_legacy_gma_database(dbpath)
 prior_list = db_dic['prior_list']
 datablock_list = db_dic['datablock_list']
@@ -29,7 +29,7 @@ gls_result['table'].to_csv('gma_result_with_niffte_tpc.csv')
 # the Mannhart evaluation
 # read the json database
 #dbpath = '../legacy-tests/test_002/input/gmadata.json'
-dbpath = '../legacy-tests/test_004/input/data.gma'
+dbpath = '../../legacy-tests/test_004/input/data.gma'
 db_dic = read_legacy_gma_database(dbpath)
 prior_list = db_dic['prior_list']
 datablock_list = db_dic['datablock_list']
@@ -164,4 +164,3 @@ datablock_list = dblist.get_datablock_list(dict)
 
 gls_result = run_gmap_simplified(prior_list=prior_list, datablock_list=datablock_list)
 gls_result['table'].to_csv('gma_with_sacs_ratios.csv')
-

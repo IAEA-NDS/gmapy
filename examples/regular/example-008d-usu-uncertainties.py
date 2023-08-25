@@ -17,7 +17,7 @@ import scipy.sparse as sps
 import numpy as np
 
 
-gmadb = GMADatabase('../legacy-tests/test_004/input/data.gma')
+gmadb = GMADatabase('../../legacy-tests/test_004/input/data.gma')
 
 dt = gmadb.get_datatable()
 covmat = gmadb.get_covmat()
@@ -77,6 +77,9 @@ mh_startvals[-len(uncvec):] = 0.025
 
 propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.055, rho=0.5)
 
+print('Starting sampling... This takes a long time... \n' +
+      'Intermediate results are stored in `.pkl` (pickle) files ' +
+      'every `save_batchsize=100` samples')
 mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 100000,
                  log_transition_pdf=prop_logpdf, thin_step=100, attempt_resume=False,
                  save_dir='results-008d', save_prefix='mh_res_000_', save_batchsize=100, seed=589) 
@@ -106,8 +109,6 @@ plt.show()
 
 stdvec[mod_dt.index]
 
-
-
 # get a network with all the connections
 
 tmp = exp_dt.loc[exp_dt.ENERGY > 1]
@@ -123,7 +124,3 @@ plt.xlim(0.1, 25)
 plt.ylim(-1, 3) 
 # plt.xscale('log')
 plt.show()
-
-
-
-
