@@ -1,0 +1,127 @@
+import sys
+sys.path.append('..')
+import re
+from gmapy.gma_database_class import GMADatabase
+from gmapy.posterior_usu import PosteriorUSU
+from gmapy.mcmc_inference import mh_algo
+from gmapy.inference import lm_update
+from gmapy.mappings.energy_dependent_usu_map import attach_endep_usu_df
+from gmapy.mappings.priortools import (
+    prepare_prior_and_likelihood_quantities,
+    create_propagate_source_mask
+)
+from gmapy.inference import lm_update
+from gmapy.mappings.compound_map import CompoundMap
+import matplotlib.pyplot as plt
+import scipy.sparse as sps
+import numpy as np
+
+
+gmadb = GMADatabase('../legacy-tests/test_004/input/data.gma')
+
+dt = gmadb.get_datatable()
+covmat = gmadb.get_covmat()
+
+# attach the usu error contributions here
+# red_dt = dt.loc[dt.REAC.str.match('MT:.*-R1:(8|9|10)(-R2:(8|9|10))?$')]
+mod_dt = dt[dt.NODE.str.match('xsid_')]
+exp_dt = dt[dt.NODE.str.match('exp_')]
+exp_dt.groupby('REAC')['REAC'].count()
+exp_dt.groupby('REAC')['ENERGY'].max()
+
+red_exp_dt = exp_dt[exp_dt.REAC.str.match('MT:[1357]-.*-?R.:9')] 
+red_exp_dt[['NODE', 'REAC']].drop_duplicates().groupby('REAC').count()
+
+
+all_reacs = exp_dt.REAC.drop_duplicates()
+usu_reacs = all_reacs[all_reacs.str.match('MT:[1357].*-R.:9')]
+
+cdt = dt.copy()
+cdt = attach_endep_usu_df(cdt, usu_reacs, [0, 7, 12.5, 20], [0.1]*4)
+usu_uncs = cdt.loc[cdt.NODE.str.match('endep_'), 'UNC'].to_numpy()
+usu_cov = sps.diags(usu_uncs**2)
+ccovmat = sps.block_diag([covmat, usu_cov], format='csr')
+
+# set up quantities to construct posterior distribution object
+q = prepare_prior_and_likelihood_quantities(cdt, ccovmat)
+priordt = q['priortable']
+priorvals = q['priorvals']
+priorcov = q['priorcov']
+expvals = q['expvals']
+expcov = q['expcov']
+
+unc_dt = priordt.loc[priordt.NODE.str.match('endep_usu'), ['NODE', 'REAC', 'ENERGY']]
+unc_idcs = unc_dt.index.to_numpy()
+# unc_group_assoc = unc_dt.REAC + '_EN:' +  unc_dt.ENERGY.astype(str)
+unc_group_assoc = unc_dt.ENERGY.to_numpy()
+
+m = CompoundMap(cdt, reduce=True)
+source_mask = create_propagate_source_mask(priordt)
+postdist = PosteriorUSU(
+    priorvals, priorcov, m, expvals, expcov,
+    relative_exp_errors=True, source_mask=source_mask,
+    unc_idcs=unc_idcs, unc_group_assoc=unc_group_assoc
+)
+
+uncvec = np.full(len(postdist._groups), 0.1)
+startvals = np.concatenate([priorvals + 1e-4, uncvec])
+lm_res = lm_update(postdist, startvals=startvals, print_status=True, rtol=1e-5,
+                   maxiter=1, must_converge=False)
+
+mh_startvals = lm_res['upd_vals'].copy()
+endep_usu_idcs = priordt.index[priordt.NODE.str.match('endep_usu')]
+mh_startvals[endep_usu_idcs] = 0.02
+mh_startvals[-len(uncvec):] = 0.025
+
+propfun, prop_logpdf = postdist.generate_proposal_fun(mh_startvals, scale=0.055, rho=0.5)
+
+mh_res = mh_algo(mh_startvals, postdist.logpdf, propfun, 100000,
+                 log_transition_pdf=prop_logpdf, thin_step=100, attempt_resume=True,
+                 save_dir='results-008c', save_prefix='mh_res_000', save_batchsize=100, seed=589) 
+
+mh_res['elapsed_time']
+mh_res['accept_rate']
+smpl = mh_res['samples']
+
+plt.plot(np.arange(len(mh_res['logprob_hist'])), mh_res['logprob_hist'])
+plt.show()
+
+plt.plot(np.arange(smpl[:,6000:].shape[1]), smpl[-1, 6000:])
+plt.show()
+
+meanvec = np.mean(smpl[:, 6000:], axis=1)
+stdvec = np.std(smpl[:, 6000:], axis=1)
+meanvec[-15:]
+stdvec[-15:]
+priordt['POST'] = meanvec[:-len(postdist._groups)]
+priordt['UNC'] = stdvec[:-len(postdist._groups)]
+priordt['RELUNC'] = meanvec[:-len(postdist._groups)] / stdvec[:-len(postdist._groups)]
+priordt[priordt.NODE.str.match('xsid_8') & (priordt.ENERGY > 1) & (priordt.ENERGY < 20)]
+
+
+plt.hist(smpl[-12, 6000:], bins=20)
+plt.show()
+
+stdvec[mod_dt.index]
+
+
+
+# get a network with all the connections
+
+tmp = exp_dt.loc[exp_dt.ENERGY > 1]
+tmp.loc[:, ['REAC', 'ENERGY']].groupby('REAC').agg({'ENERGY': ['min', 'max']})
+
+myreac = 'MT:3-R1:9-R2:8'
+red_exp_dt = exp_dt.loc[exp_dt.REAC==myreac]
+red_mod_dt = mod_dt.loc[mod_dt.REAC==myreac]
+red_exp_dt
+
+plt.errorbar(red_exp_dt.ENERGY, red_exp_dt.DATA, red_exp_dt.UNC, fmt='bo', ls='none')
+plt.xlim(0.1, 25) 
+plt.ylim(-1, 3) 
+# plt.xscale('log')
+plt.show()
+
+
+
+
