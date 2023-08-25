@@ -5,7 +5,11 @@ import re
 from ..data_management.datablock_api import dataset_iterator
 from ..data_management import dataset_api as dsapi
 from ..data_management.quantity_types import SHAPE_MT_IDS
-import tensorflow as tf
+try:
+    import tensorflow as tf
+    tf_available = True
+except ImportError:
+    tf_available = False
 
 
 def prepare_prior_and_exptable(datatable, reduce, reset_index=True):
@@ -134,8 +138,9 @@ def initialize_shape_prior(datatable, mapping=None, refvals=None, uncs=None):
             propvals = mapping.propagate(refvals, datatable)
         # required type conversion because indexing of
         # tf.Tensors by numpy arrays does not work
-        if isinstance(propvals, tf.Tensor):
-            propvals = propvals.numpy()
+        if tf_available:
+            if isinstance(propvals, tf.Tensor):
+                propvals = propvals.numpy()
         for cur_exp, cur_exp_df in exp_groups:
             cur_propvals = propvals[cur_exp_df.index]
             cur_uncs = uncs[cur_exp_df.index]
