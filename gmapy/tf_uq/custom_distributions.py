@@ -249,14 +249,14 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         like_data = tf.reshape(self._like_data, (-1, 1))
         propvals = tf.reshape(self._propfun(x), (-1, 1))
         d = like_data - propvals
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=False) as tape:
             tape.watch(covpars)
             j = self._jacfun(x)
             like_cov = like_cov_fun(covpars)
             constvec = like_cov.solve(d)
             u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
             u = tf.reshape(u, (-1,))
-        g = tape.jacobian(u, covpars)
+        g = tape.jacobian(u, covpars, experimental_use_pfor=True)
         return g
 
     def _log_prob_hessian_chisqr_wrt_covpars(self, x, covpars):
@@ -268,14 +268,14 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         propvals = tf.reshape(self._propfun(x), (-1, 1))
         d = like_data - propvals
         d = tf.reshape(d, (-1, 1))
-        with tf.GradientTape() as tape1:
+        with tf.GradientTape(persistent=False) as tape1:
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
                 tape2.watch(covpars)
                 like_cov = like_cov_fun(covpars)
                 u = -0.5 * tf.matmul(tf.transpose(d), like_cov.solve(d))
             g = tape2.gradient(u, covpars)
-        h = tape1.jacobian(g, covpars)
+        h = tape1.jacobian(g, covpars, experimental_use_pfor=True)
         return h
 
     def _log_prob_hessian_logdet_wrt_covpars(self, covpars):
@@ -283,14 +283,14 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         if not isinstance(covpars, tf.Tensor):
             covpars = tf.constant(covpars, dtype=tf.float64)
         like_cov_fun = self._like_cov_fun
-        with tf.GradientTape() as tape1:
+        with tf.GradientTape(persistent=False) as tape1:
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
                 tape2.watch(covpars)
                 like_cov = like_cov_fun(covpars)
                 u = -0.5 * like_cov.log_abs_determinant()
             g = tape2.gradient(u, covpars)
-        h = tape1.jacobian(g, covpars)
+        h = tape1.jacobian(g, covpars, experimental_use_pfor=True)
         return h
 
     # first derivative
