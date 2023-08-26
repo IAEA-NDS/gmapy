@@ -139,10 +139,11 @@ class CrossSectionBaseMap(tf.Module):
 
     def _generate_atomic_jacobian(self, atomic_propagate_fun):
         def _atomic_jacobian(*inpvars):
-            with tf.GradientTape() as tape:
+            with tf.GradientTape(persistent=True) as tape:
                 for iv in inpvars:
                     tape.watch(iv)
                 predvals = atomic_propagate_fun(*inpvars)
-            jac = tape.jacobian(predvals, inpvars)
+            jac = tape.jacobian(
+                predvals, inpvars, experimental_use_pfor=False)
             return jac
         return _atomic_jacobian
