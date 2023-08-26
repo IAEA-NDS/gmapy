@@ -139,11 +139,17 @@ class CrossSectionBaseMap(tf.Module):
 
     def _generate_atomic_jacobian(self, atomic_propagate_fun):
         def _atomic_jacobian(*inpvars):
-            with tf.GradientTape(persistent=True) as tape:
+            with tf.GradientTape(persistent=False) as tape:
                 for iv in inpvars:
                     tape.watch(iv)
                 predvals = atomic_propagate_fun(*inpvars)
+            # NOTE: experimental_use_pfor=True will give excessive retracing
+            #   warnings and `Executor starts aborting` messsages.
+            #   However, the method log_prob_hessian of class
+            #   MultivariateNormalLikelihood will execute much faster
+            # if approximate_hessian=False. For approximate_hessian=True,
+            # the impact is less dramatic.
             jac = tape.jacobian(
-                predvals, inpvars, experimental_use_pfor=False)
+                predvals, inpvars, experimental_use_pfor=True)
             return jac
         return _atomic_jacobian
