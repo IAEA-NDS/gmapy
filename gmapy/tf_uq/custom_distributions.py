@@ -130,23 +130,35 @@ class MultivariateNormal(BaseDistribution):
 class MultivariateNormalLikelihood(BaseDistribution):
 
     def __init__(self, num_params, propfun, jacfun, like_data, like_scale,
-                 approximate_hessian=False):
+                 approximate_hessian=False, relative=False):
         self._propfun = propfun
         self._jacfun = jacfun
         self._like_data = like_data
-        self._like_scale = like_scale
         self._num_params = num_params
         self._approximate_hessian = approximate_hessian
+        self._like_scale = like_scale
+        self._relative = relative
+
+    def _like_scale_fun(self, x):
+        scale_op = tf.linalg.LinearOperatorDiag(x)
+        comp_op = scale_op.matmul(self._like_scale)
+        return comp_op
 
     def log_prob(self, x):
         propvals = self._propfun(x)
+        like_scale = self._like_scale
+        if self._relative:
+            like_scale = self._like_scale_fun(propvals)
         pdf = tfd.MultivariateNormalLinearOperator(
-            loc=propvals, scale=self._like_scale
+            loc=propvals, scale=like_scale
         )
         return pdf.log_prob(self._like_data)
 
     def _log_prob_hessian_gls_part(self, x):
         like_scale = self._like_scale
+        if self._relative:
+            propvals = self._propfun(x)
+            like_scale = self._like_scale_fun(propvals)
         jac = tf.sparse.to_dense(self._jacfun(x))
         u = like_scale.solve(jac)
         return (-tf.matmul(tf.transpose(u), u))
@@ -154,9 +166,12 @@ class MultivariateNormalLikelihood(BaseDistribution):
     def _log_prob_hessian_model_part(self, x):
         if not isinstance(x, tf.Tensor):
             x = tf.constant(x, dtype=tf.float64)
+        propvals = self._propfun(x)
         like_scale = self._like_scale
+        if self._relative:
+            like_scale = self._like_scale_fun(propvals)
         like_data = tf.reshape(self._like_data, (-1, 1))
-        propvals = tf.reshape(self._propfun(x), (-1, 1))
+        propvals = tf.reshape(propvals, (-1, 1))
         # introduce factor -1 here instead of in front
         # of the Jacobian calculation below, as it is equivalent
         d = (-1) * (like_data - propvals)
