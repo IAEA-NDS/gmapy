@@ -201,22 +201,37 @@ class MultivariateNormalLikelihood(BaseDistribution):
 class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
 
     def __init__(self, num_params, num_covpars, propfun, jacfun,
-                 like_data, like_cov_fun,
+                 like_data, like_cov_fun, relative=False,
                  approximate_hessian=False):
         self._propfun = propfun
         self._jacfun = jacfun
         self._like_data = like_data
-        self._like_cov_fun = like_cov_fun
         self._num_params = num_params
         self._num_covpars = num_covpars
         self._approximate_hessian = approximate_hessian
+        self._orig_like_cov_fun = like_cov_fun
+        self._relative = relative
+
+    def _like_cov_fun(self, covpars, propvals):
+        orig_covop = self._orig_like_cov_fun(covpars)
+        if not self._relative:
+            return orig_covop
+        else:
+            propvals = tf.reshape(propvals, (-1,))
+            scale_op = tf.linalg.LinearOperatorDiag(propvals)
+            comp_op = tf.linalg.LinearOperatorComposition(
+                [scale_op, orig_covop, scale_op.adjoint()],
+                is_self_adjoint=True, is_positive_definite=True
+            )
+            return comp_op
 
     def log_prob(self, x):
         x = tf.reshape(x, (-1,))
         pars, covpars = self.split_pars(x)
-        covop = self._like_cov_fun(covpars)
+        propvals = self._propfun(pars)
+        covop = self._like_cov_fun(covpars, propvals)
         logdet = covop.log_abs_determinant()
-        d = self._like_data - self._propfun(pars)
+        d = self._like_data - propvals
         chisqr = tf.matmul(
             tf.reshape(d, (1, -1)), covop.solve(tf.reshape(d, (-1, 1)))
         )
@@ -267,7 +282,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         with tf.GradientTape(persistent=False) as tape:
             tape.watch(covpars)
             j = self._jacfun(x)
-            like_cov = like_cov_fun(covpars)
+            like_cov = like_cov_fun(covpars, tf.stop_gradient(propvals))
             constvec = like_cov.solve(d)
             u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
             u = tf.reshape(u, (-1,))
@@ -287,22 +302,23 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
                 tape2.watch(covpars)
-                like_cov = like_cov_fun(covpars)
+                like_cov = like_cov_fun(covpars, tf.stop_gradient(propvals))
                 u = -0.5 * tf.matmul(tf.transpose(d), like_cov.solve(d))
             g = tape2.gradient(u, covpars)
         h = tape1.jacobian(g, covpars, experimental_use_pfor=True)
         return h
 
-    def _log_prob_hessian_logdet_wrt_covpars(self, covpars):
+    def _log_prob_hessian_logdet_wrt_covpars(self, x, covpars):
         # compute -dd(logdet covmat)
         if not isinstance(covpars, tf.Tensor):
             covpars = tf.constant(covpars, dtype=tf.float64)
         like_cov_fun = self._like_cov_fun
+        propvals = self._propfun(x)
         with tf.GradientTape(persistent=False) as tape1:
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
                 tape2.watch(covpars)
-                like_cov = like_cov_fun(covpars)
+                like_cov = like_cov_fun(covpars, tf.stop_gradient(propvals))
                 u = -0.5 * like_cov.log_abs_determinant()
             g = tape2.gradient(u, covpars)
         h = tape1.jacobian(g, covpars, experimental_use_pfor=True)
@@ -317,13 +333,14 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
     #     dd logdet H (covparam block)
     def log_prob_hessian(self, x):
         x, covpars = self.split_pars(x)
-        like_cov = self._like_cov_fun(covpars)
+        propvals = self._propfun(x)
+        like_cov = self._like_cov_fun(covpars, propvals)
         pars_part = self._log_prob_hessian_gls_part(like_cov, x)
         if not self._approximate_hessian:
             model_part = self._log_prob_hessian_model_part(like_cov, x)
             pars_part += model_part
         offdiag_part = self._log_prob_hessian_offdiag_part(x, covpars)
-        covpar_part = self._log_prob_hessian_logdet_wrt_covpars(covpars)
+        covpar_part = self._log_prob_hessian_logdet_wrt_covpars(x, covpars)
         covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(x, covpars)
         res1 = tf.concat([pars_part, offdiag_part], axis=1)
         res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
