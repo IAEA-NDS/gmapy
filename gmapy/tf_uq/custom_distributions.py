@@ -190,7 +190,9 @@ class MultivariateNormalLikelihood(BaseDistribution):
                 j = self._jacfun(x)
                 u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
                 z = tf.gather(u, [[i]])
-            g = tape.gradient(z, x)
+            g = tape.gradient(
+                z, x, unconnected_gradients=tf.UnconnectedGradients.ZERO
+            )
             col_list.append(g)
         neg_hessian = tf.stack(col_list, axis=0)
         return (-neg_hessian)
@@ -278,7 +280,9 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
                 j = self._jacfun(x)
                 u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
                 z = tf.gather(u, [[i]])
-            g = tape.gradient(z, x)
+            g = tape.gradient(
+                z, x, unconnected_gradients=tf.UnconnectedGradients.ZERO
+            )
             col_list.append(g)
         hessian = tf.stack(col_list, axis=0)
         return hessian
@@ -298,7 +302,10 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
             constvec = like_cov.solve(d)
             u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
             u = tf.reshape(u, (-1,))
-        g = tape.jacobian(u, covpars, experimental_use_pfor=True)
+        g = tape.jacobian(
+            u, covpars, experimental_use_pfor=True,
+            unconnected_gradients=tf.UnconnectedGradients.ZERO
+        )
         return g
 
     def _log_prob_hessian_chisqr_wrt_covpars(self, x, covpars):
@@ -316,8 +323,13 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
                 tape2.watch(covpars)
                 like_cov = like_cov_fun(covpars, tf.stop_gradient(propvals))
                 u = -0.5 * tf.matmul(tf.transpose(d), like_cov.solve(d))
-            g = tape2.gradient(u, covpars)
-        h = tape1.jacobian(g, covpars, experimental_use_pfor=True)
+            g = tape2.gradient(
+                u, covpars, unconnected_gradients=tf.UnconnectedGradients.ZERO
+            )
+        h = tape1.jacobian(
+            g, covpars, experimental_use_pfor=True,
+            unconnected_gradients=tf.UnconnectedGradients.ZERO
+        )
         return h
 
     def _log_prob_hessian_logdet_wrt_covpars(self, x, covpars):
@@ -332,8 +344,13 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
                 tape2.watch(covpars)
                 like_cov = like_cov_fun(covpars, tf.stop_gradient(propvals))
                 u = -0.5 * like_cov.log_abs_determinant()
-            g = tape2.gradient(u, covpars)
-        h = tape1.jacobian(g, covpars, experimental_use_pfor=True)
+            g = tape2.gradient(
+                u, covpars, unconnected_gradients=tf.UnconnectedGradients.ZERO
+            )
+        h = tape1.jacobian(
+            g, covpars, experimental_use_pfor=True,
+            unconnected_gradients=tf.UnconnectedGradients.ZERO
+        )
         return h
 
     # first derivative
