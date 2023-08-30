@@ -138,6 +138,12 @@ class MultivariateNormalLikelihood(BaseDistribution):
         self._approximate_hessian = approximate_hessian
         self._like_scale = like_scale
         self._relative = relative
+        if relative and not approximate_hessian:
+            raise NotImplementedError(
+                'Exact Hessian computation is not implemented for ' +
+                'a relative covariance matrix. Please specify ' +
+                '`approximate_hessian=True` during class instantiation.'
+            )
 
     def _like_scale_fun(self, x):
         scale_op = tf.linalg.LinearOperatorDiag(x)
@@ -211,6 +217,12 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         self._approximate_hessian = approximate_hessian
         self._orig_like_cov_fun = like_cov_fun
         self._relative = relative
+        if relative and not approximate_hessian:
+            raise NotImplementedError(
+                'Exact Hessian computation is not implemented for ' +
+                'a relative covariance matrix. Please specify ' +
+                '`approximate_hessian=True` during class instantiation.'
+            )
 
     def _like_cov_fun(self, covpars, propvals):
         orig_covop = self._orig_like_cov_fun(covpars)
