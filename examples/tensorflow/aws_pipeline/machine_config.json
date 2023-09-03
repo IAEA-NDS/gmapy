@@ -1,0 +1,15 @@
+{
+  "ImageId": "ami-053b0d53c279acc90",
+  "InstanceType": "r6i.2xlarge",
+  "KeyName": "ephemeral-key",
+  "SecurityGroupIds": ["sg-0322b8b8a6675e869"],
+  "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/sda1",
+      "Ebs": {
+        "VolumeSize": 30,
+        "VolumeType": "gp2"
+      }
+    }
+  ]
+}

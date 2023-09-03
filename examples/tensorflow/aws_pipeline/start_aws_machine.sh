@@ -1,31 +1,37 @@
 #!/bin/bash
 
-machine_info_file="instance_info.json"
+instance_info_file="$1"
+machine_config_file="machine_config.json"
 
-if [ -e "$machine_info_file" ]; then
-    echo "It seems a machine is already running." >&2
-    echo "Check the $machine_info_file for more info." >&2
+if [ -z "$machine_config_file" ]; then
+    echo Please provide a machine configuration filename. >&2
     exit 1
 fi
 
-aws ec2 run-instances \
-  --region us-east-1 \
-  --image-id ami-053b0d53c279acc90 \
-  --instance-type r6i.2xlarge \
-  --key-name ephemeral-key \
-  --security-group-ids sg-0322b8b8a6675e869 \
-  --block-device-mappings \
-    '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":30,"VolumeType":"gp2"}}]' \
-  > "$machine_info_file"
+if [ -e "$instance_info_file" ]; then
+    echo Instance configuration file $instance_info_file already exists. Aborting. >&2
+    exit 1
+fi
+
+if [ -e "$instance_info_file" ]; then
+    echo "It seems a machine is already running." >&2
+    echo "Check the $instance_info_file for more info." >&2
+    exit 1
+fi
+
+echo "Information about machine will be stored in $instance_info_file"
+
+aws ec2 run-instances --cli-input-json file://${machine_config_file} \
+  > "$instance_info_file"
 
 retcode=$?
 if [ $retcode -ne 0 ]; then
-    rm "$machine_info_file"
+    rm "$instance_info_file"
     echo "An error occurred starting the AWS machine." >&2
     exit $retcode
 fi
 
-instance_id=$(cat "$machine_info_file" | jq -r .Instances[0].InstanceId)
+instance_id=$(cat "$instance_info_file" | jq -r .Instances[0].InstanceId)
 public_ip=$(aws ec2 describe-instances --instance-ids $instance_id \
             --query 'Reservations[0].Instances[0].PublicIpAddress' \
             --output text)
