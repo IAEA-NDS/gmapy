@@ -10,12 +10,7 @@ fi
 
 if [ -e "$instance_info_file" ]; then
     echo Instance configuration file $instance_info_file already exists. Aborting. >&2
-    exit 1
-fi
-
-if [ -e "$instance_info_file" ]; then
-    echo "It seems a machine is already running." >&2
-    echo "Check the $instance_info_file for more info." >&2
+    echo This may indicate that the machine is already running. >&2
     exit 1
 fi
 
