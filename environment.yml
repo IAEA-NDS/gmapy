@@ -12,3 +12,6 @@ dependencies:
     - tensorflow==2.13
     - tensorflow_probability==0.21.0
     - dill==0.3.7
+    - jupyter==1.0.0
+    - matplitlib==3.7.2
+    - seaborn==0.12.2

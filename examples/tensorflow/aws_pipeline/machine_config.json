@@ -11,5 +11,8 @@
         "VolumeType": "gp2"
       }
     }
-  ]
+  ],
+  "IamInstanceProfile": {
+    "Name": "ec2-gmapy-bucket-admin-role"
+  }
 }

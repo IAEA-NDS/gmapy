@@ -14,6 +14,7 @@ sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" \
          /etc/needrestart/needrestart.conf
 sudo apt update
 sudo apt install -y build-essential
+sudo apt install -y awscli
 
 # install the miniconda Python package manager
 cd /home/ubuntu
@@ -38,3 +39,6 @@ screen -S gmapy_session -X stuff "python 01_model_preparation.py; touch finished
 screen -S gmapy_session -X stuff "python 02_parameter_optimization.py; touch finished_optimization$(printf \\r)"
 screen -S gmapy_session -X stuff "python 03_mcmc_sampling.py; touch finished_sampling$(printf \\r)"
 screen -S gmapy_session -X detach
+
+# copy the result files
+# aws s3 cp <local-file> s3://gmapy-results/<destination-key>
