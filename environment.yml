@@ -8,4 +8,4 @@ dependencies:
   - suitesparse
   - pip:
     - fortranformat==1.2.2
-    - scikit-sparse==0.4.6
+    - scikit-sparse==0.4.12
