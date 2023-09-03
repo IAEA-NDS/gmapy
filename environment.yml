@@ -11,3 +11,4 @@ dependencies:
     - scikit-sparse==0.4.12
     - tensorflow==2.13
     - tensorflow_probability==0.21.0
+    - dill==0.3.7
