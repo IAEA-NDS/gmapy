@@ -93,7 +93,7 @@ expcov_linop = tf.linalg.LinearOperatorComposition(
 # generate the USU mapping
 usu_df = create_endep_abs_usu_df(
         exptable, ('MT:1-R1:8', 'MT:1-R1:9', 'MT:3-R1:9-R2:8'),
-        (0., 1., 6., 12., 17.5), (1e-2, 1e-2, 1e-2, 1e-2, 1e-2)
+        (0., 1., 2., 6., 12., 14.5, 20), (1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2)
 )
 usu_map = EnergyDependentAbsoluteUSUMap((usu_df, exptable), reduce=True)
 usu_jac = tf.sparse.to_dense(usu_map.jacobian(usu_df.PRIOR.to_numpy()))
