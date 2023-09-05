@@ -27,9 +27,15 @@ if [ $retcode -ne 0 ]; then
 fi
 
 instance_id=$(cat "$instance_info_file" | jq -r .Instances[0].InstanceId)
-public_ip=$(aws ec2 describe-instances --instance-ids $instance_id \
-            --query 'Reservations[0].Instances[0].PublicIpAddress' \
-            --output text)
+while true; do
+    public_ip=$(aws ec2 describe-instances --instance-ids $instance_id \
+                --query 'Reservations[0].Instances[0].PublicIpAddress' \
+                --output text)
+    if [ "$?" -eq 0 ]; then
+        break
+    fi
+    sleep 10
+done
 
 # wait for the ssh server to get ready
 count=0
