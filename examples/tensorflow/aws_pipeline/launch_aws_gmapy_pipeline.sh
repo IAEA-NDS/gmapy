@@ -1,11 +1,21 @@
 #!/bin/bash
 
 example_name="$1"
+wait_arg="$2"
 instance_info_file="../$example_name/aws_instance_info.json"
 
 if [ -z "$example_name" ]; then
     echo "Please provide an example name as argument." >&2
     exit 1
+fi
+
+if [ -e "$instance_info_file" ]; then
+    echo "Instance file '$instance_info_file' already exists."
+    echo "Assuming that calculation is already running."
+    if [ "$wait_arg" == "wait" ]; then
+        bash get_results.sh "$example_name"
+    fi
+    exit 0
 fi
 
 echo "prepare and run tensorflow example '${example_name}' on AWS machine..."
@@ -23,3 +33,7 @@ ssh -o StrictHostKeyChecking=no -i ephemeral-key.pem $login \
 
 ssh -o StrictHostKeyChecking=no -i ephemeral-key.pem -t $login \
     "bash $rem_home/$pipe_script remote $example_name"
+
+if [ "$wait_arg" == "wait" ]; then
+    bash get_results.sh "$example_name"
+fi
