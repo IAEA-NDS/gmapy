@@ -5,6 +5,7 @@ from gmapy.data_management.object_utils import (
     load_objects, save_objects
 )
 from gmapy.tf_uq.inference import generate_MCMC_chain
+from gmapy.tf_uq.custom_linear_operators import MyLinearOperatorLowRankUpdate
 import tensorflow as tf
 
 

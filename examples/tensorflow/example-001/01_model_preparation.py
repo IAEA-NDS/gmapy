@@ -35,6 +35,7 @@ from gmapy.tf_uq.custom_distributions import (
     DistributionForParameterSubset,
     UnnormalizedDistributionProduct
 )
+from gmapy.tf_uq.custom_linear_operators import MyLinearOperatorLowRankUpdate
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
@@ -111,11 +112,14 @@ def create_like_cov_fun(usu_df, expcov_linop, Smat):
         # scatter the uncertainties to the appropriate places
         tf_ids = tf.constant(ids, dtype=tf.int32)
         uncs = tf.nn.embedding_lookup(u, tf_ids)
+        update_operator = tf.linalg.LinearOperatorDiag(
+            tf.square(uncs) + 1e-8, is_positive_definite=True, is_square=True
+        )
         # covop = tf.linalg.LinearOperatorLowRankUpdate(
-        covop = tf.linalg.LinearOperatorLowRankUpdate(
-            expcov_linop, Smat, tf.square(uncs) + 1e-8,
+        covop = MyLinearOperatorLowRankUpdate(
+            expcov_linop, Smat, update_operator=update_operator,
             is_self_adjoint=True, is_positive_definite=True,
-            is_diag_update_positive=True
+            is_update_positive_definite=True
         )
         return covop
     uniq_energies = np.sort(pd.unique(usu_df.ENERGY))
@@ -143,7 +147,6 @@ likelihood = MultivariateNormalLikelihoodWithCovParams(
 
 # combine prior and likelihood into posterior
 post = UnnormalizedDistributionProduct([prior, likelihood])
-
 
 save_objects('output/01_model_preparation_output.pkl', locals(),
              'post', 'likelihood', 'priorvals', 'is_adj', 'usu_df',

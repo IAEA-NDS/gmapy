@@ -10,6 +10,7 @@ from gmapy.tf_uq.auxiliary import (
 from gmapy.data_management.object_utils import (
     load_objects, save_objects
 )
+from gmapy.tf_uq.custom_linear_operators import MyLinearOperatorLowRankUpdate
 
 post, likelihood, priorvals, is_adj, usu_df, num_covpars = \
     load_objects('output/01_model_preparation_output.pkl',
