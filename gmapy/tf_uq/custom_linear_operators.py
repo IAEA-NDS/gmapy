@@ -1,3 +1,8 @@
+import tensorflow as tf
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import linalg_ops
+
 # Copyright 2016 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,13 +33,13 @@ from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util.tf_export import tf_export
 
 __all__ = [
-    "LinearOperatorLowRankUpdate",
+    "MyLinearOperatorLowRankUpdate",
 ]
 
 
-@tf_export("linalg.LinearOperatorLowRankUpdate")
+# @tf_export("linalg.LinearOperatorLowRankUpdate")
 @linear_operator.make_composite_tensor
-class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
+class MyLinearOperatorLowRankUpdate(linear_operator.LinearOperator):
     """Perturb a `LinearOperator` with a rank `K` update.
 
     This operator acts like a [batch] matrix `A` with shape
@@ -64,14 +69,14 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
     ```python
     # Create a 3 x 3 diagonal linear operator.
     diag_operator = LinearOperatorDiag(
-        diag_update=[1., 2., 3.], is_non_singular=True, is_self_adjoint=True,
+        update_operator=[1., 2., 3.], is_non_singular=True, is_self_adjoint=True,
         is_positive_definite=True)
 
     # Perturb with a rank 2 perturbation
     operator = LinearOperatorLowRankUpdate(
         operator=diag_operator,
         u=[[1., 2.], [-1., 3.], [0., 0.]],
-        diag_update=[11., 12.],
+        update_operator=[11., 12.],
         v=[[1., 2.], [-1., 3.], [10., 10.]])
 
     operator.shape
@@ -116,7 +121,7 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
 
     This `LinearOperator` is initialized with boolean flags of the form `is_X`,
     for `X = non_singular`, `self_adjoint`, `positive_definite`,
-    `diag_update_positive` and `square`. These have the following meaning:
+    `update_operator_positive` and `square`. These have the following meaning:
 
     * If `is_X == True`, callers should expect the operator to have the
       property `X`.  This is a promise that should be fulfilled, but is *not* a
@@ -130,15 +135,15 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
     def __init__(self,
                  base_operator,
                  u,
-                 diag_update=None,
+                 update_operator=None,
                  v=None,
-                 is_diag_update_positive=None,
+                 is_update_positive_definite=None,
                  is_non_singular=None,
                  is_self_adjoint=None,
                  is_positive_definite=None,
                  is_square=None,
-                 name="LinearOperatorLowRankUpdate"):
-        """Initialize a `LinearOperatorLowRankUpdate`.
+                 name="MyLinearOperatorLowRankUpdate"):
+        """Initialize a `MyLinearOperatorLowRankUpdate`.
 
         This creates a `LinearOperator` of the form `A = L + U D V^H`, with
         `L` a `LinearOperator`, `U, V` both [batch] matrices, and `D` a [batch]
@@ -154,14 +159,14 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
           base_operator:  Shape `[B1,...,Bb, M, N]`.
           u:  Shape `[B1,...,Bb, M, K]` `Tensor` of same `dtype` as `base_operator`.
             This is `U` above.
-          diag_update:  Optional shape `[B1,...,Bb, K]` `Tensor` with same `dtype`
+          update_operator:  Optional shape `[B1,...,Bb, K]` `Tensor` with same `dtype`
             as `base_operator`.  This is the diagonal of `D` above.
              Defaults to `D` being the identity operator.
           v:  Optional `Tensor` of same `dtype` as `u` and shape `[B1,...,Bb, N, K]`
              Defaults to `v = u`, in which case the perturbation is symmetric.
              If `M != N`, then `v` must be set since the perturbation is not square.
-          is_diag_update_positive:  Python `bool`.
-            If `True`, expect `diag_update > 0`.
+          is_update_positive_definite:  Python `bool`.
+            If `True`, expect `update_operator > 0`.
           is_non_singular:  Expect that this operator is non-singular.
             Default is `None`, unless `is_positive_definite` is auto-set to be
             `True` (see below).
@@ -170,7 +175,7 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
             and `v = None` (meaning `u=v`), in which case this defaults to `True`.
           is_positive_definite:  Expect that this operator is positive definite.
             Default is `None`, unless `base_operator` is positive-definite
-            `v = None` (meaning `u=v`), and `is_diag_update_positive`, in which case
+            `v = None` (meaning `u=v`), and `is_update_positive_definite`, in which case
             this defaults to `True`.
             Note that we say an operator is positive definite when the quadratic
             form `x^H A x` has positive real part for all nonzero `x`.
@@ -183,9 +188,9 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
         parameters = dict(
             base_operator=base_operator,
             u=u,
-            diag_update=diag_update,
+            update_operator=update_operator,
             v=v,
-            is_diag_update_positive=is_diag_update_positive,
+            is_update_positive_definite=is_update_positive_definite,
             is_non_singular=is_non_singular,
             is_self_adjoint=is_self_adjoint,
             is_positive_definite=is_positive_definite,
@@ -194,22 +199,22 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
         )
         dtype = base_operator.dtype
 
-        if diag_update is not None:
-            if is_diag_update_positive and dtype.is_complex:
-                logging.warn("Note: setting is_diag_update_positive with a complex "
+        if update_operator is not None:
+            if is_update_positive_definite and dtype.is_complex:
+                logging.warn("Note: setting is_update_positive_definite with a complex "
                              "dtype means that diagonal is real and positive.")
 
-        if diag_update is None:
-            if is_diag_update_positive is False:
+        if update_operator is None:
+            if is_update_positive_definite is False:
                 raise ValueError(
                     "Default diagonal is the identity, which is positive.  However, "
-                    "user set 'is_diag_update_positive' to False.")
-            is_diag_update_positive = True
+                    "user set 'is_update_positive_definite' to False.")
+            is_update_positive_definite = True
 
         # In this case, we can use a Cholesky decomposition to help us solve/det.
         self._use_cholesky = (
             base_operator.is_positive_definite and base_operator.is_self_adjoint
-            and is_diag_update_positive
+            and is_update_positive_definite
             and v is None)
 
         # Possibly auto-set some characteristic flags from None to True.
@@ -243,16 +248,16 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
             else:
                 self._v = linear_operator_util.convert_nonref_to_tensor(v, name="v")
 
-            if diag_update is None:
-                self._diag_update = None
+            if update_operator is None:
+                self._update_operator = None
             else:
-                self._diag_update = linear_operator_util.convert_nonref_to_tensor(
-                    diag_update, name="diag_update")
+                self._update_operator = linear_operator_util.convert_nonref_to_tensor(
+                    update_operator, name="update_operator")
 
             # Create base_operator L.
             self._base_operator = base_operator
 
-            super(LinearOperatorLowRankUpdate, self).__init__(
+            super(MyLinearOperatorLowRankUpdate, self).__init__(
                 dtype=self._base_operator.dtype,
                 is_non_singular=is_non_singular,
                 is_self_adjoint=is_self_adjoint,
@@ -262,8 +267,8 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
                 name=name)
 
             # Create the diagonal operator D.
-            self._set_diag_operators(diag_update, is_diag_update_positive)
-            self._is_diag_update_positive = is_diag_update_positive
+            self._set_update_operators(update_operator, is_update_positive_definite)
+            self._is_update_positive_definite = is_update_positive_definite
 
             self._check_shapes()
 
@@ -280,23 +285,22 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
             self.base_operator.domain_dimension).assert_is_compatible_with(
                 uv_shape[-2])
 
-        if self._diag_update is not None:
+        if self._update_operator is not None:
             tensor_shape.dimension_at_index(uv_shape, -1).assert_is_compatible_with(
-                self._diag_update.shape[-1])
+                self._update_operator.shape[-1])
             array_ops.broadcast_static_shape(
-                batch_shape, self._diag_update.shape[:-1])
+                batch_shape, self._update_operator.shape[:-1])
 
-    def _set_diag_operators(self, diag_update, is_diag_update_positive):
-        """Set attributes self._diag_update and self._diag_operator."""
-        if diag_update is not None:
-            self._diag_operator = linear_operator_diag.LinearOperatorDiag(
-                self._diag_update, is_positive_definite=is_diag_update_positive)
+    def _set_update_operators(self, update_operator, is_update_positive_definite):
+        """Set attributes self._update_operator and self._update_operator."""
+        if update_operator is not None:
+            self._update_operator = update_operator
         else:
             if tensor_shape.dimension_value(self.u.shape[-1]) is not None:
                 r = tensor_shape.dimension_value(self.u.shape[-1])
             else:
                 r = array_ops.shape(self.u)[-1]
-            self._diag_operator = linear_operator_identity.LinearOperatorIdentity(
+            self._update_operator = linear_operator_identity.LinearOperatorIdentity(
                 num_rows=r, dtype=self.dtype)
 
     @property
@@ -310,19 +314,14 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
         return self._v
 
     @property
-    def is_diag_update_positive(self):
+    def is_update_positive_definite(self):
         """If this operator is `A = L + U D V^H`, this hints `D > 0` elementwise."""
-        return self._is_diag_update_positive
+        return self._is_update_positive_definite
 
     @property
-    def diag_update(self):
-        """If this operator is `A = L + U D V^H`, this is the diagonal of `D`."""
-        return self._diag_update
-
-    @property
-    def diag_operator(self):
+    def update_operator(self):
         """If this operator is `A = L + U D V^H`, this is `D`."""
-        return self._diag_operator
+        return self._update_operator
 
     @property
     def base_operator(self):
@@ -333,16 +332,16 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
         # Recall this operator is:
         #   A = L + UDV^H.
         # So in one case self-adjoint depends only on L
-        if self.u is self.v and self.diag_update is None:
+        if self.u is self.v and self.update_operator is None:
             return self.base_operator.assert_self_adjoint()
         # In all other cases, sufficient conditions for self-adjoint can be found
         # efficiently. However, those conditions are not necessary conditions.
-        return super(LinearOperatorLowRankUpdate, self).assert_self_adjoint()
+        return super(MyLinearOperatorLowRankUpdate, self).assert_self_adjoint()
 
     def _shape(self):
         batch_shape = array_ops.broadcast_static_shape(
             self.base_operator.batch_shape,
-            self.diag_operator.batch_shape)
+            self.update_operator.batch_shape)
         batch_shape = array_ops.broadcast_static_shape(
             batch_shape,
             self.u.shape[:-2])
@@ -354,7 +353,7 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
     def _shape_tensor(self):
         batch_shape = array_ops.broadcast_dynamic_shape(
             self.base_operator.batch_shape_tensor(),
-            self.diag_operator.batch_shape_tensor())
+            self.update_operator.batch_shape_tensor())
         batch_shape = array_ops.broadcast_dynamic_shape(
             batch_shape,
             array_ops.shape(self.u)[:-2])
@@ -376,7 +375,7 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
     def _matmul(self, x, adjoint=False, adjoint_arg=False):
         u, v = self._get_uv_as_tensors()
         l = self.base_operator
-        d = self.diag_operator
+        d = self.update_operator
 
         leading_term = l.matmul(x, adjoint=adjoint, adjoint_arg=adjoint_arg)
 
@@ -402,26 +401,29 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
         #   C := D^{-1} + V^H L^{-1} U
         u, v = self._get_uv_as_tensors()
         det_c = linalg_ops.matrix_determinant(self._make_capacitance(u=u, v=v))
-        det_d = self.diag_operator.determinant()
+        det_d = self.update_operator.determinant()
         det_l = self.base_operator.determinant()
         return det_c * det_d * det_l
 
     def _diag_part(self):
         # [U D V^T]_{ii} = sum_{jk} U_{ij} D_{jk} V_{ik}
         #                = sum_{j}  U_{ij} D_{jj} V_{ij}
+        d = self._update_operator
         u, v = self._get_uv_as_tensors()
-        product = u * math_ops.conj(v)
-        if self.diag_update is not None:
-            product *= array_ops.expand_dims(self.diag_update, axis=-2)
-        return (
-            math_ops.reduce_sum(product, axis=-1) + self.base_operator.diag_part())
+        if d is not None:
+            d_vt = d.matmul(v, adjoint_arg=True)
+            u_d_vt = u * tf.transpose(d_vt)
+            diag_update_part = math_ops.reduce_sum(u_d_vt, axis=-1)
+        else:
+            diag_update_part = u * math_ops.conj(v)
+        return self.base_operator.diag_part() + diag_update_part
 
     def _log_abs_determinant(self):
         u, v = self._get_uv_as_tensors()
-        # Recall
+        # Rcall
         #   det(L + UDV^H) = det(D^{-1} + V^H L^{-1} U) det(D) det(L)
         #                  = det(C) det(D) det(L)
-        log_abs_det_d = self.diag_operator.log_abs_determinant()
+        log_abs_det_d = self.update_operator.log_abs_determinant()
         log_abs_det_l = self.base_operator.log_abs_determinant()
 
         if self._use_cholesky:
@@ -487,25 +489,23 @@ class LinearOperatorLowRankUpdate(linear_operator.LinearOperator):
     def _make_capacitance(self, u, v):
         # C := D^{-1} + V^H L^{-1} U
         # which is sometimes known as the "capacitance" matrix.
-
         # L^{-1} U
         linv_u = self.base_operator.solve(u)
         # V^H L^{-1} U
         vh_linv_u = math_ops.matmul(v, linv_u, adjoint_a=True)
-
         # D^{-1} + V^H L^{-1} V
-        capacitance = self._diag_operator.inverse().add_to_tensor(vh_linv_u)
+        capacitance = self._update_operator.inverse().add_to_tensor(vh_linv_u)
         return capacitance
 
     @property
     def _composite_tensor_fields(self):
-        return ("base_operator", "u", "diag_update", "v", "is_diag_update_positive")
+        return ("base_operator", "u", "update_operator", "v", "is_update_positive_definite")
 
     @property
     def _experimental_parameter_ndims_to_matrix_ndims(self):
         return {
             "base_operator": 0,
             "u": 2,
-            "diag_update": 1,
+            "update_operator": 1,
             "v": 2
         }
