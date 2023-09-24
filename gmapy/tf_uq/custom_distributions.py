@@ -45,6 +45,25 @@ class BaseDistribution(tf.Module):
         return -self.log_prob_hessian(x)
 
 
+class DistributionWrapper(BaseDistribution):
+
+    def __init__(self, log_prob_fun):
+        self._log_prob_fun = log_prob_fun
+
+    def log_prob(self, x):
+        return self._log_prob_fun(x)
+
+    def log_prob_hessian(self, x):
+        with tf.GradientTape() as t2:
+            t2.watch(x)
+            with tf.GradientTape() as t1:
+                t1.watch(x)
+                r = self.log_prob(x)
+            g = t1.gradient(r, x)
+        h = t2.jacobian(g, x)
+        return h
+
+
 class DistributionForParameterSubset(BaseDistribution):
 
     def __init__(self, dist, num_params, idcs=None):
