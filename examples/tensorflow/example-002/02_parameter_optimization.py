@@ -2,7 +2,6 @@ import sys
 sys.path.append('../../..')
 import numpy as np
 import tensorflow as tf
-import tensorflow_probability as tfp
 from gmapy.tf_uq.inference import determine_MAP_estimate
 from gmapy.data_management.object_utils import (
     load_objects, save_objects
