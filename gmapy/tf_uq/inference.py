@@ -42,6 +42,7 @@ def determine_MAP_estimate(
         )
         converged = optres.converged.numpy()
         refvals = optres.position
+        print(f'Inner iterations: {optres.num_iterations}')
 
     if must_converge and not converged:
         raise ValueError(
