@@ -59,7 +59,7 @@ conda init bash
 source /home/ubuntu/.bashrc
 
 # prepare the gmapy package (including the examples)
-git clone -b usu_studies https://github.com/iaea-nds/gmapy
+git clone -b dev https://github.com/iaea-nds/gmapy
 conda env create -f gmapy/environment.yml -n gmapy-conda
 cd gmapy/examples/tensorflow/$example_name
 
