@@ -19,7 +19,7 @@ neg_log_post_hessian = post.neg_log_prob_hessian
 refvals = priorvals[is_adj]
 optres = determine_MAP_estimate(
     refvals, neg_log_prob_and_gradient, neg_log_post_hessian,
-    max_inner_iters=500, max_outer_iters=50, nugget=1e-5,
+    max_inner_iters=500, max_outer_iters=50, nugget=1e-4,
     ret_optres=True, must_converge=True
 )
 
