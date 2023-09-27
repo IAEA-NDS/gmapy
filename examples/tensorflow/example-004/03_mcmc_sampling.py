@@ -1,13 +1,16 @@
 import sys
 sys.path.append('../../..')
 import time
-import gc
 import tensorflow as tf
 import tensorflow_probability as tfp
 from gmapy.data_management.object_utils import (
     load_objects, save_objects
 )
 from gmapy.tf_uq.inference import generate_MCMC_chain
+# These imports are necessary to satisfy
+# dependencies of objects loaded by dill above
+import numpy as np
+
 
 post, likelihood = load_objects(
     'output/01_model_preparation_output.pkl',
@@ -17,10 +20,6 @@ optres, = load_objects(
     'output/02_parameter_optimization_output.pkl',
     'optres'
 )
-
-# These imports are necessary to satisfy
-# dependencies of objects loaded by dill above
-import numpy as np
 
 # define essential input quantities for MCMC
 optvals = optres.position
