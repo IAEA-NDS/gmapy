@@ -11,7 +11,6 @@ from gmapy.tf_uq.inference import generate_MCMC_chain
 # dependencies of objects loaded by dill above
 import numpy as np
 
-
 post, likelihood = load_objects(
     'output/01_model_preparation_output.pkl',
     'post', 'likelihood'

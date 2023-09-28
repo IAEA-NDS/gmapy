@@ -155,4 +155,4 @@ post = UnnormalizedDistributionProduct([prior, likelihood])
 
 save_objects('output/01_model_preparation_output.pkl', locals(),
              'post', 'likelihood', 'priorvals', 'is_adj', 'usu_df', 'red_usu_df',
-             'num_covpars', 'priortable', 'exptable', 'expcov', 'like_cov_fun', 'compmap')
+             'num_covpars', 'priortable', 'exptable', 'expcov', 'like_cov_fun', 'compmap', 'restrimap')
