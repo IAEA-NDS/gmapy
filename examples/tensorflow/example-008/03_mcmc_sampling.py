@@ -26,8 +26,8 @@ optvals = optres.position
 s1 = time.time()
 chain, tracing_info = generate_MCMC_chain(
     optvals, post.log_prob, post.neg_log_prob_hessian,
-    nugget=1e-8, step_size=1., num_burnin_steps=int(2e3),
-    num_results=int(20e3), num_leapfrog_steps=5
+    nugget=1e-8, step_size=0.01, num_burnin_steps=int(5e3),
+    num_results=int(50e3), num_leapfrog_steps=5
 )
 s2 = time.time()
 print(f's2-s1: {s2-s1}')
