@@ -54,6 +54,7 @@ expcov = create_experimental_covmat(db['datablock_list'])
 exptable['UNC'] = np.sqrt(expcov.diagonal())
 
 # CHANGE DATABASE: Lisowski shape cross section to absolute
+# NOTE: the change needs to be done also below in expchol_list
 lisoabs_idcs = exptable.index[exptable.AUTHOR.str.match('.*Liso') & (exptable.REAC == 'MT:2-R1:8')]
 exptable.loc[lisoabs_idcs, 'REAC'] = 'MT:1-R1:8'
 # reduce the uncertainties
@@ -78,6 +79,10 @@ expvals = exptable.DATA.to_numpy()
 # speed up the pdf log_prob calculations exploiting the block diagonal structure
 expcov_list, idcs_tuples = create_datablock_covmat_list(db['datablock_list'], relative=True)
 expchol_list = [tf.linalg.cholesky(x.toarray()) for x in expcov_list]
+# CHANGE exp_1028 Lisowski uncertainty
+tmp_numrows = idcs_tuples[182][1] - idcs_tuples[182][0] + 1
+expchol_list[182] = tf.linalg.cholesky(np.diag(np.full(tmp_numrows, 1e-6)))
+# END CHANGE
 expchol_op_list = [tf.linalg.LinearOperatorLowerTriangular(
         x, is_non_singular=True, is_square=True
     ) for x in expchol_list]
