@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../../..')
 import pandas as pd
-from scipy.sparse import block_diag
+from scipy.sparse import block_diag, csr_matrix
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -56,6 +56,12 @@ exptable['UNC'] = np.sqrt(expcov.diagonal())
 # CHANGE DATABASE: Lisowski shape cross section to absolute
 lisoabs_idcs = exptable.index[exptable.AUTHOR.str.match('.*Liso') & (exptable.REAC == 'MT:2-R1:8')]
 exptable.loc[lisoabs_idcs, 'REAC'] = 'MT:1-R1:8'
+# reduce the uncertainties
+expcov = expcov.toarray()
+expcov[lisoabs_idcs, :] = 0.
+expcov[:, lisoabs_idcs] = 0.
+expcov[lisoabs_idcs, lisoabs_idcs] = 1e-6
+expcov = csr_matrix(expcov)
 
 # For testing: perturb one dataset and see if we get a change
 # exptable.loc[exptable.NODE == 'exp_1025', 'DATA'] *= 1.5
@@ -118,4 +124,4 @@ post = UnnormalizedDistributionProduct([prior, likelihood])
 
 save_objects('output/01_model_preparation_output.pkl', locals(),
              'post', 'likelihood', 'priorvals', 'is_adj',
-             'priortable', 'exptable', 'expcov', 'expcov_linop')
+             'priortable', 'exptable', 'expcov', 'expcov_linop', 'compmap', 'restrimap')
