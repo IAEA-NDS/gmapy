@@ -1,0 +1,11 @@
+# Table 11. Thermal Neutron Constants (cross sections and average total neutron yield) for fissile actinides for neutrons with energy 0.0253 eV. 
+# The 0.4 % unrecognized systematic uncertainty is included in the uncertainties of the total neutron yields (nu-bar).  
+#
+Quantity            U3      U3-UNC  U5     U5-UNC  PU9      PU9-UNC   PU1     PU1-UNC
+SF                  533.0   2.2     587.3  1.4     752.4    2.2       1023.6  10.8
+SG                  44.9    0.9     99.5   1.3     269.8    2.5       362.3   6.1
+SS                  12.2    0.7     14.09  0.22    7.8      1.0       11.9    2.6
+# Nu-bar, Total average
+# neutron yield 
+# per 1 fission        2.487+-0.011 2.425+-0.011 2.878+-0.013 2.940+-0.013
+# Total average neutron yield per 1 fission in Cf-252(sf) 3.764+-0.016 

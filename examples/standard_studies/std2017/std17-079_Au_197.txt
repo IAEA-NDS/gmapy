@@ -1,0 +1,57 @@
+# IAEA 2017 Neutron Data Standards in Table Format
+# A. D. Carlson et al, Nuclear Data Sheets 148 (2018) 143-188. 
+# https://doi.org/10.1016/j.nds.2018.02.002
+# 
+# Table. 197Au(n,g) point-wise cross section data. 
+# It is a standard at 0.0253 eV and from 0.2 to 2.5 MeV. The MACS at 30 keV is also an standard equal to 620 +/-11 mb.
+# CS is the cross section. DCS is the cross section uncertainty. 
+# The 1.7 % unrecognized systematic uncertainty is included in the uncertainties in the table (for exclusion of 0.0253 eV point). 
+# Linear interpolation is recommended except below 200 keV. 
+# 
+En           CS        DCS
+# MeV          barn      %
+2.53E-08     98.659    0.14
+2.00E-01     0.258     2.0
+2.10E-01     0.252     2.0
+2.20E-01     0.251     2.0
+2.30E-01     0.247     2.1
+2.35E-01     0.242     2.1
+2.40E-01     0.239     2.3
+2.45E-01     0.239     2.1
+2.50E-01     0.238     2.1
+2.60E-01     0.237     2.1
+2.70E-01     0.233     2.1
+2.80E-01     0.218     2.0
+3.00E-01     0.191     2.0
+3.25E-01     0.192     2.0
+3.50E-01     0.178     2.0
+3.75E-01     0.167     2.0
+4.00E-01     0.161     1.9
+4.25E-01     0.155     2.0
+4.50E-01     0.146     2.0
+4.75E-01     0.141     2.0
+5.00E-01     0.137     2.0
+5.20E-01     0.130     2.0
+5.40E-01     0.125     2.1
+5.70E-01     0.120     2.3
+6.00E-01     0.110     2.0
+6.50E-01     0.100     2.1
+7.00E-01     0.096     2.0
+7.50E-01     0.095     2.1
+8.00E-01     0.089     2.0
+8.50E-01     0.086     2.4
+9.00E-01     0.083     2.8
+9.40E-01     0.086     2.6
+9.60E-01     0.086     4.6
+9.80E-01     0.086     3.6
+1.00E+00     0.079     2.0
+1.10E+00     0.079     2.2
+1.25E+00     0.074     2.1
+1.40E+00     0.071     2.4
+1.60E+00     0.068     2.3
+1.80E+00     0.060     2.6
+2.00E+00     0.053     2.4
+2.20E+00     0.044     2.5
+2.40E+00     0.036     2.8
+2.60E+00     0.032     2.8
+2.80E+00     0.026     2.7
