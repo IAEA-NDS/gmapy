@@ -1,0 +1,5 @@
+*.pem
+*.json
+*.pdf
+*/output_*/
+*/output/*
