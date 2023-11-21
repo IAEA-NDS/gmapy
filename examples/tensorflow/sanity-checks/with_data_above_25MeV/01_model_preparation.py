@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../..')
+sys.path.append('../../../..')
 import pandas as pd
 from scipy.sparse import block_diag, csr_matrix, diags
 import numpy as np
@@ -41,7 +41,7 @@ tfd = tfp.distributions
 tfb = tfp.bijectors
 
 # retrieve prior estimates and covariances from the database
-db_path = '../../../tests/testdata/data_and_sacs.json'
+db_path = '../../../../tests/testdata/data_and_sacs.json'
 db = read_gma_database(db_path)
 remove_dummy_datasets(db['datablock_list'])
 
@@ -56,15 +56,25 @@ exptable = create_experiment_table(db['datablock_list'])
 expcov = create_experimental_covmat(db['datablock_list'])
 exptable['UNC'] = np.sqrt(expcov.diagonal())
 
-# remove all non-linear quantities
-exptable = exptable.loc[exptable.REAC.str.match('MT:(1|5)-')]
-exptable[exptable.REAC.str.match('MT:5-')]
+# reduce the priortable
+
+# remove all datasets with energies below 25 MeV (this removes also SACS and SACS ratios
+exptable = exptable.loc[exptable.ENERGY >= 25.]
 keep_idcs = np.array(exptable.index)
 exptable.reset_index(inplace=True, drop=True)
 # subset covariance matrix
 expcov = expcov.toarray()[np.ix_(keep_idcs, keep_idcs)]
 
+# remove energies below 25 MeV in the prior 
+priortable = priortable.loc[priortable.ENERGY >= 25.]
+keep_prior_idcs = np.array(priortable.index)
+priortable.reset_index(inplace=True, drop=True)
+priorcov = csr_matrix(priorcov.toarray()[np.ix_(keep_prior_idcs, keep_prior_idcs)])
+
+# initialize the normalization errors
+priortable, priorcov = attach_shape_prior((priortable, exptable), covmat=priorcov, raise_if_exists=False)
 compmap = CompoundMapTF((priortable, exptable), reduce=True)
+initialize_shape_prior((priortable, exptable), compmap)
 
 # some convenient shortcuts
 priorvals = priortable.PRIOR.to_numpy()
