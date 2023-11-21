@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../..')
+sys.path.append('../../../..')
 import pandas as pd
 from scipy.sparse import block_diag, csr_matrix, diags
 import numpy as np
@@ -41,7 +41,7 @@ tfd = tfp.distributions
 tfb = tfp.bijectors
 
 # retrieve prior estimates and covariances from the database
-db_path = '../../../tests/testdata/data_and_sacs.json'
+db_path = '../../../../tests/testdata/data_and_sacs.json'
 db = read_gma_database(db_path)
 remove_dummy_datasets(db['datablock_list'])
 
