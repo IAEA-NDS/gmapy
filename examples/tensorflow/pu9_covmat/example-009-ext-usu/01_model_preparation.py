@@ -90,21 +90,32 @@ expcov_linop = tf.linalg.LinearOperatorComposition(
     [expcov_chol, expcov_chol.adjoint()],
     is_self_adjoint=True, is_positive_definite=True
 )
-# generate the USU mapping
-usu_df1 = create_endep_abs_usu_df(
-    exptable,
-    ('MT:1-R1:8', 'MT:1-R1:9', 'MT:1-R1:10'),
-    (0., 0.1, 1., 2., 6., 12., 20.), (1e-2,)*7
-)
-usu_df2 = create_endep_abs_usu_df(
-    exptable,
-    ('MT:3-R1:9-R2:8', 'MT:3-R1:10-R2:8', 'MT:1-R1:10'),
-    (0., 0.1, 1., 2., 6., 12., 20., 50., 100., 150., 200.), (1e-2,)*11
-)
-usu_df = pd.concat([usu_df1, usu_df2], ignore_index=True)
 
+# relevant USU error contributions
+# abs U5(n,f) at 1, 5, 15 MeV (clear USU around 2 MeV region)
+# abs PU9(n,f) at 1, 5 MeV (likely no USU but to be conservative)
+# shape U5(n,f) at 0, 1, 5, 15 MeV (likely USU in the low energy range (not thermal), at about 2 MeV nd at 15 MeV) 
+# shape PU9(n,f) at 1, 5 MeV (likely USU at about 2 MeV)
+# MT:3-R1:10-R2:8 at 0, 1, 5, 15, 30, 100, 200
+# MT:3-R1:9-R2:8 at 0, 1, 5, 15, 30, 60
+# MT:4-R1:10-R2:8 at 1, 5 MeV (likely USU in 1-5 MeV range)
+# MT:4-R1:9-R2:8 at 0, 1, 5, 15 (likely USU at 
+
+usu_dfs = []
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:1-R1:8',), (1., 5., 15.), (1e-2,)*3))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:1-R1:9',), (1., 5.), (1e-2,)*2))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:2-R1:8',), (0., 1., 5., 15.), (1e-2,)*4))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:2-R1:9',), (1., 5.), (1e-2,)*2))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:10-R2:8',), (0., 1., 5., 15., 30., 100., 200.), (1e-2,)*7))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:9-R2:8',), (0., 1., 5., 15., 30., 60.), (1e-2,)*6))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:10-R2:8',), (1., 5.), (1e-2,)*2))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:9-R2:8',), (0., 1., 5., 15.), (1e-2,)*4))
+
+
+usu_df = pd.concat(usu_dfs, ignore_index=True)
 usu_map = EnergyDependentAbsoluteUSUMap((usu_df, exptable), reduce=True)
 usu_jac = tf.sparse.to_dense(usu_map.jacobian(usu_df.PRIOR.to_numpy()))
+
 
 
 def create_like_cov_fun(usu_df, expcov_linop, Smat):
