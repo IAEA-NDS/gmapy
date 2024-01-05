@@ -1,6 +1,6 @@
 {
   "ImageId": "ami-053b0d53c279acc90",
-  "InstanceType": "r6i.2xlarge",
+  "InstanceType": "r6i.4xlarge",
   "KeyName": "ephemeral-key",
   "SecurityGroupIds": ["sg-0322b8b8a6675e869"],
   "BlockDeviceMappings": [
