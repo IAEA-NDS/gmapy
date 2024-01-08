@@ -104,7 +104,7 @@ expcov_linop = tf.linalg.LinearOperatorComposition(
 # reaction-specific USU components
 usu_dfs = []
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:1-R1:8',), (1., 5., 15.), (1e-2,)*3))
-usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:1-R1:9',), (1., 5.), (1e-2,)*2))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:1-R1:9',), (1., 5., 15.), (1e-2,)*3))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:2-R1:8',), (0., 1., 5., 15.), (1e-2,)*4))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:2-R1:9',), (1., 5.), (1e-2,)*2))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:10-R2:8',), (0., 1., 5., 15., 30., 100., 200.), (1e-2,)*7))
