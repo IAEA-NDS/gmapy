@@ -109,7 +109,7 @@ usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:2-R1:9',), (1e-3, 1e-2, 1e
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:10-R2:8',), (0.1, 1., 5., 15., 30., 100., 200.), (1e-2,)*7))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:9-R2:8',), (1e-3, 1e-2, 0.1, 1., 5., 15., 30., 60.), (1e-2,)*8))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:10-R2:8',), (0.1, 1., 5., 15., 30.), (1e-2,)*5))
-usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:9-R2:8',), (1e-3, 1e-2, 1e-1, 1., 5., 15., 30., 60.), (1e-2,)*8))
+usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:9-R2:8',), (1e-3, 1e-2, 1e-1, 1., 5., 15., 30.), (1e-2,)*7))
 
 
 usu_df = pd.concat(usu_dfs, ignore_index=True)
