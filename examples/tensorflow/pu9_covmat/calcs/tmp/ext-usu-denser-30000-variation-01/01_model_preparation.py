@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../../../../../..')
 import pandas as pd
-from scipy.sparse import block_diag
+from scipy.sparse import block_diag, csr_matrix
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -53,6 +53,15 @@ exptable = create_experiment_table(db['datablock_list'])
 expcov = create_experimental_covmat(db['datablock_list'])
 exptable['UNC'] = np.sqrt(expcov.diagonal())
 
+# variation-01: remove specific experimental datasets after visual inspection
+exp_remove_mask = (exptable.NODE == 'exp_722') & (exptable.ENERGY > 23)  # Ponkratov U5(n,f) shape beyond 23 MeV
+exp_remove_mask |= (exptable.NODE == 'exp_8008')  # removal of Nolte abs. U8(n,f) measurement (34 - 200 MeV)
+exp_remove_mask |= (exptable.NODE == 'exp_874') & (exptable.ENERGY > 23)  # Ponkratov U8(n,f) shape beyond 23 MeV
+exp_keep_idcs = np.where(~exp_remove_mask)[0]
+exptable = exptable.loc[exp_keep_idcs].reset_index(drop=True)
+expcov = csr_matrix(expcov.toarray()[np.ix_(exp_keep_idcs, exp_keep_idcs)])
+# variation-01 end
+
 # For testing: perturb one dataset and see if we get a change
 # exptable.loc[exptable.NODE == 'exp_1025', 'DATA'] *= 1.5
 
@@ -67,6 +76,15 @@ expvals = exptable.DATA.to_numpy()
 
 # speed up the pdf log_prob calculations exploiting the block diagonal structure
 expcov_list, idcs_tuples = create_datablock_covmat_list(db['datablock_list'], relative=True)
+# variation-01: remove certain points in datablocks
+for i in range(len(expcov_list)):
+    cur_idcs = np.arange(idcs_tuples[i][0], idcs_tuples[i][1]+1)
+    cur_idcs = cur_idcs[np.isin(cur_idcs, exp_keep_idcs)] - idcs_tuples[i][0]
+    expcov_list[i] = csr_matrix(expcov_list[i].toarray()[np.ix_(cur_idcs, cur_idcs)])
+
+expcov_list = [x for x in expcov_list if x.shape != (0, 0)]
+
+# variation-01 end
 expchol_list = [tf.linalg.cholesky(x.toarray()) for x in expcov_list]
 expchol_op_list = [tf.linalg.LinearOperatorLowerTriangular(
         x, is_non_singular=True, is_square=True
@@ -94,12 +112,12 @@ expcov_linop = tf.linalg.LinearOperatorComposition(
 # relevant USU error contributions
 # abs U5(n,f) at 1, 5, 15 MeV (clear USU around 2 MeV region)
 # abs PU9(n,f) at 1, 5 MeV (likely no USU but to be conservative)
-# shape U5(n,f) at 0, 1, 5, 15 MeV (likely USU in the low energy range (not thermal), at about 2 MeV nd at 15 MeV) 
+# shape U5(n,f) at 0, 1, 5, 15 MeV (likely USU in the low energy range (not thermal), at about 2 MeV nd at 15 MeV)
 # shape PU9(n,f) at 1, 5 MeV (likely USU at about 2 MeV)
 # MT:3-R1:10-R2:8 at 0, 1, 5, 15, 30, 100, 200
 # MT:3-R1:9-R2:8 at 0, 1, 5, 15, 30, 60
 # MT:4-R1:10-R2:8 at 1, 5 MeV (likely USU in 1-5 MeV range)
-# MT:4-R1:9-R2:8 at 0, 1, 5, 15 (likely USU at 
+# MT:4-R1:9-R2:8 at 0, 1, 5, 15 (likely USU at
 
 usu_dfs = []
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:1-R1:8',), (5e-3, 1e-1, 1., 5., 15., 30.), (1e-2,)*6))
@@ -110,9 +128,15 @@ usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:10-R2:8',), (0.1, 1.,
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:3-R1:9-R2:8',), (1e-3, 1e-2, 0.1, 1., 5., 15., 30., 60.), (1e-2,)*8))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:10-R2:8',), (0.1, 1., 5., 15., 30.), (1e-2,)*5))
 usu_dfs.append(create_endep_abs_usu_df(exptable, ('MT:4-R1:9-R2:8',), (1e-3, 1e-2, 1e-1, 1., 5., 15., 30.), (1e-2,)*7))
-
-
 usu_df = pd.concat(usu_dfs, ignore_index=True)
+
+# variation-01: remove usu treatment for specific datasets (after visual inspection of results)
+usu_df = usu_df[~(usu_df.NODE == 'endep_abs_usu_521')]
+usu_df = usu_df[~(usu_df.NODE == 'endep_abs_usu_1003')]
+usu_df = usu_df[~(usu_df.NODE == 'endep_abs_usu_1028')]
+usu_df = usu_df.reset_index(drop=True)
+# variation-01: end
+
 usu_map = EnergyDependentAbsoluteUSUMap((usu_df, exptable), reduce=True)
 usu_jac = tf.sparse.to_dense(usu_map.jacobian(usu_df.PRIOR.to_numpy()))
 
@@ -122,7 +146,7 @@ def create_like_cov_fun(usu_df, expcov_linop, Smat):
 
     def map_uncertainties(u):
         ids = np.zeros((len(usu_df),), dtype=np.int32)
-        for index, row in red_usu_df.iterrows(): 
+        for index, row in red_usu_df.iterrows():
             reac = row.REAC
             energy = row.ENERGY
             cur_idcs = usu_df.index[
