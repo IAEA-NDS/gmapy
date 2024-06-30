@@ -7,15 +7,15 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.10"
+python = ">=3.9, <3.11"
 numpy = ">=1.23.3"
 pandas = "~1.4.0"
 scipy = ">=1.8.0"
 fortranformat = "^1.2.2"
 scikit-sparse = "^0.4.6"
 statsmodels = "^0.13.5"
-tensorflow-probability = "^0.19.0"
-tensorflow = "^2.12.0"
+tensorflow-probability = "0.24.0"
+tensorflow = "2.16.1"
 dill = "^0.3.7"
 
 [tool.poetry.group.dev.dependencies]
