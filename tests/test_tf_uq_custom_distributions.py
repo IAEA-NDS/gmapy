@@ -29,7 +29,7 @@ from gmapy.tf_uq.custom_distributions import (
 )
 from gmapy.mappings.tf.restricted_map import RestrictedMap
 from gmapy.mappings.helperfuns.numeric_jacobian import numeric_jacobian
-from gmapy.tf_uq.custom_linear_operators import MyLinearOperatorLowRankUpdate
+# from gmapy.tf_uq.custom_linear_operators import MyLinearOperatorLowRankUpdate
 
 
 class TestTfUQCustomDistributions(unittest.TestCase):
@@ -201,8 +201,11 @@ class TestTfUQCustomDistributions(unittest.TestCase):
 
     def create_like_cov_fun(self, expcov_linop, Smat):
         def like_cov_fun(u):
-            covop = MyLinearOperatorLowRankUpdate(
-                expcov_linop, Smat, u
+            covop = tf.linalg.LinearOperatorLowRankUpdate(
+                expcov_linop, Smat, u,
+                is_self_adjoint=expcov_linop.is_self_adjoint,
+                is_positive_definite=expcov_linop.is_positive_definite,
+                is_diag_update_positive=True
             )
             return covop
         return like_cov_fun
@@ -222,10 +225,14 @@ class TestTfUQCustomDistributions(unittest.TestCase):
             tf.linalg.LinearOperatorLowerTriangular(p) for p in expchol_list
         ]
         expcov_linop_list = [
-            tf.linalg.LinearOperatorComposition([p, p.adjoint()])
+            tf.linalg.LinearOperatorComposition(
+                [p, p.adjoint()], is_self_adjoint=True, is_positive_definite=True
+            )
             for p in expchol_linop_list
         ]
-        expcov_linop = tf.linalg.LinearOperatorBlockDiag(expcov_linop_list)
+        expcov_linop = tf.linalg.LinearOperatorBlockDiag(
+            expcov_linop_list, is_self_adjoint=True, is_positive_definite=True
+        )
         Smat = self.create_Smat(self._exptable)
         like_cov_fun = self.create_like_cov_fun(expcov_linop, Smat)
         num_params = len(priorvals)
