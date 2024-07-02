@@ -314,7 +314,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         like_data = tf.reshape(self._like_data, (-1, 1))
         propvals = tf.reshape(self._propfun(x), (-1, 1))
         d = like_data - propvals
-        with tf.GradientTape(persistent=False) as tape:
+        with tf.GradientTape(persistent=True) as tape:
             tape.watch(covpars)
             j = self._jacfun(x)
             like_cov = like_cov_fun(covpars, tf.stop_gradient(propvals))
@@ -322,7 +322,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
             u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
             u = tf.reshape(u, (-1,))
         g = tape.jacobian(
-            u, covpars, experimental_use_pfor=True,
+            u, covpars, experimental_use_pfor=False,
             unconnected_gradients=tf.UnconnectedGradients.ZERO
         )
         return g
@@ -336,7 +336,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         propvals = tf.reshape(self._propfun(x), (-1, 1))
         d = like_data - propvals
         d = tf.reshape(d, (-1, 1))
-        with tf.GradientTape(persistent=False) as tape1:
+        with tf.GradientTape(persistent=True) as tape1:
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
                 tape2.watch(covpars)
@@ -346,7 +346,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
                 u, covpars, unconnected_gradients=tf.UnconnectedGradients.ZERO
             )
         h = tape1.jacobian(
-            g, covpars, experimental_use_pfor=True,
+            g, covpars, experimental_use_pfor=False,
             unconnected_gradients=tf.UnconnectedGradients.ZERO
         )
         return h
@@ -357,7 +357,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
             covpars = tf.constant(covpars, dtype=tf.float64)
         like_cov_fun = self._like_cov_fun
         propvals = self._propfun(x)
-        with tf.GradientTape(persistent=False) as tape1:
+        with tf.GradientTape(persistent=True) as tape1:
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
                 tape2.watch(covpars)
@@ -367,7 +367,7 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
                 u, covpars, unconnected_gradients=tf.UnconnectedGradients.ZERO
             )
         h = tape1.jacobian(
-            g, covpars, experimental_use_pfor=True,
+            g, covpars, experimental_use_pfor=False,
             unconnected_gradients=tf.UnconnectedGradients.ZERO
         )
         return h
