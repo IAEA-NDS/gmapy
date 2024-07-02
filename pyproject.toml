@@ -10,7 +10,10 @@ readme = "README.md"
 python = ">=3.9, <3.11"
 numpy = ">=1.23.3"
 pandas = "~1.4.0"
-scipy = ">=1.8.0"
+# pinned scipy version because
+# setdiag method seems to have issues
+# in 1.13.0 and later
+scipy = "1.12.0"
 fortranformat = "^1.2.2"
 scikit-sparse = "^0.4.6"
 statsmodels = "^0.13.5"
