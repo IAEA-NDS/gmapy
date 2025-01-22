@@ -12,6 +12,8 @@ def fort_read(fobj, formatstr, none_as=None, debug=False):
     if not isinstance(fobj, str):
         fname = fobj.name
         inpline = fobj.readline()
+        if inpline == '':
+            return []  # as EOF indicator
     else:
         fname = 'console'
         inpline = fobj
