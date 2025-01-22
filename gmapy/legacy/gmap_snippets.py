@@ -12,9 +12,11 @@ class TextfileReader:
 
 
     def readline(self):
-        self.linecnt += 1
-        if self.linecnt > len(self.fcont):
+        if self.linecnt == len(self.fcont):
+            return ''
+        elif self.linecnt > len(self.fcont):
             raise IndexError('Attempting to read beyond EOF')
+        self.linecnt += 1
         return self.fcont[self.linecnt-1]
 
 
