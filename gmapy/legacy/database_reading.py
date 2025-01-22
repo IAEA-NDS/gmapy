@@ -67,8 +67,11 @@ def read_gma_database(dbfile, format_dic={}):
         #      Control parameter input
         #
         format100 = "(A4,1X,8I5)"
-        ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = fort_read(file_IO3,  format100)
-
+        line_tuple = fort_read(file_IO3,  format100)
+        if len(line_tuple) == 0:
+            ACON = LABL.AKON[3] # if EOF, use END indicator
+        else:
+            ACON, MC1, MC2, MC3, MC4, MC5, MC6, MC7, MC8 = line_tuple
 
         # LABL.AKON[9] == 'MODE'
         if ACON == LABL.AKON[9]:
