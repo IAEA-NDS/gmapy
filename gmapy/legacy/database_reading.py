@@ -50,9 +50,14 @@ def read_gma_database(dbfile, format_dic={}):
     #
     #      DATA DE/1200*0.D0/,BM/1200*0.D0/,B/720600*0.D0/,NRED/160*0/
     #
+    MOD2 = 0
     MODC = 3
+    AMO3 = 0.0
     IELIM = 0
     LLL = 0
+    MPPP = 1
+    MODAP = 3
+    IPP = [None, 1, 1, 1, 0, 0, 1, 0, 1]
 
     #
     #      CONTROL
