@@ -15,7 +15,7 @@ pandas = "~1.4.0"
 # in 1.13.0 and later
 scipy = "1.12.0"
 fortranformat = "^1.2.2"
-scikit-sparse = "^0.4.6"
+scikit-sparse = "^0.4.15"
 statsmodels = "^0.14.0"
 tensorflow-probability = "0.24.0"
 tensorflow = "2.16.1"
