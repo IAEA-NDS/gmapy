@@ -27,48 +27,23 @@ You can directly open this notebook in the browser by clicking
 
 ### Installation
 
-#### Prerequisites
-
 gmapy depends on the [SuiteSparse] library.
-With appropriate build tools, it can probably be installed
-on Windows but this has not been tested.
-On Linux it can be installed by
-```
-sudo apt install libsuitesparse-dev
-```
-and on MacOs via
-```
-brew install suite-sparse
-```
+Please consults the [scikit-sparse] GitHub repo for installation instructions.
+If you are using the conda package manager, you can install `gmapy` in this way:
 
-It is also important that the source and library files
-of SuiteSparse can be found by the compiler and linker.
-If the installation instructions for gmapy in the next
-section fail with the error message that `cholmod.h`
-cannot be found, execute the following instructions
-with appropriate paths:
+Download or clone this repository on your computer. Let's assume the repo is
+stored in the directory `gmapy`. Then you can execute:
+
 ```
-export SUITESPARSE_INCLUDE_DIR=/opt/local/include
-export SUITESPARSE_LIBRARY_DIR=/opt/local/lib
+conda create -n gmapy-env python=3.10
+conda activate gmapy-env
+conda install -c conda-forge scikit-sparse==0.4.14
+pip install ./gmapy
 ```
-The given paths are examples of commonly used locations
-and may need to be adjusted on your system.
 
 [SuiteSparse]: https://github.com/DrTimothyAldenDavis/SuiteSparse
+[scikit-sparse]: https://github.com/scikit-sparse/scikit-sparse
 
-#### Installation of gmapy
-
-We recommend to create a virtual environment with
-Python version 3.9. With conda you can create a new
-environment by
-```
-conda create -y -n gmapy python=3.9 pip
-```
-Then activate the environment (`conda activate gmapy`)
-and install the gmapy package:
-```
-pip install git+https://github.com/iaea-nds/gmapy.git
-```
 
 ### Beyond GMAP: New features in gmapy
 
