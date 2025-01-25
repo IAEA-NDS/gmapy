@@ -74,6 +74,16 @@ res = run_gmap(dbfile="gmadata.json", dbtype="json",
 res["table"].to_csv("restable.csv", sep=";")
 '
 
+# Python print -0.0 whereas Fortran 0.0
+# thus remove the odd minus sign from Python output
+# two times each sed comment to deal with the case
+# -0.00-0.00 and to make sure both minuses are removed
+sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' gma.res
+sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' gma.res
+sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
+sed -i -e 's/-\(00*\.0*\)\([^0-9]\|$\)/ \1\2/g' plot.dta
+sed -i -e 's/-\(\.00*\)\([^0-9]\|$\)/0\1\2/g' gma.res
+sed -i -e 's/-\(\.00*\)\([^0-9]\|$\)/0\1\2/g' gma.res
 # ignore insignificant small change in python result
 sed -i -e '69344,69344s/0\.7790E-02/0.7789E-02/' gma.res
 sed -i -e '35981,35981s/0\.7790E-02/0.7789E-02/' gma.res
