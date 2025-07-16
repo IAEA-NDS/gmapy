@@ -13,7 +13,6 @@ def determine_MAP_estimate(
     max_inner_iters=500, max_outer_iters=10, nugget=1e-4,
     must_converge=True, ret_optres=False
 ):
-    max_outer_iters = 20
     if isinstance(max_inner_iters, int):
         max_inner_iters = np.full(max_outer_iters, max_inner_iters,
                                   dtype=np.int32)
