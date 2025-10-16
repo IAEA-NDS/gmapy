@@ -394,3 +394,18 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
         res = tf.concat([res1, res2], axis=0)
         return res
+
+
+class ChiSquarePseudoDist(MultivariateNormalLikelihood):
+
+    def log_prob(self, x):
+        propvals = self._propfun(x)
+        like_scale = self._like_scale
+        if self._relative:
+            like_scale = self._like_scale_fun(propvals)
+        like_data = tf.reshape(self._like_data, (-1, 1))
+        propvals = tf.reshape(propvals, (-1, 1))
+        d = (like_data - propvals)
+        u = like_scale.solve(d)
+        res = -0.5 * tf.matmul(tf.transpose(u), u)
+        return tf.squeeze(res)
