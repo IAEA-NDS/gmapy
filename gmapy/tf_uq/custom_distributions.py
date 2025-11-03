@@ -224,6 +224,31 @@ class MultivariateNormalLikelihood(BaseDistribution):
             model_part = self._log_prob_hessian_model_part(x)
             return gls_part + model_part
 
+    # Methods specific to MultivariateNormal likelihood varieties
+    def get_model_prediction(self, x):
+        """Get model prediction associated with a parameter vector."""
+        return self._propfun(x)
+
+    def get_model_jacobian(self, x):
+        """Get Jacobian matrix associated with a parameter vector."""
+        return tf.sparse.to_dense(self._jacfun(x))
+
+    def get_data_vector(self):
+        """Get the vector with observed data."""
+        return self._like_data
+
+    def get_covariance_linop(self, x):
+        """Get absolute covariance matrix as linear operator."""
+        propvals = self.get_model_prediction(x)
+        if not self._relative:
+            like_scale = self._like_scale
+        else:
+            like_scale = self._like_scale_fun(propvals)
+        return tf.linalg.LinearOperatorComposition(
+            [like_scale, like_scale.adjoint()],
+            is_positive_definite=True
+        )
+
 
 class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
 
@@ -394,6 +419,25 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
         res = tf.concat([res1, res2], axis=0)
         return res
+
+    # Methods specific to MultivariateNormal likelihood varieties
+    def get_model_prediction(self, x):
+        """Get model prediction associated with a parameter vector."""
+        x, covpars = self.split_pars(x)
+        propvals = self._propfun(x)
+        return self._propfun(x)
+
+    def get_model_jacobian(self, x):
+        """Get Jacobian matrix associated with a parameter vector."""
+        x, covpars = self.split_pars(x)
+        return tf.sparse.to_dense(self._jacfun(x))
+
+    def get_covariance_linop(self, x):
+        """Get absolute covariance matrix."""
+        x = tf.reshape(x, (-1,))
+        pars, covpars = self.split_pars(x)
+        propvals = self._propfun(pars)
+        return self._like_cov_fun(covpars, propvals)
 
 
 class ChiSquarePseudoDist(MultivariateNormalLikelihood):
