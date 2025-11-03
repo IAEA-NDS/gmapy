@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from gmapy.mappings.tf.compound_map_tf import CompoundMap as CompoundMapTF
+from gmapy.tf_uq.inference import (
+    iterative_gls_estimate,
+)
 from gmapy.tf_uq.custom_distributions import (
     MultivariateNormalLikelihood,
     MultivariateNormalLikelihoodWithCovParams,
@@ -50,6 +53,30 @@ class TestTfUQCustomDistributions(unittest.TestCase):
             tfr(covmat == like.get_covariance_linop(self._x).to_dense())
 
         )
+
+    def test_iterative_gls_with_multivariate_normal_likelihood(self):
+        like = MultivariateNormalLikelihood(
+            len(self._priordt), self._propfun, self._jacfun,
+            self._like_data, self._like_scale
+        )
+        startvals = self._x + 1.0
+        optres = iterative_gls_estimate(
+            startvals, like.get_model_prediction, like.get_model_jacobian, like.get_data_vector(), like.get_covariance_linop, rel_damp_unc=1e8, ret_optres=True
+        )
+        tfr = tf.reduce_all
+        self.assertTrue(tfr(tf.abs(optres.position - tf.constant([-2.0, 8.0], dtype=tf.float64)) < 1e-10))
+
+    def test_iterative_gls_with_relative_multivariate_normal_likelihood(self):
+        like = MultivariateNormalLikelihood(
+            len(self._priordt), self._propfun, self._jacfun,
+            self._like_data, self._like_scale, relative=True, approximate_hessian=True
+        )
+        startvals = self._x + 4.0
+        optres = iterative_gls_estimate(
+            startvals, like.get_model_prediction, like.get_model_jacobian, like.get_data_vector(), like.get_covariance_linop, rel_damp_unc=1e8, ret_optres=True
+        )
+        tfr = tf.reduce_all
+        self.assertTrue(tfr(tf.abs(optres.position - tf.constant([-2.0, 8.0], dtype=tf.float64)) < 1e-10))
 
     def test_relative_multivariate_normal_likelihood_gls_support(self):
         like = MultivariateNormalLikelihood(

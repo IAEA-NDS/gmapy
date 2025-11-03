@@ -1,3 +1,4 @@
+from collections import namedtuple
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -6,6 +7,57 @@ from .auxiliary import (
     invert_symmetric_matrix
 )
 tfb = tfp.bijectors
+
+
+def iterative_gls_estimate(
+    startvals, propfun, jacfun, data, cov_linop_fun, rel_tol=1e-6, max_iters=50,
+    rel_damp_unc=1000, must_converge=True, ret_optres=False
+):
+    curvals = startvals
+    converged = False
+    rel_damp_unc = tf.constant(rel_damp_unc, dtype=tf.float64)
+    for cur_iter in range(max_iters):
+        print(f'iteration {cur_iter}')
+        expcov_linop = cov_linop_fun(curvals)
+        S = jacfun(curvals)
+        if isinstance(S, tf.sparse.SparseTensor):
+            ST = tf.sparse.transpose(S)
+            S_dense = tf.sparse.to_dense(S)
+            inv_postcov = tf.sparse.sparse_dense_matmul(ST, expcov_linop.solve(S_dense))
+        else:
+            ST = tf.transpose(S)
+            inv_postcov = ST @ expcov_linop.solve(S)
+        # poor-man LM algorithm: constant damping term
+        damp_abs = 1/tf.square(rel_damp_unc) * tf.linalg.diag(1/(curvals**2))
+        inv_postcov_reg = inv_postcov + damp_abs
+
+        propvals = propfun(curvals)
+        d = tf.reshape(data, (-1,1)) - tf.reshape(propvals, (-1,1))
+        if isinstance(S, tf.sparse.SparseTensor):
+            rhs = tf.sparse.sparse_dense_matmul(ST, expcov_linop.solve(d))
+        else:
+            rhs = ST @ expcov_linop.solve(d)
+        delta = tf.reshape(tf.linalg.solve(inv_postcov_reg, rhs), (-1,))
+        curvals = curvals + delta
+
+        relative_change = tf.linalg.norm(delta) / tf.linalg.norm(curvals)
+        print(f'relative change: {relative_change}')
+        if tf.linalg.norm(delta) < rel_tol * tf.linalg.norm(curvals):
+            converged = True
+            break
+
+    if must_converge and not converged:
+        raise ValueError(
+            'Unable to determine iterative GLS estimate. Try increasing `max_iters`'
+        )
+
+    if ret_optres:
+        OptRes = namedtuple('OptimizationResult', ['position', 'converged', 'num_iterations'])
+        return OptRes(
+            curvals, converged, cur_iter
+        )
+    else:
+        return curvals
 
 
 def determine_MAP_estimate(
