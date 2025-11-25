@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.sparse import identity, csc_matrix
+from scipy.sparse import identity, csc_matrix, diags
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
 from sksparse.cholmod import cholesky
@@ -11,7 +11,7 @@ from .data_management.unc_utils import (
 )
 
 
-def gls_update(mapping, datatable, covmat, retcov=False):
+def gls_update(mapping, datatable, covmat, retcov=False, reg=0.0):
     """Calculate updated values and covariance matrix."""
     # prepare quantities required for update
     priorvals = np.full(len(datatable), 0.)
@@ -29,6 +29,7 @@ def gls_update(mapping, datatable, covmat, retcov=False):
     has_zerounc = covmat.diagonal() == 0.
     has_nonzerounc = np.logical_not(has_zerounc)
     isadj = np.logical_and(has_nonzerounc, not_isobs)
+
     if np.any(np.logical_and(has_zerounc, isobs)):
         raise ValueError('Observed data must have non-zero uncertainty')
 
@@ -48,12 +49,14 @@ def gls_update(mapping, datatable, covmat, retcov=False):
     inv_prior_cov = spsolve(priorcovmat, idmat)
 
     # perform the update
-    inv_post_cov = S.T @ spsolve(obscovmat, S) + inv_prior_cov
+    reg_mat = reg * diags(1.0 / np.square(priorvals).flatten(), format='csc')
+    inv_post_cov = S.T @ spsolve(obscovmat, S) + inv_prior_cov + reg_mat
     # NOTE: the second term in in zvals, which is
     # inv_priorcov * (priorvals-refvals) is omitted because in this
     # GLS update the expansion vector priorvals conincides with refvals
     zvals = S.T @ spsolve(obscovmat, meas-preds)
-    postvals = priorvals + spsolve(inv_post_cov, zvals)
+    delta = spsolve(inv_post_cov, zvals)
+    postvals = priorvals + delta
 
     post_covmat = None
     if retcov is True:
