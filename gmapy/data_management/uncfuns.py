@@ -53,8 +53,15 @@ def create_datablock_covmat_list(
         # reproduce a bug of the Fortran GMAP version
         dbtype = dbapi.get_datablock_type(db)
         if (dbtype == 'legacy-experiment-datablock' and
-                'ECOR' not in db and not fix_ppp_bug):
-            curcormat = legacy_uncfuns.relcov_to_wrong_cor(curcovmat, datasets, curpropcss)
+                'ECOR' not in db and (not fix_ppp_bug or fix_ppp_bug=='test')):
+            # This branch is here to reproduce a bug in the PPP correction implemented
+            # in the Fortran GMA code. However, for double-checking, if fix_ppp_bug='test',
+            # the bug is also fixed in this branch in a different way. This allows one
+            # to check that fix_ppp_bug=True (entering the other branch) and fix_ppp_bug='test'
+            # entering this branch leads to the same result.
+            if fix_ppp_bug == 'test':
+                fix_ppp_bug = True
+            curcormat = legacy_uncfuns.relcov_to_wrong_cor(curcovmat, datasets, curpropcss, fix_ppp_bug=fix_ppp_bug)
         else:
             curcormat = cov2cor(curcovmat)
 
