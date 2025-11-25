@@ -24,7 +24,7 @@ def get_incident_energies_safely(dataset):
 
 # this function is here to reproduce
 # a bug in GMAP Fortran in the PPP correction
-def relcov_to_wrong_cor(relcovmat, datasets, css):
+def relcov_to_wrong_cor(relcovmat, datasets, css, fix_ppp_bug=False):
     ppp_factors = calculate_ppp_factors(datasets, css)
     uncs = np.sqrt(np.diagonal(relcovmat))
     effuncs = uncs * ppp_factors
@@ -46,8 +46,13 @@ def relcov_to_wrong_cor(relcovmat, datasets, css):
         # corrected and uncorrected uncertainties are mixed
         cormat[start_idx:end_idx, :start_idx] /= \
                 uncs[start_idx:end_idx].reshape(-1,1)
-        cormat[start_idx:end_idx, :start_idx] /= \
-                effuncs[:start_idx].reshape(1,-1)
+        if not fix_ppp_bug:
+            cormat[start_idx:end_idx, :start_idx] /= \
+                    effuncs[:start_idx].reshape(1,-1)
+        else:
+            print('-----------> Fixing PPP bug in alternative way')
+            cormat[start_idx:end_idx, :start_idx] /= \
+                    uncs[:start_idx].reshape(1,-1)
     np.fill_diagonal(cormat, 1.)
     # symmetrize the matrix
     cormat[np.triu_indices_from(cormat,k=1)] = \
