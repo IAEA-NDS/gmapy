@@ -495,3 +495,37 @@ class ChiSquarePseudoDist(MultivariateNormalLikelihood):
         u = like_scale.solve(d)
         res = -0.5 * tf.matmul(tf.transpose(u), u)
         return tf.squeeze(res)
+
+
+class ChiSquarePseudoDistWithCovParams(MultivariateNormalLikelihoodWithCovParams):
+
+    def log_prob(self, x):
+        x = tf.reshape(x, (-1,))
+        pars, covpars = self.split_pars(x)
+        propvals = self._propfun(pars)
+        covop = self._like_cov_fun(pars, covpars)
+        d = self._like_data - propvals
+        chisqr = tf.matmul(
+            tf.reshape(d, (1, -1)), covop.solve(tf.reshape(d, (-1, 1)))
+        )
+        res = -0.5 * chisqr
+        return tf.squeeze(res)
+
+    def log_prob_hessian(self, x):
+        pars, covpars = self.split_pars(x)
+        propvals = self._propfun(pars)
+        like_cov = self._like_cov_fun(pars, covpars)
+        pars_part = self._log_prob_hessian_gls_part(like_cov, pars)
+        if not self._approximate_hessian:
+            model_part = self._log_prob_hessian_model_part(like_cov, pars)
+            pars_part += model_part
+
+        if self._num_covpars == 0:
+            return pars_part
+
+        offdiag_part = self._log_prob_hessian_offdiag_part(pars, covpars)
+        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(pars, covpars)
+        res1 = tf.concat([pars_part, offdiag_part], axis=1)
+        res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
+        res = tf.concat([res1, res2], axis=0)
+        return res
