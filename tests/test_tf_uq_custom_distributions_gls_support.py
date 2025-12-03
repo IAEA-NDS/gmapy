@@ -10,6 +10,7 @@ from gmapy.tf_uq.custom_distributions import (
     MultivariateNormalLikelihood,
     MultivariateNormalLikelihoodWithCovParams,
     ChiSquarePseudoDist,
+    ChiSquarePseudoDistWithCovParams,
 )
 
 
@@ -157,3 +158,34 @@ class TestTfUQCustomDistributions(unittest.TestCase):
                 == like2.get_covariance_linop(x2).to_dense()
             )
         )
+
+    def test_pseudochisquare_dists(self):
+        def like_cov_fun(x):
+            like_scale = self._like_scale
+            return tf.linalg.LinearOperatorComposition(
+                [like_scale.adjoint(), like_scale], is_positive_definite=True
+            )
+        x = self._x
+        like1 = ChiSquarePseudoDist(
+            len(self._priordt), self._propfun, self._jacfun,
+            self._like_data, self._like_scale, relative=True, approximate_hessian=True
+        )
+        like2 = ChiSquarePseudoDistWithCovParams(
+            len(self._priordt), 0, self._propfun, self._jacfun,
+            self._like_data, like_cov_fun, relative=True, approximate_hessian=True
+        )
+        tfr = tf.reduce_all
+        log_prob1 = like1.log_prob(x)
+        log_prob2 = like2.log_prob(x)
+        self.assertTrue(np.isclose(log_prob1, log_prob2))
+
+        expvals = self._like_data.numpy()
+        propvals = like1.get_model_prediction(x).numpy()
+        rel_covmat = like_cov_fun(x).to_dense().numpy()
+        abs_covmat = rel_covmat * (propvals.reshape(-1, 1) @ propvals.reshape(1,-1))
+        covmat = like1.get_covariance_linop(x).to_dense().numpy()
+        self.assertTrue(np.allclose(abs_covmat, covmat))
+        diff = expvals.reshape(-1,1) - propvals.reshape(-1, 1)
+        chisquare = diff.T @ np.linalg.inv(covmat) @ diff
+        ref_result = -0.5 * chisquare
+        self.assertTrue(np.isclose(ref_result, log_prob1))
