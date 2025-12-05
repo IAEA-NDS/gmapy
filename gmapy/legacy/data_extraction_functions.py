@@ -214,3 +214,52 @@ def extract_covariance_matrix(datablock_list):
     covmat = block_diag(mat_list, format='csr')
     return covmat
 
+
+def read_gma_result(filename: str) -> dict:
+    """Read results from GMA result file."""
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+    matchstr = '1   RESULT'
+    results = {}
+    reac_order = {}
+    pos = -1
+    while True: 
+        pos += 1
+        if pos == len(lines):
+            break
+        line = lines[pos]
+        if not line.startswith(matchstr):
+            continue
+        cur_reac = line[len(matchstr):].strip()
+        results[cur_reac] = {"energy": [], "xs": []}
+        reac_order.setdefault(cur_reac, len(reac_order))
+        pos += 4
+        while True: 
+            pos += 1
+            if pos == len(lines):
+                break
+            line = lines[pos]
+            if line[11:13].strip() != '':
+                break
+            energy, xs = line.split()[:2]
+            energy = float(energy)
+            xs = float(xs)
+            results[cur_reac]['energy'].append(energy)
+            results[cur_reac]['xs'].append(xs)
+
+    # combine to dataframe
+    df_list = []
+    for reac, cont in results.items():
+        xsid = reac_order[reac] + 1
+        curdf = pd.DataFrame({
+            'NODE': f'xsid_{xsid}',
+            'REAC': f'MT:1-R1:{xsid}',
+            'REAC_STRING': reac,
+            'ENERGY': cont['energy'],
+            'RESULT': cont['xs'],
+        })
+        df_list.append(curdf)
+
+    df = pd.concat(df_list, ignore_index=True)
+    return df
