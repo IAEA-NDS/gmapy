@@ -54,7 +54,7 @@ def update_unreduced_gmadb_prior(gmadb, priortable, is_adj, newvals):
 def reduce_database_iteratively(
     orig_gmadb, max_iters=10, rel_tol=1e-6,
     remove_dummy=True, mt6_ppp=False,
-    optim_type='iterative-gls', optim_opts=None
+    optim_type='iterative-gls', optim_opts=None, save_history=False
 ):
     """Reduce experimental data."""
     orig_gmadb = deepcopy(orig_gmadb)
@@ -88,6 +88,10 @@ def reduce_database_iteratively(
         dtype=tf.float64
     )
 
+    param_hist = []
+    if save_history:
+        param_hist.append(startvals.numpy())
+
     for i in range(max_iters):
         print(f'Outer iteration: {i}')
         # determine posterior
@@ -114,6 +118,10 @@ def reduce_database_iteratively(
         expvals_norm = np.linalg.norm(expvals)
         relative_change = delta_norm / expvals_norm
         print(f'relative change: {relative_change}')
+
+        if save_history:
+            param_hist.append(optres.numpy())
+
         if relative_change <= rel_tol:
             break
         # use the current best estimate
@@ -125,5 +133,6 @@ def reduce_database_iteratively(
     return {
         'orig_gmadb': orig_gmadb,
         'new_gmadb': new_gmadb,
-        'num_iters': num_iters
+        'num_iters': num_iters,
+        'param_hist': param_hist,
     }
