@@ -9,7 +9,6 @@
 #
 ############################################################
 import numpy as np
-from sksparse.cholmod import cholesky
 from scipy.sparse import coo_matrix, csc_matrix
 from .posterior import Posterior
 from scipy.stats import invgamma, norm, uniform

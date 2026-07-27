@@ -1,5 +1,4 @@
 import numpy as np
-from sksparse.cholmod import cholesky
 
 
 def create_posterior_funs(mapping, dt, covmat, fnscale=1, print_res=True):

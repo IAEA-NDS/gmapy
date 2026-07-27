@@ -1,5 +1,4 @@
 import numpy as np
-from sksparse.cholmod import cholesky
 from scipy.sparse import issparse, csr_matrix
 
 

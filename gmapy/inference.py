@@ -3,7 +3,6 @@ import pandas as pd
 from scipy.sparse import identity, csc_matrix, diags
 from scipy.sparse.linalg import spsolve
 from scipy.linalg.lapack import dpotri, dpotrf
-from sksparse.cholmod import cholesky
 import warnings
 from .mappings.priortools import propagate_mesh_css
 from .data_management.unc_utils import (

@@ -9,7 +9,6 @@
 #
 ############################################################
 import numpy as np
-from sksparse.cholmod import cholesky
 import scipy.sparse as sps
 import scipy.stats as stats
 from scipy.sparse import csr_matrix, coo_matrix, identity
