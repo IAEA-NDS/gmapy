@@ -496,7 +496,7 @@ def _is_int(x):
 def _is_float(x):
     return isinstance(x,
         (np.float_, np.float16, np.float32,
-         np.float64, np.float128, float))
+         np.float64, float))
 
 
 def _get_1d_array_info(arr, _intstr, _floatstr):
