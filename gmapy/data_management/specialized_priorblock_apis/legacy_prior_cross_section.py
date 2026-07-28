@@ -26,5 +26,14 @@ def get_uncertainties(priorblock):
     return np.full(n, np.inf, dtype=np.float64)
 
 
+def get_correlation_matrix(priorblock):
+    return None
+
+
+def get_interpolation(priorblock):
+    n = len(get_energies(priorblock))
+    return ['lin-lin'] * n
+
+
 def get_description(priorblock):
     return priorblock['CLAB'].strip()

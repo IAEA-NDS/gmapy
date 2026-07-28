@@ -21,6 +21,7 @@ def create_prior_table(prior_list):
         prd['ENERGY'] = priorapi.get_energies(item)
         prd['PRIOR'] = priorapi.get_values(item)
         prd['UNC'] = priorapi.get_uncertainties(item)
+        prd['INTERP'] = priorapi.get_interpolation(item)
         prd['DESCR'] = priorapi.get_description(item)
         curdf = pd.DataFrame.from_dict(prd)
         df.append(curdf)

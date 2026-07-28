@@ -1,11 +1,13 @@
 import numpy as np
 import tensorflow as tf
 from ..helperfuns import (
-    get_legacy_to_pointwise_fis_factors
+    get_legacy_to_pointwise_fis_factors,
+    get_fission_spectrum_interp
 )
 from .cross_section_base_map_tf import CrossSectionBaseMap
 from .mapping_elements_tf import (
-    IntegralOfProductLinLin
+    IntegralOfProductLinLin,
+    IntegralOfProductInterp
 )
 
 
@@ -37,7 +39,11 @@ class CrossSectionRatioOfSacsMap(CrossSectionBaseMap):
         fis_idcs = np.array(fistable.index)
         ensfis = fistable['ENERGY'].to_numpy()
 
-        norm_fact = get_legacy_to_pointwise_fis_factors(ensfis)
+        fis_interp = get_fission_spectrum_interp(fistable)
+        if fis_interp is None:
+            norm_fact = get_legacy_to_pointwise_fis_factors(ensfis)
+        else:
+            norm_fact = None
         for curexp in expids:
             exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
             if len(exptable_red) != 1:
@@ -64,18 +70,25 @@ class CrossSectionRatioOfSacsMap(CrossSectionBaseMap):
             # finally we need the indices of experimental measurements
             idcs_exp_red = exptable_red.index
             propfun = self._generate_atomic_propagate(
-                ens1, ens2, ensfis, norm_fact
+                ens1, ens2, ensfis, norm_fact, fis_interp
             )
             self._add_lists(
                 (idcs1red, idcs2red, fis_idcs), idcs_exp_red, propfun
             )
 
-    def _generate_atomic_propagate(self, ens1, ens2, ensfis, norm_fact):
+    def _generate_atomic_propagate(self, ens1, ens2, ensfis, norm_fact,
+                                   fis_interp):
         def _atomic_propagate(xsobj1, xsobj2, raw_fisobj):
-            scl = tf.constant(norm_fact, dtype=tf.float64)
-            unnorm_fisobj = raw_fisobj * scl
-            fisavg1 = IntegralOfProductLinLin(ens1, ensfis)(xsobj1, unnorm_fisobj)
-            fisavg2 = IntegralOfProductLinLin(ens2, ensfis)(xsobj2, unnorm_fisobj)
+            if fis_interp is None:
+                scl = tf.constant(norm_fact, dtype=tf.float64)
+                unnorm_fisobj = raw_fisobj * scl
+                fisavg1 = IntegralOfProductLinLin(ens1, ensfis)(xsobj1, unnorm_fisobj)
+                fisavg2 = IntegralOfProductLinLin(ens2, ensfis)(xsobj2, unnorm_fisobj)
+            else:
+                fisavg1 = IntegralOfProductInterp(
+                    ens1, ensfis, fis_interp)(xsobj1, raw_fisobj)
+                fisavg2 = IntegralOfProductInterp(
+                    ens2, ensfis, fis_interp)(xsobj2, raw_fisobj)
             fisavg_ratio = fisavg1 / fisavg2
             return fisavg_ratio
         return _atomic_propagate

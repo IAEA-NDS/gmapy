@@ -1,7 +1,8 @@
 import numpy as np
 from .cross_section_base_map import CrossSectionBaseMap
 from .helperfuns import (
-    get_legacy_to_pointwise_fis_factors
+    get_legacy_to_pointwise_fis_factors,
+    get_fission_spectrum_interp
 )
 from .mapping_elements import (
     InputSelectorCollection,
@@ -46,8 +47,14 @@ class CrossSectionRatioOfSacsMap(CrossSectionBaseMap):
         raw_fisobj = selcol.define_selector(fistable.index, self._src_len)
         inp.add_selector(raw_fisobj)
 
-        scl = get_legacy_to_pointwise_fis_factors(ensfis)
-        unnorm_fisobj = raw_fisobj * Const(scl)
+        fis_interp = get_fission_spectrum_interp(fistable)
+        if fis_interp is None:
+            cur_interp = 'lin-lin'
+            scl = get_legacy_to_pointwise_fis_factors(ensfis)
+            unnorm_fisobj = raw_fisobj * Const(scl)
+        else:
+            cur_interp = fis_interp
+            unnorm_fisobj = raw_fisobj
 
         for curexp in expids:
             exptable_red = exptable[exptable['NODE'].str.fullmatch(curexp, na=False)]
@@ -82,10 +89,12 @@ class CrossSectionRatioOfSacsMap(CrossSectionBaseMap):
 
             fisavg1 = FissionAverage(
                 ens1, xsobj1, ensfis, unnorm_fisobj, check_norm=False,
+                fis_interp=cur_interp,
                 atol=self.__atol, rtol=self.__rtol, maxord=self.__maxord
             )
             fisavg2 = FissionAverage(
                 ens2, xsobj2, ensfis, unnorm_fisobj, check_norm=False,
+                fis_interp=cur_interp,
                 atol=self.__atol, rtol=self.__rtol, maxord=self.__maxord
             )
             fisavg_ratio = fisavg1 / fisavg2

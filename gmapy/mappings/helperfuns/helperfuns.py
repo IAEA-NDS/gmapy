@@ -9,6 +9,32 @@ def mapclass_with_params(origclass, **kwargs):
     return WrapperClass
 
 
+def get_fission_spectrum_interp(fistable):
+    """Determine the interpretation of the fission spectrum rows.
+
+    Returns None if the spectrum values are bin-integrated probabilities
+    (legacy binned interpretation), which is also assumed if the table
+    lacks an INTERP column. Otherwise, the spectrum values are a
+    point-wise density and the per-point vector of interpolation laws
+    is returned.
+    """
+    if 'INTERP' not in fistable.columns:
+        return None
+    interp = fistable['INTERP'].to_list()
+    is_binned = [
+        el is None or (isinstance(el, float) and np.isnan(el))
+        or el == 'legacy-binned' for el in interp
+    ]
+    if all(is_binned):
+        return None
+    if any(is_binned):
+        raise ValueError(
+            'mixture of legacy-binned and point-wise interpolation ' +
+            'laws in fission spectrum'
+        )
+    return np.array(interp)
+
+
 def get_legacy_to_pointwise_fis_factors(energies):
     # The fission spectrum values in the legacy GMA database
     # are given as a histogram (piecewise rectangular function)

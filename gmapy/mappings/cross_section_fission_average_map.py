@@ -1,7 +1,8 @@
 import numpy as np
 from .cross_section_base_map import CrossSectionBaseMap
 from .helperfuns import (
-    get_legacy_to_pointwise_fis_factors
+    get_legacy_to_pointwise_fis_factors,
+    get_fission_spectrum_interp
 )
 from .mapping_elements import (
     InputSelectorCollection,
@@ -53,16 +54,26 @@ class CrossSectionFissionAverageMap(CrossSectionBaseMap):
         # retrieve fission spectrum
         fistable = priortable[priortable['NODE'].str.fullmatch('fis', na=False)]
         ensfis = fistable['ENERGY'].to_numpy()
+        fis_interp = get_fission_spectrum_interp(fistable)
+        if fis_interp is not None and legacy_integration:
+            raise ValueError(
+                'legacy integration not possible with point-wise ' +
+                'fission spectrum'
+            )
+        cur_interp = 'lin-lin' if fis_interp is None else fis_interp
 
         raw_fisobj = selcol.define_selector(fistable.index, self._src_len)
         inp.add_selector(raw_fisobj)
         if legacy_integration:
             fisobj = raw_fisobj
         if not legacy_integration:
-            scl = get_legacy_to_pointwise_fis_factors(ensfis)
-            unnorm_fisobj = raw_fisobj * Const(scl)
+            if fis_interp is None:
+                scl = get_legacy_to_pointwise_fis_factors(ensfis)
+                unnorm_fisobj = raw_fisobj * Const(scl)
+            else:
+                unnorm_fisobj = raw_fisobj
             fisint = Integral(
-                unnorm_fisobj, ensfis, 'lin-lin',
+                unnorm_fisobj, ensfis, cur_interp,
                 atol=self._atol, rtol=self._rtol, maxord=self._maxord
             )
             fisobj = unnorm_fisobj / Replicator(fisint, len(unnorm_fisobj))
@@ -82,6 +93,7 @@ class CrossSectionFissionAverageMap(CrossSectionBaseMap):
                                        check_norm=False,
                                        legacy=legacy_integration,
                                        fix_jacobian=fix_jacobian,
+                                       fis_interp=cur_interp,
                                        atol=self._atol, rtol=self._rtol,
                                        maxord=self._maxord)
 

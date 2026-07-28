@@ -254,8 +254,8 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
         @lru_cache(maxsize=64)
         def sensfun(x):
             x = np.array(x)
-            return get_basic_product_sensmats(xlist_ref, ylist_ref, x, interplist,
-                                              zero_outside)
+            return get_basic_product_sensmats(xlist_ref, ylist_ref, x,
+                                              interplist_ref, zero_outside)
         def generate_dpropfun(i):
             def cur_dpropfun(x):
                 # convert to tuple because ndarrays are
@@ -285,11 +285,14 @@ def get_basic_integral_of_product_sensmats(xlist, ylist, interplist,
         for x, y, interp in zip(xlist, ylist, interplist):
             cury = basic_propagate(x, y, xref, interp, zero_outside)
             tmpord = np.argsort(x)
-            idcs = np.searchsorted(x[tmpord], xref)
-            idcs = tmpord[idcs]
             if isinstance(interp, str):
                 interp = np.full(len(x), interp)
-            curinterp = np.array(interp, copy=False)[idcs]
+            sorted_interp = np.array(interp, copy=False)[tmpord]
+            # law of the segment of the original mesh that contains
+            # xref[j], associated with xref[j] by left-point convention
+            idcs = np.searchsorted(np.array(x)[tmpord], xref, side='right') - 1
+            idcs = np.clip(idcs, 0, len(x) - 1)
+            curinterp = sorted_interp[idcs]
             xlist_ref.append(xref)
             ylist_ref.append(cury)
             interplist_ref.append(curinterp)
