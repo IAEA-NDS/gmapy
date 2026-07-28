@@ -347,8 +347,10 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
     def split_pars(self, x):
         return tf.split(x, [self._num_params, self._num_covpars])
 
-    def _log_prob_hessian_gls_part(self, like_cov, pars):
-        jac = tf.sparse.to_dense(self._jacfun(pars))
+    def _log_prob_hessian_gls_part(self, like_cov, pars, jac=None):
+        if jac is None:
+            jac = self._jacfun(pars)
+        jac = tf.sparse.to_dense(jac)
         u = like_cov.solve(jac)
         return (-tf.matmul(tf.transpose(jac), u))
 
@@ -373,19 +375,26 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         hessian = tf.stack(col_list, axis=0)
         return hessian
 
-    def _log_prob_hessian_offdiag_part(self, pars, covpars):
+    def _log_prob_hessian_offdiag_part(self, pars, covpars,
+                                       jac=None, propvals=None):
         # compute -dz dH z
         pars = tf.convert_to_tensor(pars, dtype=tf.float64)
         like_cov_fun = self._like_cov_fun
         like_data = tf.reshape(self._like_data, (-1, 1))
-        propvals = tf.reshape(self._propfun(pars), (-1, 1))
+        if propvals is None:
+            propvals = self._propfun(pars)
+        propvals = tf.reshape(propvals, (-1, 1))
         d = like_data - propvals
+        # the Jacobian does not depend on covpars, so keep its
+        # computation outside the tape to avoid recording all
+        # its intermediate results
+        if jac is None:
+            jac = self._jacfun(pars)
         with tf.GradientTape(persistent=True) as tape:
             tape.watch(covpars)
-            j = self._jacfun(pars)
             like_cov = like_cov_fun(tf.stop_gradient(pars), covpars)
             constvec = like_cov.solve(d)
-            u = tf.sparse.sparse_dense_matmul(j, constvec, adjoint_a=True)
+            u = tf.sparse.sparse_dense_matmul(jac, constvec, adjoint_a=True)
             u = tf.reshape(u, (-1,))
         g = tape.jacobian(
             u, covpars, experimental_use_pfor=False,
@@ -393,12 +402,15 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         )
         return g
 
-    def _log_prob_hessian_chisqr_wrt_covpars(self, pars, covpars):
+    def _log_prob_hessian_chisqr_wrt_covpars(self, pars, covpars,
+                                             propvals=None):
         # compute -z ddH z
         pars = tf.convert_to_tensor(pars, dtype=tf.float64)
         like_cov_fun = self._like_cov_fun
         like_data = tf.reshape(self._like_data, (-1, 1))
-        propvals = tf.reshape(self._propfun(pars), (-1, 1))
+        if propvals is None:
+            propvals = self._propfun(pars)
+        propvals = tf.reshape(propvals, (-1, 1))
         d = like_data - propvals
         d = tf.reshape(d, (-1, 1))
         with tf.GradientTape(persistent=True) as tape1:
@@ -421,7 +433,6 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         if not isinstance(covpars, tf.Tensor):
             covpars = tf.constant(covpars, dtype=tf.float64)
         like_cov_fun = self._like_cov_fun
-        propvals = self._propfun(pars)
         with tf.GradientTape(persistent=True) as tape1:
             tape1.watch(covpars)
             with tf.GradientTape() as tape2:
@@ -448,7 +459,8 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         pars, covpars = self.split_pars(x)
         propvals = self._propfun(pars)
         like_cov = self._like_cov_fun(pars, covpars)
-        pars_part = self._log_prob_hessian_gls_part(like_cov, pars)
+        jac = self._jacfun(pars)
+        pars_part = self._log_prob_hessian_gls_part(like_cov, pars, jac=jac)
         if not self._approximate_hessian:
             model_part = self._log_prob_hessian_model_part(like_cov, pars)
             pars_part += model_part
@@ -456,9 +468,13 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         if self._num_covpars == 0:
             return pars_part
 
-        offdiag_part = self._log_prob_hessian_offdiag_part(pars, covpars)
+        offdiag_part = self._log_prob_hessian_offdiag_part(
+            pars, covpars, jac=jac, propvals=propvals
+        )
         covpar_part = self._log_prob_hessian_logdet_wrt_covpars(pars, covpars)
-        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(pars, covpars)
+        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(
+            pars, covpars, propvals=propvals
+        )
         res1 = tf.concat([pars_part, offdiag_part], axis=1)
         res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
         res = tf.concat([res1, res2], axis=0)

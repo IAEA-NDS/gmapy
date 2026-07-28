@@ -61,7 +61,12 @@ class CrossSectionShapeOfSumMap(CrossSectionBaseMap):
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
                 propfun = self._generate_atomic_propagate(src_en_list, tar_en)
                 ext_src_idcs_list = src_idcs_list + [norm_index]
-                self._add_lists(ext_src_idcs_list, tar_idcs, propfun)
+                self._add_lists(
+                    ext_src_idcs_list, tar_idcs, propfun,
+                    aux_list={'roles': ('num',) * len(src_idcs_list) + ('norm',),
+                              'src_ens': tuple(src_en_list) + (None,),
+                              'tar_en': tar_en}
+                )
 
     def _generate_atomic_propagate(self, src_en_list, tar_en):
         def _atomic_propagate(*cvars_and_norm_fact):

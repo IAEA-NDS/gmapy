@@ -62,7 +62,10 @@ class CrossSectionRatioShapeMap(CrossSectionBaseMap):
                     raise IndexError('Exactly one normalization factor must be present for a dataset')
                 propfun = self._generate_atomic_propagate(src_en1, src_en2, tar_en)
                 self._add_lists(
-                    (src_idcs1, src_idcs2, norm_index), tar_idcs, propfun
+                    (src_idcs1, src_idcs2, norm_index), tar_idcs, propfun,
+                    aux_list={'roles': ('num', 'den', 'norm'),
+                              'src_ens': (src_en1, src_en2, None),
+                              'tar_en': tar_en}
                 )
 
     def _generate_atomic_propagate(self, src_en1, src_en2, tar_en):

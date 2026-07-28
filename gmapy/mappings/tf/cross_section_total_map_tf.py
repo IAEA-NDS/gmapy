@@ -43,7 +43,11 @@ class CrossSectionTotalMap(CrossSectionBaseMap):
             tar_idcs = np.array(exptable_red.index)
             tar_en = np.array(exptable_red['ENERGY'])
             propfun = self._generate_atomic_propagate(src_en_list, tar_en)
-            self._add_lists(src_idcs_list, tar_idcs, propfun)
+            self._add_lists(
+                src_idcs_list, tar_idcs, propfun,
+                aux_list={'roles': ('num',) * len(src_idcs_list),
+                          'src_ens': tuple(src_en_list), 'tar_en': tar_en}
+            )
 
     def _generate_atomic_propagate(self, src_en_list, tar_en):
         def _atomic_propagate(*cvars):

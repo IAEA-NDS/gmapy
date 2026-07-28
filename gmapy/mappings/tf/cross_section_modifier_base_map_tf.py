@@ -6,7 +6,8 @@ from .mapping_elements_tf import (
 )
 from .tf_helperfuns import (
     scatter_sparse_matrix,
-    subset_sparse_matrix
+    subset_sparse_matrix,
+    coalesce_sparse_matrices
 )
 
 
@@ -46,7 +47,7 @@ class CrossSectionModifierBaseMap(CrossSectionBaseMap):
     def jacobian(self, inputs, orig_jac=None):
         if orig_jac is None:
             orig_jac = self._orig_jacfun(inputs)
-        res = None
+        parts = []
         outer_iter = self._outer_jacobian_iterator(inputs)
         for jacfun, inpvars, src_idcs_list, tar_idcs in outer_iter:
             orig_propvals = InputSelector(tar_idcs)(self._orig_propvals)
@@ -63,11 +64,12 @@ class CrossSectionModifierBaseMap(CrossSectionBaseMap):
             res1 = scatter_sparse_matrix(
                 res1, tar_idcs, None, shape=(self._tar_len, self._src_len)
             )
-            res = res1 if res is None else tf.sparse.add(res, res1)
+            parts.append(res1)
             # calculate direct contributions
             inner_iter = self._inner_jacobian_iterator(
                 src_idcs_list, tar_idcs, jac_list[1:]
             )
-            for curjac in inner_iter:
-                res = curjac if res is None else tf.sparse.add(res, curjac)
-        return res
+            parts.extend(inner_iter)
+        return coalesce_sparse_matrices(
+            parts, (self._tar_len, self._src_len)
+        )

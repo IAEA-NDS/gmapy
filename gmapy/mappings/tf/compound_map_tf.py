@@ -17,6 +17,7 @@ from .mapping_elements_tf import (
     InputSelector,
     Distributor
 )
+from .tf_helperfuns import coalesce_sparse_matrices
 
 
 class CompoundMap(tf.Module):
@@ -94,16 +95,10 @@ class CompoundMap(tf.Module):
         return res
 
     def _orig_jacobian(self, inputs):
-        first = True
-        res = None
+        parts = []
         for curmap in self._maplist:
-            curjac = curmap.jacobian(inputs)
-            if first is True:
-                first = False
-                res = curjac
-            else:
-                res = tf.sparse.add(res, curjac)
-        return res
+            parts.extend(curmap._jacobian_parts(inputs))
+        return coalesce_sparse_matrices(parts, parts[0].dense_shape)
 
     def jacobian(self, inputs):
         orig_propvals = self._orig_propagate(inputs)
