@@ -1,13 +1,15 @@
 from .dispatch_utils import generate_method_caller
 from .specialized_priorblock_apis import (
     legacy_prior_cross_section,
-    legacy_fission_spectrum
+    legacy_fission_spectrum,
+    pointwise_fission_spectrum
 )
 
 
 _api_mapping = {
     'legacy-prior-cross-section': legacy_prior_cross_section,
-    'legacy-fission-spectrum': legacy_fission_spectrum
+    'legacy-fission-spectrum': legacy_fission_spectrum,
+    'pointwise-fission-spectrum': pointwise_fission_spectrum
 }
 
 
@@ -48,3 +50,11 @@ def get_description(priorblock):
 
 def get_uncertainties(priorblock):
     return _call_method(priorblock, 'get_uncertainties')
+
+
+def get_correlation_matrix(priorblock):
+    return _call_method(priorblock, 'get_correlation_matrix')
+
+
+def get_interpolation(priorblock):
+    return _call_method(priorblock, 'get_interpolation')

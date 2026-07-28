@@ -26,5 +26,14 @@ def get_uncertainties(priorblock):
     return np.full(n, 0., dtype=np.float64)
 
 
+def get_correlation_matrix(priorblock):
+    return None
+
+
+def get_interpolation(priorblock):
+    n = len(priorblock['ENFIS'])
+    return ['legacy-binned'] * n
+
+
 def get_description(priorblock):
     return 'fission spectrum'
