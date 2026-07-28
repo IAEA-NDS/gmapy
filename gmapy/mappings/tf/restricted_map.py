@@ -5,7 +5,8 @@ from .tf_helperfuns import subset_sparse_matrix
 class RestrictedMap(tf.Module):
 
     def __init__(self, num_params, propfun, jacfun,
-                 fixed_params=None, fixed_params_idcs=None):
+                 fixed_params=None, fixed_params_idcs=None,
+                 whessfun=None):
         fixed_params = tf.reshape(
             tf.constant(fixed_params, dtype=tf.float64), (-1,)
         )
@@ -25,6 +26,7 @@ class RestrictedMap(tf.Module):
         self._free_params_idcs = free_params_idcs
         self._orig_propfun = propfun
         self._orig_jacfun = jacfun
+        self._orig_whessfun = whessfun
 
     def __call__(self, x):
         return self.propagate(x)
@@ -50,3 +52,11 @@ class RestrictedMap(tf.Module):
         tmp = subset_sparse_matrix(tmp, self._free_params_idcs)
         jac = tf.sparse.transpose(tmp)
         return jac
+
+    def weighted_hessian(self, x, weights):
+        x_full = self._assemble_paramvec(x)
+        orig_hess = self._orig_whessfun(x_full, weights)
+        tmp = subset_sparse_matrix(orig_hess, self._free_params_idcs)
+        tmp = tf.sparse.transpose(tmp)
+        tmp = subset_sparse_matrix(tmp, self._free_params_idcs)
+        return tf.sparse.reorder(tf.sparse.transpose(tmp))
