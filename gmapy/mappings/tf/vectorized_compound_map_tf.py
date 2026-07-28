@@ -9,6 +9,29 @@ from .vectorized_helpers import (
 )
 
 
+def _make_legacy_hessfun(propfun):
+    # graph-compiled weighted Hessian block of one legacy dataset;
+    # the pfor-vectorized double backward pass is traced only once
+    @tf.function
+    def hessfun(wt, *inpvars):
+        with tf.GradientTape() as t2:
+            t2.watch(inpvars)
+            with tf.GradientTape() as t1:
+                t1.watch(inpvars)
+                sval = tf.reduce_sum(wt * propfun(*inpvars))
+            grads = t1.gradient(
+                sval, inpvars,
+                unconnected_gradients=tf.UnconnectedGradients.ZERO
+            )
+            gcat = tf.concat(grads, axis=0)
+        hblocks = t2.jacobian(
+            gcat, inpvars, experimental_use_pfor=True,
+            unconnected_gradients=tf.UnconnectedGradients.ZERO
+        )
+        return tf.concat(hblocks, axis=1)
+    return hessfun
+
+
 def _coalesce_numpy_coo(rows, cols, vals, num_cols):
     lin_idcs = rows.astype(np.int64) * num_cols + cols.astype(np.int64)
     uniq, inv = np.unique(lin_idcs, return_inverse=True)
@@ -189,18 +212,65 @@ class VectorizedCompoundMap(CompoundMap):
             })
         self._whess_patterns = patterns
 
-    def weighted_row_hessian(self, inputs, weights):
+    def _build_legacy_whess_meta(self):
+        meta = []
+        for curmap in self._legacy_maps:
+            it = curmap._lists_iterator()
+            for src_idcs_list, tar_idcs, propfun, _, _ in it:
+                inp_idcs = [
+                    tf.constant(np.asarray(s), dtype=tf.int64)
+                    for s in src_idcs_list
+                ]
+                glob = np.concatenate(
+                    [np.asarray(s) for s in src_idcs_list]
+                )
+                mesh_r, mesh_c = np.meshgrid(glob, glob, indexing='ij')
+                out_idcs = np.stack(
+                    [mesh_r.reshape(-1), mesh_c.reshape(-1)], axis=1
+                )
+                meta.append({
+                    'hessfun': _make_legacy_hessfun(propfun),
+                    'inp_idcs': inp_idcs,
+                    'tar_idcs': tf.constant(
+                        np.asarray(tar_idcs), dtype=tf.int64
+                    ),
+                    'out_indices': tf.constant(out_idcs, dtype=tf.int64),
+                })
+        self._legacy_whess_meta = meta
+
+    def _legacy_weighted_hessian_parts(self, x, w):
+        # second-order contributions of the legacy (SACS) datasets:
+        # each dataset only involves a small parameter subset, so its
+        # weighted Hessian block is computed with nested tapes and
+        # scattered into the full parameter space
+        if not hasattr(self, '_legacy_whess_meta'):
+            self._build_legacy_whess_meta()
+        n = self._src_len
+        parts = []
+        for meta in self._legacy_whess_meta:
+            inpvars = [tf.gather(x, idcs) for idcs in meta['inp_idcs']]
+            wt = tf.gather(w, meta['tar_idcs'])
+            hcat = meta['hessfun'](wt, *inpvars)
+            parts.append(tf.sparse.SparseTensor(
+                meta['out_indices'], tf.reshape(hcat, (-1,)), (n, n)
+            ))
+        return parts
+
+    def weighted_row_hessian(self, inputs, weights, include_legacy=True):
         """Compute sum_i weights[i] * hessian(f_i) as sparse matrix.
 
-        f_i are the components of `propagate` covered by the
-        algebraic form; weights on rows of the legacy (SACS) maps
-        are ignored. The result is a sparse (src_len, src_len)
-        tensor with fixed sparsity pattern, computed without
-        GradientTape.
+        f_i are the components of `propagate`. Components covered by
+        the algebraic form are handled by a closed-form contraction
+        with fixed sparsity pattern; the datasets of the legacy
+        (SACS) maps contribute dense blocks over their small
+        parameter subsets, computed with nested tapes (skipped with
+        `include_legacy=False`). The result is a sparse
+        (src_len, src_len) tensor.
         """
         if not hasattr(self, '_whess_patterns'):
             self._build_whess_patterns()
-        num, den, g = self._algebraic_parts(inputs)
+        x = tf.convert_to_tensor(inputs, dtype=tf.float64)
+        num, den, g = self._algebraic_parts(x)
         w = tf.convert_to_tensor(weights, dtype=tf.float64)
         coeffs = {
             'ab': -w * g / (den * den),
@@ -219,6 +289,8 @@ class VectorizedCompoundMap(CompoundMap):
                 parts.append(
                     tf.sparse.SparseTensor(pat['mirror_indices'], vals, (n, n))
                 )
+        if include_legacy:
+            parts.extend(self._legacy_weighted_hessian_parts(x, w))
         if not parts:
             return tf.sparse.SparseTensor(
                 tf.zeros((0, 2), dtype=tf.int64),

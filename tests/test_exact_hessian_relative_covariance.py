@@ -30,17 +30,20 @@ class TestExactHessianRelativeCovariance(unittest.TestCase):
         vecmap = VectorizedCompoundMap((priortable, exptable), reduce=True)
         priorvals = priortable['PRIOR'].to_numpy() + 1e-5
         num_params = len(priorvals)
-        # params feeding the legacy (SACS) datasets stay fixed: their
-        # second-order contributions are not covered by the
-        # weighted-hessian contraction
+        # deliberately include parameters feeding the legacy (SACS)
+        # datasets so that their nested-tape second-order
+        # contributions are exercised
         legacy_src = np.unique(np.concatenate([
             np.concatenate([np.asarray(s) for s in src_idcs_list])
             for curmap in vecmap._legacy_maps
             for src_idcs_list in curmap._src_idcs_list
         ]))
-        candidates = np.setdiff1d(np.arange(num_params), legacy_src)
+        others = np.setdiff1d(np.arange(num_params), legacy_src)
         rng = np.random.default_rng(43)
-        free_idcs = np.sort(rng.choice(candidates, size=50, replace=False))
+        free_idcs = np.sort(np.concatenate([
+            rng.choice(legacy_src, size=10, replace=False),
+            rng.choice(others, size=40, replace=False)
+        ]))
         fixed_idcs = np.setdiff1d(np.arange(num_params), free_idcs)
         restrimap = RestrictedMap(
             num_params, vecmap.propagate, vecmap.jacobian,
