@@ -49,7 +49,8 @@ class CrossSectionRatioMap(CrossSectionBaseMap):
             propfun = self._generate_atomic_propagate(src_en1, src_en2, tar_en)
             self._add_lists(
                 (src_idcs1, src_idcs2), tar_idcs, propfun,
-                (src_en1, src_en2, tar_en)
+                aux_list={'roles': ('num', 'den'),
+                          'src_ens': (src_en1, src_en2), 'tar_en': tar_en}
             )
 
     def _generate_atomic_propagate(self, src_en1, src_en2, tar_en):

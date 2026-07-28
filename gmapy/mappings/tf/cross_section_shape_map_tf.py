@@ -42,7 +42,11 @@ class CrossSectionShapeMap(CrossSectionBaseMap):
                 ens2 = np.array(exptable_ds['ENERGY'])
                 idcs2red = np.array(exptable_ds.index)
                 propfun = self._generate_atomic_propagate(ens1, ens2)
-                self._add_lists((idcs1red, norm_index), idcs2red, propfun)
+                self._add_lists(
+                    (idcs1red, norm_index), idcs2red, propfun,
+                    aux_list={'roles': ('num', 'norm'),
+                              'src_ens': (ens1, None), 'tar_en': ens2}
+                )
 
     def _generate_atomic_propagate(self, ens1, ens2):
         def _atomic_propagate(inpvar, norm_fact):

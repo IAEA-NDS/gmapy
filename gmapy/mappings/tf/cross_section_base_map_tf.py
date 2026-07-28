@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 import pandas as pd
 from ..priortools import prepare_prior_and_exptable
@@ -8,6 +9,10 @@ from .mapping_elements_tf import (
 from .tf_helperfuns import (
     scatter_sparse_matrix,
     coalesce_sparse_matrices
+)
+from .vectorized_helpers import (
+    piecewise_linear_interp_matrix,
+    concat_coo_triplets
 )
 
 
@@ -139,6 +144,63 @@ class CrossSectionBaseMap(tf.Module):
         return coalesce_sparse_matrices(
             parts, (self._tar_len, self._src_len)
         )
+
+    def vectorized_blocks(self):
+        """Yield per-dataset COO blocks for the vectorized compound map.
+
+        Each block describes the dataset's contribution to the
+        propagated vector in global indices (rows in the target
+        space, columns in the source space):
+
+            y[tar_idcs] = norm * (num @ x)[tar_idcs] / den
+
+        with `num`/`den` given as (rows, cols, vals) triplets,
+        `den = (den_triplets @ x)[tar_idcs]` or 1 if the dataset has
+        no denominator, and `norm = x[norm_col]` or 1 if it has no
+        normalization parameter. Requires the map class to attach a
+        vectorization spec (roles/src_ens/tar_en) via `_add_lists`.
+        """
+        self._base_prepare_propagate()
+        it = self._lists_iterator()
+        for src_idcs_list, tar_idcs, _, _, aux in it:
+            if not isinstance(aux, dict) or 'roles' not in aux:
+                raise NotImplementedError(
+                    f'{type(self).__name__} does not provide a '
+                    'vectorization spec for its datasets'
+                )
+            tar_idcs = np.asarray(tar_idcs)
+            num_parts = []
+            den_parts = []
+            norm_col = None
+            for src_idcs, role, src_en in zip(
+                src_idcs_list, aux['roles'], aux['src_ens']
+            ):
+                src_idcs = np.asarray(src_idcs)
+                if role == 'norm':
+                    if len(src_idcs) != 1:
+                        raise IndexError(
+                            'normalization operand must refer to '
+                            'exactly one parameter'
+                        )
+                    norm_col = int(src_idcs[0])
+                    continue
+                rows, cols, vals = piecewise_linear_interp_matrix(
+                    src_en, aux['tar_en']
+                )
+                triplet = (tar_idcs[rows], src_idcs[cols], vals)
+                if role == 'num':
+                    num_parts.append(triplet)
+                elif role == 'den':
+                    den_parts.append(triplet)
+                else:
+                    raise ValueError(f'unknown operand role `{role}`')
+            yield {
+                'tar_idcs': tar_idcs,
+                'num': concat_coo_triplets(num_parts),
+                'den': (concat_coo_triplets(den_parts)
+                        if den_parts else None),
+                'norm_col': norm_col,
+            }
 
     def _generate_atomic_propagate(self, *args, **kwargs):
         raise NotImplementedError(

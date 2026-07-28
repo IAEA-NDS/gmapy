@@ -57,7 +57,10 @@ class TestPiecewiseLinearInterpMatrix(unittest.TestCase):
         tar = rng.uniform(0., 20., size=100)
         self._compare(src, tar)
 
-    def test_single_point_mesh_raises(self):
+    def test_single_point_mesh_with_matching_targets(self):
+        self._compare(np.array([2.53e-8]), np.array([2.53e-8, 2.53e-8]))
+
+    def test_single_point_mesh_with_other_targets_raises(self):
         with self.assertRaises(NotImplementedError):
             piecewise_linear_interp_matrix([1.], [1., 2.])
 
