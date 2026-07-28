@@ -48,6 +48,26 @@ def subset_sparse_matrix(spmat, row_idcs):
     return new_spmat
 
 
+def coalesce_sparse_matrices(spmat_list, dense_shape):
+    # equivalent to chaining tf.sparse.add over spmat_list:
+    # entries at identical positions are summed
+    indices = tf.concat([m.indices for m in spmat_list], axis=0)
+    values = tf.concat([m.values for m in spmat_list], axis=0)
+    ncols = tf.cast(dense_shape[1], tf.int64)
+    lin_idcs = indices[:, 0] * ncols + indices[:, 1]
+    uniq_lin_idcs, seg_idcs = tf.unique(lin_idcs)
+    uniq_values = tf.math.unsorted_segment_sum(
+        values, seg_idcs, tf.size(uniq_lin_idcs)
+    )
+    uniq_idcs = tf.stack(
+        (uniq_lin_idcs // ncols, uniq_lin_idcs % ncols), axis=1
+    )
+    spmat = tf.sparse.SparseTensor(
+        indices=uniq_idcs, values=uniq_values, dense_shape=dense_shape
+    )
+    return tf.sparse.reorder(spmat)
+
+
 def scatter_sparse_matrix(spmat, row_idcs, col_idcs, shape):
     if col_idcs is None:
         col_idcs_tf = tf.range(spmat.dense_shape[1], dtype=tf.int64)

@@ -5,7 +5,10 @@ from .mapping_elements_tf import (
     InputSelectorCollection,
     Distributor
 )
-from .tf_helperfuns import scatter_sparse_matrix
+from .tf_helperfuns import (
+    scatter_sparse_matrix,
+    coalesce_sparse_matrices
+)
 
 
 class CrossSectionBaseMap(tf.Module):
@@ -120,17 +123,22 @@ class CrossSectionBaseMap(tf.Module):
             )
             yield curjac
 
-    def jacobian(self, inputs):
-        res = None
+    def _jacobian_parts(self, inputs):
+        parts = []
         outer_iter = self._outer_jacobian_iterator(inputs)
         for jacfun, inpvars, src_idcs_list, tar_idcs in outer_iter:
             jac_list = jacfun(*inpvars)
             inner_iter = self._inner_jacobian_iterator(
                 src_idcs_list, tar_idcs, jac_list
             )
-            for curjac in inner_iter:
-                res = curjac if res is None else tf.sparse.add(res, curjac)
-        return res
+            parts.extend(inner_iter)
+        return parts
+
+    def jacobian(self, inputs):
+        parts = self._jacobian_parts(inputs)
+        return coalesce_sparse_matrices(
+            parts, (self._tar_len, self._src_len)
+        )
 
     def _generate_atomic_propagate(self, *args, **kwargs):
         raise NotImplementedError(
