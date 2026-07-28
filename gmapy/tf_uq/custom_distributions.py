@@ -160,6 +160,11 @@ class MultivariateNormal(BaseDistribution):
 
 class MultivariateNormalLikelihood(BaseDistribution):
 
+    # the chi-square pseudo densities drop the log-determinant term
+    # of the log-density; its contributions to the exact Hessian are
+    # switched off there via this class attribute
+    _include_logdet_hessian_terms = True
+
     def __init__(self, num_params, propfun, jacfun, like_data, like_scale,
                  approximate_hessian=False, relative=False, whessfun=None):
         self._propfun = propfun
@@ -170,10 +175,11 @@ class MultivariateNormalLikelihood(BaseDistribution):
         self._approximate_hessian = approximate_hessian
         self._like_scale = like_scale
         self._relative = relative
-        if relative and not approximate_hessian:
+        if relative and not approximate_hessian and whessfun is None:
             raise NotImplementedError(
-                'Exact Hessian computation is not implemented for ' +
-                'a relative covariance matrix. Please specify ' +
+                'Exact Hessian computation for a relative covariance ' +
+                'matrix requires a weighted-hessian function of the ' +
+                'mapping (`whessfun`). Provide one or specify ' +
                 '`approximate_hessian=True` during class instantiation.'
             )
 
@@ -238,7 +244,41 @@ class MultivariateNormalLikelihood(BaseDistribution):
         neg_hessian = tf.stack(col_list, axis=0)
         return (-neg_hessian)
 
+    # exact Hessian for the relative covariance C = D_p C0 D_p with
+    # C0 = like_scale like_scale^T and scaling vector equal to the
+    # model prediction p = f(x): with z = (y-p)/p and v = C0^-1 z
+    #     d2L/dx2 = -K^T C0^-1 K - J^T D_c J + sum_i w_i d2f_i/dx2
+    # with K = D_{y/p^2} J, c = (2vy/p - t)/p^2, w = (vy/p - t)/p,
+    # where t = 1 for the normal likelihood (log-determinant terms)
+    # and t = 0 for the chi-square pseudo density
+    def _log_prob_hessian_exact_relative(self, x):
+        if not isinstance(x, tf.Tensor):
+            x = tf.constant(x, dtype=tf.float64)
+        like_scale = self._like_scale
+        y = tf.reshape(
+            tf.convert_to_tensor(self._like_data, tf.float64), (-1,)
+        )
+        p = tf.reshape(self._propfun(x), (-1,))
+        z = (y - p) / p
+        v = tf.reshape(
+            like_scale.solve(
+                like_scale.solve(tf.reshape(z, (-1, 1))), adjoint=True
+            ), (-1,)
+        )
+        jac = tf.sparse.to_dense(self._jacfun(x))
+        kmat = jac * tf.reshape(y / (p * p), (-1, 1))
+        u = like_scale.solve(kmat)
+        res = -tf.matmul(u, u, adjoint_a=True)
+        t = 1. if self._include_logdet_hessian_terms else 0.
+        c = (2. * v * y / p - t) / (p * p)
+        res -= tf.matmul(jac, tf.reshape(c, (-1, 1)) * jac, adjoint_a=True)
+        w = (v * y / p - t) / p
+        res += tf.sparse.to_dense(self._whessfun(x, w))
+        return res
+
     def log_prob_hessian(self, x):
+        if self._relative and not self._approximate_hessian:
+            return self._log_prob_hessian_exact_relative(x)
         gls_part = self._log_prob_hessian_gls_part(x)
         if self._approximate_hessian:
             return gls_part
@@ -488,9 +528,10 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         kmat = jac * tf.reshape(y / (p * p), (-1, 1))
         u = cov0.solve(kmat)
         res = -tf.matmul(kmat, u, adjoint_a=True)
-        c = (2. * v * y / p - 1.) / (p * p)
+        t = 1. if self._include_logdet_hessian_terms else 0.
+        c = (2. * v * y / p - t) / (p * p)
         res -= tf.matmul(jac, tf.reshape(c, (-1, 1)) * jac, adjoint_a=True)
-        w = (v * y / p - 1.) / p
+        w = (v * y / p - t) / p
         res += tf.sparse.to_dense(self._whessfun(pars, w))
         return res, kmat, z
 
@@ -523,8 +564,11 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         offdiag_part = self._log_prob_hessian_offdiag_part_exact(
             covpars, kmat, z
         )
-        covpar_part = self._log_prob_hessian_logdet_wrt_covpars(pars, covpars)
-        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(pars, covpars)
+        covpar_part = self._log_prob_hessian_chisqr_wrt_covpars(pars, covpars)
+        if self._include_logdet_hessian_terms:
+            covpar_part += self._log_prob_hessian_logdet_wrt_covpars(
+                pars, covpars
+            )
         res1 = tf.concat([pars_part, offdiag_part], axis=1)
         res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
         return tf.concat([res1, res2], axis=0)
@@ -583,6 +627,8 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
 
 class ChiSquarePseudoDist(MultivariateNormalLikelihood):
 
+    _include_logdet_hessian_terms = False
+
     def log_prob(self, x):
         propvals = self._propfun(x)
         like_scale = self._like_scale
@@ -598,6 +644,8 @@ class ChiSquarePseudoDist(MultivariateNormalLikelihood):
 
 class ChiSquarePseudoDistWithCovParams(MultivariateNormalLikelihoodWithCovParams):
 
+    _include_logdet_hessian_terms = False
+
     def log_prob(self, x):
         x = tf.reshape(x, (-1,))
         pars, covpars = self.split_pars(x)
@@ -612,9 +660,15 @@ class ChiSquarePseudoDistWithCovParams(MultivariateNormalLikelihoodWithCovParams
 
     def log_prob_hessian(self, x):
         pars, covpars = self.split_pars(x)
+        if self._relative and not self._approximate_hessian:
+            # inherited exact-relative machinery; the class attribute
+            # switches off the log-determinant contributions absent
+            # from this pseudo density
+            return self._log_prob_hessian_exact_relative(pars, covpars)
         propvals = self._propfun(pars)
         like_cov = self._like_cov_fun(pars, covpars)
-        pars_part = self._log_prob_hessian_gls_part(like_cov, pars)
+        jac = self._jacfun(pars)
+        pars_part = self._log_prob_hessian_gls_part(like_cov, pars, jac=jac)
         if not self._approximate_hessian:
             model_part = self._log_prob_hessian_model_part(like_cov, pars)
             pars_part += model_part
@@ -622,8 +676,12 @@ class ChiSquarePseudoDistWithCovParams(MultivariateNormalLikelihoodWithCovParams
         if self._num_covpars == 0:
             return pars_part
 
-        offdiag_part = self._log_prob_hessian_offdiag_part(pars, covpars)
-        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(pars, covpars)
+        offdiag_part = self._log_prob_hessian_offdiag_part(
+            pars, covpars, jac=jac, propvals=propvals
+        )
+        covpar_part = self._log_prob_hessian_chisqr_wrt_covpars(
+            pars, covpars, propvals=propvals
+        )
         res1 = tf.concat([pars_part, offdiag_part], axis=1)
         res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
         res = tf.concat([res1, res2], axis=0)
