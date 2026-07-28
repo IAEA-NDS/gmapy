@@ -8,6 +8,34 @@ def concat_coo_triplets(triplet_list):
     return rows, cols, vals
 
 
+def row_pair_pattern(x_rows, x_cols, x_vals, y_rows, y_cols, y_vals):
+    """Cartesian pairing of same-row entries of two COO matrices.
+
+    For all index pairs (j, j') with x_rows[j] == y_rows[j'] return
+    (rows, out_k, out_l, base) with rows the shared row index,
+    out_k = x_cols[j], out_l = y_cols[j'] and base = x_vals[j] *
+    y_vals[j'], i.e. the constant part of sum_i c_i * X_i^T Y_i over
+    outer products of matrix rows; the y triplets must be sorted by
+    row. Used to precompute the sparsity pattern of expressions like
+    X^T diag(c) Y.
+    """
+    num_rows = max(x_rows.max(), y_rows.max()) + 1 if len(x_rows) else 0
+    y_counts = np.bincount(y_rows, minlength=num_rows)
+    y_offsets = np.concatenate([[0], np.cumsum(y_counts)])
+    rep = y_counts[x_rows]
+    idx_x = np.repeat(np.arange(len(x_rows)), rep)
+    ends = np.cumsum(rep)
+    starts = ends - rep
+    total = ends[-1] if len(ends) else 0
+    within = np.arange(total) - np.repeat(starts, rep)
+    idx_y = y_offsets[x_rows[idx_x]] + within
+    rows = x_rows[idx_x]
+    out_k = x_cols[idx_x]
+    out_l = y_cols[idx_y]
+    base = x_vals[idx_x] * y_vals[idx_y]
+    return rows, out_k, out_l, base
+
+
 def piecewise_linear_interp_matrix(src_en, tar_en):
     """COO triplets of the linear map equivalent to PiecewiseLinearInterpolation.
 

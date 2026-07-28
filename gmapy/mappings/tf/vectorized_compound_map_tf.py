@@ -3,7 +3,10 @@ import tensorflow as tf
 from .compound_map_tf import CompoundMap
 from .mapping_elements_tf import InputSelector, Distributor
 from .tf_helperfuns import coalesce_sparse_matrices
-from .vectorized_helpers import concat_coo_triplets
+from .vectorized_helpers import (
+    concat_coo_triplets,
+    row_pair_pattern
+)
 
 
 def _coalesce_numpy_coo(rows, cols, vals, num_cols):
@@ -18,6 +21,9 @@ class _SparseFactor:
 
     def __init__(self, rows, cols, vals, shape):
         rows, cols, vals = _coalesce_numpy_coo(rows, cols, vals, shape[1])
+        self.np_rows = rows
+        self.np_cols = cols
+        self.np_vals = vals
         self.spmat = tf.sparse.SparseTensor(
             indices=np.stack([rows, cols], axis=1),
             values=tf.constant(vals, dtype=tf.float64),
@@ -145,6 +151,80 @@ class VectorizedCompoundMap(CompoundMap):
             inpdist = Distributor(self._indep_idcs, self._tar_len)(inp)
             res = res + inpdist
         return res
+
+    def _build_whess_patterns(self):
+        # second derivatives of f = g*a/b in terms of the linear
+        # functionals a = (Ax)_i, b = (Bx+b0)_i, g = (Nx+g0)_i:
+        # d2f/dadb = -g/b^2, d2f/dadg = 1/b, d2f/dbdg = -a/b^2,
+        # d2f/db2 = 2ga/b^3, d2f/da2 = d2f/dg2 = 0; the sum
+        # sum_i w_i d2f_i factorizes into X^T diag(c) Y products
+        # whose sparsity patterns are fixed at construction
+        pairs = []
+        amat, bmat, nmat = self._amat, self._bmat, self._nmat
+        if bmat is not None:
+            pairs.append(('ab', amat, bmat, True))
+            pairs.append(('bb', bmat, bmat, False))
+        if nmat is not None:
+            pairs.append(('ag', amat, nmat, True))
+        if bmat is not None and nmat is not None:
+            pairs.append(('bg', bmat, nmat, True))
+        patterns = []
+        for coeff_key, xmat, ymat, mirror in pairs:
+            rows, out_k, out_l, base = row_pair_pattern(
+                xmat.np_rows, xmat.np_cols, xmat.np_vals,
+                ymat.np_rows, ymat.np_cols, ymat.np_vals
+            )
+            if len(rows) == 0:
+                continue
+            idcs = np.stack([out_k, out_l], axis=1)
+            patterns.append({
+                'coeff': coeff_key,
+                'rows': tf.constant(rows, dtype=tf.int64),
+                'indices': tf.constant(idcs, dtype=tf.int64),
+                'mirror_indices': (
+                    tf.constant(idcs[:, ::-1].copy(), dtype=tf.int64)
+                    if mirror else None
+                ),
+                'base': tf.constant(base, dtype=tf.float64),
+            })
+        self._whess_patterns = patterns
+
+    def weighted_row_hessian(self, inputs, weights):
+        """Compute sum_i weights[i] * hessian(f_i) as sparse matrix.
+
+        f_i are the components of `propagate` covered by the
+        algebraic form; weights on rows of the legacy (SACS) maps
+        are ignored. The result is a sparse (src_len, src_len)
+        tensor with fixed sparsity pattern, computed without
+        GradientTape.
+        """
+        if not hasattr(self, '_whess_patterns'):
+            self._build_whess_patterns()
+        num, den, g = self._algebraic_parts(inputs)
+        w = tf.convert_to_tensor(weights, dtype=tf.float64)
+        coeffs = {
+            'ab': -w * g / (den * den),
+            'ag': w / den,
+            'bg': -w * num / (den * den),
+            'bb': 2. * w * g * num / (den * den * den),
+        }
+        n = self._src_len
+        parts = []
+        for pat in self._whess_patterns:
+            vals = pat['base'] * tf.gather(coeffs[pat['coeff']], pat['rows'])
+            parts.append(
+                tf.sparse.SparseTensor(pat['indices'], vals, (n, n))
+            )
+            if pat['mirror_indices'] is not None:
+                parts.append(
+                    tf.sparse.SparseTensor(pat['mirror_indices'], vals, (n, n))
+                )
+        if not parts:
+            return tf.sparse.SparseTensor(
+                tf.zeros((0, 2), dtype=tf.int64),
+                tf.zeros((0,), dtype=tf.float64), (n, n)
+            )
+        return coalesce_sparse_matrices(parts, (n, n))
 
     def _orig_jacobian(self, inputs):
         num, den, g = self._algebraic_parts(inputs)
