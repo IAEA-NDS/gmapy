@@ -288,10 +288,11 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         self._approximate_hessian = approximate_hessian
         self._orig_like_cov_fun = like_cov_fun
         self._relative = relative
-        if relative and not approximate_hessian:
+        if relative and not approximate_hessian and whessfun is None:
             raise NotImplementedError(
-                'Exact Hessian computation is not implemented for ' +
-                'a relative covariance matrix. Please specify ' +
+                'Exact Hessian computation for a relative covariance ' +
+                'matrix requires a weighted-hessian function of the ' +
+                'mapping (`whessfun`). Provide one or specify ' +
                 '`approximate_hessian=True` during class instantiation.'
             )
         # The following instance variables only impact the construction
@@ -466,6 +467,68 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         )
         return h
 
+    # Exact Hessian for the relative covariance C = D_p C0(u) D_p
+    # (scaling vector equal to the model prediction p = f(x)):
+    # with z = (y-p)/p and v = C0^-1 z the log-density is
+    #     L = -1/2 logdet C0 - sum(log p) - 1/2 z^T C0^-1 z + const
+    # and the parameter block becomes
+    #     d2L/dx2 = -K^T C0^-1 K - J^T D_c J + sum_i w_i d2f_i/dx2
+    # with K = D_{y/p^2} J, c = (2vy/p - 1)/p^2, w = (vy/p - 1)/p;
+    # the cross block is d2L/dxdu = K^T dv/du.
+    def _log_prob_hessian_pars_part_exact(self, pars, covpars):
+        pars = tf.reshape(tf.convert_to_tensor(pars, tf.float64), (-1,))
+        cov0 = self._orig_like_cov_fun(covpars)
+        y = tf.reshape(
+            tf.convert_to_tensor(self._like_data, tf.float64), (-1,)
+        )
+        p = tf.reshape(self._propfun(pars), (-1,))
+        z = (y - p) / p
+        v = tf.reshape(cov0.solve(tf.reshape(z, (-1, 1))), (-1,))
+        jac = tf.sparse.to_dense(self._jacfun(pars))
+        kmat = jac * tf.reshape(y / (p * p), (-1, 1))
+        u = cov0.solve(kmat)
+        res = -tf.matmul(kmat, u, adjoint_a=True)
+        c = (2. * v * y / p - 1.) / (p * p)
+        res -= tf.matmul(jac, tf.reshape(c, (-1, 1)) * jac, adjoint_a=True)
+        w = (v * y / p - 1.) / p
+        res += tf.sparse.to_dense(self._whessfun(pars, w))
+        return res, kmat, z
+
+    def _log_prob_hessian_offdiag_part_exact(self, covpars, kmat, z):
+        z = tf.reshape(z, (-1, 1))
+        with tf.GradientTape(persistent=True) as tape:
+            tape.watch(covpars)
+            cov0 = self._orig_like_cov_fun(covpars)
+            v = cov0.solve(z)
+            uvec = tf.reshape(tf.matmul(kmat, v, adjoint_a=True), (-1,))
+        g = tape.jacobian(
+            uvec, covpars, experimental_use_pfor=False,
+            unconnected_gradients=tf.UnconnectedGradients.ZERO
+        )
+        return g
+
+    def _log_prob_hessian_exact_relative(self, pars, covpars):
+        if (self._no_ppp_idcs is not None or
+                self._cov_freeze_param_values is not None):
+            raise NotImplementedError(
+                'exact Hessian computation is not implemented for a '
+                'relative covariance matrix with no_ppp_idcs or '
+                'frozen covariance scaling parameters'
+            )
+        pars_part, kmat, z = self._log_prob_hessian_pars_part_exact(
+            pars, covpars
+        )
+        if self._num_covpars == 0:
+            return pars_part
+        offdiag_part = self._log_prob_hessian_offdiag_part_exact(
+            covpars, kmat, z
+        )
+        covpar_part = self._log_prob_hessian_logdet_wrt_covpars(pars, covpars)
+        covpar_part += self._log_prob_hessian_chisqr_wrt_covpars(pars, covpars)
+        res1 = tf.concat([pars_part, offdiag_part], axis=1)
+        res2 = tf.concat([tf.transpose(offdiag_part), covpar_part], axis=1)
+        return tf.concat([res1, res2], axis=0)
+
     # first derivative
     #     2*dz H z + z dH z
     # second derivative
@@ -475,6 +538,8 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
     #     dd logdet H (covparam block)
     def log_prob_hessian(self, x):
         pars, covpars = self.split_pars(x)
+        if self._relative and not self._approximate_hessian:
+            return self._log_prob_hessian_exact_relative(pars, covpars)
         propvals = self._propfun(pars)
         like_cov = self._like_cov_fun(pars, covpars)
         jac = self._jacfun(pars)
