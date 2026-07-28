@@ -1,12 +1,15 @@
 import numpy as np
 import tensorflow as tf
 from ..helperfuns import (
-    get_legacy_to_pointwise_fis_factors
+    get_legacy_to_pointwise_fis_factors,
+    get_fission_spectrum_interp
 )
 from .cross_section_base_map_tf import CrossSectionBaseMap
 from .mapping_elements_tf import (
     IntegralLinLin,
-    IntegralOfProductLinLin
+    IntegralOfProductLinLin,
+    IntegralInterp,
+    IntegralOfProductInterp
 )
 
 
@@ -40,10 +43,14 @@ class CrossSectionFissionAverageMap(CrossSectionBaseMap):
         fis_idcs = np.array(fistable.index, copy=True)
         ensfis = np.array(fistable['ENERGY'].to_numpy())
 
-        # NOTE: Propagation of uncertainties in the energies of the
-        #       fission spectrum would required porting get_legacy_to_pointwise_fis_factors
-        #       to a function using tensorflow operations
-        norm_fact_fis = get_legacy_to_pointwise_fis_factors(ensfis)
+        fis_interp = get_fission_spectrum_interp(fistable)
+        if fis_interp is None:
+            # NOTE: Propagation of uncertainties in the energies of the
+            #       fission spectrum would required porting get_legacy_to_pointwise_fis_factors
+            #       to a function using tensorflow operations
+            norm_fact_fis = get_legacy_to_pointwise_fis_factors(ensfis)
+        else:
+            norm_fact_fis = None
 
         reacs = exptable['REAC'].unique()
         for curreac in reacs:
@@ -58,19 +65,25 @@ class CrossSectionFissionAverageMap(CrossSectionBaseMap):
 
             num_reac_points = len(exptable_red)
             propfun = self._generate_atomic_propagate(
-                ensfis, norm_fact_fis, ens1, num_reac_points
+                ensfis, norm_fact_fis, fis_interp, ens1, num_reac_points
             )
             self._add_lists((idcs1red, fis_idcs), idcs2red, propfun)
 
     def _generate_atomic_propagate(
-        self, ensfis, norm_fact_fis, ens1, num_reac_points
+        self, ensfis, norm_fact_fis, fis_interp, ens1, num_reac_points
     ):
         def _atomic_propagate(xsobj, raw_fisobj):
-            scl = tf.constant(norm_fact_fis, dtype=tf.float64)
-            unnorm_fisobj = raw_fisobj * scl
-            fisint = IntegralLinLin(ensfis)(unnorm_fisobj)
-            fisobj = unnorm_fisobj / fisint
-            curfisavg = IntegralOfProductLinLin(ens1, ensfis)(xsobj, fisobj)
+            if fis_interp is None:
+                scl = tf.constant(norm_fact_fis, dtype=tf.float64)
+                unnorm_fisobj = raw_fisobj * scl
+                fisint = IntegralLinLin(ensfis)(unnorm_fisobj)
+                fisobj = unnorm_fisobj / fisint
+                curfisavg = IntegralOfProductLinLin(ens1, ensfis)(xsobj, fisobj)
+            else:
+                fisint = IntegralInterp(ensfis, fis_interp)(raw_fisobj)
+                fisobj = raw_fisobj / fisint
+                curfisavg = IntegralOfProductInterp(
+                    ens1, ensfis, fis_interp)(xsobj, fisobj)
             rep_curfisavg = tf.ones((num_reac_points,), dtype=tf.float64) * curfisavg
             return rep_curfisavg
         return _atomic_propagate
