@@ -102,7 +102,11 @@ def create_prior_covmat(prior_list):
     cov_list = []
     for curprior in prior_list:
         uncs = priorapi.get_uncertainties(curprior)
-        curcov = diags(np.square(uncs))
+        cormat = priorapi.get_correlation_matrix(curprior)
+        if cormat is None:
+            curcov = diags(np.square(uncs))
+        else:
+            curcov = csr_matrix(cormat * np.outer(uncs, uncs))
         cov_list.append(curcov)
     covmat = block_diag(cov_list, format='csr')
     return covmat

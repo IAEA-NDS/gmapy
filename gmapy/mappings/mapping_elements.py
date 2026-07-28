@@ -686,7 +686,7 @@ class FissionAverage(MyAlgebra):
 
     def __init__(self, en, xsobj, fisen, fisobj,
                  check_norm=True, legacy=False,
-                 fix_jacobian=True, **kwargs):
+                 fix_jacobian=True, fis_interp='lin-lin', **kwargs):
         super().__init__()
         en = np.array(en)
         fisen = np.array(fisen)
@@ -694,17 +694,22 @@ class FissionAverage(MyAlgebra):
         self.__atol = kwargs.get('atol', 1e-6)
         self.__maxord = kwargs.get('maxord', 16)
         if legacy:
+            if not np.all(np.array(fis_interp) == 'lin-lin'):
+                raise ValueError(
+                    'legacy fission average incompatible with ' +
+                    'interpolated fission spectrum'
+                )
             self.__fisavg = LegacyFissionAverage(
                 en, xsobj, fisen, fisobj, check_norm, fix_jacobian,
             )
         else:
             if check_norm:
                 self.__fisint = Integral(
-                    fisobj, fisen, 'lin-lin',
+                    fisobj, fisen, fis_interp,
                     atol=self.__atol, rtol=self.__rtol, maxord=self.__maxord
                 )
             self.__fisavg = IntegralOfProduct(
-                [xsobj, fisobj], [en, fisen], ['lin-lin', 'lin-lin'],
+                [xsobj, fisobj], [en, fisen], ['lin-lin', fis_interp],
                 zero_outside=True, atol=self.__atol, rtol=self.__rtol,
                 maxord=self.__maxord
             )
