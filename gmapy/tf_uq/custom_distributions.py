@@ -161,9 +161,10 @@ class MultivariateNormal(BaseDistribution):
 class MultivariateNormalLikelihood(BaseDistribution):
 
     def __init__(self, num_params, propfun, jacfun, like_data, like_scale,
-                 approximate_hessian=False, relative=False):
+                 approximate_hessian=False, relative=False, whessfun=None):
         self._propfun = propfun
         self._jacfun = jacfun
+        self._whessfun = whessfun
         self._like_data = like_data
         self._num_params = num_params
         self._approximate_hessian = approximate_hessian
@@ -207,6 +208,15 @@ class MultivariateNormalLikelihood(BaseDistribution):
         like_scale = self._like_scale
         if self._relative:
             like_scale = self._like_scale_fun(propvals)
+        if self._whessfun is not None:
+            # sum_i w_i * hessian(f_i) with w = C^-1 (y - f) computed
+            # as a closed-form contraction instead of the
+            # per-parameter loop below
+            d = tf.reshape(self._like_data - propvals, (-1, 1))
+            w = like_scale.solve(like_scale.solve(d), adjoint=True)
+            return tf.sparse.to_dense(
+                self._whessfun(x, tf.reshape(w, (-1,)))
+            )
         like_data = tf.reshape(self._like_data, (-1, 1))
         propvals = tf.reshape(propvals, (-1, 1))
         # introduce factor -1 here instead of in front
@@ -267,9 +277,11 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
     def __init__(self, num_params, num_covpars, propfun, jacfun,
                  like_data, like_cov_fun, relative=False,
                  approximate_hessian=False, no_ppp_idcs=None,
-                 cov_freeze_param_idcs=None, cov_freeze_param_values=None):
+                 cov_freeze_param_idcs=None, cov_freeze_param_values=None,
+                 whessfun=None):
         self._propfun = propfun
         self._jacfun = jacfun
+        self._whessfun = whessfun
         self._like_data = like_data
         self._num_params = num_params
         self._num_covpars = num_covpars
@@ -360,6 +372,12 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         propvals = tf.reshape(self._propfun(pars), (-1, 1))
         d = like_data - propvals
         constvec = like_cov.solve(d)
+        if self._whessfun is not None:
+            # closed-form contraction sum_i w_i * hessian(f_i)
+            # instead of the per-parameter loop below
+            return tf.sparse.to_dense(
+                self._whessfun(pars, tf.reshape(constvec, (-1,)))
+            )
         col_list = []
         for i in range(self._num_params):
             print(f'Hessian elements related to {i}-th parameter')
