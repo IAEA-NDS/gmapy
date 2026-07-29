@@ -265,6 +265,50 @@ class SoftplusHalfNormal(BaseDistribution):
         return tf.linalg.diag(d2)
 
 
+class SoftplusHalfCauchy(BaseDistribution):
+    """Independent half-Cauchy densities on softplus(x_i) (unnormalized).
+
+    Contributes `-sum_i log(1 + softplus(x_i)^2 / scale_i^2)` to the
+    log probability. The building block of horseshoe-type priors on
+    variance-component magnitudes: applied to local scales lambda_i
+    (scale 1) and a global scale tau (scale tau_0), the heavy tails
+    leave clearly nonzero components essentially unshrunk while the
+    density mass near zero pulls ambiguous components to zero.
+    Combine with `DistributionForParameterSubset` to act on a subset
+    of the parameter vector.
+    """
+
+    def __init__(self, scale):
+        self._scale = tf.reshape(
+            tf.convert_to_tensor(scale, dtype=tf.float64), (-1,)
+        )
+
+    def log_prob(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, dtype=tf.float64), (-1,))
+        sp = tf.math.softplus(x)
+        return -tf.reduce_sum(
+            tf.math.log1p(tf.square(sp / self._scale))
+        )
+
+    def log_prob_batch(self, x):
+        x = tf.convert_to_tensor(x, dtype=tf.float64)
+        sp = tf.math.softplus(x)
+        return -tf.reduce_sum(
+            tf.math.log1p(tf.square(sp / self._scale[None, :])), axis=1
+        )
+
+    def log_prob_hessian(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, dtype=tf.float64), (-1,))
+        sp = tf.math.softplus(x)
+        sig = tf.math.sigmoid(x)
+        s2 = tf.square(self._scale)
+        denom = s2 + tf.square(sp)
+        gpp = 2. * (tf.square(sig) + sp * sig * (1. - sig))
+        gp2 = tf.square(2. * sp * sig)
+        d2 = -(gpp * denom - gp2) / tf.square(denom)
+        return tf.linalg.diag(d2)
+
+
 class MultivariateNormal(BaseDistribution):
 
     def __init__(self, prior_loc, prior_scale):

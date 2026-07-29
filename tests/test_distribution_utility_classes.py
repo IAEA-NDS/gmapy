@@ -8,7 +8,8 @@ from gmapy.tf_uq.custom_distributions import (
     MultivariateNormal,
     MultivariateNormalLikelihoodWithCovParams,
     LogBarrier,
-    SoftplusHalfNormal
+    SoftplusHalfNormal,
+    SoftplusHalfCauchy
 )
 from gmapy.tf_uq.inference import determine_MAP_estimate_precond_lbfgs
 
@@ -179,6 +180,59 @@ class TestSoftplusHalfNormal(unittest.TestCase):
 
     def test_gradient_and_hessian_vs_finite_differences(self):
         dist = SoftplusHalfNormal([0.2, 0.5])
+        x0 = np.array([0.4, -0.8])
+        eps = 1e-6
+        _, grad = dist.log_prob_and_gradient(
+            tf.constant(x0, dtype=tf.float64))
+        grad = np.array(grad)
+        hess = np.array(dist.log_prob_hessian(
+            tf.constant(x0, dtype=tf.float64)))
+        for i in range(2):
+            xp, xm = x0.copy(), x0.copy()
+            xp[i] += eps
+            xm[i] -= eps
+            fp = float(dist.log_prob(tf.constant(xp, dtype=tf.float64)))
+            fm = float(dist.log_prob(tf.constant(xm, dtype=tf.float64)))
+            self.assertAlmostEqual(grad[i], (fp - fm) / (2 * eps), places=6)
+            _, gp = dist.log_prob_and_gradient(
+                tf.constant(xp, dtype=tf.float64))
+            _, gm = dist.log_prob_and_gradient(
+                tf.constant(xm, dtype=tf.float64))
+            np.testing.assert_allclose(
+                hess[:, i], (np.array(gp) - np.array(gm)) / (2 * eps),
+                atol=1e-6
+            )
+
+
+class TestSoftplusHalfCauchy(unittest.TestCase):
+
+    def test_log_prob_value(self):
+        dist = SoftplusHalfCauchy([0.5, 2.0])
+        x = np.array([0.3, -1.2])
+        sp = np.log1p(np.exp(x))
+        expected = -np.sum(np.log1p((sp / np.array([0.5, 2.0]))**2))
+        res = float(dist.log_prob(tf.constant(x, dtype=tf.float64)))
+        self.assertAlmostEqual(res, expected, places=12)
+
+    def test_scalar_scale_broadcasts(self):
+        dist = SoftplusHalfCauchy(0.3)
+        x = np.array([0.5, -0.7, 2.0])
+        sp = np.log1p(np.exp(x))
+        expected = -np.sum(np.log1p((sp / 0.3)**2))
+        res = float(dist.log_prob(tf.constant(x, dtype=tf.float64)))
+        self.assertAlmostEqual(res, expected, places=12)
+
+    def test_batch_matches_single_evaluations(self):
+        dist = SoftplusHalfCauchy([0.2, 0.5, 1.0])
+        xs = np.array([[0.3, -1.2, 0.0], [2.0, 0.1, -3.0]])
+        batch = np.array(dist.log_prob_batch(
+            tf.constant(xs, dtype=tf.float64)))
+        single = [float(dist.log_prob(tf.constant(x, dtype=tf.float64)))
+                  for x in xs]
+        np.testing.assert_allclose(batch, single, rtol=1e-12)
+
+    def test_gradient_and_hessian_vs_finite_differences(self):
+        dist = SoftplusHalfCauchy([0.5, 1.5])
         x0 = np.array([0.4, -0.8])
         eps = 1e-6
         _, grad = dist.log_prob_and_gradient(
