@@ -89,6 +89,11 @@ class TestCovarianceModelsSynthetic(unittest.TestCase):
         c2, l2 = lowrank.batch_chisqr_and_logdet(u_batch, z_batch)
         self.assertTrue(np.allclose(c1.numpy(), c2.numpy(), rtol=1e-9))
         self.assertTrue(np.allclose(l1.numpy(), l2.numpy(), rtol=1e-9))
+        # instances unpickled from versions predating the cache
+        # attribute must still work
+        del lowrank._base_cache
+        c3, l3 = lowrank.batch_chisqr_and_logdet(u_batch, z_batch)
+        self.assertTrue(np.allclose(c2.numpy(), c3.numpy(), rtol=1e-12))
 
 
 class TestLikelihoodWithLowRankModel(unittest.TestCase):

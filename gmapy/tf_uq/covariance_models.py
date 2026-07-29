@@ -143,8 +143,9 @@ class LowRankCovarianceModel(CovarianceModel):
     def _get_base_cache(self):
         # constant quantities of the Woodbury identity; computed
         # eagerly once (init_scope lifts the computation out of any
-        # surrounding tf.function tracing)
-        if self._base_cache is None:
+        # surrounding tf.function tracing); getattr for compatibility
+        # with instances unpickled from versions without the cache
+        if getattr(self, '_base_cache', None) is None:
             with tf.init_scope():
                 wmat = self._base_operator.solve(self._smat)
                 vmat = tf.matmul(self._smat, wmat, adjoint_a=True)
