@@ -6,7 +6,8 @@ from gmapy.tf_uq.inference import (
     determine_MAP_estimate,
     determine_MAP_estimate_newton,
     determine_MAP_estimate_trust_region,
-    determine_MAP_estimate_lbfgs
+    determine_MAP_estimate_lbfgs,
+    determine_MAP_estimate_precond_lbfgs
 )
 from gmapy.tf_uq.covariance_models import LowRankCovarianceModel
 from gmapy.tf_uq.custom_distributions import (
@@ -64,6 +65,14 @@ class TestNewtonMapEstimateQuadratic(unittest.TestCase):
             x0, nlpg, nlph, nugget=1e-10, ret_optres=True
         )
         self.assertTrue(bool(res.converged))
+        self.assertTrue(np.allclose(
+            np.array(res.position), np.array(loc), atol=1e-6
+        ))
+        res = determine_MAP_estimate_precond_lbfgs(
+            x0, nlpg, nlph, nugget=1e-10, ret_optres=True
+        )
+        self.assertTrue(bool(res.converged))
+        self.assertLessEqual(int(res.num_iterations), 5)
         self.assertTrue(np.allclose(
             np.array(res.position), np.array(loc), atol=1e-6
         ))
@@ -161,6 +170,26 @@ class TestNewtonVsBfgsOnDatabase(unittest.TestCase):
         fb = float(res_bfgs.objective_value.numpy())
         self.assertAlmostEqual(fl, fb, delta=1e-7 * abs(fb))
         pl = np.array(res_lbfgs.position)
+        pb = np.array(res_bfgs.position)
+        self.assertTrue(
+            np.allclose(pl, pb, rtol=1e-4, atol=2e-3),
+            msg=f'max abs diff {np.max(np.abs(pl - pb))}'
+        )
+
+    def test_persistent_precond_lbfgs_finds_same_optimum(self):
+        post = self._post
+        nlpg = tf.function(post.neg_log_prob_and_gradient)
+        res_pl = determine_MAP_estimate_precond_lbfgs(
+            self._x0, nlpg, post.neg_log_prob_hessian, ret_optres=True
+        )
+        res_bfgs = determine_MAP_estimate(
+            self._x0, nlpg, post.neg_log_prob_hessian, ret_optres=True
+        )
+        self.assertTrue(bool(res_pl.converged))
+        fl = float(res_pl.objective_value)
+        fb = float(res_bfgs.objective_value.numpy())
+        self.assertAlmostEqual(fl, fb, delta=1e-7 * abs(fb))
+        pl = np.array(res_pl.position)
         pb = np.array(res_bfgs.position)
         self.assertTrue(
             np.allclose(pl, pb, rtol=1e-4, atol=2e-3),

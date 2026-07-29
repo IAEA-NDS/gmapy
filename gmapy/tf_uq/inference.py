@@ -268,6 +268,142 @@ def determine_MAP_estimate_lbfgs(
         return x
 
 
+def determine_MAP_estimate_precond_lbfgs(
+    startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
+    max_iters=5000, num_correction_pairs=30, tolerance=1e-5,
+    nugget=1e-4, hessian_refresh_interval=100, armijo_c1=1e-4,
+    max_step_halvings=30, must_converge=True, ret_optres=False
+):
+    """Determine the MAP estimate by preconditioned L-BFGS with a
+    persistent correction-pair history.
+
+    In contrast to `determine_MAP_estimate_lbfgs`, which relies on
+    `tfp.optimizer.lbfgs_minimize` and therefore discards the
+    accumulated correction pairs whenever the preconditioner is
+    renewed, this implementation applies the inverse of the
+    positive-definite projection of the Hessian provided by
+    `neg_log_prob_hessian` directly as initial matrix of the L-BFGS
+    two-loop recursion. The Hessian can hence be refreshed (every
+    `hessian_refresh_interval` accepted steps and on line-search
+    failure) WITHOUT discarding the correction pairs, which carry
+    the valley curvature information accumulated along the
+    trajectory. `tolerance` refers to the Newton decrement measured
+    in the metric of the preconditioner; its round-off floor is
+    about sqrt(2e-14 * |objective|).
+    """
+    def nlpg_np(xv):
+        f, g = neg_log_prob_and_gradient(
+            tf.constant(xv, dtype=tf.float64)
+        )
+        return float(f), np.array(g)
+
+    def refresh_h0(xv):
+        hess = np.array(
+            neg_log_prob_hessian(tf.constant(xv, dtype=tf.float64))
+        )
+        hess = 0.5 * (hess + hess.T)
+        eigvals, eigvecs = np.linalg.eigh(hess)
+        return eigvecs, np.maximum(eigvals, nugget)
+
+    def h0inv(vec):
+        return qmat @ ((qmat.T @ vec) / evals)
+
+    x = np.array(
+        tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
+    )
+    fval, grad = nlpg_np(x)
+    qmat, evals = refresh_h0(x)
+    iters_since_refresh = 0
+    pairs = []
+    converged = False
+    num_iters = 0
+    while num_iters < max_iters:
+        # convergence: Newton decrement in the preconditioner metric
+        dec_sq = float(grad.dot(h0inv(grad)))
+        if (np.sqrt(max(dec_sq, 0.)) <= tolerance
+                or 0.5 * dec_sq <= 1e-14 * (1. + abs(fval))):
+            converged = True
+            break
+        num_iters += 1
+        # two-loop recursion with explicit initial matrix
+        qvec = grad.copy()
+        alphas = []
+        for svec, yvec, rho in reversed(pairs):
+            a = rho * svec.dot(qvec)
+            alphas.append(a)
+            qvec -= a * yvec
+        rvec = h0inv(qvec)
+        for (svec, yvec, rho), a in zip(pairs, reversed(alphas)):
+            b = rho * yvec.dot(rvec)
+            rvec += (a - b) * svec
+        direction = -rvec
+        dgrad = float(grad.dot(direction))
+        if not np.isfinite(dgrad) or dgrad >= 0.:
+            # stale correction pairs: fall back to the preconditioner
+            pairs = []
+            direction = -h0inv(grad)
+            dgrad = float(grad.dot(direction))
+        # backtracking line search
+        alpha = 1.
+        accepted = False
+        for _ in range(max_step_halvings):
+            xnew = x + alpha * direction
+            fnew, gnew = nlpg_np(xnew)
+            if (np.isfinite(fnew)
+                    and fnew <= fval + armijo_c1 * alpha * dgrad):
+                accepted = True
+                break
+            alpha *= 0.5
+        if not accepted:
+            if iters_since_refresh > 0:
+                # renew preconditioner at the current position but
+                # keep the correction pairs
+                qmat, evals = refresh_h0(x)
+                iters_since_refresh = 0
+                print(f'#  iter {num_iters}: line search failed, '
+                      'refreshed Hessian')
+                continue
+            if pairs:
+                pairs = []
+                print(f'#  iter {num_iters}: line search failed, '
+                      'dropped correction pairs')
+                continue
+            break
+        svec = xnew - x
+        yvec = gnew - grad
+        sy = float(svec.dot(yvec))
+        if sy > 1e-10 * np.linalg.norm(svec) * np.linalg.norm(yvec):
+            pairs.append((svec, yvec, 1. / sy))
+            if len(pairs) > num_correction_pairs:
+                pairs.pop(0)
+        x, fval, grad = xnew, fnew, gnew
+        iters_since_refresh += 1
+        if iters_since_refresh >= hessian_refresh_interval:
+            qmat, evals = refresh_h0(x)
+            iters_since_refresh = 0
+        if num_iters % 25 == 0:
+            print(f'#  iter {num_iters}: fval={fval:.8e}  '
+                  f'max|grad|={np.max(np.abs(grad)):.3e}  '
+                  f'decrement={np.sqrt(max(dec_sq, 0.)):.3e}  '
+                  f'alpha={alpha:.2e}  npairs={len(pairs)}')
+
+    if must_converge and not converged:
+        raise ValueError(
+            'Unable to determine MAP estimate. Try increasing ' +
+            '`max_iters`'
+        )
+    if ret_optres:
+        OptRes = namedtuple(
+            'OptimizationResult',
+            ['position', 'converged', 'num_iterations', 'objective_value']
+        )
+        return OptRes(
+            tf.constant(x, dtype=tf.float64), converged, num_iters, fval
+        )
+    else:
+        return tf.constant(x, dtype=tf.float64)
+
+
 def determine_MAP_estimate_trust_region(
     startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
     neg_log_prob_gn_hessian=None, max_iters=100, tolerance=1e-8,
