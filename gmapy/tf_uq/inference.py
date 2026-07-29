@@ -303,7 +303,7 @@ def determine_MAP_estimate_precond_lbfgs(
         )
         hess = 0.5 * (hess + hess.T)
         eigvals, eigvecs = np.linalg.eigh(hess)
-        return eigvecs, np.maximum(eigvals, nugget)
+        return eigvecs, eigvals
 
     def h0inv(vec):
         return qmat @ ((qmat.T @ vec) / evals)
@@ -312,7 +312,13 @@ def determine_MAP_estimate_precond_lbfgs(
         tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
     )
     fval, grad = nlpg_np(x)
-    qmat, evals = refresh_h0(x)
+    qmat, evals_raw = refresh_h0(x)
+    # saddle-free treatment of indefiniteness: the magnitude of
+    # negative eigenvalues acts as damping, so that directions of
+    # strong negative curvature receive small steps instead of the
+    # huge ones a positive-clipping of the spectrum would produce
+    cur_nugget = nugget
+    evals = np.maximum(np.abs(evals_raw), cur_nugget)
     iters_since_refresh = 0
     pairs = []
     converged = False
@@ -358,7 +364,9 @@ def determine_MAP_estimate_precond_lbfgs(
             if iters_since_refresh > 0:
                 # renew preconditioner at the current position but
                 # keep the correction pairs
-                qmat, evals = refresh_h0(x)
+                qmat, evals_raw = refresh_h0(x)
+                cur_nugget = nugget
+                evals = np.maximum(np.abs(evals_raw), cur_nugget)
                 iters_since_refresh = 0
                 print(f'#  iter {num_iters}: line search failed, '
                       'refreshed Hessian')
@@ -368,6 +376,15 @@ def determine_MAP_estimate_precond_lbfgs(
                 print(f'#  iter {num_iters}: line search failed, '
                       'dropped correction pairs')
                 continue
+            if cur_nugget <= 1e8 * nugget:
+                # last resort: escalate the eigenvalue floor of the
+                # preconditioner (Levenberg-style damping)
+                cur_nugget *= 10.
+                evals = np.maximum(np.abs(evals_raw), cur_nugget)
+                print(f'#  iter {num_iters}: line search failed, '
+                      f'escalated damping to {cur_nugget:.1e}')
+                continue
+            print(f'#  iter {num_iters}: line search failed, giving up')
             break
         svec = xnew - x
         yvec = gnew - grad
@@ -379,7 +396,9 @@ def determine_MAP_estimate_precond_lbfgs(
         x, fval, grad = xnew, fnew, gnew
         iters_since_refresh += 1
         if iters_since_refresh >= hessian_refresh_interval:
-            qmat, evals = refresh_h0(x)
+            qmat, evals_raw = refresh_h0(x)
+            cur_nugget = nugget
+            evals = np.maximum(np.abs(evals_raw), cur_nugget)
             iters_since_refresh = 0
         if num_iters % 25 == 0:
             print(f'#  iter {num_iters}: fval={fval:.8e}  '
