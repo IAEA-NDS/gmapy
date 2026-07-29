@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, deque
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -274,6 +274,8 @@ def determine_MAP_estimate_precond_lbfgs(
     nugget=1e-4, hessian_refresh_interval=100, armijo_c1=1e-4,
     max_step_halvings=30, batch_neg_log_prob=None,
     num_line_candidates=16, saddle_free=True,
+    phase_switch_window=50, phase_switch_tol=1e-5,
+    checkpoint_file=None, checkpoint_interval=25,
     must_converge=True, ret_optres=False
 ):
     """Determine the MAP estimate by preconditioned L-BFGS with a
@@ -308,7 +310,17 @@ def determine_MAP_estimate_precond_lbfgs(
     nugget (bold moves along negative curvature directions, which
     can help to descend into deeper basins of multimodal
     posteriors). Wherever the Hessian is positive definite both
-    choices coincide.
+    choices coincide. With `saddle_free='auto'` a two-phase schedule
+    is used: the bold clipping explores until the relative decrease
+    of the objective over the last `phase_switch_window` iterations
+    falls below `phase_switch_tol`, after which the iteration
+    switches to the saddle-free clipping for a stable endgame within
+    the basin that has been reached.
+
+    If `checkpoint_file` is given, the current position is saved
+    there (numpy .npz format) every `checkpoint_interval` accepted
+    steps, so that a long run can be resumed after an interruption
+    by passing the stored position as `startvals`.
     """
     def nlpg_np(xv):
         f, g = neg_log_prob_and_gradient(
@@ -327,8 +339,11 @@ def determine_MAP_estimate_precond_lbfgs(
     def h0inv(vec):
         return qmat @ ((qmat.T @ vec) / evals)
 
+    saddle_free_active = (saddle_free is True)
+    auto_phase = (saddle_free == 'auto')
+
     def clip_spectrum(e_raw, floor):
-        base = np.abs(e_raw) if saddle_free else e_raw
+        base = np.abs(e_raw) if saddle_free_active else e_raw
         return np.maximum(base, floor)
 
     x = np.array(
@@ -346,6 +361,7 @@ def determine_MAP_estimate_precond_lbfgs(
     pairs = []
     converged = False
     num_iters = 0
+    fval_history = deque(maxlen=phase_switch_window + 1)
     while num_iters < max_iters:
         # convergence: Newton decrement in the preconditioner metric
         dec_sq = float(grad.dot(h0inv(grad)))
@@ -354,6 +370,19 @@ def determine_MAP_estimate_precond_lbfgs(
             converged = True
             break
         num_iters += 1
+        fval_history.append(fval)
+        if (auto_phase and not saddle_free_active
+                and len(fval_history) > phase_switch_window
+                and num_iters > 2 * phase_switch_window):
+            progress = fval_history[0] - fval
+            if progress <= phase_switch_tol * (1. + abs(fval)):
+                saddle_free_active = True
+                qmat, evals_raw = refresh_h0(x)
+                cur_nugget = nugget
+                evals = clip_spectrum(evals_raw, cur_nugget)
+                iters_since_refresh = 0
+                print(f'#  iter {num_iters}: exploration stalled, '
+                      'switching to saddle-free spectrum treatment')
         # two-loop recursion with explicit initial matrix
         qvec = grad.copy()
         alphas = []
@@ -451,6 +480,12 @@ def determine_MAP_estimate_precond_lbfgs(
             cur_nugget = nugget
             evals = clip_spectrum(evals_raw, cur_nugget)
             iters_since_refresh = 0
+        if (checkpoint_file is not None
+                and num_iters % checkpoint_interval == 0):
+            np.savez(
+                checkpoint_file, position=x, fval=fval,
+                num_iters=num_iters, saddle_free=saddle_free_active
+            )
         if num_iters % 25 == 0:
             print(f'#  iter {num_iters}: fval={fval:.8e}  '
                   f'max|grad|={np.max(np.abs(grad)):.3e}  '

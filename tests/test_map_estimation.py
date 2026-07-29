@@ -1,5 +1,7 @@
 import unittest
 import pathlib
+import tempfile
+import os
 import numpy as np
 import tensorflow as tf
 from gmapy.tf_uq.inference import (
@@ -222,6 +224,29 @@ class TestNewtonVsBfgsOnDatabase(unittest.TestCase):
         self.assertTrue(bool(res.converged))
         self.assertAlmostEqual(abs(float(res.position[0])), 1., places=6)
         self.assertAlmostEqual(float(res.objective_value), -0.25, places=8)
+
+    def test_precond_lbfgs_auto_phase_with_checkpointing(self):
+        post = self._post
+        nlpg = tf.function(post.neg_log_prob_and_gradient)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ckpt = os.path.join(tmpdir, 'checkpoint.npz')
+            res_auto = determine_MAP_estimate_precond_lbfgs(
+                self._x0, nlpg, post.neg_log_prob_hessian,
+                saddle_free='auto', checkpoint_file=ckpt,
+                checkpoint_interval=5, ret_optres=True
+            )
+            self.assertTrue(bool(res_auto.converged))
+            self.assertTrue(os.path.exists(ckpt))
+            stored = np.load(ckpt)
+            self.assertEqual(
+                len(stored['position']), len(np.array(res_auto.position))
+            )
+        res_bfgs = determine_MAP_estimate(
+            self._x0, nlpg, post.neg_log_prob_hessian, ret_optres=True
+        )
+        fa = float(res_auto.objective_value)
+        fb = float(res_bfgs.objective_value.numpy())
+        self.assertAlmostEqual(fa, fb, delta=1e-7 * abs(fb))
 
     def test_precond_lbfgs_with_batched_line_search(self):
         post = self._post
