@@ -195,6 +195,121 @@ def determine_MAP_estimate_newton(
         return x
 
 
+def determine_MAP_estimate_trust_region(
+    startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
+    neg_log_prob_gn_hessian=None, max_iters=100, tolerance=1e-8,
+    init_damping=1e-3, switch_damping=1e-5,
+    must_converge=True, ret_optres=False
+):
+    """Determine the MAP estimate by a trust-region Newton iteration.
+
+    The (negative log posterior) Hessian is damped in
+    Levenberg-Marquardt style with a dimensionless damping parameter
+    relative to its largest eigenvalue, adapted according to the
+    ratio of actual to predicted decrease of the objective. As the
+    damped system is solved in the eigenbasis of the Hessian,
+    damping adjustments do not require recomputing the Hessian.
+
+    If a Gauss-Newton style Hessian function is provided via
+    `neg_log_prob_gn_hessian` (e.g. relying on the GLS approximation
+    of the likelihood Hessian, which is positive definite and a
+    robust curvature model far away from the optimum), it is used
+    during the globalization phase and replaced by the exact Hessian
+    of `neg_log_prob_hessian` once the damping has decayed below
+    `switch_damping`.
+    """
+    x = tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
+    fval_t, grad = neg_log_prob_and_gradient(x)
+    fval = float(fval_t)
+    use_gn = neg_log_prob_gn_hessian is not None
+    damping = init_damping
+    converged = False
+    num_iters = 0
+    need_hessian = True
+    rho = np.nan
+    while not converged and num_iters < max_iters:
+        num_iters += 1
+        if use_gn and damping < switch_damping:
+            use_gn = False
+            need_hessian = True
+            print('#  switching from Gauss-Newton to exact Hessian')
+        if need_hessian:
+            hessfun = (neg_log_prob_gn_hessian if use_gn
+                       else neg_log_prob_hessian)
+            hess = hessfun(x)
+            eigvals, eigvecs = tf.linalg.eigh(
+                (hess + tf.transpose(hess)) / 2.
+            )
+            emax = float(tf.reduce_max(tf.abs(eigvals)))
+            eigvals = tf.maximum(eigvals, 1e-12 * emax)
+            need_hessian = False
+        c = tf.reshape(
+            tf.matmul(eigvecs, tf.reshape(grad, (-1, 1)), adjoint_a=True),
+            (-1,)
+        )
+        gmax = float(tf.reduce_max(tf.abs(grad)))
+        if gmax <= tolerance:
+            converged = True
+            break
+        # predicted decrease of the undamped Newton step below the
+        # round-off level of the objective means convergence to
+        # numerical precision (for the current curvature model)
+        newton_decr_half = 0.5 * float(tf.reduce_sum(c * c / eigvals))
+        if newton_decr_half <= 1e-14 * (1. + abs(fval)):
+            if use_gn:
+                use_gn = False
+                need_hessian = True
+                print('#  switching from Gauss-Newton to exact Hessian')
+                continue
+            converged = True
+            break
+        accepted = False
+        while not accepted and damping < 1e8:
+            denom = eigvals + damping * emax
+            dcoef = -c / denom
+            direction = tf.reshape(
+                tf.matmul(eigvecs, tf.reshape(dcoef, (-1, 1))), (-1,)
+            )
+            pred_decr = float(
+                tf.reduce_sum(c * c / denom)
+                - 0.5 * tf.reduce_sum(eigvals * dcoef * dcoef)
+            )
+            xnew = x + direction
+            fnew_t, gnew = neg_log_prob_and_gradient(xnew)
+            fnew = float(fnew_t)
+            rho = (fval - fnew) / pred_decr if pred_decr > 0. else -1.
+            if np.isfinite(fnew) and fnew < fval:
+                accepted = True
+                x, fval, grad = xnew, fnew, gnew
+                if rho > 0.75:
+                    damping = max(0.5 * damping, 1e-10)
+                elif rho < 0.25:
+                    damping *= 4.
+            else:
+                damping *= 4.
+        if not accepted:
+            break
+        need_hessian = True
+        print(f'#  tr iteration {num_iters} '
+              f'({"gn" if use_gn else "exact"}): fval={fval:.8e}  '
+              f'max|grad|={float(tf.reduce_max(tf.abs(grad))):.3e}  '
+              f'damping={damping:.1e}  rho={rho:.2f}')
+
+    if must_converge and not converged:
+        raise ValueError(
+            'Unable to determine MAP estimate. ' +
+            'Try increasing `max_iters` and/or `init_damping`'
+        )
+    if ret_optres:
+        OptRes = namedtuple(
+            'OptimizationResult',
+            ['position', 'converged', 'num_iterations', 'objective_value']
+        )
+        return OptRes(x, converged, num_iters, fval)
+    else:
+        return x
+
+
 def generate_MCMC_chain(
     startvals, log_prob, neg_log_prob_hessian, nugget=1e-10,
     step_size=0.001, num_burnin_steps=100, num_results=1000,
