@@ -5,7 +5,8 @@ import tensorflow as tf
 from gmapy.tf_uq.inference import (
     determine_MAP_estimate,
     determine_MAP_estimate_newton,
-    determine_MAP_estimate_trust_region
+    determine_MAP_estimate_trust_region,
+    determine_MAP_estimate_lbfgs
 )
 from gmapy.tf_uq.covariance_models import LowRankCovarianceModel
 from gmapy.tf_uq.custom_distributions import (
@@ -58,6 +59,13 @@ class TestNewtonMapEstimateQuadratic(unittest.TestCase):
         self.assertLessEqual(int(res.num_iterations), 10)
         self.assertTrue(np.allclose(
             np.array(res.position), np.array(loc), atol=1e-8
+        ))
+        res = determine_MAP_estimate_lbfgs(
+            x0, nlpg, nlph, nugget=1e-10, ret_optres=True
+        )
+        self.assertTrue(bool(res.converged))
+        self.assertTrue(np.allclose(
+            np.array(res.position), np.array(loc), atol=1e-6
         ))
 
 
@@ -137,6 +145,26 @@ class TestNewtonVsBfgsOnDatabase(unittest.TestCase):
         self.assertTrue(
             np.allclose(pn, pb, rtol=1e-4, atol=2e-3),
             msg=f'max abs diff {np.max(np.abs(pn - pb))}'
+        )
+
+    def test_preconditioned_lbfgs_finds_same_optimum(self):
+        post = self._post
+        nlpg = tf.function(post.neg_log_prob_and_gradient)
+        res_lbfgs = determine_MAP_estimate_lbfgs(
+            self._x0, nlpg, post.neg_log_prob_hessian, ret_optres=True
+        )
+        res_bfgs = determine_MAP_estimate(
+            self._x0, nlpg, post.neg_log_prob_hessian, ret_optres=True
+        )
+        self.assertTrue(bool(res_lbfgs.converged))
+        fl = float(res_lbfgs.objective_value)
+        fb = float(res_bfgs.objective_value.numpy())
+        self.assertAlmostEqual(fl, fb, delta=1e-7 * abs(fb))
+        pl = np.array(res_lbfgs.position)
+        pb = np.array(res_bfgs.position)
+        self.assertTrue(
+            np.allclose(pl, pb, rtol=1e-4, atol=2e-3),
+            msg=f'max abs diff {np.max(np.abs(pl - pb))}'
         )
 
     def test_trust_region_finds_same_optimum(self):

@@ -195,6 +195,79 @@ def determine_MAP_estimate_newton(
         return x
 
 
+def determine_MAP_estimate_lbfgs(
+    startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
+    max_inner_iters=3000, max_outer_iters=10, nugget=1e-4,
+    num_correction_pairs=20, tolerance=1e-5,
+    must_converge=True, ret_optres=False
+):
+    """Determine the MAP estimate by preconditioned L-BFGS.
+
+    In each outer iteration the Hessian provided by
+    `neg_log_prob_hessian` is evaluated at the reference point, made
+    positive definite and used to transform the parameters
+    (x = x_ref + L y with L L^T the inverse Hessian), so that the
+    transformed problem has unit curvature at the reference point.
+    It is then minimized by the limited-memory BFGS algorithm, whose
+    per-iteration cost is O(num_correction_pairs * dim) in contrast
+    to the dense matrix algebra per iteration of
+    `determine_MAP_estimate`, while the accumulated correction pairs
+    still capture the valley curvature of sloppy posteriors along
+    the trajectory. The gradient norm of the transformed problem is
+    the Newton decrement of the original one, so `tolerance` is
+    dimensionless; its round-off floor is about
+    sqrt(2e-14 * |objective|).
+    """
+    x = tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
+    n = int(x.shape[0])
+    converged = False
+    total_inner = 0
+    fval = None
+    for outer_iter in range(1, max_outer_iters + 1):
+        print(f'#  outer iteration {outer_iter}')
+        hess = neg_log_prob_hessian(x)
+        hess_pd = make_positive_definite(hess, nugget)
+        inv_hess = invert_symmetric_matrix(hess_pd)
+        inv_hess = make_positive_definite(inv_hess, nugget)
+        lmat = tf.linalg.cholesky(inv_hess)
+        x_ref = x
+
+        def transformed_fun(y):
+            xcur = x_ref + tf.linalg.matvec(lmat, y)
+            f, g = neg_log_prob_and_gradient(xcur)
+            return f, tf.linalg.matvec(lmat, g, adjoint_a=True)
+
+        optres = tfp.optimizer.lbfgs_minimize(
+            transformed_fun,
+            initial_position=tf.zeros((n,), dtype=tf.float64),
+            num_correction_pairs=num_correction_pairs,
+            tolerance=tolerance,
+            max_iterations=max_inner_iters
+        )
+        total_inner += int(optres.num_iterations)
+        x = x_ref + tf.linalg.matvec(lmat, optres.position)
+        fval = float(optres.objective_value)
+        converged = bool(optres.converged)
+        print(f'-- inner iterations: {int(optres.num_iterations)}  '
+              f'fval={fval:.8e}  converged={converged}')
+        if converged:
+            break
+
+    if must_converge and not converged:
+        raise ValueError(
+            'Unable to determine MAP estimate. Try increasing ' +
+            '`max_inner_iters` and/or `max_outer_iters`'
+        )
+    if ret_optres:
+        OptRes = namedtuple(
+            'OptimizationResult',
+            ['position', 'converged', 'num_iterations', 'objective_value']
+        )
+        return OptRes(x, converged, total_inner, fval)
+    else:
+        return x
+
+
 def determine_MAP_estimate_trust_region(
     startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
     neg_log_prob_gn_hessian=None, max_iters=100, tolerance=1e-8,
