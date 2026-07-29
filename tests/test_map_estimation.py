@@ -196,6 +196,28 @@ class TestNewtonVsBfgsOnDatabase(unittest.TestCase):
             msg=f'max abs diff {np.max(np.abs(pl - pb))}'
         )
 
+    def test_precond_lbfgs_with_batched_line_search(self):
+        post = self._post
+        nlpg = tf.function(post.neg_log_prob_and_gradient)
+        batch_nlp = tf.function(post.neg_log_prob_batch)
+        res_batch = determine_MAP_estimate_precond_lbfgs(
+            self._x0, nlpg, post.neg_log_prob_hessian,
+            batch_neg_log_prob=batch_nlp, ret_optres=True
+        )
+        res_seq = determine_MAP_estimate_precond_lbfgs(
+            self._x0, nlpg, post.neg_log_prob_hessian, ret_optres=True
+        )
+        self.assertTrue(bool(res_batch.converged))
+        fb = float(res_batch.objective_value)
+        fs = float(res_seq.objective_value)
+        self.assertAlmostEqual(fb, fs, delta=1e-7 * abs(fs))
+        pb = np.array(res_batch.position)
+        ps = np.array(res_seq.position)
+        self.assertTrue(
+            np.allclose(pb, ps, rtol=1e-4, atol=2e-3),
+            msg=f'max abs diff {np.max(np.abs(pb - ps))}'
+        )
+
     def test_trust_region_finds_same_optimum(self):
         post = self._post
         likelihood = self._likelihood

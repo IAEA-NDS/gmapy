@@ -272,7 +272,8 @@ def determine_MAP_estimate_precond_lbfgs(
     startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
     max_iters=5000, num_correction_pairs=30, tolerance=1e-5,
     nugget=1e-4, hessian_refresh_interval=100, armijo_c1=1e-4,
-    max_step_halvings=30, must_converge=True, ret_optres=False
+    max_step_halvings=30, batch_neg_log_prob=None,
+    num_line_candidates=16, must_converge=True, ret_optres=False
 ):
     """Determine the MAP estimate by preconditioned L-BFGS with a
     persistent correction-pair history.
@@ -290,6 +291,14 @@ def determine_MAP_estimate_precond_lbfgs(
     trajectory. `tolerance` refers to the Newton decrement measured
     in the metric of the preconditioner; its round-off floor is
     about sqrt(2e-14 * |objective|).
+
+    If `batch_neg_log_prob` is provided (a function evaluating the
+    negative log probability for a batch of parameter vectors given
+    as rows of a matrix, see
+    `BaseDistribution.neg_log_prob_batch`), the line search
+    evaluates `num_line_candidates` step lengths per call instead of
+    backtracking sequentially, which reduces its cost substantially
+    for structured covariance models.
     """
     def nlpg_np(xv):
         f, g = neg_log_prob_and_gradient(
@@ -349,17 +358,45 @@ def determine_MAP_estimate_precond_lbfgs(
             pairs = []
             direction = -h0inv(grad)
             dgrad = float(grad.dot(direction))
-        # backtracking line search
+        # line search: batched evaluation of candidate step lengths
+        # if possible, otherwise sequential backtracking
         alpha = 1.
         accepted = False
-        for _ in range(max_step_halvings):
-            xnew = x + alpha * direction
-            fnew, gnew = nlpg_np(xnew)
-            if (np.isfinite(fnew)
-                    and fnew <= fval + armijo_c1 * alpha * dgrad):
-                accepted = True
-                break
-            alpha *= 0.5
+        if batch_neg_log_prob is not None:
+            num_batches = int(np.ceil(
+                (max_step_halvings + 1) / num_line_candidates
+            ))
+            for batch_idx in range(num_batches):
+                alphas = 0.5 ** np.arange(
+                    batch_idx * num_line_candidates,
+                    (batch_idx + 1) * num_line_candidates
+                )
+                xmat = x[np.newaxis, :] \
+                    + alphas[:, np.newaxis] * direction[np.newaxis, :]
+                fvals = np.array(batch_neg_log_prob(
+                    tf.constant(xmat, dtype=tf.float64)
+                ))
+                ok = np.isfinite(fvals) & \
+                    (fvals <= fval + armijo_c1 * alphas * dgrad)
+                if np.any(ok):
+                    # largest step length fulfilling the Armijo
+                    # condition; the gradient (and for consistency
+                    # the objective) is evaluated at the winner only
+                    alpha = float(alphas[int(np.argmax(ok))])
+                    xnew = x + alpha * direction
+                    fnew, gnew = nlpg_np(xnew)
+                    accepted = np.isfinite(fnew) and fnew < fval
+                    if accepted:
+                        break
+        else:
+            for _ in range(max_step_halvings):
+                xnew = x + alpha * direction
+                fnew, gnew = nlpg_np(xnew)
+                if (np.isfinite(fnew)
+                        and fnew <= fval + armijo_c1 * alpha * dgrad):
+                    accepted = True
+                    break
+                alpha *= 0.5
         if not accepted:
             if iters_since_refresh > 0:
                 # renew preconditioner at the current position but
