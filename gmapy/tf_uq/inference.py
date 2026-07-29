@@ -63,14 +63,17 @@ def iterative_gls_estimate(
 def determine_MAP_estimate(
     startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
     max_inner_iters=500, max_outer_iters=10, nugget=1e-4,
-    must_converge=True, ret_optres=False, compile_inner_iterations=True
+    must_converge=True, ret_optres=False, compile_inner_iterations=False
 ):
     if isinstance(max_inner_iters, int):
         max_inner_iters = np.full(max_outer_iters, max_inner_iters,
                                   dtype=np.int32)
-    # compiling the BFGS loop reduces the per-iteration cost to a
-    # graph step; disable for models whose computational graph is
-    # too large to be traced (e.g. the non-vectorized compound map)
+    # NOTE: compiling the BFGS loop removes the eager dispatch
+    #   overhead but NOT the dense inverse-Hessian update of BFGS
+    #   (O(n^2..n^3) per iteration), which dominates for large
+    #   parameter counts; in graph mode the loop was also observed
+    #   to consume much more memory than the eager one, so this is
+    #   opt-in
     bfgs_minimize = tfp.optimizer.bfgs_minimize
     if compile_inner_iterations:
         bfgs_minimize = tf.function(tfp.optimizer.bfgs_minimize)
