@@ -273,7 +273,8 @@ def determine_MAP_estimate_precond_lbfgs(
     max_iters=5000, num_correction_pairs=30, tolerance=1e-5,
     nugget=1e-4, hessian_refresh_interval=100, armijo_c1=1e-4,
     max_step_halvings=30, batch_neg_log_prob=None,
-    num_line_candidates=16, must_converge=True, ret_optres=False
+    num_line_candidates=16, saddle_free=True,
+    must_converge=True, ret_optres=False
 ):
     """Determine the MAP estimate by preconditioned L-BFGS with a
     persistent correction-pair history.
@@ -299,6 +300,15 @@ def determine_MAP_estimate_precond_lbfgs(
     evaluates `num_line_candidates` step lengths per call instead of
     backtracking sequentially, which reduces its cost substantially
     for structured covariance models.
+
+    In regions where the Hessian is indefinite, `saddle_free=True`
+    clips the magnitudes of its eigenvalues (cautious small steps
+    along directions of negative curvature), whereas
+    `saddle_free=False` clips the eigenvalues themselves at the
+    nugget (bold moves along negative curvature directions, which
+    can help to descend into deeper basins of multimodal
+    posteriors). Wherever the Hessian is positive definite both
+    choices coincide.
     """
     def nlpg_np(xv):
         f, g = neg_log_prob_and_gradient(
@@ -317,6 +327,10 @@ def determine_MAP_estimate_precond_lbfgs(
     def h0inv(vec):
         return qmat @ ((qmat.T @ vec) / evals)
 
+    def clip_spectrum(e_raw, floor):
+        base = np.abs(e_raw) if saddle_free else e_raw
+        return np.maximum(base, floor)
+
     x = np.array(
         tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
     )
@@ -327,7 +341,7 @@ def determine_MAP_estimate_precond_lbfgs(
     # strong negative curvature receive small steps instead of the
     # huge ones a positive-clipping of the spectrum would produce
     cur_nugget = nugget
-    evals = np.maximum(np.abs(evals_raw), cur_nugget)
+    evals = clip_spectrum(evals_raw, cur_nugget)
     iters_since_refresh = 0
     pairs = []
     converged = False
@@ -403,7 +417,7 @@ def determine_MAP_estimate_precond_lbfgs(
                 # keep the correction pairs
                 qmat, evals_raw = refresh_h0(x)
                 cur_nugget = nugget
-                evals = np.maximum(np.abs(evals_raw), cur_nugget)
+                evals = clip_spectrum(evals_raw, cur_nugget)
                 iters_since_refresh = 0
                 print(f'#  iter {num_iters}: line search failed, '
                       'refreshed Hessian')
@@ -417,7 +431,7 @@ def determine_MAP_estimate_precond_lbfgs(
                 # last resort: escalate the eigenvalue floor of the
                 # preconditioner (Levenberg-style damping)
                 cur_nugget *= 10.
-                evals = np.maximum(np.abs(evals_raw), cur_nugget)
+                evals = clip_spectrum(evals_raw, cur_nugget)
                 print(f'#  iter {num_iters}: line search failed, '
                       f'escalated damping to {cur_nugget:.1e}')
                 continue
@@ -435,7 +449,7 @@ def determine_MAP_estimate_precond_lbfgs(
         if iters_since_refresh >= hessian_refresh_interval:
             qmat, evals_raw = refresh_h0(x)
             cur_nugget = nugget
-            evals = np.maximum(np.abs(evals_raw), cur_nugget)
+            evals = clip_spectrum(evals_raw, cur_nugget)
             iters_since_refresh = 0
         if num_iters % 25 == 0:
             print(f'#  iter {num_iters}: fval={fval:.8e}  '

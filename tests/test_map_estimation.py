@@ -196,6 +196,33 @@ class TestNewtonVsBfgsOnDatabase(unittest.TestCase):
             msg=f'max abs diff {np.max(np.abs(pl - pb))}'
         )
 
+    def test_precond_lbfgs_bold_clipping_escapes_saddle(self):
+        # double-well objective with indefinite Hessian at the
+        # starting point: the bold (positive) clipping must still
+        # converge to one of the minima
+        def nlpg(x):
+            with tf.GradientTape() as tape:
+                tape.watch(x)
+                f = (0.25 * x[0]**4 - 0.5 * x[0]**2
+                     + 0.5 * tf.reduce_sum(x[1:]**2))
+            return f, tape.gradient(f, x)
+
+        def nlph(x):
+            hess = tf.linalg.diag(tf.concat(
+                [[3. * x[0]**2 - 1.], tf.ones(4, dtype=tf.float64)],
+                axis=0
+            ))
+            return hess
+
+        x0 = tf.constant([0.01, 1., -1., 2., 0.5], dtype=tf.float64)
+        res = determine_MAP_estimate_precond_lbfgs(
+            x0, nlpg, nlph, nugget=1e-8, saddle_free=False,
+            ret_optres=True
+        )
+        self.assertTrue(bool(res.converged))
+        self.assertAlmostEqual(abs(float(res.position[0])), 1., places=6)
+        self.assertAlmostEqual(float(res.objective_value), -0.25, places=8)
+
     def test_precond_lbfgs_with_batched_line_search(self):
         post = self._post
         nlpg = tf.function(post.neg_log_prob_and_gradient)
