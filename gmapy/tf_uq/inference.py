@@ -198,7 +198,8 @@ def determine_MAP_estimate_newton(
 def determine_MAP_estimate_trust_region(
     startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
     neg_log_prob_gn_hessian=None, max_iters=100, tolerance=1e-8,
-    init_damping=1e-3, switch_damping=1e-5,
+    init_damping=1e-3, switch_damping=1e-5, geodesic_accel=True,
+    accel_ratio=0.75, accel_fd_step=0.1,
     must_converge=True, ret_optres=False
 ):
     """Determine the MAP estimate by a trust-region Newton iteration.
@@ -217,6 +218,15 @@ def determine_MAP_estimate_trust_region(
     during the globalization phase and replaced by the exact Hessian
     of `neg_log_prob_hessian` once the damping has decayed below
     `switch_damping`.
+
+    With `geodesic_accel=True` the step is augmented by the geodesic
+    acceleration of Transtrum & Sethna: the second-order correction
+    `a = -H_damped^-1 k`, with `k` the second directional derivative
+    of the gradient along the step obtained by a finite difference
+    (one extra gradient evaluation), lets the iteration follow the
+    long curved valleys of sloppy-model posteriors instead of
+    chording across them. A step is only taken with acceleration if
+    `|a| <= accel_ratio * |d|`; otherwise the damping is increased.
     """
     x = tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
     fval_t, grad = neg_log_prob_and_gradient(x)
@@ -264,6 +274,7 @@ def determine_MAP_estimate_trust_region(
             converged = True
             break
         accepted = False
+        accel_frac = 0.
         while not accepted and damping < 1e8:
             denom = eigvals + damping * emax
             dcoef = -c / denom
@@ -274,7 +285,33 @@ def determine_MAP_estimate_trust_region(
                 tf.reduce_sum(c * c / denom)
                 - 0.5 * tf.reduce_sum(eigvals * dcoef * dcoef)
             )
-            xnew = x + direction
+            step = direction
+            if geodesic_accel:
+                h = accel_fd_step
+                _, grad_h = neg_log_prob_and_gradient(x + h * direction)
+                hess_d = tf.reshape(
+                    tf.matmul(
+                        eigvecs, tf.reshape(eigvals * dcoef, (-1, 1))
+                    ), (-1,)
+                )
+                kvec = 2. * (grad_h - grad - h * hess_d) / (h * h)
+                ck = tf.reshape(
+                    tf.matmul(
+                        eigvecs, tf.reshape(kvec, (-1, 1)), adjoint_a=True
+                    ), (-1,)
+                )
+                accel = tf.reshape(
+                    tf.matmul(eigvecs, tf.reshape(-ck / denom, (-1, 1))),
+                    (-1,)
+                )
+                anorm = float(tf.linalg.norm(accel))
+                dnorm = float(tf.linalg.norm(direction))
+                if not np.isfinite(anorm) or anorm > accel_ratio * dnorm:
+                    damping *= 4.
+                    continue
+                accel_frac = anorm / dnorm if dnorm > 0. else 0.
+                step = direction + 0.5 * accel
+            xnew = x + step
             fnew_t, gnew = neg_log_prob_and_gradient(xnew)
             fnew = float(fnew_t)
             rho = (fval - fnew) / pred_decr if pred_decr > 0. else -1.
@@ -282,7 +319,11 @@ def determine_MAP_estimate_trust_region(
                 accepted = True
                 x, fval, grad = xnew, fnew, gnew
                 if rho > 0.75:
-                    damping = max(0.5 * damping, 1e-10)
+                    # NOTE: the damping floor must be far below the
+                    #   ratio of smallest to largest Hessian
+                    #   eigenvalue, otherwise the sloppy directions
+                    #   never see an (almost) undamped Newton step
+                    damping = max(0.5 * damping, 1e-14)
                 elif rho < 0.25:
                     damping *= 4.
             else:
@@ -293,7 +334,8 @@ def determine_MAP_estimate_trust_region(
         print(f'#  tr iteration {num_iters} '
               f'({"gn" if use_gn else "exact"}): fval={fval:.8e}  '
               f'max|grad|={float(tf.reduce_max(tf.abs(grad))):.3e}  '
-              f'damping={damping:.1e}  rho={rho:.2f}')
+              f'damping={damping:.1e}  rho={rho:.2f}  '
+              f'accel={accel_frac:.2f}')
 
     if must_converge and not converged:
         raise ValueError(
