@@ -184,6 +184,48 @@ class UnnormalizedDistributionProduct(BaseDistribution):
         return res
 
 
+class LogBarrier(BaseDistribution):
+    """Logarithmic barrier for linear inequality constraints Q x >= 0.
+
+    Contributes `strength * sum(log(Q x))` to the log probability.
+    Used as a component of an `UnnormalizedDistributionProduct`, it
+    keeps optimization and sampling procedures within the feasible
+    region: for candidate parameter vectors violating a constraint
+    the log probability is not finite, so line searches and
+    Metropolis-Hastings corrections reject them automatically,
+    whereas in the interior of the feasible region (elements of Q x
+    of order one) a small `strength` leaves the posterior
+    essentially unchanged. The starting point of any procedure must
+    be strictly feasible (see `is_feasible`).
+    """
+
+    def __init__(self, qmat, strength=1e-4):
+        self._qmat = tf.convert_to_tensor(qmat, dtype=tf.float64)
+        self._strength = tf.constant(strength, dtype=tf.float64)
+
+    def is_feasible(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, tf.float64), (-1, 1))
+        return bool(tf.reduce_all(tf.matmul(self._qmat, x) > 0.))
+
+    def log_prob(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, tf.float64), (-1, 1))
+        cons = tf.matmul(self._qmat, x)
+        return self._strength * tf.reduce_sum(tf.math.log(cons))
+
+    def log_prob_batch(self, x):
+        x = tf.convert_to_tensor(x, dtype=tf.float64)
+        cons = tf.matmul(x, self._qmat, transpose_b=True)
+        return self._strength * tf.reduce_sum(tf.math.log(cons), axis=1)
+
+    def log_prob_hessian(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, tf.float64), (-1, 1))
+        cons = tf.reshape(tf.matmul(self._qmat, x), (-1, 1))
+        scaled_qmat = self._qmat / cons
+        return -self._strength * tf.matmul(
+            scaled_qmat, scaled_qmat, adjoint_a=True
+        )
+
+
 class MultivariateNormal(BaseDistribution):
 
     def __init__(self, prior_loc, prior_scale):
