@@ -63,11 +63,17 @@ def iterative_gls_estimate(
 def determine_MAP_estimate(
     startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
     max_inner_iters=500, max_outer_iters=10, nugget=1e-4,
-    must_converge=True, ret_optres=False
+    must_converge=True, ret_optres=False, compile_inner_iterations=True
 ):
     if isinstance(max_inner_iters, int):
         max_inner_iters = np.full(max_outer_iters, max_inner_iters,
                                   dtype=np.int32)
+    # compiling the BFGS loop reduces the per-iteration cost to a
+    # graph step; disable for models whose computational graph is
+    # too large to be traced (e.g. the non-vectorized compound map)
+    bfgs_minimize = tfp.optimizer.bfgs_minimize
+    if compile_inner_iterations:
+        bfgs_minimize = tf.function(tfp.optimizer.bfgs_minimize)
     outer_iter = 0
     converged = False
     refvals = startvals
@@ -86,7 +92,7 @@ def determine_MAP_estimate(
         fixed_inv_neg_log_post_hessian = \
             make_positive_definite(inv_neg_log_post_hessian, nugget)
         # find peak of posterior distribution (to use it as a starting value of MCMC)
-        optres = tfp.optimizer.bfgs_minimize(
+        optres = bfgs_minimize(
             neg_log_prob_and_gradient, initial_position=refvals,
             initial_inverse_hessian_estimate=fixed_inv_neg_log_post_hessian,
             max_iterations=max_inner_iter
