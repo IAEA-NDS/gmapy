@@ -226,6 +226,45 @@ class LogBarrier(BaseDistribution):
         )
 
 
+class SoftplusHalfNormal(BaseDistribution):
+    """Independent half-normal densities on softplus(x_i) (unnormalized).
+
+    Contributes `-sum_i softplus(x_i)^2 / (2 scale_i^2)` to the log
+    probability. Intended as a weak restraint on variance-component
+    magnitudes sigma_i = softplus(x_i) (e.g. per-dataset discrepancy
+    bands): the log-determinant of a covariance model grows only
+    logarithmically in sigma, so without this penalty an effectively
+    rejected dataset can drive its band to arbitrarily large values.
+    Combine with `DistributionForParameterSubset` to act on a subset
+    of the parameter vector.
+    """
+
+    def __init__(self, scale):
+        self._scale = tf.reshape(
+            tf.convert_to_tensor(scale, dtype=tf.float64), (-1,)
+        )
+
+    def log_prob(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, dtype=tf.float64), (-1,))
+        sp = tf.math.softplus(x)
+        return -0.5 * tf.reduce_sum(tf.square(sp / self._scale))
+
+    def log_prob_batch(self, x):
+        x = tf.convert_to_tensor(x, dtype=tf.float64)
+        sp = tf.math.softplus(x)
+        return -0.5 * tf.reduce_sum(
+            tf.square(sp / self._scale[None, :]), axis=1
+        )
+
+    def log_prob_hessian(self, x):
+        x = tf.reshape(tf.convert_to_tensor(x, dtype=tf.float64), (-1,))
+        sp = tf.math.softplus(x)
+        sig = tf.math.sigmoid(x)
+        d2 = -(tf.square(sig) + sp * sig * (1. - sig)) \
+            / tf.square(self._scale)
+        return tf.linalg.diag(d2)
+
+
 class MultivariateNormal(BaseDistribution):
 
     def __init__(self, prior_loc, prior_scale):
