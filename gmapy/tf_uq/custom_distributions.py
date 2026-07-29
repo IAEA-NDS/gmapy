@@ -51,9 +51,21 @@ class BaseDistribution(tf.Module):
             'please implement this function in derived class'
         )
 
+    def log_prob_batch(self, x):
+        """Log probability for a batch of parameter vectors (rows).
+
+        The default assumes that `log_prob` is batch-aware;
+        distributions for which this is not the case must override
+        this method.
+        """
+        return self.log_prob(x)
+
     # convenience functions for tensorflow minimizer algos
     def neg_log_prob(self, x):
         return -self.log_prob(x)
+
+    def neg_log_prob_batch(self, x):
+        return -self.log_prob_batch(x)
 
     def neg_log_prob_and_gradient(self, x):
         res = self.log_prob_and_gradient(x)
@@ -101,6 +113,14 @@ class DistributionForParameterSubset(BaseDistribution):
             return tf.constant(0., dtype=tf.float64)
         x_red = tf.gather_nd(x, self._param_idcs)
         return self._dist.log_prob(x_red)
+
+    def log_prob_batch(self, x):
+        if self._isempty:
+            return tf.zeros((tf.shape(x)[0],), dtype=tf.float64)
+        x_red = tf.gather(
+            x, tf.reshape(self._param_idcs, (-1,)), axis=-1
+        )
+        return self._dist.log_prob_batch(x_red)
 
     def log_prob_hessian(self, x):
         num_params = self._num_params
@@ -151,6 +171,16 @@ class UnnormalizedDistributionProduct(BaseDistribution):
                 first = False
             else:
                 res = tf.add(res, dist.log_prob_hessian(x))
+        return res
+
+    def log_prob_batch(self, x):
+        first = True
+        for dist in self._distributions:
+            if first:
+                res = dist.log_prob_batch(x)
+                first = False
+            else:
+                res = tf.add(res, dist.log_prob_batch(x))
         return res
 
 
@@ -431,6 +461,53 @@ class MultivariateNormalLikelihoodWithCovParams(MultivariateNormalLikelihood):
         normfact = tf.cast(tf.size(d), dtype=tf.float64) * log2pi
         res = -0.5 * (normfact + logdet + chisqr)
         return tf.squeeze(res)
+
+    def log_prob_batch(self, x):
+        """Log probability for a batch of parameter vectors (rows).
+
+        The model prediction is evaluated row by row (cheap), while
+        the covariance solves and determinants are delegated to the
+        covariance model, which can compute them for the whole batch
+        at nearly the cost of a single evaluation for structured
+        covariance matrices.
+        """
+        if (self._no_ppp_idcs is not None or
+                self._cov_freeze_param_values is not None):
+            raise NotImplementedError(
+                'batch evaluation is not implemented for no_ppp_idcs '
+                'or frozen covariance scaling parameters'
+            )
+        x = tf.convert_to_tensor(x, dtype=tf.float64)
+        num = int(x.shape[0])
+        pars = x[:, :self._num_params]
+        covpars = x[:, self._num_params:]
+        propvals = tf.stack([
+            tf.reshape(self._propfun(pars[k]), (-1,)) for k in range(num)
+        ])
+        like_data = tf.reshape(
+            tf.convert_to_tensor(self._like_data, tf.float64), (1, -1)
+        )
+        d = like_data - propvals
+        if self._relative:
+            z = d / propvals
+            logdet_scale = 2. * tf.reduce_sum(
+                tf.math.log(tf.abs(propvals)), axis=1
+            )
+        else:
+            z = d
+            logdet_scale = tf.zeros((num,), dtype=tf.float64)
+        chisqr, logdet0 = self._get_covmodel().batch_chisqr_and_logdet(
+            covpars, z
+        )
+        res = -0.5 * chisqr
+        # NOTE: this class attribute also reflects whether the
+        #   log-density contains the log-determinant term (absent
+        #   for the chi-square pseudo densities)
+        if self._include_logdet_hessian_terms:
+            log2pi = tf.math.log(tf.constant(2*math.pi, dtype=tf.float64))
+            normfact = tf.cast(tf.shape(like_data)[1], tf.float64) * log2pi
+            res -= 0.5 * (normfact + logdet0 + logdet_scale)
+        return res
 
     def combine_pars(self, params, covpars):
         return tf.concat([params, covpars], axis=0)

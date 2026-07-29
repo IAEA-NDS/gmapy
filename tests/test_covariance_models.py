@@ -79,6 +79,17 @@ class TestCovarianceModelsSynthetic(unittest.TestCase):
                 covpar2.numpy(), covpar2.numpy().T, rtol=1e-12, atol=1e-14
             ))
 
+    def test_batch_chisqr_and_logdet_agreement(self):
+        generic, lowrank, rng = _make_synthetic_models()
+        u_batch = tf.constant(
+            rng.uniform(0.1, 0.5, size=(5, 3)), dtype=tf.float64
+        )
+        z_batch = tf.constant(rng.normal(size=(5, 40)), dtype=tf.float64)
+        c1, l1 = generic.batch_chisqr_and_logdet(u_batch, z_batch)
+        c2, l2 = lowrank.batch_chisqr_and_logdet(u_batch, z_batch)
+        self.assertTrue(np.allclose(c1.numpy(), c2.numpy(), rtol=1e-9))
+        self.assertTrue(np.allclose(l1.numpy(), l2.numpy(), rtol=1e-9))
+
 
 class TestLikelihoodWithLowRankModel(unittest.TestCase):
 
@@ -154,6 +165,23 @@ class TestLikelihoodWithLowRankModel(unittest.TestCase):
             msg=f'{tag1} vs {tag2}: max abs diff '
                 f'{np.max(np.abs(h1 - h2))} at scale {scale}'
         )
+
+    def test_log_prob_batch_matches_single_evaluations(self):
+        rng = np.random.default_rng(3)
+        xmat = np.tile(self._x, (4, 1))
+        xmat += rng.normal(scale=1e-3, size=xmat.shape)
+        for tag in ('lowrank_exact', 'generic_exact'):
+            lik = self._liks[tag]
+            batch = lik.log_prob_batch(
+                tf.constant(xmat, dtype=tf.float64)
+            ).numpy()
+            singles = np.array(
+                [float(lik.log_prob(xmat[k])) for k in range(4)]
+            )
+            self.assertTrue(
+                np.allclose(batch, singles, rtol=1e-10),
+                msg=f'{tag}: max diff {np.max(np.abs(batch - singles))}'
+            )
 
     def test_lowrank_matches_generic_exact_hessian(self):
         self._compare('generic_exact', 'lowrank_exact')
