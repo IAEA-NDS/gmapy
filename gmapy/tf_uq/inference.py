@@ -115,6 +115,86 @@ def determine_MAP_estimate(
         return refvals
 
 
+def determine_MAP_estimate_newton(
+    startvals, neg_log_prob_and_gradient, neg_log_prob_hessian,
+    max_iters=30, nugget=1e-4, tolerance=1e-8, armijo_c1=1e-4,
+    max_step_halvings=40, must_converge=True, ret_optres=False
+):
+    """Determine the MAP estimate by a damped Newton iteration.
+
+    In contrast to `determine_MAP_estimate`, which uses the Hessian
+    matrix only as a preconditioner for BFGS inner iterations, the
+    curvature information is recomputed via `neg_log_prob_hessian`
+    in EVERY iteration. With a cheap (e.g. exact) Hessian this
+    converges in a few iterations without the costly dense
+    inverse-Hessian updates of BFGS. The Hessian is made positive
+    definite by clipping its eigenvalues at `nugget`; if a Newton
+    step does not achieve sufficient decrease in the line search,
+    the clipping threshold is temporarily escalated
+    (Levenberg-style damping).
+    """
+    x = tf.reshape(tf.convert_to_tensor(startvals, tf.float64), (-1,))
+    fval, grad = neg_log_prob_and_gradient(x)
+    converged = bool(tf.reduce_max(tf.abs(grad)) <= tolerance)
+    num_iters = 0
+    while not converged and num_iters < max_iters:
+        num_iters += 1
+        hess = neg_log_prob_hessian(x)
+        cur_nugget = nugget
+        step_found = False
+        while not step_found and cur_nugget <= 1e8 * nugget:
+            hess_pd = make_positive_definite(hess, cur_nugget)
+            chol = tf.linalg.cholesky(hess_pd)
+            direction = -tf.reshape(
+                tf.linalg.cholesky_solve(chol, tf.reshape(grad, (-1, 1))),
+                (-1,)
+            )
+            dgrad = float(tf.reduce_sum(direction * grad))
+            if not np.isfinite(dgrad) or dgrad >= 0.:
+                cur_nugget *= 10.
+                continue
+            # the predicted decrease of the Newton step is half the
+            # squared Newton decrement; once it drops below the
+            # round-off level of the objective, the iterate is
+            # converged to numerical precision
+            if -dgrad / 2. <= 1e-14 * (1. + abs(float(fval))):
+                converged = True
+                break
+            alpha = 1.
+            for _ in range(max_step_halvings):
+                xnew = x + alpha * direction
+                fnew, gnew = neg_log_prob_and_gradient(xnew)
+                if (np.isfinite(float(fnew)) and
+                        float(fnew) <= float(fval) + armijo_c1*alpha*dgrad):
+                    step_found = True
+                    break
+                alpha *= 0.5
+            if not step_found:
+                cur_nugget *= 10.
+        if converged or not step_found:
+            break
+        x, fval, grad = xnew, fnew, gnew
+        gmax = float(tf.reduce_max(tf.abs(grad)))
+        print(f'#  newton iteration {num_iters}: '
+              f'fval={float(fval):.8e}  max|grad|={gmax:.3e}  '
+              f'step={alpha:.3e}')
+        converged = gmax <= tolerance
+
+    if must_converge and not converged:
+        raise ValueError(
+            'Unable to determine MAP estimate. ' +
+            'Try increasing `max_iters` and/or `nugget`'
+        )
+    if ret_optres:
+        OptRes = namedtuple(
+            'OptimizationResult',
+            ['position', 'converged', 'num_iterations', 'objective_value']
+        )
+        return OptRes(x, converged, num_iters, fval)
+    else:
+        return x
+
+
 def generate_MCMC_chain(
     startvals, log_prob, neg_log_prob_hessian, nugget=1e-10,
     step_size=0.001, num_burnin_steps=100, num_results=1000,
